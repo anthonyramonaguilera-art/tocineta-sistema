@@ -9,6 +9,7 @@ import { verifyPin } from '../auth/pin.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
 import { getCurrentExchangeRate } from '../menu/menu-service.js';
+import { enqueueOrderPrintJobs } from '../printing/worker.js';
 
 export interface OpenJornadaInput {
   openedByUserId: string;
@@ -643,19 +644,8 @@ export function processOrderPayment(
       WHERE id = ?
     `).run(session.id, now, orderId);
 
-    // 5. Encolar Trabajos de Impresión Asíncrona (Caja USB y Cocina TCP)
-    const ticketBytes = Buffer.from(`TICKET_ORDEN_${order.order_number}_PAGADA\n`);
-    rawDb.prepare(`
-      INSERT INTO print_jobs (
-        id, printer_id, order_id, job_type, payload_bytes, status, attempts, created_at_ms
-      ) VALUES (?, 'print_caja_usb', ?, 'NOTA_ENTREGA', ?, 'pending', 0, ?)
-    `).run(`pjob_${generateUuidV7()}`, orderId, ticketBytes, now);
-
-    rawDb.prepare(`
-      INSERT INTO print_jobs (
-        id, printer_id, order_id, job_type, payload_bytes, status, attempts, created_at_ms
-      ) VALUES (?, 'print_cocina', ?, 'TICKET_COCINA', ?, 'pending', 0, ?)
-    `).run(`pjob_${generateUuidV7()}`, orderId, ticketBytes, now);
+    // 5. Encolar Trabajos de Impresión Asíncrona (Caja USB y Cocina TCP con Ticket IR)
+    enqueueOrderPrintJobs(rawDb, orderId);
 
     // 6. Auditoría y Bus de Eventos
     appendAuditEvent(rawDb, {

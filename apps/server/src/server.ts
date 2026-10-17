@@ -5,9 +5,18 @@ import { authRoutes } from './routes/auth.js';
 import { menuRoutes } from './modules/menu/routes.js';
 import { orderRoutes } from './modules/orders/routes.js';
 import { cashierRoutes } from './modules/cashier/routes.js';
+import { printingRoutes } from './modules/printing/routes.js';
+import { PrintingWorker } from './modules/printing/worker.js';
+import { getDatabaseContext } from './db/connection.js';
 import { websocketPlugin } from './plugins/websocket.js';
 import { staticPlugin } from './plugins/static.js';
 import { idempotencyPlugin } from './modules/idempotency/idempotency-plugin.js';
+
+declare module 'fastify' {
+  interface FastifyInstance {
+    printingWorker?: PrintingWorker;
+  }
+}
 
 export interface BuildServerOptions {
   logger?: FastifyServerOptions['logger'];
@@ -33,6 +42,21 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
     logger: options.logger !== undefined ? options.logger : defaultLogger
   });
 
+  // Inicializar PrintingWorker interno
+  const dbCtx = getDatabaseContext();
+  const worker = new PrintingWorker(dbCtx.rawDb, {
+    mockTransports: process.env.NODE_ENV === 'test'
+  });
+  server.decorate('printingWorker', worker);
+
+  if (process.env.NODE_ENV !== 'test') {
+    worker.start(1500);
+  }
+
+  server.addHook('onClose', async () => {
+    worker.stop();
+  });
+
   // Registro de Plugins
   await server.register(idempotencyPlugin);
   await server.register(websocketPlugin);
@@ -44,6 +68,7 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   await server.register(menuRoutes);
   await server.register(orderRoutes);
   await server.register(cashierRoutes);
+  await server.register(printingRoutes);
 
   if (!options.disableStatic) {
     await server.register(staticPlugin);

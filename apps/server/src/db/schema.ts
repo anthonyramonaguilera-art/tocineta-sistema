@@ -398,10 +398,16 @@ export const printJobs = sqliteTable('print_jobs', {
   printerId: text('printer_id').notNull().references(() => printers.id),
   orderId: text('order_id').references(() => orders.id),
   jobType: text('job_type').notNull(),
-  payloadBytes: text('payload_bytes').notNull(), // o BLOB
-  status: text('status').notNull().default('pending'),
+  payloadBytes: text('payload_bytes').notNull(),
+  ticketIrJson: text('ticket_ir_json'),
+  station: text('station'),
+  status: text('status').notNull().default('en_cola'),
   errorMessage: text('error_message'),
   attempts: integer('attempts').notNull().default(0),
+  maxAttempts: integer('max_attempts').notNull().default(3),
+  reprintCount: integer('reprint_count').notNull().default(0),
+  reprintReason: text('reprint_reason'),
+  reprintedByUserId: text('reprinted_by_user_id').references(() => users.id),
   createdAtMs: integer('created_at_ms').notNull(),
   completedAtMs: integer('completed_at_ms')
 });

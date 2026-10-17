@@ -6,6 +6,7 @@ import { appendAuditEvent } from '../audit/audit-service.js';
 import { verifyPin } from '../auth/pin.js';
 import { checkUserLockout, recordFailedAttempt, resetLockout } from '../auth/lockout.js';
 import { mapUserRow } from '../../db/schema.js';
+import { enqueueOrderPrintJobs } from '../printing/worker.js';
 
 export interface OrderModifierInput {
   ingredientId?: string;
@@ -641,6 +642,9 @@ export function authorizeWithoutPayment(
         updated_at_ms = ?
     WHERE id = ?
   `).run(authorizer.id, newVersion, now, orderId);
+
+  // 3. Encolar impresión de comanda de cocina y comprobante
+  enqueueOrderPrintJobs(rawDb, orderId);
 
   appendAuditEvent(rawDb, {
     actorUserId: authorizer.id,

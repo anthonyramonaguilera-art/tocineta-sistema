@@ -166,7 +166,6 @@ describe('Hito M5 - Módulo de Caja, Calculadora Multimétodo, Vueltos Mixtos y 
           }
         }
       });
-
       expect(resPay.statusCode).toBe(200);
       const payData = JSON.parse(resPay.payload);
       expect(payData.success).toBe(true);

@@ -5,6 +5,8 @@ import type { CashierOrder } from './types.js';
 import { useMultiTabCashierGuard } from './useMultiTabCashierGuard.js';
 import { DrinksChecklist } from './DrinksChecklist.js';
 import { MultiMethodCalculator } from './MultiMethodCalculator.js';
+import { PrintAttentionModal } from './PrintAttentionModal.js';
+import { TicketPreviewModal } from './TicketPreviewModal.js';
 import { usdToBsCents } from '@tocineta/shared';
 
 export const CashierView: React.FC = () => {
@@ -13,6 +15,8 @@ export const CashierView: React.FC = () => {
 
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
+  const [previewJobId, setPreviewJobId] = useState<string | null>(null);
+  const [lastPaidOrderId, setLastPaidOrderId] = useState<string | null>(null);
 
   // Estados de Apertura de Jornada
   const [showOpenModal, setShowOpenModal] = useState<boolean>(false);
@@ -107,7 +111,30 @@ export const CashierView: React.FC = () => {
       {/* BANNER DE ÉXITO */}
       {successBanner && (
         <div className="p-4 rounded-2xl bg-emerald-500/20 border-2 border-emerald-500/60 text-emerald-300 font-bold text-sm flex items-center justify-between shadow-lg animate-in fade-in">
-          <span>{successBanner}</span>
+          <div className="flex items-center gap-3">
+            <span>{successBanner}</span>
+            {lastPaidOrderId && (
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    const res = await fetch(`/api/print-jobs?orderId=${lastPaidOrderId}&limit=1`);
+                    if (res.ok) {
+                      const d = await res.json();
+                      if (d.data?.length > 0) {
+                        setPreviewJobId(d.data[0].id);
+                      }
+                    }
+                  } catch (err) {
+                    console.error('Error al obtener job:', err);
+                  }
+                }}
+                className="px-2.5 py-1 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow active:scale-95 flex items-center gap-1.5"
+              >
+                <span>👁️</span> Ver Ticket
+              </button>
+            )}
+          </div>
           <button
             onClick={() => setSuccessBanner(null)}
             className="text-xs font-bold px-2 py-1 hover:text-white"
@@ -326,7 +353,9 @@ export const CashierView: React.FC = () => {
                 order={selectedOrder}
                 rateMicroBs={currentRateMicroBs}
                 onPaymentSuccess={() => {
+                  const paidId = selectedOrder.id;
                   setSuccessBanner(`✓ ¡Orden #${selectedOrder.order_number} cobrada con éxito y despachada a cocina!`);
+                  setLastPaidOrderId(paidId);
                   setSelectedOrderId(null);
                   refetchOrders();
                 }}
@@ -344,6 +373,17 @@ export const CashierView: React.FC = () => {
         </div>
 
       </div>
+
+      {/* MODAL ALERTA DE IMPRESORA CON FALLO */}
+      <PrintAttentionModal onOpenTicketPreview={(jobId) => setPreviewJobId(jobId)} />
+
+      {/* MODAL VISTA PREVIA DE TICKET TÉRMICO */}
+      {previewJobId && (
+        <TicketPreviewModal
+          jobId={previewJobId}
+          onClose={() => setPreviewJobId(null)}
+        />
+      )}
 
     </div>
   );
