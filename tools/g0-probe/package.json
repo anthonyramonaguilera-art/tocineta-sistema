@@ -1,0 +1,7 @@
+{
+  "name": "@tocineta/g0-probe",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Herramienta CLI y servidor de diagnostico Gate G0 para impresoras termicas y red LAN"
+}
