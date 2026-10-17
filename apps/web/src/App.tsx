@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext.js';
 import { AuthScreen } from './components/AuthScreen.js';
 import { AppLayout } from './components/AppLayout.js';
 import { PosView } from './components/PosView.js';
+import { CashierView } from './features/cashier/CashierView.js';
 import { MenuAdminView } from './components/MenuAdminView.js';
 import { SystemHealthDashboard } from './components/SystemHealthDashboard.js';
 
@@ -18,7 +19,9 @@ const queryClient = new QueryClient({
 
 const MainNavigator: React.FC = () => {
   const { user } = useAuth();
-  const [currentTab, setCurrentTab] = useState<'pos' | 'menu-admin' | 'health'>('pos');
+  const [currentTab, setCurrentTab] = useState<'pos' | 'cashier' | 'menu-admin' | 'health'>(() => {
+    return user?.role === 'cajera' ? 'cashier' : 'pos';
+  });
 
   const { data: menuData } = useQuery<{ formattedRate?: string }>({
     queryKey: ['posMenu'],
@@ -40,6 +43,7 @@ const MainNavigator: React.FC = () => {
       formattedRate={menuData?.formattedRate}
     >
       {currentTab === 'pos' && <PosView />}
+      {currentTab === 'cashier' && <CashierView />}
       {currentTab === 'menu-admin' && <MenuAdminView />}
       {currentTab === 'health' && <SystemHealthDashboard />}
     </AppLayout>

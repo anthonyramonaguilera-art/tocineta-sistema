@@ -3,8 +3,8 @@ import { useAuth } from '../context/AuthContext.js';
 import { useEventStream } from '../hooks/useEventStream.js';
 
 interface AppLayoutProps {
-  currentTab: 'pos' | 'menu-admin' | 'health';
-  onTabChange: (tab: 'pos' | 'menu-admin' | 'health') => void;
+  currentTab: 'pos' | 'cashier' | 'menu-admin' | 'health';
+  onTabChange: (tab: 'pos' | 'cashier' | 'menu-admin' | 'health') => void;
   formattedRate?: string;
   children: React.ReactNode;
 }
@@ -141,6 +141,20 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <span>🍔</span>
             <span>Comandero / POS</span>
           </button>
+
+          {(user?.role === 'cajera' || isAdminOrSupervisor) && (
+            <button
+              onClick={() => onTabChange('cashier')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                currentTab === 'cashier'
+                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                  : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
+              }`}
+            >
+              <span>💵</span>
+              <span>Caja y Cobro</span>
+            </button>
+          )}
 
           {isAdminOrSupervisor && (
             <button

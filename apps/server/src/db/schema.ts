@@ -143,7 +143,9 @@ export const AccountBucketValues = [
   'BANK_BS',
   'BANK_USD',
   'DISCOUNT_EXPENSE',
-  'OPERATING_EXPENSE'
+  'OPERATING_EXPENSE',
+  'ROUNDING_ADJUSTMENT',
+  'TIP_IN'
 ] as const;
 export type AccountBucket = (typeof AccountBucketValues)[number];
 

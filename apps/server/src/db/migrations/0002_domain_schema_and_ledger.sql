@@ -256,7 +256,7 @@ CREATE INDEX IF NOT EXISTS idx_line_mods_line ON order_line_modifiers(order_line
 CREATE TABLE IF NOT EXISTS payments (
   id TEXT PRIMARY KEY,
   order_id TEXT NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
-  method TEXT NOT NULL CHECK(method IN ('EFECTIVO_USD', 'EFECTIVO_BS', 'PAGO_MOVIL', 'PUNTO_DE_VENTA', 'ZELLE', 'OTROS')),
+  method TEXT NOT NULL CHECK(method IN ('EFECTIVO_USD', 'EFECTIVO_BS', 'PAGO_MOVIL', 'PUNTO_DE_VENTA', 'UBII', 'BINANCE', 'ZELLE', 'OTROS')),
   currency TEXT NOT NULL CHECK(currency IN ('USD', 'BS')),
   amount_cents INTEGER NOT NULL,
   rate_micro_bs INTEGER NOT NULL,
@@ -267,6 +267,7 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 
 CREATE INDEX IF NOT EXISTS idx_payments_order ON payments(order_id);
+CREATE INDEX IF NOT EXISTS idx_payments_reference ON payments(reference_code);
 
 -- 18. Entregas de Vuelto
 CREATE TABLE IF NOT EXISTS change_deliveries (
@@ -287,7 +288,11 @@ CREATE TABLE IF NOT EXISTS ledger_entries (
   entry_id TEXT NOT NULL UNIQUE,
   jornada_id TEXT NOT NULL REFERENCES jornadas(id),
   order_id TEXT REFERENCES orders(id),
-  account_bucket TEXT NOT NULL CHECK(account_bucket IN ('FOOD_SALES', 'MOTORIZADO_FUND', 'MARKETING_COURTESY', 'CASH_USD', 'CASH_BS', 'BANK_BS', 'BANK_USD', 'DISCOUNT_EXPENSE', 'OPERATING_EXPENSE')),
+  account_bucket TEXT NOT NULL CHECK(account_bucket IN (
+    'FOOD_SALES', 'MOTORIZADO_FUND', 'MARKETING_COURTESY', 'CASH_USD',
+    'CASH_BS', 'BANK_BS', 'BANK_USD', 'DISCOUNT_EXPENSE', 'OPERATING_EXPENSE',
+    'ROUNDING_ADJUSTMENT', 'TIP_IN'
+  )),
   debit_usd_cents INTEGER NOT NULL DEFAULT 0,
   credit_usd_cents INTEGER NOT NULL DEFAULT 0,
   rate_micro_bs INTEGER NOT NULL,
