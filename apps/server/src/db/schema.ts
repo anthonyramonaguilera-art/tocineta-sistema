@@ -128,7 +128,7 @@ export type ModifierType = (typeof ModifierTypeValues)[number];
 export const FulfillmentTypeValues = ['salon', 'para_llevar', 'delivery'] as const;
 export type FulfillmentType = (typeof FulfillmentTypeValues)[number];
 
-export const PaymentStatusValues = ['sin_pago', 'parcial', 'pagado', 'autorizado_sin_pago'] as const;
+export const PaymentStatusValues = ['sin_pago', 'parcial', 'pagado', 'autorizado_sin_pago', 'anulado', 'reembolsado'] as const;
 export type PaymentStatus = (typeof PaymentStatusValues)[number];
 
 export const FulfillmentStatusValues = ['pendiente', 'enviado', 'en_cocina', 'en_preparacion', 'listo', 'entregado', 'cerrado', 'anulado'] as const;
@@ -182,6 +182,8 @@ export const jornadas = sqliteTable('jornadas', {
   status: text('status').notNull().default('abierta'),
   initialCashUsdCents: integer('initial_cash_usd_cents').notNull().default(0),
   initialCashBsCents: integer('initial_cash_bs_cents').notNull().default(0),
+  auditHeadHash: text('audit_head_hash'),
+  zReportJson: text('z_report_json'),
   notes: text('notes')
 });
 
@@ -196,6 +198,14 @@ export const cashSessions = sqliteTable('cash_sessions', {
   openingCashBsCents: integer('opening_cash_bs_cents').notNull().default(0),
   closingCashUsdCents: integer('closing_cash_usd_cents'),
   closingCashBsCents: integer('closing_cash_bs_cents'),
+  recountUsed: integer('recount_used').notNull().default(0),
+  closingUbiiVoucherBsCents: integer('closing_ubii_voucher_bs_cents'),
+  expectedCashUsdCents: integer('expected_cash_usd_cents'),
+  expectedCashBsCents: integer('expected_cash_bs_cents'),
+  expectedUbiiGrossBsCents: integer('expected_ubii_gross_bs_cents'),
+  diffUsdCents: integer('diff_usd_cents'),
+  diffBsCents: integer('diff_bs_cents'),
+  diffUbiiBsCents: integer('diff_ubii_bs_cents'),
   closingNotes: text('closing_notes')
 });
 
@@ -423,9 +433,14 @@ export const workerIncidents = sqliteTable('worker_incidents', {
   id: text('id').primaryKey(),
   jornadaId: text('jornada_id').notNull().references(() => jornadas.id),
   userId: text('user_id').notNull().references(() => users.id),
+  orderId: text('order_id').references(() => orders.id),
   incidentType: text('incident_type').notNull(),
+  reasonCode: text('reason_code'),
+  responsibleArea: text('responsible_area'),
+  resolution: text('resolution'),
   description: text('description').notNull(),
   estimatedLossUsdCents: integer('estimated_loss_usd_cents').notNull().default(0),
+  authorizedByUserId: text('authorized_by_user_id').references(() => users.id),
   createdAtMs: integer('created_at_ms').notNull()
 });
 

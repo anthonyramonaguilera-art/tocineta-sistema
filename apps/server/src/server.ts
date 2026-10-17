@@ -7,6 +7,9 @@ import { orderRoutes } from './modules/orders/routes.js';
 import { cashierRoutes } from './modules/cashier/routes.js';
 import { printingRoutes } from './modules/printing/routes.js';
 import { kdsRoutes } from './modules/kds/routes.js';
+import { closuresRoutes } from './modules/closures/routes.js';
+import { incidentsRoutes } from './modules/incidents/routes.js';
+import { reportsRoutes } from './modules/reports/routes.js';
 import { PrintingWorker } from './modules/printing/worker.js';
 import { getDatabaseContext } from './db/connection.js';
 import { websocketPlugin } from './plugins/websocket.js';
@@ -71,6 +74,9 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   await server.register(cashierRoutes);
   await server.register(printingRoutes);
   await server.register(kdsRoutes);
+  await server.register(closuresRoutes);
+  await server.register(incidentsRoutes);
+  await server.register(reportsRoutes);
 
   if (!options.disableStatic) {
     await server.register(staticPlugin);

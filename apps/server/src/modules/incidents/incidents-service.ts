@@ -1,0 +1,322 @@
+/**
+ * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * Módulo de Incidentes, Mermas y Devoluciones (M8)
+ * 
+ * Reglas de Negocio Oficiales:
+ * - 'refire': Requiere PIN de Supervisor o Admin. Registra el costo como merma en worker_incidents
+ *   y dispara un ticket urgente '*** REPOSICIÓN SIN COBRO ***' a cocina sin alterar la caja.
+ * - 'refund' / 'void_paid': Requiere PIN de Supervisor (hasta el tope de $20.00 USD) o Admin (ilimitado).
+ *   Genera el contra-asiento contable en ledger_entries, actualiza payment_status a 'reembolsado'/'anulado'.
+ */
+
+import type Database from 'better-sqlite3';
+import { generateUuidV7, renderTicketToEscPos } from '@tocineta/shared';
+import { verifyPin } from '../auth/pin.js';
+import { appendAuditEvent } from '../audit/audit-service.js';
+import { publishDomainEvent } from '../events/event-bus.js';
+import {
+  loadOrderReceiptDataFromDb,
+  buildRefireTicketIR
+} from '../printing/templates.js';
+
+export const SUPERVISOR_REFUND_LIMIT_USD_CENTS = 2000; // $20.00 USD límite para supervisor
+
+export interface ReportIncidentInput {
+  reasonCode: string;
+  responsibleArea: 'mesonero' | 'cocina' | 'cliente' | 'sistema' | 'impresora';
+  resolution: 'refire' | 'refund' | 'void_paid';
+  authorizerPin: string;
+  workerId?: string;
+  description?: string;
+  estimatedLossUsdCents?: number;
+}
+
+export interface IncidentResult {
+  success: boolean;
+  incidentId: string;
+  orderId: string;
+  resolution: 'refire' | 'refund' | 'void_paid';
+  authorizedBy: {
+    id: string;
+    name: string;
+    role: string;
+  };
+  printJobId?: string;
+  refundedUsdCents?: number;
+  message: string;
+}
+
+export function reportOrderIncident(
+  rawDb: Database.Database,
+  orderId: string,
+  input: ReportIncidentInput
+): IncidentResult {
+  const now = Date.now();
+
+  // 1. Validar que la orden exista
+  const order = rawDb.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as any;
+  if (!order) {
+    const err: any = new Error(`Orden '${orderId}' no encontrada`);
+    err.statusCode = 404;
+    throw err;
+  }
+
+  // 2. Validar PIN de Autorización (Supervisor o Admin requerido)
+  const authorizers = rawDb.prepare(`
+    SELECT id, name, role, pin_salt, pin_hash
+    FROM users
+    WHERE role IN ('admin', 'supervisor') AND is_active = 1
+  `).all() as any[];
+
+  let verifiedAuthorizer: { id: string; name: string; role: string } | null = null;
+  for (const a of authorizers) {
+    if (verifyPin(input.authorizerPin, a.pin_salt, a.pin_hash)) {
+      verifiedAuthorizer = { id: a.id, name: a.name, role: a.role };
+      break;
+    }
+  }
+
+  if (!verifiedAuthorizer) {
+    const err: any = new Error('PIN de autorización inválido o usuario sin privilegios de Supervisor o Administrador');
+    err.statusCode = 403;
+    throw err;
+  }
+
+  const incidentId = `inc_${generateUuidV7()}`;
+  const targetWorkerId = input.workerId || order.created_by_user_id;
+
+  // 3. Manejo de 'refire' (Reposición Urgente a Cocina)
+  if (input.resolution === 'refire') {
+    // Merma estimada: costo indicado o total neto de alimentos de la orden
+    const lossCents = input.estimatedLossUsdCents !== undefined && input.estimatedLossUsdCents >= 0
+      ? input.estimatedLossUsdCents
+      : order.net_food_sales_usd_cents;
+
+    // Registrar en worker_incidents
+    rawDb.prepare(`
+      INSERT INTO worker_incidents (
+        id, jornada_id, user_id, order_id, incident_type,
+        reason_code, responsible_area, resolution, description,
+        estimated_loss_usd_cents, authorized_by_user_id, created_at_ms
+      ) VALUES (?, ?, ?, ?, 'MERMA_ALIMENTO', ?, ?, 'refire', ?, ?, ?, ?)
+    `).run(
+      incidentId,
+      order.jornada_id,
+      targetWorkerId,
+      orderId,
+      input.reasonCode,
+      input.responsibleArea,
+      input.description || `Reposición de comida por ${input.reasonCode}`,
+      lossCents,
+      verifiedAuthorizer.id,
+      now
+    );
+
+    // Cargar datos de la orden y líneas de cocina para ticket de reposición
+    const { order: receiptOrder, kitchenLines } = loadOrderReceiptDataFromDb(rawDb, orderId);
+    const refireIR = buildRefireTicketIR(receiptOrder, kitchenLines, input.reasonCode);
+    const refireBytes = Buffer.from(renderTicketToEscPos(refireIR, { beep: true }));
+
+    const printJobId = `pjob_${generateUuidV7()}`;
+    rawDb.prepare(`
+      INSERT INTO print_jobs (
+        id, printer_id, order_id, job_type, payload_bytes,
+        ticket_ir_json, station, status, attempts, created_at_ms
+      ) VALUES (?, 'print_cocina', ?, 'REPOSICION_COCINA', ?, ?, 'cocina', 'en_cola', 0, ?)
+    `).run(printJobId, orderId, refireBytes, JSON.stringify(refireIR), now);
+
+    // Reactivar orden y líneas en cocina/KDS sin alterar pagos ni caja
+    rawDb.prepare(`
+      UPDATE orders
+      SET fulfillment_status = 'en_preparacion',
+          station_status_hot_dogs = CASE WHEN station_status_hot_dogs = 'na' THEN 'na' ELSE 'en_preparacion' END,
+          station_status_hamburguesas = CASE WHEN station_status_hamburguesas = 'na' THEN 'na' ELSE 'en_preparacion' END,
+          updated_at_ms = ?
+      WHERE id = ?
+    `).run(now, orderId);
+
+    rawDb.prepare(`
+      UPDATE order_lines
+      SET status = 'pendiente',
+          prepared_at_ms = NULL,
+          ready_at_ms = NULL
+      WHERE order_id = ? AND line_role IN ('STANDARD', 'COMBO_CHILD', 'COURTESY_ITEM') AND station != 'caja_bebidas'
+    `).run(orderId);
+
+    appendAuditEvent(rawDb, {
+      actorUserId: verifiedAuthorizer.id,
+      action: 'ORDER_INCIDENT_REFIRE',
+      entityType: 'order',
+      entityId: orderId,
+      payload: {
+        incidentId,
+        reasonCode: input.reasonCode,
+        responsibleArea: input.responsibleArea,
+        estimatedLossUsdCents: lossCents,
+        authorizedBy: verifiedAuthorizer.name
+      }
+    });
+
+    publishDomainEvent(rawDb, {
+      eventType: 'ORDER_REFIRE_DISPATCHED',
+      entityId: orderId,
+      payload: {
+        orderId,
+        incidentId,
+        reasonCode: input.reasonCode,
+        printJobId
+      }
+    });
+
+    return {
+      success: true,
+      incidentId,
+      orderId,
+      resolution: 'refire',
+      authorizedBy: verifiedAuthorizer,
+      printJobId,
+      message: 'Reposición urgente enviada a cocina e incidente registrado como merma sin alterar caja.'
+    };
+  }
+
+  // 4. Manejo de 'refund' o 'void_paid' (Reembolso / Anulación de Orden)
+  if (input.resolution === 'refund' || input.resolution === 'void_paid') {
+    const totalOrderCents = order.total_to_collect_usd_cents || order.net_food_sales_usd_cents;
+
+    // Regla de tope para Supervisor: Si supera $20.00 USD exige Admin
+    if (verifiedAuthorizer.role === 'supervisor' && totalOrderCents > SUPERVISOR_REFUND_LIMIT_USD_CENTS) {
+      const err: any = new Error(
+        `El monto a reembolsar ($${(totalOrderCents / 100).toFixed(2)}) supera el límite de $${(SUPERVISOR_REFUND_LIMIT_USD_CENTS / 100).toFixed(2)} permitido para Supervisores. Requiere PIN de Administrador.`
+      );
+      err.statusCode = 403;
+      throw err;
+    }
+
+    const isPaid = order.payment_status === 'pagado' || order.payment_status === 'autorizado_sin_pago';
+    const rateMicroBs = order.rate_micro_bs || 40_000_000;
+
+    // Si estaba pagada, revertir en ledger_entries (partida doble inversa)
+    if (isPaid) {
+      const insertLedger = rawDb.prepare(`
+        INSERT INTO ledger_entries (
+          entry_id, jornada_id, order_id, account_bucket,
+          debit_usd_cents, credit_usd_cents, rate_micro_bs, description, created_at_ms
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      // Reversión de Ingresos de Comida
+      if (order.net_food_sales_usd_cents > 0) {
+        insertLedger.run(
+          `led_${generateUuidV7()}`,
+          order.jornada_id,
+          orderId,
+          'FOOD_SALES',
+          order.net_food_sales_usd_cents, // Débito revierte el crédito original
+          0,
+          rateMicroBs,
+          `Reversión Venta Alimentos por Reembolso #${order.order_number} (${input.reasonCode})`,
+          now
+        );
+      }
+
+      // Reversión de Fondo Motorizado si existía
+      if (order.delivery_fee_usd_cents > 0) {
+        insertLedger.run(
+          `led_${generateUuidV7()}`,
+          order.jornada_id,
+          orderId,
+          'MOTORIZADO_FUND',
+          order.delivery_fee_usd_cents,
+          0,
+          rateMicroBs,
+          `Reversión Fondo Delivery por Reembolso #${order.order_number}`,
+          now
+        );
+      }
+
+      // Salida de Dinero / Reembolso de Caja o Banco
+      // Se registra la salida proporcional en efectivo USD o bucket de pago
+      insertLedger.run(
+        `led_${generateUuidV7()}`,
+        order.jornada_id,
+        orderId,
+        'CASH_USD',
+        0,
+        totalOrderCents, // Crédito a caja representa salida de dinero devuelto al cliente
+        rateMicroBs,
+        `Salida Reembolso Cliente Orden #${order.order_number} (${input.reasonCode})`,
+        now
+      );
+    }
+
+    // Actualizar estados de la orden
+    const newPaymentStatus = isPaid ? 'reembolsado' : 'anulado';
+    rawDb.prepare(`
+      UPDATE orders
+      SET payment_status = ?,
+          fulfillment_status = 'anulado',
+          updated_at_ms = ?
+      WHERE id = ?
+    `).run(newPaymentStatus, now, orderId);
+
+    // Registrar en worker_incidents
+    rawDb.prepare(`
+      INSERT INTO worker_incidents (
+        id, jornada_id, user_id, order_id, incident_type,
+        reason_code, responsible_area, resolution, description,
+        estimated_loss_usd_cents, authorized_by_user_id, created_at_ms
+      ) VALUES (?, ?, ?, ?, 'DISCREPANCIA_CAJA', ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      incidentId,
+      order.jornada_id,
+      targetWorkerId,
+      orderId,
+      input.reasonCode,
+      input.responsibleArea,
+      input.resolution,
+      input.description || `Reembolso de orden #${order.order_number} por ${input.reasonCode}`,
+      totalOrderCents,
+      verifiedAuthorizer.id,
+      now
+    );
+
+    appendAuditEvent(rawDb, {
+      actorUserId: verifiedAuthorizer.id,
+      action: 'ORDER_INCIDENT_REFUND',
+      entityType: 'order',
+      entityId: orderId,
+      payload: {
+        incidentId,
+        reasonCode: input.reasonCode,
+        responsibleArea: input.responsibleArea,
+        refundedUsdCents: totalOrderCents,
+        authorizedBy: verifiedAuthorizer.name
+      }
+    });
+
+    publishDomainEvent(rawDb, {
+      eventType: 'ORDER_REFUNDED',
+      entityId: orderId,
+      payload: {
+        orderId,
+        incidentId,
+        refundedUsdCents: totalOrderCents,
+        paymentStatus: newPaymentStatus
+      }
+    });
+
+    return {
+      success: true,
+      incidentId,
+      orderId,
+      resolution: input.resolution,
+      authorizedBy: verifiedAuthorizer,
+      refundedUsdCents: totalOrderCents,
+      message: `Orden reembolsada/anulada exitosamente. Asiento contable de reversión registrado en libro mayor.`
+    };
+  }
+
+  const err: any = new Error(`Resolución de incidente no soportada: '${input.resolution}'`);
+  err.statusCode = 400;
+  throw err;
+}

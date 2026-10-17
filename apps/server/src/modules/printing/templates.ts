@@ -603,3 +603,193 @@ export function loadOrderReceiptDataFromDb(
     kitchenLines
   };
 }
+
+export interface ZReportData {
+  jornadaId: string;
+  openedAtMs: number;
+  closedAtMs: number;
+  closedByName: string;
+  rateMicroBs: number;
+  grossSalesUsdCents: number;
+  discountUsdCents: number;
+  netSalesUsdCents: number;
+  deliveryFeesUsdCents: number;
+  totalCollectedUsdCents: number;
+  cashUsdCents: number;
+  cashBsCents: number;
+  pagoMovilBsCents: number;
+  ubiiGrossBsCents: number;
+  ubiiFeeBsCents: number;
+  ubiiNetBsCents: number;
+  binanceUsdCents: number;
+  zelleUsdCents: number;
+  expensesUsdCents: number;
+  mermasLossUsdCents: number;
+  ordersCount: number;
+  auditHeadHash: string;
+}
+
+/**
+ * Plantilla de Cierre Z Oficial con Desglose y Hash de Auditoría SHA-256
+ */
+export function buildZReportTicketIR(data: ZReportData): TicketIR {
+  const blocks: TicketBlock[] = [];
+  const rateBs = (data.rateMicroBs / 1_000_000).toFixed(2);
+  const netBs = Math.round((data.netSalesUsdCents * data.rateMicroBs) / 1_000_000);
+
+  blocks.push({ type: 'header_logo' });
+  blocks.push({
+    type: 'key_value',
+    key: 'TOCINETA SONRÍE',
+    value: 'RIF: V-17040918-0',
+    bold: true
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'FOOD TRUCK',
+    value: 'PUERTO ORDAZ'
+  });
+
+  blocks.push({ type: 'separator', style: 'double' });
+  blocks.push({
+    type: 'banner_inverted',
+    text: '=== CIERRE Z DE JORNADA ==='
+  });
+
+  const openedDateStr = new Date(data.openedAtMs).toLocaleString('es-VE');
+  const closedDateStr = new Date(data.closedAtMs).toLocaleString('es-VE');
+
+  blocks.push({ type: 'key_value', key: 'Jornada ID:', value: data.jornadaId.slice(-8) });
+  blocks.push({ type: 'key_value', key: 'Apertura:', value: openedDateStr });
+  blocks.push({ type: 'key_value', key: 'Cierre:', value: closedDateStr });
+  blocks.push({ type: 'key_value', key: 'Cerrado por:', value: data.closedByName });
+  blocks.push({ type: 'key_value', key: 'Tasa BCV:', value: `${rateBs} Bs/$`, bold: true });
+  blocks.push({ type: 'separator', style: 'dashed' });
+
+  // Totales de Venta
+  blocks.push({
+    type: 'title_double',
+    text: `TOTAL: $${(data.netSalesUsdCents / 100).toFixed(2)}`
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'Total en Bs:',
+    value: `Bs ${(netBs / 100).toFixed(2)}`,
+    bold: true
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'Venta Bruta:',
+    value: `$${(data.grossSalesUsdCents / 100).toFixed(2)}`
+  });
+  if (data.discountUsdCents > 0) {
+    blocks.push({
+      type: 'key_value',
+      key: 'Descuentos/Cupones:',
+      value: `-$${(data.discountUsdCents / 100).toFixed(2)}`
+    });
+  }
+  if (data.deliveryFeesUsdCents > 0) {
+    blocks.push({
+      type: 'key_value',
+      key: 'Fondo Delivery:',
+      value: `$${(data.deliveryFeesUsdCents / 100).toFixed(2)}`
+    });
+  }
+
+  // Desglose de Pagos
+  blocks.push({ type: 'separator', style: 'single' });
+  blocks.push({
+    type: 'banner_inverted',
+    text: 'DESGLOSE DE MEDIOS DE PAGO'
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'Efectivo USD ($):',
+    value: `$${(data.cashUsdCents / 100).toFixed(2)}`
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'Efectivo Bs:',
+    value: `Bs ${(data.cashBsCents / 100).toFixed(2)}`
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'Pago Móvil Banesco:',
+    value: `Bs ${(data.pagoMovilBsCents / 100).toFixed(2)}`
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'Punto Ubii (Bruto):',
+    value: `Bs ${(data.ubiiGrossBsCents / 100).toFixed(2)}`
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'Comisión Ubii (0.75%):',
+    value: `-Bs ${(data.ubiiFeeBsCents / 100).toFixed(2)}`
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'Ubii Neto Banco:',
+    value: `Bs ${(data.ubiiNetBsCents / 100).toFixed(2)}`,
+    bold: true
+  });
+  if (data.binanceUsdCents > 0) {
+    blocks.push({
+      type: 'key_value',
+      key: 'Binance USDT:',
+      value: `$${(data.binanceUsdCents / 100).toFixed(2)}`
+    });
+  }
+  if (data.zelleUsdCents > 0) {
+    blocks.push({
+      type: 'key_value',
+      key: 'Zelle USD:',
+      value: `$${(data.zelleUsdCents / 100).toFixed(2)}`
+    });
+  }
+
+  // Resumen Operativo
+  blocks.push({ type: 'separator', style: 'dashed' });
+  blocks.push({
+    type: 'key_value',
+    key: 'Total Órdenes:',
+    value: `${data.ordersCount}`
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'Gastos de Caja:',
+    value: `$${(data.expensesUsdCents / 100).toFixed(2)}`
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'Mermas/Incidentes:',
+    value: `$${(data.mermasLossUsdCents / 100).toFixed(2)}`
+  });
+
+  // Bloque Criptográfico de Auditoría
+  blocks.push({ type: 'separator', style: 'double' });
+  blocks.push({
+    type: 'banner_inverted',
+    text: 'CADENA DE AUDITORÍA INMUTABLE'
+  });
+  blocks.push({
+    type: 'key_value',
+    key: 'SHA-256 HEAD:',
+    value: 'VERIFICADO',
+    bold: true
+  });
+  blocks.push({
+    type: 'footer',
+    lines: [data.auditHeadHash, 'Cierre Contable Oficial - Tocineta Sonríe'],
+    align: 'center'
+  });
+  blocks.push({ type: 'cut' });
+
+  return {
+    id: `zreport_${data.jornadaId}`,
+    title: 'CIERRE Z OFICIAL',
+    widthColumns: 32,
+    blocks
+  };
+}

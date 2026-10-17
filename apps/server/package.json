@@ -18,8 +18,10 @@
     "@tocineta/shared": "workspace:*",
     "better-sqlite3": "^13.0.3",
     "drizzle-orm": "^0.39.3",
+    "exceljs": "^4.4.0",
     "fastify": "^5.2.1",
     "fastify-plugin": "^6.0.1",
+    "pdfkit": "^0.20.2",
     "pino": "^9.6.0",
     "pino-pretty": "^13.0.0",
     "zod": "^3.24.2"
@@ -27,6 +29,7 @@
   "devDependencies": {
     "@types/better-sqlite3": "^9.6.0",
     "@types/node": "^26.6.5",
+    "@types/pdfkit": "^0.17.6",
     "drizzle-kit": "^0.30.5",
     "tsx": "^4.23.15",
     "typescript": "^7.0.2",
