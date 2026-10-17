@@ -3,8 +3,8 @@ import { useAuth } from '../context/AuthContext.js';
 import { useEventStream } from '../hooks/useEventStream.js';
 
 interface AppLayoutProps {
-  currentTab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health';
-  onTabChange: (tab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health') => void;
+  currentTab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency';
+  onTabChange: (tab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency') => void;
   formattedRate?: string;
   children: React.ReactNode;
 }
@@ -193,6 +193,20 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <span>🩺</span>
             <span>Diagnóstico del Sistema</span>
           </button>
+
+          {(user?.role === 'cajera' || isAdminOrSupervisor) && (
+            <button
+              onClick={() => onTabChange('emergency')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                currentTab === 'emergency'
+                  ? 'bg-amber-500 text-tocineta-bg shadow-md'
+                  : 'text-amber-400/80 hover:text-amber-300 hover:bg-tocineta-bg border border-amber-500/30'
+              }`}
+            >
+              <span>📋</span>
+              <span>Modo Emergencia Papel</span>
+            </button>
+          )}
         </div>
       </header>
 

@@ -10,6 +10,9 @@ import { kdsRoutes } from './modules/kds/routes.js';
 import { closuresRoutes } from './modules/closures/routes.js';
 import { incidentsRoutes } from './modules/incidents/routes.js';
 import { reportsRoutes } from './modules/reports/routes.js';
+import { backupsRoutes } from './modules/backups/routes.js';
+import { emergencyRoutes } from './modules/emergency/routes.js';
+import { startSnapshotWorker } from './modules/backups/snapshot-service.js';
 import { PrintingWorker } from './modules/printing/worker.js';
 import { getDatabaseContext } from './db/connection.js';
 import { websocketPlugin } from './plugins/websocket.js';
@@ -53,12 +56,17 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   });
   server.decorate('printingWorker', worker);
 
+  let snapshotWorker: { stop: () => void } | null = null;
   if (process.env.NODE_ENV !== 'test') {
     worker.start(1500);
+    snapshotWorker = startSnapshotWorker(dbCtx.rawDb);
   }
 
   server.addHook('onClose', async () => {
     worker.stop();
+    if (snapshotWorker) {
+      snapshotWorker.stop();
+    }
   });
 
   // Registro de Plugins
@@ -77,6 +85,8 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   await server.register(closuresRoutes);
   await server.register(incidentsRoutes);
   await server.register(reportsRoutes);
+  await server.register(backupsRoutes, { rawDb: dbCtx.rawDb });
+  await server.register(emergencyRoutes, { rawDb: dbCtx.rawDb });
 
   if (!options.disableStatic) {
     await server.register(staticPlugin);

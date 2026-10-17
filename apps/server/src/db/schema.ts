@@ -326,6 +326,8 @@ export const orders = sqliteTable('orders', {
   authorizedWithoutPaymentBy: text('authorized_without_payment_by').references(() => users.id),
   tableServiceMode: text('table_service_mode').notNull().default('ticket_independiente'),
   kitchenPassedAtMs: integer('kitchen_passed_at_ms'),
+  emergencySlipNumber: text('emergency_slip_number').unique(),
+  isDeferredPaper: integer('is_deferred_paper').notNull().default(0),
   createdAtMs: integer('created_at_ms').notNull(),
   updatedAtMs: integer('updated_at_ms').notNull(),
   closedAtMs: integer('closed_at_ms')
@@ -552,4 +554,20 @@ export type StockCount = typeof stockCounts.$inferSelect;
 export type OperatingExpense = typeof operatingExpenses.$inferSelect;
 export type EventLog = typeof eventsLog.$inferSelect;
 
+export const BackupTypeValues = ['SNAPSHOT_HOT', 'ENCRYPTED_USB_DAILY', 'MANUAL_EXPORT'] as const;
+export type BackupType = (typeof BackupTypeValues)[number];
 
+export const backupsLog = sqliteTable('backups_log', {
+  id: text('id').primaryKey(),
+  backupType: text('backup_type', { enum: BackupTypeValues }).notNull(),
+  destinationPath: text('destination_path').notNull(),
+  fileSizeBytes: integer('file_size_bytes').notNull(),
+  sha256Hash: text('sha256_hash').notNull(),
+  jornadaId: text('jornada_id').references(() => jornadas.id),
+  auditHeadHash: text('audit_head_hash'),
+  recipientsCount: integer('recipients_count').default(0),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export type BackupLog = typeof backupsLog.$inferSelect;
+export type InsertBackupLog = typeof backupsLog.$inferInsert;

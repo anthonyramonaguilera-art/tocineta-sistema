@@ -8,6 +8,7 @@ import { CashierView } from './features/cashier/CashierView.js';
 import { KdsView } from './features/kds/KdsView.js';
 import { MenuAdminView } from './components/MenuAdminView.js';
 import { SystemHealthDashboard } from './components/SystemHealthDashboard.js';
+import { DeferredPaperView } from './features/emergency/DeferredPaperView.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,7 +21,7 @@ const queryClient = new QueryClient({
 
 const MainNavigator: React.FC = () => {
   const { user } = useAuth();
-  const [currentTab, setCurrentTab] = useState<'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health'>(() => {
+  const [currentTab, setCurrentTab] = useState<'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency'>(() => {
     if (user?.role === 'cocinero') return 'kds';
     return user?.role === 'cajera' ? 'cashier' : 'pos';
   });
@@ -49,6 +50,7 @@ const MainNavigator: React.FC = () => {
       {currentTab === 'kds' && <KdsView />}
       {currentTab === 'menu-admin' && <MenuAdminView />}
       {currentTab === 'health' && <SystemHealthDashboard />}
+      {currentTab === 'emergency' && <DeferredPaperView />}
     </AppLayout>
   );
 };

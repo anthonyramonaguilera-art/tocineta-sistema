@@ -3,6 +3,7 @@ import { generateUuidV7, renderTicketToEscPos } from '@tocineta/shared';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
 import { buildZReportTicketIR, type ZReportData } from '../printing/templates.js';
+import { createEncryptedBackup } from '../backups/backup-service.js';
 
 export interface BlindCountInput {
   cashUsdCents: number;
@@ -441,6 +442,15 @@ export function closeJornadaZ(
       closedByName: user.name,
       auditHeadHash
     }
+  });
+
+  // 8. Respaldo Cifrado Diario a USB (age) al cerrar jornada
+  createEncryptedBackup(rawDb, {
+    jornadaId,
+    actorUserId: user.id,
+    backupType: 'ENCRYPTED_USB_DAILY'
+  }).catch((err) => {
+    console.error('[Cierre Z] Error al generar respaldo cifrado automático a USB:', err);
   });
 
   return {
