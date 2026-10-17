@@ -215,6 +215,7 @@ export const products = sqliteTable('products', {
   estimatedCostUsdCents: integer('estimated_cost_usd_cents').notNull().default(0),
   station: text('station', { enum: StationValues }).notNull(),
   isActive: integer('is_active').notNull().default(1),
+  isAvailable: integer('is_available').notNull().default(1),
   isCombo: integer('is_combo').notNull().default(0),
   allowsFlavors: integer('allows_flavors').notNull().default(0),
   imageUrl: text('image_url'),
@@ -227,6 +228,7 @@ export const productFlavorOptions = sqliteTable('product_flavor_options', {
   productId: text('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
   flavorName: text('flavor_name').notNull(),
   isActive: integer('is_active').notNull().default(1),
+  isAvailable: integer('is_available').notNull().default(1),
   displayOrder: integer('display_order').notNull().default(0)
 });
 
@@ -477,11 +479,10 @@ export const operatingExpenses = sqliteTable('operating_expenses', {
 });
 
 export const eventsLog = sqliteTable('events_log', {
-  id: integer('id').primaryKey({ autoIncrement: true }),
-  level: text('level').notNull(),
-  source: text('source').notNull(),
-  message: text('message').notNull(),
-  dataJson: text('data_json'),
+  seq: integer('seq').primaryKey({ autoIncrement: true }),
+  eventType: text('event_type').notNull(),
+  entityId: text('entity_id').notNull(),
+  payloadJson: text('payload_json').notNull(),
   createdAtMs: integer('created_at_ms').notNull()
 });
 

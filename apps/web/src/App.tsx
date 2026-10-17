@@ -1,42 +1,57 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
-import { Header } from './components/Header.js';
+import { AuthProvider, useAuth } from './context/AuthContext.js';
+import { AuthScreen } from './components/AuthScreen.js';
+import { AppLayout } from './components/AppLayout.js';
+import { PosView } from './components/PosView.js';
+import { MenuAdminView } from './components/MenuAdminView.js';
 import { SystemHealthDashboard } from './components/SystemHealthDashboard.js';
-import { fetchSystemHealth } from './api/client.js';
 
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
-      staleTime: 2000
+      staleTime: 5000
     }
   }
 });
 
-const AppContent: React.FC = () => {
-  const { data, isSuccess } = useQuery({
-    queryKey: ['systemHealthHeader'],
-    queryFn: fetchSystemHealth,
-    refetchInterval: 3000
+const MainNavigator: React.FC = () => {
+  const { user } = useAuth();
+  const [currentTab, setCurrentTab] = useState<'pos' | 'menu-admin' | 'health'>('pos');
+
+  const { data: menuData } = useQuery<{ formattedRate?: string }>({
+    queryKey: ['posMenu'],
+    queryFn: async () => {
+      const res = await fetch('/api/menu/pos');
+      return res.json();
+    },
+    staleTime: 10000
   });
 
+  if (!user) {
+    return <AuthScreen />;
+  }
+
   return (
-    <div className="min-h-screen bg-tocineta-bg text-white flex flex-col font-sans">
-      <Header
-        localTimeCaracas={data?.systemTime.localTimeCaracas}
-        isOnline={isSuccess}
-      />
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
-        <SystemHealthDashboard />
-      </main>
-    </div>
+    <AppLayout
+      currentTab={currentTab}
+      onTabChange={setCurrentTab}
+      formattedRate={menuData?.formattedRate}
+    >
+      {currentTab === 'pos' && <PosView />}
+      {currentTab === 'menu-admin' && <MenuAdminView />}
+      {currentTab === 'health' && <SystemHealthDashboard />}
+    </AppLayout>
   );
 };
 
 export const App: React.FC = () => {
   return (
     <QueryClientProvider client={queryClient}>
-      <AppContent />
+      <AuthProvider>
+        <MainNavigator />
+      </AuthProvider>
     </QueryClientProvider>
   );
 };
