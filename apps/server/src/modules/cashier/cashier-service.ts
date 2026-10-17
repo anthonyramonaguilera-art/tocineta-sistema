@@ -2,7 +2,6 @@ import type Database from 'better-sqlite3';
 import {
   generateUuidV7,
   calculateSettlement,
-  usdToBsCents,
   parseRateToMicroBs,
   type SettlementResult
 } from '@tocineta/shared';
