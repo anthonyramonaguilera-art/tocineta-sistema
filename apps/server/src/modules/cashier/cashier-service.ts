@@ -633,16 +633,27 @@ export function processOrderPayment(
     }
 
     // 4. Actualizar Estado de la Orden a 'pagado' y 'en_preparacion'
+    const hasHotDogs = rawDb.prepare("SELECT 1 FROM order_lines WHERE order_id = ? AND station = 'hot_dogs' AND line_role != 'COMBO_PARENT' LIMIT 1").get(orderId) !== undefined;
+    const hasBurgers = rawDb.prepare("SELECT 1 FROM order_lines WHERE order_id = ? AND station = 'hamburguesas' AND line_role != 'COMBO_PARENT' LIMIT 1").get(orderId) !== undefined;
+
     rawDb.prepare(`
       UPDATE orders
       SET payment_status = 'pagado',
           fulfillment_status = 'en_preparacion',
           cash_session_id = ?,
-          station_status_hot_dogs = CASE WHEN station_status_hot_dogs = 'na' THEN 'na' ELSE 'en_preparacion' END,
-          station_status_hamburguesas = CASE WHEN station_status_hamburguesas = 'na' THEN 'na' ELSE 'en_preparacion' END,
+          kitchen_passed_at_ms = COALESCE(kitchen_passed_at_ms, ?),
+          station_status_hot_dogs = ?,
+          station_status_hamburguesas = ?,
           updated_at_ms = ?
       WHERE id = ?
-    `).run(session.id, now, orderId);
+    `).run(
+      session.id,
+      now,
+      hasHotDogs ? 'en_preparacion' : 'na',
+      hasBurgers ? 'en_preparacion' : 'na',
+      now,
+      orderId
+    );
 
     // 5. Encolar Trabajos de Impresión Asíncrona (Caja USB y Cocina TCP con Ticket IR)
     enqueueOrderPrintJobs(rawDb, orderId);

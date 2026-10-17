@@ -304,6 +304,12 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
     const deliveryFeeUsdCents = input.deliveryFeeUsdCents || 0;
     const totalToCollectUsdCents = netFoodSalesUsdCents + deliveryFeeUsdCents;
 
+    // Detectar presencia de estaciones de cocina para inicializar estados
+    const hasHotDogs = processedLines.some(l => l.station === 'hot_dogs' && l.lineRole !== 'COMBO_PARENT');
+    const hasBurgers = processedLines.some(l => l.station === 'hamburguesas' && l.lineRole !== 'COMBO_PARENT');
+    const stationStatusHotDogs = hasHotDogs ? 'pendiente' : 'na';
+    const stationStatusBurgers = hasBurgers ? 'pendiente' : 'na';
+
     // 3. Insertar orden en tabla orders
     rawDb.prepare(`
       INSERT INTO orders (
@@ -311,12 +317,14 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
         table_number, customer_name, customer_phone, delivery_address, delivery_fee_usd_cents,
         gross_food_subtotal_usd_cents, discount_usd_cents, coupon_id, net_food_sales_usd_cents,
         total_to_collect_usd_cents, rate_micro_bs, payment_status, fulfillment_status,
+        station_status_hot_dogs, station_status_hamburguesas,
         notes, version, table_service_mode, created_at_ms, updated_at_ms
       ) VALUES (
         ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?,
         ?, ?, ?, ?,
         ?, ?, 'sin_pago', 'enviado',
+        ?, ?,
         ?, 1, ?, ?, ?
       )
     `).run(
@@ -336,6 +344,8 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
       netFoodSalesUsdCents,
       totalToCollectUsdCents,
       rateMicroBs,
+      stationStatusHotDogs,
+      stationStatusBurgers,
       input.notes || null,
       tableServiceMode,
       now,
@@ -633,15 +643,29 @@ export function authorizeWithoutPayment(
   const newVersion = current.version + 1;
 
   // 2. Actualizar estado de orden
+  const hasHotDogs = rawDb.prepare("SELECT 1 FROM order_lines WHERE order_id = ? AND station = 'hot_dogs' AND line_role != 'COMBO_PARENT' LIMIT 1").get(orderId) !== undefined;
+  const hasBurgers = rawDb.prepare("SELECT 1 FROM order_lines WHERE order_id = ? AND station = 'hamburguesas' AND line_role != 'COMBO_PARENT' LIMIT 1").get(orderId) !== undefined;
+
   rawDb.prepare(`
     UPDATE orders
     SET payment_status = 'autorizado_sin_pago',
         fulfillment_status = 'en_preparacion',
+        kitchen_passed_at_ms = COALESCE(kitchen_passed_at_ms, ?),
+        station_status_hot_dogs = ?,
+        station_status_hamburguesas = ?,
         authorized_without_payment_by = ?,
         version = ?,
         updated_at_ms = ?
     WHERE id = ?
-  `).run(authorizer.id, newVersion, now, orderId);
+  `).run(
+    now,
+    hasHotDogs ? 'en_preparacion' : 'na',
+    hasBurgers ? 'en_preparacion' : 'na',
+    authorizer.id,
+    newVersion,
+    now,
+    orderId
+  );
 
   // 3. Encolar impresión de comanda de cocina y comprobante
   enqueueOrderPrintJobs(rawDb, orderId);

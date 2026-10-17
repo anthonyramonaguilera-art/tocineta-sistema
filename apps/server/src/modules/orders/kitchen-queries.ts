@@ -8,12 +8,16 @@ export interface KitchenBuildableLine {
   displayName: string;
   quantity: number;
   station: Station;
+  status: 'pendiente' | 'preparando' | 'listo';
+  preparedAtMs?: number | null;
+  readyAtMs?: number | null;
   flavorChoice?: string | null;
   customInstructions?: string | null;
   modifiers: string[];
   barraLibreModifiers: string[];
   ingredientExclusions: string[];
   ingredientExtras: string[];
+  criticalModifiers: string[];
 }
 
 export interface KitchenQueryOptions {
@@ -55,7 +59,10 @@ export function getKitchenBuildableLines(
       ol.quantity,
       ol.station,
       ol.flavor_choice,
-      ol.custom_instructions
+      ol.custom_instructions,
+      COALESCE(ol.status, 'pendiente') as status,
+      ol.prepared_at_ms,
+      ol.ready_at_ms
     FROM order_lines ol
     JOIN products p ON ol.product_id = p.id
     WHERE ol.order_id = ? 
@@ -77,6 +84,9 @@ export function getKitchenBuildableLines(
     station: Station;
     flavor_choice?: string | null;
     custom_instructions?: string | null;
+    status: 'pendiente' | 'preparando' | 'listo';
+    prepared_at_ms?: number | null;
+    ready_at_ms?: number | null;
   }>;
 
   if (lineRows.length === 0) {
@@ -152,6 +162,23 @@ export function getKitchenBuildableLines(
       allFormattedModifiers.push(`Nota: ${line.custom_instructions}`);
     }
 
+    const criticalModifiers: string[] = [];
+    for (const exc of exclusions) {
+      criticalModifiers.push(exc.toUpperCase());
+    }
+    if (line.custom_instructions) {
+      const upperInstr = line.custom_instructions.toUpperCase();
+      if (
+        upperInstr.includes('SIN ') ||
+        upperInstr.includes('POCA') ||
+        upperInstr.includes('LECHUGA') ||
+        upperInstr.includes('ALERG') ||
+        upperInstr.includes('PAN')
+      ) {
+        criticalModifiers.push(line.custom_instructions);
+      }
+    }
+
     const displayName = `${line.quantity}x ${cleanProductName}`;
 
     return {
@@ -161,12 +188,16 @@ export function getKitchenBuildableLines(
       displayName,
       quantity: line.quantity,
       station: line.station,
+      status: line.status || 'pendiente',
+      preparedAtMs: line.prepared_at_ms || null,
+      readyAtMs: line.ready_at_ms || null,
       flavorChoice: line.flavor_choice || null,
       customInstructions: line.custom_instructions || null,
       modifiers: allFormattedModifiers,
       barraLibreModifiers: barraLibreList,
       ingredientExclusions: exclusions,
-      ingredientExtras: extras
+      ingredientExtras: extras,
+      criticalModifiers
     };
   });
 }

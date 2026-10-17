@@ -6,6 +6,7 @@ import { menuRoutes } from './modules/menu/routes.js';
 import { orderRoutes } from './modules/orders/routes.js';
 import { cashierRoutes } from './modules/cashier/routes.js';
 import { printingRoutes } from './modules/printing/routes.js';
+import { kdsRoutes } from './modules/kds/routes.js';
 import { PrintingWorker } from './modules/printing/worker.js';
 import { getDatabaseContext } from './db/connection.js';
 import { websocketPlugin } from './plugins/websocket.js';
@@ -69,6 +70,7 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   await server.register(orderRoutes);
   await server.register(cashierRoutes);
   await server.register(printingRoutes);
+  await server.register(kdsRoutes);
 
   if (!options.disableStatic) {
     await server.register(staticPlugin);

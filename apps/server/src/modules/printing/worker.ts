@@ -589,6 +589,24 @@ export function createRefirePrintJob(
     ) VALUES (?, 'print_cocina', ?, 'REPOSICION_COCINA', ?, ?, 'cocina', 'en_cola', 0, ?)
   `).run(newJobId, orderId, refireBytes, JSON.stringify(refireIR), now);
 
+  // Reactivar orden y líneas en KDS
+  rawDb.prepare(`
+    UPDATE orders
+    SET fulfillment_status = 'en_preparacion',
+        station_status_hot_dogs = CASE WHEN station_status_hot_dogs = 'na' THEN 'na' ELSE 'en_preparacion' END,
+        station_status_hamburguesas = CASE WHEN station_status_hamburguesas = 'na' THEN 'na' ELSE 'en_preparacion' END,
+        updated_at_ms = ?
+    WHERE id = ?
+  `).run(now, orderId);
+
+  rawDb.prepare(`
+    UPDATE order_lines
+    SET status = 'pendiente',
+        prepared_at_ms = NULL,
+        ready_at_ms = NULL
+    WHERE order_id = ? AND line_role IN ('STANDARD', 'COMBO_CHILD', 'COURTESY_ITEM') AND station != 'caja_bebidas'
+  `).run(orderId);
+
   appendAuditEvent(rawDb, {
     actorUserId: auth.user.id,
     action: 'KITCHEN_REFIRE_CREATED',
@@ -597,6 +615,17 @@ export function createRefirePrintJob(
     payload: {
       newJobId,
       reason
+    }
+  });
+
+  publishDomainEvent(rawDb, {
+    eventType: 'KDS_ORDER_REFIRE',
+    entityId: orderId,
+    payload: {
+      orderId,
+      orderNumber: order.orderNumber,
+      reason,
+      isRefire: true
     }
   });
 

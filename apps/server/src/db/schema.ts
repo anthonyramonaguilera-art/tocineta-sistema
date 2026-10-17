@@ -315,10 +315,14 @@ export const orders = sqliteTable('orders', {
   version: integer('version').notNull().default(1),
   authorizedWithoutPaymentBy: text('authorized_without_payment_by').references(() => users.id),
   tableServiceMode: text('table_service_mode').notNull().default('ticket_independiente'),
+  kitchenPassedAtMs: integer('kitchen_passed_at_ms'),
   createdAtMs: integer('created_at_ms').notNull(),
   updatedAtMs: integer('updated_at_ms').notNull(),
   closedAtMs: integer('closed_at_ms')
 });
+
+export const OrderLineStatusValues = ['pendiente', 'preparando', 'listo'] as const;
+export type OrderLineStatus = (typeof OrderLineStatusValues)[number];
 
 export const orderLines = sqliteTable('order_lines', {
   id: text('id').primaryKey(),
@@ -333,6 +337,9 @@ export const orderLines = sqliteTable('order_lines', {
   station: text('station', { enum: StationValues }).notNull(),
   flavorChoice: text('flavor_choice'),
   customInstructions: text('custom_instructions'),
+  status: text('status', { enum: OrderLineStatusValues }).notNull().default('pendiente'),
+  preparedAtMs: integer('prepared_at_ms'),
+  readyAtMs: integer('ready_at_ms'),
   snapshotJson: text('snapshot_json'),
   createdAtMs: integer('created_at_ms').notNull()
 });
