@@ -1,8 +1,10 @@
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
 import { healthRoutes } from './routes/health.js';
 import { systemHealthRoutes } from './routes/system-health.js';
+import { authRoutes } from './routes/auth.js';
 import { websocketPlugin } from './plugins/websocket.js';
 import { staticPlugin } from './plugins/static.js';
+import { idempotencyPlugin } from './modules/idempotency/idempotency-plugin.js';
 
 export interface BuildServerOptions {
   logger?: FastifyServerOptions['logger'];
@@ -29,11 +31,13 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   });
 
   // Registro de Plugins
+  await server.register(idempotencyPlugin);
   await server.register(websocketPlugin);
 
   // Registro de Rutas
   await server.register(healthRoutes);
   await server.register(systemHealthRoutes);
+  await server.register(authRoutes);
 
   if (!options.disableStatic) {
     await server.register(staticPlugin);

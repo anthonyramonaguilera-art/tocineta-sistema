@@ -42,7 +42,12 @@ export const SystemHealthResponseSchema = z.object({
       foreignKeys: z.number(),
       busyTimeoutMs: z.number()
     }),
-    lastSnapshot: SnapshotInfoSchema.nullable()
+    lastSnapshot: SnapshotInfoSchema.nullable(),
+    auditChain: z.object({
+      valid: z.boolean(),
+      count: z.number(),
+      headHash: z.string().nullable()
+    }).optional()
   }),
   system: z.object({
     platform: z.string(),

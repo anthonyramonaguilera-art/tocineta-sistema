@@ -8,6 +8,7 @@ import {
   type SnapshotInfo
 } from '@tocineta/shared';
 import { getDatabaseContext } from '../db/connection.js';
+import { verifyAuditChain } from '../modules/audit/audit-service.js';
 
 function formatGigabytes(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
@@ -110,6 +111,18 @@ export const systemHealthRoutes: FastifyPluginAsync = async (fastify) => {
 
     const mem = process.memoryUsage();
 
+    let auditChain: { valid: boolean; count: number; headHash: string | null } | undefined;
+    try {
+      const chainResult = verifyAuditChain(dbCtx.rawDb);
+      auditChain = {
+        valid: chainResult.valid,
+        count: chainResult.count,
+        headHash: chainResult.headHash
+      };
+    } catch {
+      // Si la tabla audit_events aún no existe (ej. tests tempranos)
+    }
+
     const response: SystemHealthResponse = {
       status: 'ok',
       version: '0.1.0',
@@ -131,7 +144,8 @@ export const systemHealthRoutes: FastifyPluginAsync = async (fastify) => {
           foreignKeys: pragmas.foreignKeys,
           busyTimeoutMs: pragmas.busyTimeoutMs
         },
-        lastSnapshot
+        lastSnapshot,
+        auditChain
       },
       system: {
         platform: process.platform,

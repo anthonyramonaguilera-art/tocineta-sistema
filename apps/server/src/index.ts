@@ -2,10 +2,11 @@ import { env } from './config/env.js';
 import { initSqlite } from './db/connection.js';
 import { runMigrations } from './db/migrate.js';
 import { buildServer } from './server.js';
+import { seedInitialUsers } from './modules/auth/seed-users.js';
 
 async function bootstrap() {
   console.log(`\n=============================================================`);
-  console.log(`🍔 SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE - HITO M0`);
+  console.log(`🍔 SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE - HITO M1`);
   console.log(`=============================================================`);
   console.log(`⚙️ Entorno: ${env.NODE_ENV} | Host: ${env.HOST} | Port: ${env.PORT}`);
   console.log(`📁 Base de Datos SQLite: ${env.DB_PATH}`);
@@ -29,6 +30,12 @@ async function bootstrap() {
     console.log(`✅ ${migResult.appliedCount} migración(es) aplicada(s) exitosamente.`);
   } else {
     console.log(`✨ Base de datos al día. Cero migraciones pendientes.`);
+  }
+
+  // 3. Semilla de usuarios iniciales (idempotente)
+  const seededCount = seedInitialUsers(dbContext.rawDb);
+  if (seededCount > 0) {
+    console.log(`👤 ${seededCount} usuario(s) inicial(es) creado(s) con éxito.`);
   }
 
   // 3. Inicialización del servidor Fastify (Proceso Único)

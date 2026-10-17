@@ -23,3 +23,42 @@ export function formatCaracasDateTime(date: Date = new Date()): string {
 export function getUtcTimestampMs(): number {
   return Date.now();
 }
+
+export type ClockIntegrityStatus = 'OK' | 'CLOCK_WENT_BACKWARDS' | 'CLOCK_JUMP_CONFIRM_REQUIRED';
+
+export interface ClockIntegrityResult {
+  status: ClockIntegrityStatus;
+  deltaMs?: number;
+}
+
+/**
+ * Guardia de reloj oficial para detectar retrocesos o saltos temporales sospechosos
+ */
+export function checkClockIntegrity(
+  nowUtcMs: number,
+  lastRecordedUtcMs: number | null
+): ClockIntegrityResult {
+  if (lastRecordedUtcMs === null) {
+    return { status: 'OK' };
+  }
+
+  const deltaMs = nowUtcMs - lastRecordedUtcMs;
+
+  // Si el reloj retrocedió más de 1 minuto (60.000 ms)
+  if (nowUtcMs < lastRecordedUtcMs - 60_000) {
+    return {
+      status: 'CLOCK_WENT_BACKWARDS',
+      deltaMs
+    };
+  }
+
+  // Si hubo un salto mayor a 36 horas (36 * 3600 * 1000 ms = 129.600.000 ms)
+  if (deltaMs > 36 * 3600 * 1000) {
+    return {
+      status: 'CLOCK_JUMP_CONFIRM_REQUIRED',
+      deltaMs
+    };
+  }
+
+  return { status: 'OK' };
+}
