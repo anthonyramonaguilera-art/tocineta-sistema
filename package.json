@@ -1,0 +1,30 @@
+{
+  "name": "SISTEMA",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "probe": "tsx tools/g0-probe/probe.ts",
+    "probe:list": "tsx tools/g0-probe/probe.ts --list",
+    "probe:usb": "tsx tools/g0-probe/probe.ts --usb",
+    "probe:tcp": "tsx tools/g0-probe/probe.ts --tcp",
+    "probe:server": "tsx tools/g0-probe/probe.ts --port 3000"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devEngines": {
+    "packageManager": {
+      "name": "pnpm",
+      "version": "12.14.0",
+      "onFail": "download"
+    }
+  },
+  "packageManager": "pnpm@12.14.0",
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2"
+  }
+}
