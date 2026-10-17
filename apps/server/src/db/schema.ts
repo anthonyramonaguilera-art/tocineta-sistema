@@ -131,7 +131,7 @@ export type FulfillmentType = (typeof FulfillmentTypeValues)[number];
 export const PaymentStatusValues = ['sin_pago', 'parcial', 'pagado', 'autorizado_sin_pago'] as const;
 export type PaymentStatus = (typeof PaymentStatusValues)[number];
 
-export const FulfillmentStatusValues = ['pendiente', 'en_cocina', 'listo', 'entregado', 'cerrado', 'anulado'] as const;
+export const FulfillmentStatusValues = ['pendiente', 'enviado', 'en_cocina', 'en_preparacion', 'listo', 'entregado', 'cerrado', 'anulado'] as const;
 export type FulfillmentStatus = (typeof FulfillmentStatusValues)[number];
 
 export const AccountBucketValues = [
@@ -155,6 +155,7 @@ export const businessSettings = sqliteTable('business_settings', {
   address: text('address').notNull().default('Detrás de Torre Movistar, Puerto Ordaz'),
   deliveryAccountingMode: text('delivery_accounting_mode').notNull().default('THIRD_PARTY_PASS_THROUGH'),
   deliveryQuickTiersJson: text('delivery_quick_tiers_json').notNull().default('[200, 300, 400, 500]'),
+  tableServiceMode: text('table_service_mode').notNull().default('ticket_independiente'),
   banescoPagoMovilPhone: text('banesco_pago_movil_phone').notNull().default('04249728209'),
   banescoPagoMovilId: text('banesco_pago_movil_id').notNull().default('17040918'),
   posFeeBps: integer('pos_fee_bps').notNull().default(75),
@@ -309,6 +310,9 @@ export const orders = sqliteTable('orders', {
   stationStatusHotDogs: text('station_status_hot_dogs').notNull().default('na'),
   stationStatusHamburguesas: text('station_status_hamburguesas').notNull().default('na'),
   notes: text('notes'),
+  version: integer('version').notNull().default(1),
+  authorizedWithoutPaymentBy: text('authorized_without_payment_by').references(() => users.id),
+  tableServiceMode: text('table_service_mode').notNull().default('ticket_independiente'),
   createdAtMs: integer('created_at_ms').notNull(),
   updatedAtMs: integer('updated_at_ms').notNull(),
   closedAtMs: integer('closed_at_ms')
@@ -327,6 +331,7 @@ export const orderLines = sqliteTable('order_lines', {
   station: text('station', { enum: StationValues }).notNull(),
   flavorChoice: text('flavor_choice'),
   customInstructions: text('custom_instructions'),
+  snapshotJson: text('snapshot_json'),
   createdAtMs: integer('created_at_ms').notNull()
 });
 

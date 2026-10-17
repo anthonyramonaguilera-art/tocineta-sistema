@@ -3,6 +3,7 @@ import { healthRoutes } from './routes/health.js';
 import { systemHealthRoutes } from './routes/system-health.js';
 import { authRoutes } from './routes/auth.js';
 import { menuRoutes } from './modules/menu/routes.js';
+import { orderRoutes } from './modules/orders/routes.js';
 import { websocketPlugin } from './plugins/websocket.js';
 import { staticPlugin } from './plugins/static.js';
 import { idempotencyPlugin } from './modules/idempotency/idempotency-plugin.js';
@@ -40,6 +41,7 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   await server.register(systemHealthRoutes);
   await server.register(authRoutes);
   await server.register(menuRoutes);
+  await server.register(orderRoutes);
 
   if (!options.disableStatic) {
     await server.register(staticPlugin);

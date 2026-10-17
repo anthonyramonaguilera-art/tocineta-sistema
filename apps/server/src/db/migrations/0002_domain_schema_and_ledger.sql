@@ -190,7 +190,7 @@ CREATE TABLE IF NOT EXISTS orders (
   total_to_collect_usd_cents INTEGER NOT NULL DEFAULT 0,
   rate_micro_bs INTEGER NOT NULL,
   payment_status TEXT NOT NULL CHECK(payment_status IN ('sin_pago', 'parcial', 'pagado', 'autorizado_sin_pago')) DEFAULT 'sin_pago',
-  fulfillment_status TEXT NOT NULL CHECK(fulfillment_status IN ('pendiente', 'en_cocina', 'listo', 'entregado', 'cerrado', 'anulado')) DEFAULT 'pendiente',
+  fulfillment_status TEXT NOT NULL CHECK(fulfillment_status IN ('pendiente', 'enviado', 'en_cocina', 'en_preparacion', 'listo', 'entregado', 'cerrado', 'anulado')) DEFAULT 'pendiente',
   station_status_hot_dogs TEXT NOT NULL CHECK(station_status_hot_dogs IN ('na', 'pendiente', 'en_preparacion', 'listo')) DEFAULT 'na',
   station_status_hamburguesas TEXT NOT NULL CHECK(station_status_hamburguesas IN ('na', 'pendiente', 'en_preparacion', 'listo')) DEFAULT 'na',
   notes TEXT,
