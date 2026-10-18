@@ -1,8 +1,8 @@
 # Informe Ejecutivo de Avances, Hallazgos Técnicos y Recomendaciones
 ## Sistema Operativo Local "Tocineta Sonríe" — Varons Media
 **Fecha de corte:** Octubre 2026  
-**Estado general:** Release 1 (Hitos G0 y M0 al M10) y Release 2 (Hito M11) completados y verificados al 100%  
-**Batería de pruebas:** 157 pruebas automatizadas superadas (20 en `@tocineta/shared`, 137 en `@tocineta/server`)  
+**Estado general:** Release 1 (Hitos G0 y M0 al M10) y Release 2 (Hitos M11 y M12) completados y verificados al 100%  
+**Batería de pruebas:** 163 pruebas automatizadas superadas (20 en `@tocineta/shared`, 143 en `@tocineta/server`)  
 
 ---
 
@@ -45,6 +45,7 @@ graph TD
 | **M10.2** | Implementación de las 5 Mejoras Aprobadas (`SUG-01` a `SUG-05`) | **100%** | Code-splitting React.lazy (~116 kB bundle inicial), autodetección USB con espacio y marcador, Dry-Run en solo lectura, archivado seguro de eventos. |
 | **M10.3** | Certificación de Release 1 (22 Pruebas de Aceptación) y Script de Prueba Física Real | **100%** | Suite de aceptación de punta a punta aprobada y validación con impresoras térmicas reales DP58U-03 y MP583. |
 | **M11** | **Release 2:** Módulo Operativo de Delivery (Zonas, Motorizados, Efectivo en Mano y Liquidación Nocturna) y Cupones Duales (`DISCOUNT` y `COURTESY_ITEM`) | **100%** | CRUD motorizados, tarifas rápidas $2/$3/$4/$5, enmascaramiento de privacidad, control de efectivo en mano, liquidación nocturna en `MOTORIZADO_FUND` sin alterar `FOOD_SALES`, cupones duales con comanda `[OBSEQUIO CUPÓN - $0.00]` y costo interno de 35¢ en `MARKETING_COURTESY`. |
+| **M12** | **Release 2:** Modo Soporte Auditado (Quick Assist Windows 11) y Motor de Actualizaciones Firmadas `Ed25519` con Rollback Automático | **100%** | Activación exclusiva con PIN de Admin (Sra. Olinelcys), sesión auditada de 2h con banner inconfundible, verificación de firmas Ed25519 y SHA-256, protección de horario de ventas (16:00 a 02:00 Caracas) y reversión automática total (`AUTOMATIC_ROLLBACK_COMPLETED`) ante fallos de migración SQL (Prueba de Aceptación #23). |
 
 ---
 

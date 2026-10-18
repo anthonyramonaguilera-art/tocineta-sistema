@@ -583,3 +583,29 @@ export const backupsLog = sqliteTable('backups_log', {
 
 export type BackupLog = typeof backupsLog.$inferSelect;
 export type InsertBackupLog = typeof backupsLog.$inferInsert;
+
+export const supportSessions = sqliteTable('support_sessions', {
+  id: text('id').primaryKey(),
+  startedByUserId: text('started_by_user_id').notNull().references(() => users.id),
+  startedAtMs: integer('started_at_ms').notNull(),
+  expiresAtMs: integer('expires_at_ms').notNull(),
+  endedAtMs: integer('ended_at_ms'),
+  status: text('status', { enum: ['ACTIVE', 'ENDED', 'EXPIRED'] }).notNull(),
+  quickAssistLaunched: integer('quick_assist_launched').notNull().default(0),
+  notes: text('notes')
+});
+
+export const systemUpdates = sqliteTable('system_updates', {
+  id: text('id').primaryKey(),
+  version: text('version').notNull(),
+  previousVersion: text('previous_version'),
+  description: text('description'),
+  manifestSha256: text('manifest_sha256').notNull(),
+  appliedByUserId: text('applied_by_user_id').references(() => users.id),
+  appliedAtMs: integer('applied_at_ms').notNull(),
+  status: text('status', { enum: ['APPLIED', 'FAILED_ROLLBACK'] }).notNull(),
+  errorDetails: text('error_details')
+});
+
+export type SupportSession = typeof supportSessions.$inferSelect;
+export type SystemUpdate = typeof systemUpdates.$inferSelect;

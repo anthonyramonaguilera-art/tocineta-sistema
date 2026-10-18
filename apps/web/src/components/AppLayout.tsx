@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext.js';
 import { useEventStream } from '../hooks/useEventStream.js';
+import { SupportBanner, StartSupportModal } from './SupportBanner.js';
 
 interface AppLayoutProps {
   currentTab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency';
@@ -28,6 +29,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [confirmPinInput, setConfirmPinInput] = useState('');
   const [changePinError, setChangePinError] = useState<string | null>(null);
   const [isChangingPin, setIsChangingPin] = useState(false);
+  const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
 
   const handleUnlock = async () => {
     if (!unlockPin) return;
@@ -71,6 +73,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-tocineta-bg text-white flex flex-col font-sans select-none">
+      {/* Banner inconfundible de Modo Soporte Varons Media */}
+      <SupportBanner />
+
       {/* Barra Superior de Estado y Navegación */}
       <header className="bg-tocineta-card border-b border-tocineta-border sticky top-0 z-40 px-4 py-2.5 sm:px-6 shadow-md">
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
@@ -145,6 +150,17 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                     {user.role}
                   </div>
                 </div>
+                {user.role === 'admin' && (
+                  <button
+                    type="button"
+                    onClick={() => setIsSupportModalOpen(true)}
+                    title="Modo Soporte Auditado Varons Media"
+                    className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/40 text-amber-400 hover:bg-amber-500/20 transition-all text-xs font-bold flex items-center gap-1"
+                  >
+                    <span>🛠️</span>
+                    <span className="hidden lg:inline text-[11px]">Soporte</span>
+                  </button>
+                )}
                 <button
                   onClick={logout}
                   title="Cerrar Sesión"
@@ -371,6 +387,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           </div>
         </div>
       )}
+
+      {/* Modal para Iniciar Modo Soporte (Exclusivo Admin) */}
+      <StartSupportModal
+        isOpen={isSupportModalOpen}
+        onClose={() => setIsSupportModalOpen(false)}
+      />
     </div>
   );
 };
