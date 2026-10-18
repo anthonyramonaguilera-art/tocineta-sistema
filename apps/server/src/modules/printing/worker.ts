@@ -20,7 +20,8 @@ import type Database from 'better-sqlite3';
 import {
   generateUuidV7,
   renderTicketToEscPos,
-  type TicketIR
+  type TicketIR,
+  type EscPosConfig
 } from '@tocineta/shared';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
@@ -62,7 +63,23 @@ export interface PrinterRow {
   address: string;
   columns: number;
   codepage: number;
+  has_cutter: number;
+  has_buzzer: number;
   is_active: number;
+}
+
+export function getPrinterConfig(rawDb: Database.Database, printerId: string): EscPosConfig {
+  try {
+    const p = rawDb.prepare('SELECT codepage, has_cutter, has_buzzer FROM printers WHERE id = ?').get(printerId) as any;
+    if (!p) return { codepage: 16, hasCutter: false, hasBuzzer: false };
+    return {
+      codepage: p.codepage ?? 16,
+      hasCutter: Boolean(p.has_cutter),
+      hasBuzzer: Boolean(p.has_buzzer)
+    };
+  } catch {
+    return { codepage: 16, hasCutter: false, hasBuzzer: false };
+  }
 }
 
 export interface PrintJobRow {
@@ -420,7 +437,8 @@ export function enqueueOrderPrintJobs(
 
   // 1. Generar Nota de Entrega para Caja (TicketIR y Buffer ESC/POS)
   const receiptIR = buildReceiptTicketIR(order, lines);
-  const receiptBytes = Buffer.from(renderTicketToEscPos(receiptIR, { beep: true }));
+  const cajaConfig = getPrinterConfig(rawDb, 'print_caja_usb');
+  const receiptBytes = Buffer.from(renderTicketToEscPos(receiptIR, cajaConfig));
 
   const cajaJobId = `pjob_${generateUuidV7()}`;
   rawDb.prepare(`
@@ -433,10 +451,11 @@ export function enqueueOrderPrintJobs(
   // 2. Generar Comandas de Cocina por Estación
   const kitchenIRs = buildKitchenTicketIRs({ order, kitchenLines });
   const kitchenJobIds: string[] = [];
+  const cocinaConfig = getPrinterConfig(rawDb, 'print_cocina');
 
   for (const kIR of kitchenIRs) {
     const kJobId = `pjob_${generateUuidV7()}`;
-    const kBytes = Buffer.from(renderTicketToEscPos(kIR, { beep: true }));
+    const kBytes = Buffer.from(renderTicketToEscPos(kIR, cocinaConfig));
     const station = kIR.title?.toLowerCase().includes('hot dog') ? 'hot_dogs' : 'hamburguesas';
 
     rawDb.prepare(`
@@ -491,7 +510,8 @@ export function reprintPrintJob(
   const originalIR = JSON.parse(job.ticket_ir_json) as TicketIR;
   const newReprintCount = (job.reprint_count || 0) + 1;
   const reprintedIR = buildReprintTicketIR(originalIR, newReprintCount, input.reason, auth.user.name);
-  const newBytes = Buffer.from(renderTicketToEscPos(reprintedIR, { beep: true }));
+  const pConfig = getPrinterConfig(rawDb, job.printer_id);
+  const newBytes = Buffer.from(renderTicketToEscPos(reprintedIR, pConfig));
 
   const now = Date.now();
   const newJobId = `pjob_${generateUuidV7()}`;
@@ -577,7 +597,8 @@ export function createRefirePrintJob(
 
   const { order, kitchenLines } = loadOrderReceiptDataFromDb(rawDb, orderId);
   const refireIR = buildRefireTicketIR(order, kitchenLines, reason);
-  const refireBytes = Buffer.from(renderTicketToEscPos(refireIR, { beep: true }));
+  const cocinaConfig = getPrinterConfig(rawDb, 'print_cocina');
+  const refireBytes = Buffer.from(renderTicketToEscPos(refireIR, cocinaConfig));
 
   const now = Date.now();
   const newJobId = `pjob_${generateUuidV7()}`;

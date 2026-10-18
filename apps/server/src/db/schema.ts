@@ -408,7 +408,9 @@ export const printers = sqliteTable('printers', {
   connectionType: text('connection_type').notNull(),
   address: text('address').notNull(),
   columns: integer('columns').notNull().default(32),
-  codepage: integer('codepage').notNull().default(850),
+  codepage: integer('codepage').notNull().default(16),
+  hasCutter: integer('has_cutter').notNull().default(0),
+  hasBuzzer: integer('has_buzzer').notNull().default(0),
   isActive: integer('is_active').notNull().default(1)
 });
 

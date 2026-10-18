@@ -58,6 +58,16 @@ Write-Host "   - URL Objetivo: $TargetUrl"
 Write-Host "   - Intervalo de supervisión: $CheckIntervalSec segundos"
 Write-Host "   - Presione Ctrl+C para detener la supervisión.`n"
 
+# Verificación y reparación física de impresora térmica USB (M10.1)
+$repairScript = Join-Path $PSScriptRoot "repair-printer-driver.ps1"
+if (Test-Path $repairScript) {
+    try {
+        & $repairScript
+    } catch {
+        Write-Warning "No se pudo ejecutar repair-printer-driver.ps1: $($_.Exception.Message)"
+    }
+}
+
 function Start-KioskProcess {
     Write-Host "[$(Get-Date -Format 'HH:mm:ss')] 🚀 Lanzando $browserName en modo kiosco..." -ForegroundColor Green
     $proc = Start-Process -FilePath $browserExe -ArgumentList $kioskArgs -PassThru

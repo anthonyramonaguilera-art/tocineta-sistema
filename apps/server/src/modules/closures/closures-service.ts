@@ -3,6 +3,7 @@ import { generateUuidV7, renderTicketToEscPos } from '@tocineta/shared';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
 import { buildZReportTicketIR, type ZReportData } from '../printing/templates.js';
+import { getPrinterConfig } from '../printing/worker.js';
 import { createEncryptedBackup } from '../backups/backup-service.js';
 
 export interface BlindCountInput {
@@ -411,7 +412,8 @@ export function closeJornadaZ(
 
   // 6. Encolar impresión del Ticket Térmico de Cierre Z con Hash SHA-256
   const zTicketIR = buildZReportTicketIR(zReportData);
-  const zBytes = Buffer.from(renderTicketToEscPos(zTicketIR, { beep: true }));
+  const cajaConfig = getPrinterConfig(rawDb, 'print_caja_usb');
+  const zBytes = Buffer.from(renderTicketToEscPos(zTicketIR, cajaConfig));
 
   const newPrintJobId = `pjob_${generateUuidV7()}`;
   rawDb.prepare(`

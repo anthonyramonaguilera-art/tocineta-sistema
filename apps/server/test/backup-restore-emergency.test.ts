@@ -13,6 +13,7 @@ import type { FastifyInstance } from 'fastify';
 import { createHotSnapshot, pruneSnapshots, listSnapshots } from '../src/modules/backups/snapshot-service.js';
 import { createEncryptedBackup } from '../src/modules/backups/backup-service.js';
 import { decryptWithAge } from '../src/modules/backups/age-service.js';
+import { generateIdentity, identityToRecipient } from 'age-encryption';
 import { restoreAndVerifyDatabase } from '../src/modules/backups/restore-engine.js';
 import { generateEmergencySlipsPdf, formatSlipNumber } from '../src/modules/emergency/slips-generator.js';
 
@@ -24,12 +25,11 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
   let rawDb: Database.Database;
   let app: FastifyInstance;
 
-  // Claves de prueba generadas canónicamente:
-  const OLINELCYS_PUBLIC = 'age1q5q9c7am7xx9e4flj0j8ugyfqejpyp5dc8qsvqpnv7uamg4wkcuqye3f0r';
-  const OLINELCYS_PRIVATE = 'AGE-SECRET-KEY-1EH6GADU6VQ0SRYGS30G56ZN8UUKTKYFWNY9DHGQAPUQJPJ9DES0SMKUFWL';
-
-  const VARONS_PUBLIC = 'age15asuchr5fv6fvqhpxm7zedh0n54p7sukdzn5zjp4auqaju8h5cfslg5ne7';
-  const VARONS_PRIVATE = 'AGE-SECRET-KEY-12ALNYAPFWKAE854CVKJUHFRC0U5R7KT24DYL6UW6XSQR5VYNR2VQP4ULMA';
+  // Claves de prueba generadas efímeramente en runtime (Higiene de claves A.4)
+  let olinelcysPublic = '';
+  let olinelcysPrivate = '';
+  let varonsPublic = '';
+  let varonsPrivate = '';
 
   let adminToken = '';
   let supervisorToken = '';
@@ -43,6 +43,12 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
     fs.mkdirSync(tempDir, { recursive: true });
     fs.mkdirSync(tempSnapshotsDir, { recursive: true });
     fs.mkdirSync(tempUsbDir, { recursive: true });
+
+    // Generar claves efímeras en RAM (Higiene de claves A.4)
+    olinelcysPrivate = await generateIdentity();
+    olinelcysPublic = await identityToRecipient(olinelcysPrivate);
+    varonsPrivate = await generateIdentity();
+    varonsPublic = await identityToRecipient(varonsPrivate);
 
     const dbCtx = initSqlite(tempDb);
     rawDb = dbCtx.rawDb;
@@ -77,6 +83,12 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
   });
 
   afterAll(async () => {
+    // Higiene de claves: limpiar variables de claves privadas en RAM
+    olinelcysPrivate = '';
+    olinelcysPublic = '';
+    varonsPrivate = '';
+    varonsPublic = '';
+
     await app.close();
     try {
       rawDb.close();
@@ -165,7 +177,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
       const backupResult = await createEncryptedBackup(rawDb, {
         destinationDir: tempUsbDir,
         backupType: 'ENCRYPTED_USB_DAILY',
-        recipients: [OLINELCYS_PUBLIC, VARONS_PUBLIC]
+        recipients: [olinelcysPublic, varonsPublic]
       });
 
       expect(backupResult.backupId).toMatch(/^bck_/);
@@ -195,14 +207,14 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
       expect(headerStr).not.toContain('SQLite format 3');
       expect(headerStr).toContain('age-encryption');
 
-      // 2. Intentar descifrar con una clave privada espuria/falsa debe fallar de forma terminante
-      const FAKE_PRIVATE_KEY = 'AGE-SECRET-KEY-10000000000000000000000000000000000000000000000000000000000';
-      await expect(decryptWithAge(fileBuffer, FAKE_PRIVATE_KEY)).rejects.toThrow();
+      // 2. Intentar descifrar con una clave privada espuria/falsa generada debe fallar de forma terminante
+      const fakePrivateKey = await generateIdentity();
+      await expect(decryptWithAge(fileBuffer, fakePrivateKey)).rejects.toThrow();
     });
 
     it('Aceptación Dual: SÍ se descifra perfectamente con la clave privada de Sra. Olinelcys', async () => {
       const fileBuffer = fs.readFileSync(encryptedBackupFile);
-      const decrypted = await decryptWithAge(fileBuffer, OLINELCYS_PRIVATE);
+      const decrypted = await decryptWithAge(fileBuffer, olinelcysPrivate);
 
       expect(decrypted.length).toBeGreaterThan(0);
       expect(decrypted.slice(0, 16).toString('utf-8')).toContain('SQLite format 3');
@@ -210,7 +222,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
 
     it('Aceptación Dual: SÍ se descifra perfectamente con la clave privada de Varons Media', async () => {
       const fileBuffer = fs.readFileSync(encryptedBackupFile);
-      const decrypted = await decryptWithAge(fileBuffer, VARONS_PRIVATE);
+      const decrypted = await decryptWithAge(fileBuffer, varonsPrivate);
 
       expect(decrypted.length).toBeGreaterThan(0);
       expect(decrypted.slice(0, 16).toString('utf-8')).toContain('SQLite format 3');
@@ -223,7 +235,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
         headers: { authorization: `Bearer ${adminToken}` },
         payload: {
           destinationDir: tempUsbDir,
-          recipients: [OLINELCYS_PUBLIC, VARONS_PUBLIC]
+          recipients: [olinelcysPublic, varonsPublic]
         }
       });
 
@@ -242,7 +254,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
       // 1. Crear respaldo cifrado fresco
       const backupResult = await createEncryptedBackup(rawDb, {
         destinationDir: tempUsbDir,
-        recipients: [OLINELCYS_PUBLIC]
+        recipients: [olinelcysPublic]
       });
 
       const restoredTargetDb = path.join(tempDir, 'restored_test.db');
@@ -250,7 +262,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
       // 2. Ejecutar restauración con clave privada autorizada
       const restoreRes = await restoreAndVerifyDatabase({
         backupFilePath: backupResult.encryptedFilePath,
-        privateKey: OLINELCYS_PRIVATE,
+        privateKey: olinelcysPrivate,
         targetDbPath: restoredTargetDb,
         dryRun: false
       });

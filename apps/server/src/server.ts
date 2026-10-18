@@ -18,6 +18,7 @@ import { getDatabaseContext } from './db/connection.js';
 import { websocketPlugin } from './plugins/websocket.js';
 import { staticPlugin } from './plugins/static.js';
 import { idempotencyPlugin } from './modules/idempotency/idempotency-plugin.js';
+import { seedInitialUsers } from './modules/auth/seed-users.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -51,6 +52,17 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
 
   // Inicializar PrintingWorker interno
   const dbCtx = getDatabaseContext();
+
+  // Bootstrap automático de usuarios si la tabla users está vacía tras migraciones (B.5 / F5)
+  try {
+    const userCount = dbCtx.rawDb.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number } | undefined;
+    if (userCount && userCount.cnt === 0) {
+      const count = seedInitialUsers(dbCtx.rawDb);
+      server.log.info(`BOOTSTRAP: ${count} usuarios iniciales creados`);
+      console.log(`BOOTSTRAP: ${count} usuarios iniciales creados`);
+    }
+  } catch {}
+
   const worker = new PrintingWorker(dbCtx.rawDb, {
     mockTransports: process.env.NODE_ENV === 'test'
   });

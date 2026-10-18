@@ -74,6 +74,13 @@ export interface PosDeliveryTier {
   label: string;
 }
 
+export interface PosPaidExtra {
+  id: string;
+  name: string;
+  priceUsdCents: number;
+  priceBsCents: number;
+}
+
 export interface PosMenuResponse {
   success: boolean;
   rateMicroBs: number;
@@ -81,6 +88,7 @@ export interface PosMenuResponse {
   latestSeq: number;
   categories: PosCategory[];
   barraLibreIngredients: PosBarraLibreIngredient[];
+  paidExtras?: PosPaidExtra[];
   globalModifiers: string[];
   deliveryQuickTiers: PosDeliveryTier[];
   combos: PosCombo[];

@@ -9,16 +9,9 @@ interface CustomizationModalProps {
   initialModifiers?: CustomizationModifier[];
   initialInstructions?: string;
   barraLibreList?: Array<{ id: string; name: string }>;
+  paidExtrasList?: Array<{ id: string; name: string; priceUsdCents: number; priceBsCents?: number }>;
   onSave: (modifiers: CustomizationModifier[], customInstructions: string, extraPriceUsdCents: number) => void;
 }
-
-const PAID_EXTRAS = [
-  { id: 'extra_carne_smash', name: 'Extra Carne Smash', priceUsdCents: 350 },
-  { id: 'extra_salchicha', name: 'Extra Salchicha', priceUsdCents: 100 },
-  { id: 'extra_queso_cheddar', name: 'Extra Queso Cheddar', priceUsdCents: 100 },
-  { id: 'extra_queso_amarillo', name: 'Extra Queso Amarillo', priceUsdCents: 100 },
-  { id: 'extra_tocineta', name: 'Extra Tocineta Crujiente', priceUsdCents: 100 }
-];
 
 export const CustomizationModal: React.FC<CustomizationModalProps> = ({
   isOpen,
@@ -27,6 +20,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
   initialModifiers = [],
   initialInstructions = '',
   barraLibreList = [],
+  paidExtrasList = [],
   onSave
 }) => {
   if (!isOpen) return null;
@@ -89,7 +83,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
   // Estado local de Extras Pagos: map de extraId -> cantidad (0, 1, 2)
   const [paidExtrasCount, setPaidExtrasCount] = useState<Record<string, number>>(() => {
     const counts: Record<string, number> = {};
-    for (const extra of PAID_EXTRAS) counts[extra.id] = 0;
+    for (const extra of paidExtrasList) counts[extra.id] = 0;
     for (const m of initialModifiers) {
       if (m.modifierType === 'EXTRA_INGREDIENTE' && m.ingredientId && counts[m.ingredientId] !== undefined) {
         counts[m.ingredientId] = (counts[m.ingredientId] || 0) + 1;
@@ -150,7 +144,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
     setLettuceWrapped(false);
     setSelectedBarraLibre(new Set());
     const clearedExtras: Record<string, number> = {};
-    for (const extra of PAID_EXTRAS) clearedExtras[extra.id] = 0;
+    for (const extra of paidExtrasList) clearedExtras[extra.id] = 0;
     setPaidExtrasCount(clearedExtras);
     setInstructions('');
   };
@@ -214,7 +208,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
     }
 
     // Extras Pagos
-    for (const extra of PAID_EXTRAS) {
+    for (const extra of paidExtrasList) {
       const qty = paidExtrasCount[extra.id] || 0;
       if (qty > 0) {
         extraCents += extra.priceUsdCents * qty;
@@ -226,7 +220,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
     }
 
     return { summaryTags: tags, totalExtraCents: extraCents };
-  }, [baseIngredients, baseStates, lettuceWrapped, selectedBarraLibre, paidExtrasCount, barraLibreList]);
+  }, [baseIngredients, baseStates, lettuceWrapped, selectedBarraLibre, paidExtrasCount, barraLibreList, paidExtrasList]);
 
   // Guardar y cerrar modal
   const handleSave = () => {
@@ -266,7 +260,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
     }
 
     // Modificadores Extras Pagados
-    for (const extra of PAID_EXTRAS) {
+    for (const extra of paidExtrasList) {
       const qty = paidExtrasCount[extra.id] || 0;
       for (let i = 0; i < qty; i++) {
         finalModifiers.push({
@@ -438,16 +432,17 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
             </div>
           )}
 
-          {/* EXTRAS PAGOS ($1.00 / $3.50) */}
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-yellow">
-                🥓 Extras Pagados:
-              </span>
-              <span className="text-[10px] text-tocineta-muted">Se suman al precio del plato</span>
-            </div>
-            <div className="space-y-2">
-              {PAID_EXTRAS.map(extra => {
+          {/* EXTRAS PAGOS DINÁMICOS */}
+          {paidExtrasList.length > 0 && (
+            <div>
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-yellow">
+                  🥓 Extras Pagados:
+                </span>
+                <span className="text-[10px] text-tocineta-muted">Se suman al precio del plato</span>
+              </div>
+              <div className="space-y-2">
+                {paidExtrasList.map(extra => {
                 const count = paidExtrasCount[extra.id] || 0;
                 return (
                   <div
@@ -487,6 +482,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
               })}
             </div>
           </div>
+          )}
 
           {/* INSTRUCCIÓN PERSONALIZADA */}
           <div>

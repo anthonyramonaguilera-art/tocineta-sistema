@@ -11,7 +11,7 @@
 .PARAMETER BackupPath
     Ruta al archivo .db.age o snapshot .db. Si no se especifica, se solicita interactivamente.
 .PARAMETER PrivateKey
-    Clave privada age (comienza con AGE-SECRET-KEY-1...). Si el archivo está cifrado y no se especifica, se solicita de forma segura.
+    Clave privada age. Si el archivo está cifrado y no se especifica, se solicita de forma segura.
 .PARAMETER TargetDb
     Ruta destino para la base de datos activa. Por defecto: ./data/tocineta.db
 .PARAMETER DryRun
@@ -74,7 +74,7 @@ if ($isAge -and (-not $PrivateKey -or $PrivateKey.Trim() -eq "")) {
     Write-Host ""
     Write-Host "[ATENCION] El archivo esta cifrado con age (.age)." -ForegroundColor Yellow
     Write-Host "Ingrese la clave privada de recuperacion (Sra. Olinelcys en sobre sellado o Varons Media en gestor de contraseñas)." -ForegroundColor Gray
-    Write-Host "Formato: AGE-SECRET-KEY-1..." -ForegroundColor Gray
+    Write-Host "Formato: clave privada age..." -ForegroundColor Gray
     $secureInput = Read-Host "Clave Privada" -AsSecureString
     $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureInput)
     $PrivateKey = [System.Runtime.InteropServices.Marshal]::PtrToStringAuto($BSTR)

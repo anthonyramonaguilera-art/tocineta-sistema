@@ -46,7 +46,7 @@ export function seedInitialUsers(rawDb: Database.Database): number {
         hash,
         salt,
         pinLength,
-        0, // must_change_pin
+        (u.role === 'admin' || u.role === 'supervisor') ? 1 : 0, // must_change_pin (1 para admin/supervisor, 0 resto)
         1, // is_active
         0, // failed_attempts
         0, // lockout_stage
@@ -61,4 +61,17 @@ export function seedInitialUsers(rawDb: Database.Database): number {
 
   transaction();
   return insertedCount;
+}
+
+if (process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('seed-users.ts')) {
+  import('../../db/connection.js').then(({ initSqlite }) => {
+    const dbPath = process.env.DB_PATH || './data/tocineta.db';
+    const ctx = initSqlite(dbPath);
+    try {
+      const count = seedInitialUsers(ctx.rawDb);
+      console.log(`BOOTSTRAP: ${count} usuarios iniciales creados`);
+    } finally {
+      ctx.rawDb.close();
+    }
+  });
 }

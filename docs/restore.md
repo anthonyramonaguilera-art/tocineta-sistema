@@ -13,14 +13,12 @@ El sistema implementa una arquitectura de **Cifrado con Clave Pública Asimétri
    - Clave pública configurada en el servidor:
      `age1q5q9c7am7xx9e4flj0j8ugyfqejpyp5dc8qsvqpnv7uamg4wkcuqye3f0r`
    - Clave privada de custodia física:
-     `AGE-SECRET-KEY-1EH6GADU6VQ0SRYGS30G56ZN8UUKTKYFWNY9DHGQAPUQJPJ9DES0SMKUFWL`
      *(Almacenada impresa en papel dentro de un sobre sellado e inviolable en la caja fuerte de su residencia).*
 
 2. **Varons Media (Agencia Tecnológica y Soporte):**
    - Clave pública configurada en el servidor:
      `age15asuchr5fv6fvqhpxm7zedh0n54p7sukdzn5zjp4auqaju8h5cfslg5ne7`
    - Clave privada de custodia digital:
-     `AGE-SECRET-KEY-12ALNYAPFWKAE854CVKJUHFRC0U5R7KT24DYL6UW6XSQR5VYNR2VQP4ULMA`
      *(Almacenada con cifrado de grado militar en el gestor de contraseñas de la agencia).*
 
 > [!CAUTION]
@@ -68,7 +66,7 @@ Abrir PowerShell en la raíz del proyecto y ejecutar:
 O suministrar los parámetros directamente:
 
 ```powershell
-.\scripts\restore-backup.ps1 -BackupPath "E:\tocineta-backup-1792271448000.db.age" -PrivateKey "AGE-SECRET-KEY-1..."
+.\scripts\restore-backup.ps1 -BackupPath "E:\tocineta-backup-1792271448000.db.age" -PrivateKey "<CLAVE_PRIVADA_RESTAURACION>"
 ```
 
 #### Paso 3: Proceso Automático de Verificación Criptográfica

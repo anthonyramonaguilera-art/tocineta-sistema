@@ -16,6 +16,7 @@ interface AuthContextType {
   login: (userId: string, pin: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   unlockSensitive: (pin: string) => Promise<{ success: boolean; error?: string }>;
+  changePin: (currentPin: string, newPin: string) => Promise<{ success: boolean; error?: string }>;
   recordUserActivity: () => void;
 }
 
@@ -145,6 +146,36 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const changePin = async (currentPin: string, newPin: string) => {
+    if (!token) return { success: false, error: 'No hay sesión activa' };
+
+    try {
+      const res = await fetch('/api/auth/change-pin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ currentPin, newPin })
+      });
+
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        return { success: false, error: data.error || 'Error al cambiar PIN' };
+      }
+
+      if (user) {
+        const updatedUser = { ...user, mustChangePin: false };
+        setUser(updatedUser);
+        localStorage.setItem('tocineta_user', JSON.stringify(updatedUser));
+      }
+
+      return { success: true };
+    } catch (err: any) {
+      return { success: false, error: err.message || 'Error al cambiar PIN' };
+    }
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -156,6 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         logout,
         unlockSensitive,
+        changePin,
         recordUserActivity
       }}
     >

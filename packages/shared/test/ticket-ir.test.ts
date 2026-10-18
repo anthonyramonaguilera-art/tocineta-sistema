@@ -53,8 +53,8 @@ describe('Ticket IR - Representación Intermedia, HTML y ESC/POS (@tocineta/shar
     expect(html).toContain('CORTE');
   });
 
-  it('renderTicketToEscPos genera el arreglo binario con inicialización ESC/POS, CP850 y corte', () => {
-    const bytes = renderTicketToEscPos(sampleIR, { beep: true });
+  it('renderTicketToEscPos genera el arreglo binario con inicialización ESC/POS, CP850 y corte cuando se solicita', () => {
+    const bytes = renderTicketToEscPos(sampleIR, { beep: true, codepage: 2, hasCutter: true, hasBuzzer: true });
     expect(bytes).toBeInstanceOf(Uint8Array);
     expect(bytes.length).toBeGreaterThan(4000); // Incluye el logo de 384x96 dots (GS v 0)
 
@@ -70,6 +70,23 @@ describe('Ticket IR - Representación Intermedia, HTML y ESC/POS (@tocineta/shar
     // Debe contener el comando de corte parcial GS V 66 0 (0x1d, 0x56, 0x42, 0x00)
     const cutIdx = bytes.indexOf(0x56);
     expect(cutIdx).toBeGreaterThan(0);
+  });
+
+  it('renderTicketToEscPos emite WPC1252 (ESC t 16) por defecto y respeta hasCutter=false y hasBuzzer=false', () => {
+    const bytes = renderTicketToEscPos(sampleIR, { codepage: 16, hasCutter: false, hasBuzzer: false });
+    expect(bytes[2]).toBe(0x1b);
+    expect(bytes[3]).toBe(0x74);
+    expect(bytes[4]).toBe(0x10); // ESC t 16
+
+    // No debe contener corte GS V (0x1d 0x56) ni buzzer ESC B (0x1b 0x42)
+    const hasGsV = bytes.some((b, i) => b === 0x1d && bytes[i + 1] === 0x56);
+    expect(hasGsV).toBe(false);
+    const hasEscB = bytes.some((b, i) => b === 0x1b && bytes[i + 1] === 0x42);
+    expect(hasEscB).toBe(false);
+
+    // Termina con 5 saltos de línea (0x0A x 5)
+    const last5 = bytes.slice(-5);
+    expect(Array.from(last5)).toEqual([0x0a, 0x0a, 0x0a, 0x0a, 0x0a]);
   });
 
   it('encodeCP850 mapea correctamente caracteres en español (á, é, í, ó, ú, ñ, Ñ, ¡, ¿)', () => {

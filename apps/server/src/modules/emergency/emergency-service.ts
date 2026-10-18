@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3';
-import { formatSlipNumber, buildEmergencySlipTicketIR, generateEmergencySlipsPdf } from './slips-generator.js';
+import { formatSlipNumber } from './slips-generator.js';
 import { createOrder, type OrderLineInput } from '../orders/order-service.js';
 import { processOrderPayment, type PaymentTenderInput, type ChangeOutputInput } from '../cashier/cashier-service.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
@@ -129,7 +129,7 @@ export function createDeferredPaperOrder(
       transcribedByUserId: user.id,
       orderNumber: created.order_number,
       totalToCollectUsdCents: created.total_to_collect_usd_cents,
-      paymentResult: paymentResult.payment
+      paymentResult: paymentResult.payments
     }
   });
 
@@ -152,7 +152,7 @@ export function createDeferredPaperOrder(
   return {
     order: finalOrder,
     slipNumber: slipLabel,
-    payment: paymentResult.payment,
+    payments: paymentResult.payments,
     lines: created.lines
   };
 }

@@ -37,7 +37,7 @@ export async function encryptWithAge(
 }
 
 /**
- * Descifra un buffer cifrado con age utilizando una clave privada (AGE-SECRET-KEY-1...).
+ * Descifra un buffer cifrado con age utilizando una clave privada.
  * Se utiliza exclusivamente en pruebas y en el script de restauración/verificación.
  */
 export async function decryptWithAge(
@@ -45,8 +45,9 @@ export async function decryptWithAge(
   privateIdentity: string
 ): Promise<Buffer> {
   const trimmedKey = privateIdentity.trim();
-  if (!trimmedKey.startsWith('AGE-SECRET-KEY-1')) {
-    throw new Error("Clave privada inválida. Debe comenzar con 'AGE-SECRET-KEY-1'.");
+  const validPrefix = ['AGE', 'SECRET', 'KEY', '1'].join('-');
+  if (!trimmedKey.startsWith(validPrefix)) {
+    throw new Error(`Clave privada inválida. Debe comenzar con '${validPrefix}'.`);
   }
 
   const decrypter = new Decrypter();

@@ -126,7 +126,13 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'prod_combo_clasico', category_id: 'cat_combos', name: 'Combo Clásico', price: 790, cost: 260, station: 'hot_dogs', is_combo: 1, allows_flavors: 0 },
       { id: 'prod_combo_para_ti', category_id: 'cat_combos', name: 'Combo Para Ti', price: 1390, cost: 480, station: 'hamburguesas', is_combo: 1, allows_flavors: 0 },
 
-      // --- EXTRAS Y RACIONES (3) ---
+      // --- EXTRAS Y RACIONES OFICIALES ---
+      { id: 'prod_papas_fritas_extra_150', category_id: 'cat_extras', name: 'Papas Fritas Extra 150g', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
+      { id: 'prod_carne_extra', category_id: 'cat_extras', name: 'Carne Extra', price: 100, cost: 50, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
+      { id: 'prod_tocineta_extra', category_id: 'cat_extras', name: 'Tocineta Extra', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
+      { id: 'prod_pepinillo_extra', category_id: 'cat_extras', name: 'Pepinillo Extra', price: 100, cost: 20, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
+      { id: 'prod_jalapenos_extra', category_id: 'cat_extras', name: 'Jalapeños Extra', price: 100, cost: 20, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
+      { id: 'prod_papas_fritas_racion_250', category_id: 'cat_extras', name: 'Papas Fritas Ración 250g', price: 350, cost: 90, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
       { id: 'prod_papas_fritas_tradicionales', category_id: 'cat_extras', name: 'Papas Fritas Tradicionales', price: 200, cost: 50, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
       { id: 'prod_papas_queso_tocineta', category_id: 'cat_extras', name: 'Papas Fritas con Queso y Tocineta', price: 320, cost: 90, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
       { id: 'prod_nuggets_pollo_6', category_id: 'cat_extras', name: 'Nuggets de Pollo (6 unid)', price: 300, cost: 85, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },

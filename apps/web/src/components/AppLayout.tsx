@@ -15,12 +15,19 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   formattedRate = '40,00',
   children
 }) => {
-  const { user, logout, currency, setCurrency, isSensitiveLocked, unlockSensitive } = useAuth();
+  const { user, logout, currency, setCurrency, isSensitiveLocked, unlockSensitive, changePin } = useAuth();
   const { isConnected, latestSeq } = useEventStream();
 
   const [unlockPin, setUnlockPin] = useState('');
   const [unlockError, setUnlockError] = useState<string | null>(null);
   const [isUnlocking, setIsUnlocking] = useState(false);
+
+  // Estado para modal obligatorio de cambio de PIN (B.4)
+  const [currentPinInput, setCurrentPinInput] = useState('');
+  const [newPinInput, setNewPinInput] = useState('');
+  const [confirmPinInput, setConfirmPinInput] = useState('');
+  const [changePinError, setChangePinError] = useState<string | null>(null);
+  const [isChangingPin, setIsChangingPin] = useState(false);
 
   const handleUnlock = async () => {
     if (!unlockPin) return;
@@ -35,6 +42,28 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       setUnlockPin('');
     } else {
       setUnlockPin('');
+    }
+  };
+
+  const handleChangePin = async () => {
+    if (!currentPinInput) {
+      setChangePinError('Debe ingresar su PIN actual');
+      return;
+    }
+    if (newPinInput.length !== 6) {
+      setChangePinError('El nuevo PIN debe tener exactamente 6 dígitos');
+      return;
+    }
+    if (newPinInput !== confirmPinInput) {
+      setChangePinError('La confirmación del PIN no coincide');
+      return;
+    }
+    setIsChangingPin(true);
+    setChangePinError(null);
+    const res = await changePin(currentPinInput, newPinInput);
+    setIsChangingPin(false);
+    if (!res.success) {
+      setChangePinError(res.error || 'Error al cambiar PIN');
     }
   };
 
@@ -254,6 +283,89 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 className="flex-1 py-2.5 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-bold hover:bg-tocineta-yellow/90 transition-all disabled:opacity-50"
               >
                 {isUnlocking ? 'Verificando...' : 'Desbloquear'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Obligatorio de Cambio de PIN (B.4 / F4) */}
+      {user?.mustChangePin && (
+        <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-tocineta-card border border-amber-500/40 rounded-3xl p-6 max-w-md w-full shadow-2xl">
+            <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto text-3xl mb-3 shadow-inner">
+              🔑
+            </div>
+            <h3 className="text-xl font-black text-white text-center">Cambio Obligatorio de PIN</h3>
+            <p className="text-xs text-tocineta-muted mt-1 text-center">
+              Hola, <span className="text-white font-bold">{user.name}</span>. Por seguridad física y auditoría, debe establecer su PIN de 6 dígitos antes de continuar.
+            </p>
+
+            <div className="space-y-3 my-5">
+              <div>
+                <label className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider block mb-1">
+                  PIN Actual:
+                </label>
+                <input
+                  type="password"
+                  maxLength={6}
+                  value={currentPinInput}
+                  onChange={e => setCurrentPinInput(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Ingrese PIN actual"
+                  className="w-full text-center text-lg font-mono bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl py-2.5 text-white outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider block mb-1">
+                  Nuevo PIN (6 dígitos):
+                </label>
+                <input
+                  type="password"
+                  maxLength={6}
+                  value={newPinInput}
+                  onChange={e => setNewPinInput(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Nuevo PIN (6 dígitos)"
+                  className="w-full text-center text-xl font-mono tracking-widest bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl py-2.5 text-white outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider block mb-1">
+                  Confirmar Nuevo PIN:
+                </label>
+                <input
+                  type="password"
+                  maxLength={6}
+                  value={confirmPinInput}
+                  onChange={e => setConfirmPinInput(e.target.value.replace(/\D/g, ''))}
+                  placeholder="Repita nuevo PIN"
+                  className="w-full text-center text-xl font-mono tracking-widest bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl py-2.5 text-white outline-none"
+                />
+              </div>
+
+              {changePinError && (
+                <div className="p-2.5 bg-red-500/20 border border-red-500/40 rounded-xl text-xs text-red-300 text-center font-medium">
+                  {changePinError}
+                </div>
+              )}
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={logout}
+                className="flex-1 py-3 rounded-xl border border-tocineta-border text-xs font-bold text-tocineta-muted hover:text-white hover:bg-tocineta-bg transition-all"
+              >
+                Cerrar Sesión
+              </button>
+              <button
+                type="button"
+                onClick={handleChangePin}
+                disabled={isChangingPin || !currentPinInput || newPinInput.length !== 6 || confirmPinInput.length !== 6}
+                className="flex-1 py-3 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-black uppercase tracking-wider hover:bg-tocineta-yellow-hover active:scale-95 transition-all disabled:opacity-40"
+              >
+                {isChangingPin ? 'Guardando...' : 'Establecer PIN'}
               </button>
             </div>
           </div>

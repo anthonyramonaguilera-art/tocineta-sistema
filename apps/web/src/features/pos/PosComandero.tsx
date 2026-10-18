@@ -977,7 +977,8 @@ export const PosComandero: React.FC = () => {
           isOpen={true}
           onClose={() => setCustomizingProduct(null)}
           product={customizingProduct}
-          barraLibreList={menu.barraLibreIngredients || []}
+          barraLibreList={menu?.barraLibreIngredients || []}
+          paidExtrasList={menu?.paidExtras || []}
           onSave={handleSaveCustomization}
         />
       )}

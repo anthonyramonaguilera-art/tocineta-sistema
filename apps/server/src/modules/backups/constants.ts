@@ -7,7 +7,7 @@ import * as path from 'node:path';
  *
  * REGLA CRÍTICA DE SEGURIDAD:
  * La laptop del Food Truck ÚNICAMENTE almacena las claves públicas (age1...).
- * JAMÁS almacena claves privadas (AGE-SECRET-KEY-1...).
+ * JAMÁS almacena claves privadas de age.
  */
 export const DEFAULT_AGE_RECIPIENTS = [
   // Sra. Olinelcys

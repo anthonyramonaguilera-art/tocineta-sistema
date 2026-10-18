@@ -87,7 +87,7 @@ export const backupsRoutes: FastifyPluginAsync<BackupsRoutesOptions> = async (fa
   /**
    * Consulta el historial de respaldos en bitácora
    */
-  fastify.get('/api/backups/history', async (request, reply) => {
+  fastify.get('/api/backups/history', async (_request, reply) => {
     try {
       const history = getBackupsHistory(rawDb, 50);
       return reply.send({ success: true, history });
@@ -99,7 +99,7 @@ export const backupsRoutes: FastifyPluginAsync<BackupsRoutesOptions> = async (fa
   /**
    * Lista los snapshots locales existentes
    */
-  fastify.get('/api/backups/snapshots', async (request, reply) => {
+  fastify.get('/api/backups/snapshots', async (_request, reply) => {
     try {
       const snapshots = listSnapshots();
       return reply.send({ success: true, snapshots });

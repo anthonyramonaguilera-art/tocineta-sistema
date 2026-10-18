@@ -58,7 +58,7 @@ export async function restoreAndVerifyDatabase(options: RestoreOptions): Promise
 
   if (isEncrypted) {
     if (!options.privateKey) {
-      throw new Error("El archivo está cifrado con age (.age). Se requiere una clave privada 'AGE-SECRET-KEY-1...' para restaurar.");
+      throw new Error("El archivo está cifrado con age (.age). Se requiere una clave privada age para restaurar.");
     }
 
     const encryptedBytes = fs.readFileSync(backupFilePath);

@@ -182,6 +182,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.status(200).send({
       success: true,
       token: rawToken,
+      mustChangePin: Boolean(user.mustChangePin),
       user: {
         id: user.id,
         name: user.name,

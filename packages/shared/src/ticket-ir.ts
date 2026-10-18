@@ -37,9 +37,11 @@ export interface TicketIR {
 
 export interface EscPosConfig {
   columns?: number;
-  codepage?: number; // por defecto 850 (PC850 Multilingual)
+  codepage?: number; // por defecto 16 (WPC1252). Si 2 u 850 -> CP850
   feedLinesBeforeCut?: number;
   beep?: boolean;
+  hasCutter?: boolean | number;
+  hasBuzzer?: boolean | number;
 }
 
 // ============================================================================
@@ -69,7 +71,44 @@ export function asciiBytes(str: string): Uint8Array {
 }
 
 // ============================================================================
-// ENCODING CP850 PARA CARACTERES EN ESPAÑOL
+// ENCODING WPC1252 (Windows-1252 / Latin-1) - Ganadora física en DP58U-03 (ESC t 16)
+// ============================================================================
+
+export function encodeWPC1252(str: string): Uint8Array {
+  const bytes: number[] = [];
+  for (let i = 0; i < str.length; i++) {
+    const char = str[i];
+    const code = char.charCodeAt(0);
+    if (code >= 0x20 && code <= 0x7e) {
+      bytes.push(code);
+    } else {
+      switch (char) {
+        case 'á': bytes.push(0xe1); break;
+        case 'é': bytes.push(0xe9); break;
+        case 'í': bytes.push(0xed); break;
+        case 'ó': bytes.push(0xf3); break;
+        case 'ú': bytes.push(0xfa); break;
+        case 'Á': bytes.push(0xc1); break;
+        case 'É': bytes.push(0xc9); break;
+        case 'Í': bytes.push(0xcd); break;
+        case 'Ó': bytes.push(0xd3); break;
+        case 'Ú': bytes.push(0xda); break;
+        case 'ñ': bytes.push(0xf1); break;
+        case 'Ñ': bytes.push(0xd1); break;
+        case 'ü': bytes.push(0xfc); break;
+        case 'Ü': bytes.push(0xdc); break;
+        case '¡': bytes.push(0xa1); break;
+        case '¿': bytes.push(0xbf); break;
+        case '↳': bytes.push(0xaf); break;
+        default: bytes.push(0x3f); break; // '?'
+      }
+    }
+  }
+  return new Uint8Array(bytes);
+}
+
+// ============================================================================
+// ENCODING CP850 (PC850 Multilingual) - Retrocompatibilidad (ESC t 2)
 // ============================================================================
 
 export function encodeCP850(str: string): Uint8Array {
@@ -454,15 +493,42 @@ export function renderTicketToHtml(ir: TicketIR): string {
 // RENDERIZADOR 2: ARREGLO BINARIO ESC/POS PARA PAPEL DE 58mm (32 COLUMNAS)
 // ============================================================================
 
-export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8Array {
+export function renderTicketToEscPos(
+  irOrConfig?: TicketIR | EscPosConfig,
+  maybeConfig?: EscPosConfig
+): Uint8Array {
+  let ir: TicketIR;
+  let config: EscPosConfig | undefined;
+
+  if (irOrConfig && 'blocks' in irOrConfig && Array.isArray((irOrConfig as TicketIR).blocks)) {
+    ir = irOrConfig as TicketIR;
+    config = maybeConfig;
+  } else {
+    config = irOrConfig as EscPosConfig | undefined;
+    ir = {
+      widthColumns: config?.columns || 32,
+      blocks: [
+        { type: 'text', text: 'TOCINETA SONRÍE - JALAPEÑOS - MAÍZ - HAMBURGUESA CLÁSICA' },
+        { type: 'cut' }
+      ]
+    };
+  }
+
   const cols = config?.columns || ir.widthColumns || 32;
+  const rawCodepage = config?.codepage ?? 16;
+  const isCp850 = rawCodepage === 2 || rawCodepage === 850;
+  const codepageByte = isCp850 ? 0x02 : 0x10;
+  const encode = isCp850 ? encodeCP850 : encodeWPC1252;
+  const hasCutter = Boolean(config?.hasCutter);
+  const hasBuzzer = Boolean(config?.hasBuzzer);
+
   const chunks: Uint8Array[] = [];
 
   // Reset e inicialización de impresora: ESC @
   chunks.push(new Uint8Array([0x1b, 0x40]));
 
-  // Selección de página de códigos CP850: ESC t 2
-  chunks.push(new Uint8Array([0x1b, 0x74, 0x02]));
+  // Selección de página de códigos: ESC t N (0x10 para WPC1252, 0x02 para CP850)
+  chunks.push(new Uint8Array([0x1b, 0x74, codepageByte]));
 
   // Fuente A (estándar 12x24 dots -> 32 columnas): ESC M 0
   chunks.push(new Uint8Array([0x1b, 0x4d, 0x00]));
@@ -482,7 +548,7 @@ export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8
 
         const rawText = block.text.trim();
         const paddedText = ` ${rawText} `;
-        chunks.push(encodeCP850(paddedText));
+        chunks.push(encode(paddedText));
         chunks.push(asciiBytes('\n'));
 
         chunks.push(new Uint8Array([0x1b, 0x45, 0x00])); // Negrita OFF
@@ -496,7 +562,7 @@ export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8
         chunks.push(new Uint8Array([0x1b, 0x61, alignByte]));
         chunks.push(new Uint8Array([0x1d, 0x21, 0x11])); // Doble Ancho y Alto
         chunks.push(new Uint8Array([0x1b, 0x45, 0x01])); // Negrita ON
-        chunks.push(encodeCP850(block.text));
+        chunks.push(encode(block.text));
         chunks.push(asciiBytes('\n'));
         chunks.push(new Uint8Array([0x1b, 0x45, 0x00])); // Negrita OFF
         chunks.push(new Uint8Array([0x1d, 0x21, 0x00])); // Tamaño normal
@@ -510,7 +576,7 @@ export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8
         if (block.bold) chunks.push(new Uint8Array([0x1b, 0x45, 0x01]));
         if (block.doubleHeight) chunks.push(new Uint8Array([0x1d, 0x21, 0x01]));
 
-        chunks.push(encodeCP850(block.text));
+        chunks.push(encode(block.text));
         chunks.push(asciiBytes('\n'));
 
         if (block.doubleHeight) chunks.push(new Uint8Array([0x1d, 0x21, 0x00]));
@@ -528,9 +594,9 @@ export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8
         const totalLen = k.length + v.length;
         if (totalLen < cols) {
           const spaces = ' '.repeat(cols - totalLen);
-          chunks.push(encodeCP850(k + spaces + v));
+          chunks.push(encode(k + spaces + v));
         } else {
-          chunks.push(encodeCP850(`${k}: ${v}`));
+          chunks.push(encode(`${k}: ${v}`));
         }
         chunks.push(asciiBytes('\n'));
 
@@ -550,7 +616,7 @@ export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8
         } else {
           sepLine = sepChar.repeat(cols);
         }
-        chunks.push(encodeCP850(sepLine));
+        chunks.push(encode(sepLine));
         chunks.push(asciiBytes('\n'));
         break;
       }
@@ -565,21 +631,21 @@ export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8
           const totalLen = left.length + right.length;
           if (totalLen < cols) {
             const spaces = ' '.repeat(cols - totalLen);
-            chunks.push(encodeCP850(left + spaces + right));
+            chunks.push(encode(left + spaces + right));
           } else {
             const availableLeft = cols - right.length - 1;
             if (availableLeft > 5) {
               const shortLeft = left.slice(0, availableLeft);
               const spaces = ' '.repeat(cols - shortLeft.length - right.length);
-              chunks.push(encodeCP850(shortLeft + spaces + right));
+              chunks.push(encode(shortLeft + spaces + right));
             } else {
-              chunks.push(encodeCP850(left));
+              chunks.push(encode(left));
               chunks.push(asciiBytes('\n'));
-              chunks.push(encodeCP850(' '.repeat(cols - right.length) + right));
+              chunks.push(encode(' '.repeat(cols - right.length) + right));
             }
           }
         } else {
-          chunks.push(encodeCP850(left));
+          chunks.push(encode(left));
         }
         chunks.push(asciiBytes('\n'));
         chunks.push(new Uint8Array([0x1b, 0x45, 0x00])); // Negrita OFF
@@ -592,7 +658,7 @@ export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8
           chunks.push(new Uint8Array([0x1b, 0x45, 0x01])); // Negrita ON
         }
         const indent = '  ↳ ';
-        chunks.push(encodeCP850(indent + block.text));
+        chunks.push(encode(indent + block.text));
         chunks.push(asciiBytes('\n'));
         if (block.highlighted) {
           chunks.push(new Uint8Array([0x1b, 0x45, 0x00]));
@@ -605,43 +671,43 @@ export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8
         if (block.subtotalUsd) {
           const s = block.subtotalUsd;
           const k = 'SUBTOTAL:';
-          chunks.push(encodeCP850(k + ' '.repeat(Math.max(1, cols - k.length - s.length)) + s));
+          chunks.push(encode(k + ' '.repeat(Math.max(1, cols - k.length - s.length)) + s));
           chunks.push(asciiBytes('\n'));
         }
         if (block.discountUsd) {
           const d = block.discountUsd;
           const k = 'DESCUENTO:';
-          chunks.push(encodeCP850(k + ' '.repeat(Math.max(1, cols - k.length - d.length)) + d));
+          chunks.push(encode(k + ' '.repeat(Math.max(1, cols - k.length - d.length)) + d));
           chunks.push(asciiBytes('\n'));
         }
         if (block.deliveryUsd) {
           const del = block.deliveryUsd;
           const k = 'DELIVERY:';
-          chunks.push(encodeCP850(k + ' '.repeat(Math.max(1, cols - k.length - del.length)) + del));
+          chunks.push(encode(k + ' '.repeat(Math.max(1, cols - k.length - del.length)) + del));
           chunks.push(asciiBytes('\n'));
         }
 
-        chunks.push(encodeCP850('='.repeat(cols)));
+        chunks.push(encode('='.repeat(cols)));
         chunks.push(asciiBytes('\n'));
 
         // TOTAL USD en Negrita
         chunks.push(new Uint8Array([0x1b, 0x45, 0x01]));
         const usdKey = 'TOTAL USD:';
         const usdV = block.totalUsd;
-        chunks.push(encodeCP850(usdKey + ' '.repeat(Math.max(1, cols - usdKey.length - usdV.length)) + usdV));
+        chunks.push(encode(usdKey + ' '.repeat(Math.max(1, cols - usdKey.length - usdV.length)) + usdV));
         chunks.push(asciiBytes('\n'));
 
         // TOTAL BS en Negrita
         const bsKey = 'TOTAL BS:';
         const bsV = block.totalBs;
-        chunks.push(encodeCP850(bsKey + ' '.repeat(Math.max(1, cols - bsKey.length - bsV.length)) + bsV));
+        chunks.push(encode(bsKey + ' '.repeat(Math.max(1, cols - bsKey.length - bsV.length)) + bsV));
         chunks.push(asciiBytes('\n'));
         chunks.push(new Uint8Array([0x1b, 0x45, 0x00]));
 
         if (block.bcvRate) {
           const rateStr = `(${block.bcvRate})`;
           chunks.push(new Uint8Array([0x1b, 0x61, 0x02])); // Derecha
-          chunks.push(encodeCP850(rateStr));
+          chunks.push(encode(rateStr));
           chunks.push(asciiBytes('\n'));
           chunks.push(new Uint8Array([0x1b, 0x61, 0x00])); // Izquierda
         }
@@ -652,7 +718,7 @@ export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8
         const alignByte = block.align === 'left' ? 0 : block.align === 'right' ? 2 : 1;
         chunks.push(new Uint8Array([0x1b, 0x61, alignByte]));
         for (const line of block.lines) {
-          chunks.push(encodeCP850(line));
+          chunks.push(encode(line));
           chunks.push(asciiBytes('\n'));
         }
         chunks.push(new Uint8Array([0x1b, 0x61, 0x00]));
@@ -660,15 +726,20 @@ export function renderTicketToEscPos(ir: TicketIR, config?: EscPosConfig): Uint8
       }
 
       case 'cut': {
-        const feed = block.feedLines ?? config?.feedLinesBeforeCut ?? 4;
-        chunks.push(new Uint8Array([0x1b, 0x64, feed & 0xff]));
-
-        if (config?.beep) {
-          chunks.push(new Uint8Array([0x1b, 0x42, 0x02, 0x02, 0x07]));
+        if (hasBuzzer) {
+          chunks.push(new Uint8Array([0x1b, 0x42, 0x03, 0x03]));
         }
 
-        // GS V 66 0 (Corte parcial con alimentación)
-        chunks.push(new Uint8Array([0x1d, 0x56, 0x42, 0x00]));
+        if (hasCutter) {
+          const feed = block.feedLines ?? config?.feedLinesBeforeCut ?? 4;
+          chunks.push(new Uint8Array([0x1b, 0x64, feed & 0xff]));
+          // GS V 66 0 (Corte parcial con alimentación)
+          chunks.push(new Uint8Array([0x1d, 0x56, 0x42, 0x00]));
+        } else {
+          // Si hasCutter === false (o 0, valor por defecto): PROHIBIDO emitir GS V (0x1D 0x56)
+          // Al final del ticket emite únicamente 5 saltos de línea (0x0A x 5)
+          chunks.push(new Uint8Array([0x0a, 0x0a, 0x0a, 0x0a, 0x0a]));
+        }
         break;
       }
     }

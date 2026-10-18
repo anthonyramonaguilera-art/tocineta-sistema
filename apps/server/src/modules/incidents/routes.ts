@@ -44,7 +44,8 @@ export const incidentsRoutes: FastifyPluginAsync = async (fastify) => {
       authorizerPin: body.authorizer_pin || body.authorizerPin || body.pin,
       workerId: body.worker_id || body.workerId,
       description: body.description,
-      estimatedLossUsdCents: body.estimated_loss_usd_cents ?? body.estimatedLossUsdCents
+      estimatedLossUsdCents: body.estimated_loss_usd_cents ?? body.estimatedLossUsdCents,
+      refundMethod: body.refund_method || body.refundMethod
     };
 
     try {

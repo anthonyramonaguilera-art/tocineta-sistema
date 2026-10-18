@@ -3,6 +3,7 @@ import type Database from 'better-sqlite3';
 import { generateEmergencySlipsPdf, buildEmergencySlipTicketIR } from './slips-generator.js';
 import { createDeferredPaperOrder, getDeferredOrders, type DeferredPaperOrderInput } from './emergency-service.js';
 import { renderTicketToEscPos, generateUuidV7 } from '@tocineta/shared';
+import { getPrinterConfig } from '../printing/worker.js';
 import { extractSessionToken, hashToken } from '../../routes/auth.js';
 
 interface EmergencyRoutesOptions {
@@ -68,9 +69,10 @@ export const emergencyRoutes: FastifyPluginAsync<EmergencyRoutesOptions> = async
       const now = Date.now();
       const queuedJobs: string[] = [];
 
+      const cajaConfig = getPrinterConfig(rawDb, 'print_caja_usb');
       for (let i = startNum; i <= endNum; i++) {
         const ticketIR = buildEmergencySlipTicketIR(i);
-        const escposBytes = Buffer.from(renderTicketToEscPos(ticketIR, { beep: false }));
+        const escposBytes = Buffer.from(renderTicketToEscPos(ticketIR, cajaConfig));
         const printJobId = `pjob_${generateUuidV7()}`;
 
         rawDb.prepare(`
@@ -125,7 +127,7 @@ export const emergencyRoutes: FastifyPluginAsync<EmergencyRoutesOptions> = async
   /**
    * Historial de comandas diferidas cargadas
    */
-  fastify.get('/api/emergency/deferred-orders', async (request, reply) => {
+  fastify.get('/api/emergency/deferred-orders', async (_request, reply) => {
     try {
       const orders = getDeferredOrders(rawDb);
       return reply.send({ success: true, orders });

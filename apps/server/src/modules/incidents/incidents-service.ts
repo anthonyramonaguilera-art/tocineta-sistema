@@ -18,6 +18,7 @@ import {
   loadOrderReceiptDataFromDb,
   buildRefireTicketIR
 } from '../printing/templates.js';
+import { getPrinterConfig } from '../printing/worker.js';
 
 export const SUPERVISOR_REFUND_LIMIT_USD_CENTS = 2000; // $20.00 USD límite para supervisor
 
@@ -29,6 +30,7 @@ export interface ReportIncidentInput {
   workerId?: string;
   description?: string;
   estimatedLossUsdCents?: number;
+  refundMethod?: 'CASH_USD' | 'CASH_BS' | 'PAGO_MOVIL';
 }
 
 export interface IncidentResult {
@@ -115,7 +117,8 @@ export function reportOrderIncident(
     // Cargar datos de la orden y líneas de cocina para ticket de reposición
     const { order: receiptOrder, kitchenLines } = loadOrderReceiptDataFromDb(rawDb, orderId);
     const refireIR = buildRefireTicketIR(receiptOrder, kitchenLines, input.reasonCode);
-    const refireBytes = Buffer.from(renderTicketToEscPos(refireIR, { beep: true }));
+    const cocinaConfig = getPrinterConfig(rawDb, 'print_cocina');
+    const refireBytes = Buffer.from(renderTicketToEscPos(refireIR, cocinaConfig));
 
     const printJobId = `pjob_${generateUuidV7()}`;
     rawDb.prepare(`
@@ -235,16 +238,58 @@ export function reportOrderIncident(
       }
 
       // Salida de Dinero / Reembolso de Caja o Banco
-      // Se registra la salida proporcional en efectivo USD o bucket de pago
+      // Se determina el bucket contable correcto (CASH_USD, CASH_BS o BANK_BS para PAGO_MOVIL)
+      // usando la tasa histórica del pago original. PROHIBIDO tocar CASH_USD si fue en Bs.
+      const orderPayments = rawDb.prepare('SELECT * FROM payments WHERE order_id = ?').all(orderId) as any[];
+
+      let refundBucket: 'CASH_USD' | 'CASH_BS' | 'BANK_BS' = 'CASH_USD';
+      let refundRateMicroBs = rateMicroBs;
+
+      if (input.refundMethod) {
+        if (input.refundMethod === 'PAGO_MOVIL') {
+          refundBucket = 'BANK_BS';
+        } else if (input.refundMethod === 'CASH_BS') {
+          refundBucket = 'CASH_BS';
+        } else {
+          refundBucket = 'CASH_USD';
+        }
+        if (orderPayments.length > 0 && orderPayments[0].rate_micro_bs) {
+          refundRateMicroBs = orderPayments[0].rate_micro_bs;
+        }
+      } else if (orderPayments.length > 0) {
+        // Inferencia automática desde los registros en `payments` de la orden
+        const hasPagoMovil = orderPayments.some(p => p.method === 'PAGO_MOVIL' || p.method === 'UBII');
+        const hasCashBs = orderPayments.some(p => p.method === 'CASH_BS' || p.currency === 'BS');
+        const hasUsd = orderPayments.some(p => p.currency === 'USD' || p.method === 'CASH_USD');
+
+        if (hasPagoMovil) {
+          refundBucket = 'BANK_BS';
+        } else if (hasCashBs && !hasUsd) {
+          refundBucket = 'CASH_BS';
+        } else {
+          refundBucket = 'CASH_USD';
+        }
+
+        const matchingPayment = orderPayments.find(p => {
+          if (refundBucket === 'BANK_BS') return p.method === 'PAGO_MOVIL' || p.method === 'UBII';
+          if (refundBucket === 'CASH_BS') return p.method === 'CASH_BS' || p.currency === 'BS';
+          return p.currency === 'USD' || p.method === 'CASH_USD';
+        }) || orderPayments[0];
+
+        if (matchingPayment?.rate_micro_bs) {
+          refundRateMicroBs = matchingPayment.rate_micro_bs;
+        }
+      }
+
       insertLedger.run(
         `led_${generateUuidV7()}`,
         order.jornada_id,
         orderId,
-        'CASH_USD',
+        refundBucket,
         0,
-        totalOrderCents, // Crédito a caja representa salida de dinero devuelto al cliente
-        rateMicroBs,
-        `Salida Reembolso Cliente Orden #${order.order_number} (${input.reasonCode})`,
+        totalOrderCents, // Crédito a caja/banco representa salida de dinero devuelto al cliente
+        refundRateMicroBs,
+        `Salida Reembolso Cliente Orden #${order.order_number} (${input.reasonCode}) [${refundBucket}]`,
         now
       );
     }

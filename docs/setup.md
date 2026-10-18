@@ -124,3 +124,22 @@ powershell -ExecutionPolicy Bypass -File .\scripts\guardian.ps1
    - Debe reportar espacio libre en SSD, memoria y hora de `America/Caracas`.
 3. **Interfaz Web de Producción:** `http://localhost:3000`
    - Debe mostrar el dashboard oscuro de Tocineta Sonríe con métricas en tiempo real.
+
+---
+
+## 8. REPARACIÓN Y PERSISTENCIA USB DE IMPRESORA TÉRMICA (M10.1)
+
+Las impresoras térmicas USB de 58mm económicas (como `DP58U-03` con chip USB básico `iSerialNumber = 0`) pueden cambiar de puerto (`USB001` ➔ `USB002` / `USB003`) o caer al driver genérico de Windows al reconectarse en otro puerto físico.
+
+Para diagnosticar, remapear el puerto y asegurar el driver oficial:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\repair-printer-driver.ps1
+```
+
+*Acciones automáticas:*
+- Detecta la cola activa (`DP58U-03` o `POS-58`) y los puertos `USB00*` disponibles.
+- Si el puerto USB activo cambió, lo reasigna automáticamente con `Set-Printer -PortName`.
+- Configura `Set-Printer -KeepPrintedJobs $false` para evitar acumulación residual de trabajos RAW en el spooler.
+- Si Windows intentó asociar el driver genérico `Generic / Text Only`, lo restaura automáticamente al driver oficial `POS-58`.
+- Este script se invoca automáticamente en cada arranque mediante `scripts/guardian.ps1`.

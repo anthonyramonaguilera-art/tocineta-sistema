@@ -144,7 +144,9 @@ describe('Hito M4 - Gestión de Pedidos, Concurrencia Optimista, Prorrateo e Ide
       const children = order.lines.filter((l: any) => l.line_role === 'COMBO_CHILD');
       expect(children.length).toBe(3);
 
-      // Suma de precios prorrateados de los hijos debe ser exactamente igual al precio del combo (790)
+      // Suma y proporcionalidad exacta de Hamilton de los hijos
+      const proratedValues = children.map((c: any) => c.prorated_unit_price_usd_cents);
+      expect(proratedValues).toEqual([325, 325, 140]);
       const sumProrated = children.reduce((sum: number, c: any) => sum + c.prorated_unit_price_usd_cents, 0);
       expect(sumProrated).toBe(790);
 

@@ -33,10 +33,11 @@ async function bootstrap() {
     console.log(`✨ Base de datos al día. Cero migraciones pendientes.`);
   }
 
-  // 3. Semilla de usuarios iniciales (idempotente)
-  const seededCount = seedInitialUsers(dbContext.rawDb);
-  if (seededCount > 0) {
-    console.log(`👤 ${seededCount} usuario(s) inicial(es) creado(s) con éxito.`);
+  // 3. Semilla de usuarios iniciales (Bootstrap automático)
+  const userCountRow = dbContext.rawDb.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number };
+  if (userCountRow.cnt === 0) {
+    const seededCount = seedInitialUsers(dbContext.rawDb);
+    console.log(`BOOTSTRAP: ${seededCount} usuarios iniciales creados`);
   }
 
   // 4. Semilla de catálogo oficial (27 productos, combos, barra libre, sabores Pepsi, cupones)

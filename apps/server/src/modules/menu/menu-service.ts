@@ -253,13 +253,54 @@ export function getPosMenu(rawDb: Database.Database) {
     }));
   } catch {}
 
+  // 5b. 6 Extras Pagos oficiales
+  const paidExtraNames = [
+    'Papas Fritas Extra 150g',
+    'Carne Extra',
+    'Tocineta Extra',
+    'Pepinillo Extra',
+    'Jalapeños Extra',
+    'Papas Fritas Ración 250g'
+  ];
+
+  const paidExtraRows = rawDb.prepare(`
+    SELECT id, name, price_usd_cents
+    FROM products
+    WHERE is_active = 1 AND name IN (?, ?, ?, ?, ?, ?)
+    ORDER BY CASE name
+      WHEN 'Papas Fritas Extra 150g' THEN 1
+      WHEN 'Carne Extra' THEN 2
+      WHEN 'Tocineta Extra' THEN 3
+      WHEN 'Pepinillo Extra' THEN 4
+      WHEN 'Jalapeños Extra' THEN 5
+      WHEN 'Papas Fritas Ración 250g' THEN 6
+      ELSE 7
+    END ASC
+  `).all(...paidExtraNames) as Array<{ id: string; name: string; price_usd_cents: number }>;
+
+  const paidExtras = (paidExtraRows.length === 6 ? paidExtraRows : [
+    { id: 'prod_papas_fritas_extra_150', name: 'Papas Fritas Extra 150g', price_usd_cents: 100 },
+    { id: 'prod_carne_extra', name: 'Carne Extra', price_usd_cents: 100 },
+    { id: 'prod_tocineta_extra', name: 'Tocineta Extra', price_usd_cents: 100 },
+    { id: 'prod_pepinillo_extra', name: 'Pepinillo Extra', price_usd_cents: 100 },
+    { id: 'prod_jalapenos_extra', name: 'Jalapeños Extra', price_usd_cents: 100 },
+    { id: 'prod_papas_fritas_racion_250', name: 'Papas Fritas Ración 250g', price_usd_cents: 350 }
+  ]).map(pe => ({
+    id: pe.id,
+    name: pe.name,
+    priceUsdCents: pe.price_usd_cents,
+    priceBsCents: usdToBsCents(pe.price_usd_cents, rateMicroBs)
+  }));
+
   return {
     success: true,
     rateMicroBs,
     formattedRate,
     latestSeq,
     categories,
+    barraLibre: barraLibreIngredients,
     barraLibreIngredients,
+    paidExtras,
     globalModifiers: ['Poca Salsa', 'Sin Salsas', 'Sin Pan / Envuelta en Lechuga'],
     deliveryQuickTiers,
     combos
