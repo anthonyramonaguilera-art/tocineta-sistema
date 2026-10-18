@@ -572,6 +572,29 @@ export function processOrderPayment(
       );
     }
 
+    // E. REGISTRO CONTABLE DE CORTESÍAS DE MARKETING (SI APLICA)
+    const courtesyLines = rawDb.prepare(`
+      SELECT ol.*, p.estimated_cost_usd_cents, p.name as product_name
+      FROM order_lines ol
+      JOIN products p ON ol.product_id = p.id
+      WHERE ol.order_id = ? AND ol.line_role = 'COURTESY_ITEM'
+    `).all(orderId) as any[];
+
+    for (const cl of courtesyLines) {
+      const costCents = cl.estimated_cost_usd_cents || 35;
+      insertLedger.run(
+        `led_${generateUuidV7()}`,
+        jornada.id,
+        orderId,
+        'MARKETING_COURTESY',
+        costCents,
+        0,
+        rateMicroBs,
+        `Costo Interno Marketing Obsequio: ${cl.product_name} (${costCents}c USD) Orden #${order.order_number}`,
+        now
+      );
+    }
+
     // D. CREDITOS POR ENTREGA DE VUELTOS (SALIDAS DE CAJA)
     if (changeUsd > 0) {
       insertLedger.run(

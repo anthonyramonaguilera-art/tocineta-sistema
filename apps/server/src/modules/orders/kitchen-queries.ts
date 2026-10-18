@@ -6,6 +6,7 @@ export interface KitchenBuildableLine {
   productId: string;
   productName: string;
   displayName: string;
+  isCourtesyItem?: boolean;
   quantity: number;
   station: Station;
   status: 'pendiente' | 'preparando' | 'listo';
@@ -186,6 +187,7 @@ export function getKitchenBuildableLines(
       productId: line.product_id,
       productName: cleanProductName,
       displayName,
+      isCourtesyItem: line.line_role === 'COURTESY_ITEM',
       quantity: line.quantity,
       station: line.station,
       status: line.status || 'pendiente',

@@ -12,6 +12,8 @@ import { incidentsRoutes } from './modules/incidents/routes.js';
 import { reportsRoutes } from './modules/reports/routes.js';
 import { backupsRoutes } from './modules/backups/routes.js';
 import { emergencyRoutes } from './modules/emergency/routes.js';
+import { deliveryRoutes } from './modules/delivery/routes.js';
+import { couponRoutes } from './modules/coupons/routes.js';
 import { startSnapshotWorker } from './modules/backups/snapshot-service.js';
 import { PrintingWorker } from './modules/printing/worker.js';
 import { getDatabaseContext } from './db/connection.js';
@@ -99,6 +101,8 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   await server.register(reportsRoutes);
   await server.register(backupsRoutes, { rawDb: dbCtx.rawDb });
   await server.register(emergencyRoutes, { rawDb: dbCtx.rawDb });
+  await server.register(deliveryRoutes);
+  await server.register(couponRoutes);
 
   if (!options.disableStatic) {
     await server.register(staticPlugin);

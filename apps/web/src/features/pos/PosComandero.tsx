@@ -38,6 +38,12 @@ export const PosComandero: React.FC = () => {
   const [tableNumber, setTableNumber] = useState<string>('Mesa 1');
   const [fulfillmentType, setFulfillmentType] = useState<'salon' | 'para_llevar' | 'delivery'>('salon');
   const [deliveryTierCents, setDeliveryTierCents] = useState<number>(200);
+  const [customerName, setCustomerName] = useState<string>('');
+  const [customerPhone, setCustomerPhone] = useState<string>('');
+  const [deliveryAddress, setDeliveryAddress] = useState<string>('');
+  const [deliveryReference, setDeliveryReference] = useState<string>('');
+  const [motorizadoId, setMotorizadoId] = useState<string>('');
+  const [cashCollectedByDriver, setCashCollectedByDriver] = useState<boolean>(false);
   const [notes, setNotes] = useState<string>('');
   const [couponCode, setCouponCode] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -86,6 +92,17 @@ export const PosComandero: React.FC = () => {
       return res.json();
     },
     refetchInterval: 6000
+  });
+
+  // Consultar repartidores activos
+  const { data: driversData } = useQuery<{ success: boolean; drivers: Array<{ id: string; name: string; phone: string }> }>({
+    queryKey: ['deliveryDrivers'],
+    queryFn: async () => {
+      const res = await fetch('/api/delivery/drivers');
+      if (!res.ok) return { success: false, drivers: [] };
+      return res.json();
+    },
+    staleTime: 30000
   });
 
   // Lista plana de productos
@@ -208,6 +225,12 @@ export const PosComandero: React.FC = () => {
     setEditingOrderNumber(null);
     setNotes('');
     setCouponCode('');
+    setCustomerName('');
+    setCustomerPhone('');
+    setDeliveryAddress('');
+    setDeliveryReference('');
+    setMotorizadoId('');
+    setCashCollectedByDriver(false);
   };
 
   // --------------------------------------------------------------------------
@@ -273,6 +296,13 @@ export const PosComandero: React.FC = () => {
           body: JSON.stringify({
             version: editingOrderVersion,
             tableNumber,
+            fulfillmentType,
+            deliveryFeeUsdCents: fulfillmentType === 'delivery' ? deliveryFeeCents : 0,
+            customerName: fulfillmentType === 'delivery' ? (customerName.trim() || undefined) : undefined,
+            customerPhone: fulfillmentType === 'delivery' ? (customerPhone.trim() || undefined) : undefined,
+            deliveryAddress: fulfillmentType === 'delivery' ? (deliveryAddress.trim() || undefined) : undefined,
+            deliveryReference: fulfillmentType === 'delivery' ? (deliveryReference.trim() || undefined) : undefined,
+            motorizadoId: fulfillmentType === 'delivery' ? (motorizadoId || undefined) : undefined,
             notes,
             lines: linesPayload
           })
@@ -318,6 +348,12 @@ export const PosComandero: React.FC = () => {
       fulfillmentType,
       notes: notes.trim() || undefined,
       deliveryFeeUsdCents: fulfillmentType === 'delivery' ? deliveryFeeCents : 0,
+      customerName: fulfillmentType === 'delivery' ? (customerName.trim() || undefined) : undefined,
+      customerPhone: fulfillmentType === 'delivery' ? (customerPhone.trim() || undefined) : undefined,
+      deliveryAddress: fulfillmentType === 'delivery' ? (deliveryAddress.trim() || undefined) : undefined,
+      deliveryReference: fulfillmentType === 'delivery' ? (deliveryReference.trim() || undefined) : undefined,
+      motorizadoId: fulfillmentType === 'delivery' ? (motorizadoId || undefined) : undefined,
+      cashCollectedByDriver: fulfillmentType === 'delivery' ? cashCollectedByDriver : false,
       couponCode: couponCode.trim() || undefined,
       lines: linesPayload
     };
@@ -793,28 +829,110 @@ export const PosComandero: React.FC = () => {
               ))}
             </div>
 
-            {/* Si es delivery: Selector de Zona/Tarifa */}
-            {fulfillmentType === 'delivery' && menu.deliveryQuickTiers && (
-              <div className="p-2.5 bg-tocineta-bg border border-tocineta-border rounded-2xl space-y-1.5">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-tocineta-muted block">
-                  Tarifa Motorizado:
-                </span>
-                <div className="grid grid-cols-4 gap-1">
-                  {menu.deliveryQuickTiers.map(t => (
-                    <button
-                      key={t.usdCents}
-                      type="button"
-                      onClick={() => setDeliveryTierCents(t.usdCents)}
-                      className={`min-h-[40px] rounded-xl text-xs font-mono font-bold transition-all ${
-                        deliveryTierCents === t.usdCents
-                          ? 'bg-tocineta-yellow text-tocineta-bg shadow'
-                          : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted'
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
+            {/* Si es delivery: Panel Operativo de Despacho, Zonas y Motorizado */}
+            {fulfillmentType === 'delivery' && (
+              <div className="p-3 bg-tocineta-bg border border-tocineta-border rounded-2xl space-y-2.5">
+                {/* 4 Botones Táctiles de Tarifa / Zona + Manual */}
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-tocineta-muted block mb-1">
+                    Tarifa de Delivery (Fondo Motorizado):
+                  </span>
+                  <div className="grid grid-cols-4 gap-1">
+                    {[
+                      { cents: 200, label: '+$2.00' },
+                      { cents: 300, label: '+$3.00' },
+                      { cents: 400, label: '+$4.00' },
+                      { cents: 500, label: '+$5.00' }
+                    ].map(t => (
+                      <button
+                        key={t.cents}
+                        type="button"
+                        onClick={() => setDeliveryTierCents(t.cents)}
+                        className={`min-h-[42px] rounded-xl text-xs font-mono font-black transition-all ${
+                          deliveryTierCents === t.cents
+                            ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                            : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+                        }`}
+                      >
+                        {t.label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
+
+                {/* Datos del Cliente */}
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    placeholder="Nombre del Cliente"
+                    value={customerName}
+                    onChange={e => setCustomerName(e.target.value)}
+                    className="min-h-[40px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none focus:border-tocineta-yellow"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Teléfono (ej: 0414...)"
+                    value={customerPhone}
+                    onChange={e => setCustomerPhone(e.target.value)}
+                    className="min-h-[40px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none focus:border-tocineta-yellow font-mono"
+                  />
+                </div>
+
+                {/* Dirección y Punto de Referencia */}
+                <div className="space-y-1.5">
+                  <input
+                    type="text"
+                    placeholder="Dirección exacta de entrega..."
+                    value={deliveryAddress}
+                    onChange={e => setDeliveryAddress(e.target.value)}
+                    className="w-full min-h-[40px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none focus:border-tocineta-yellow"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Punto de referencia (ej: Casa blanca frente a plaza)..."
+                    value={deliveryReference}
+                    onChange={e => setDeliveryReference(e.target.value)}
+                    className="w-full min-h-[38px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-[11px] text-white placeholder-tocineta-muted outline-none focus:border-tocineta-yellow"
+                  />
+                </div>
+
+                {/* Selector de Motorizado */}
+                <div className="space-y-1">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-tocineta-muted block">
+                    Motorizado Asignado:
+                  </span>
+                  <select
+                    value={motorizadoId}
+                    onChange={e => setMotorizadoId(e.target.value)}
+                    className="w-full min-h-[42px] bg-tocineta-card border border-tocineta-border rounded-xl px-3 text-xs font-bold text-tocineta-yellow outline-none focus:border-tocineta-yellow"
+                  >
+                    <option value="">-- Sin asignar / Por despachar --</option>
+                    {(driversData?.drivers || []).map(d => (
+                      <option key={d.id} value={d.id}>
+                        🛵 {d.name} ({d.phone})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Control de Efectivo en Mano del Motorizado */}
+                <button
+                  type="button"
+                  onClick={() => setCashCollectedByDriver(prev => !prev)}
+                  className={`w-full min-h-[42px] px-3 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
+                    cashCollectedByDriver
+                      ? 'bg-amber-500/20 border-amber-500/60 text-amber-300'
+                      : 'bg-tocineta-card border-tocineta-border text-tocineta-muted hover:text-white'
+                  }`}
+                >
+                  <div className="flex items-center gap-2">
+                    <span>💵</span>
+                    <span className="text-[11px]">Cobrado en efectivo por el motorizado</span>
+                  </div>
+                  <span className="font-mono text-xs">
+                    {cashCollectedByDriver ? '✓ SÍ (En mano)' : '✕ NO'}
+                  </span>
+                </button>
               </div>
             )}
           </div>

@@ -42,6 +42,9 @@ export interface CreateOrderInput {
   customerName?: string | null;
   customerPhone?: string | null;
   deliveryAddress?: string | null;
+  deliveryReference?: string | null;
+  motorizadoId?: string | null;
+  cashCollectedByDriver?: boolean;
   deliveryFeeUsdCents?: number;
   couponCode?: string | null;
   notes?: string | null;
@@ -55,6 +58,8 @@ export interface UpdateOrderInput {
   customerName?: string | null;
   customerPhone?: string | null;
   deliveryAddress?: string | null;
+  deliveryReference?: string | null;
+  motorizadoId?: string | null;
   deliveryFeeUsdCents?: number;
   notes?: string | null;
   lines?: OrderLineInput[];
@@ -314,7 +319,8 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
     rawDb.prepare(`
       INSERT INTO orders (
         id, order_number, jornada_id, created_by_user_id, fulfillment_type,
-        table_number, customer_name, customer_phone, delivery_address, delivery_fee_usd_cents,
+        table_number, customer_name, customer_phone, delivery_address, delivery_reference,
+        delivery_fee_usd_cents, motorizado_id,
         gross_food_subtotal_usd_cents, discount_usd_cents, coupon_id, net_food_sales_usd_cents,
         total_to_collect_usd_cents, rate_micro_bs, payment_status, fulfillment_status,
         station_status_hot_dogs, station_status_hamburguesas,
@@ -322,6 +328,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
       ) VALUES (
         ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?,
+        ?, ?,
         ?, ?, ?, ?,
         ?, ?, 'sin_pago', 'enviado',
         ?, ?,
@@ -337,7 +344,9 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
       input.customerName || null,
       input.customerPhone || null,
       input.deliveryAddress || null,
+      input.deliveryReference || null,
       deliveryFeeUsdCents,
+      input.motorizadoId || null,
       grossFoodSubtotalUsdCents,
       discountUsdCents,
       couponId,
@@ -351,6 +360,32 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
       now,
       now
     );
+
+    // Si es delivery, registrar en tabla deliveries
+    if (input.fulfillmentType === 'delivery') {
+      let driverName = null;
+      if (input.motorizadoId) {
+        const d = rawDb.prepare('SELECT name FROM delivery_drivers WHERE id = ?').get(input.motorizadoId) as any;
+        driverName = d?.name || null;
+      }
+      const cashCollected = input.cashCollectedByDriver ? 1 : 0;
+      const cashAmount = cashCollected ? netFoodSalesUsdCents : 0;
+      rawDb.prepare(`
+        INSERT INTO deliveries (
+          id, order_id, driver_id, motorizado_name, delivery_fee_usd_cents,
+          status, settled_to_motorizado, cash_collected_by_driver, food_cash_amount_usd_cents, created_at_ms
+        ) VALUES (?, ?, ?, ?, ?, 'asignado', 0, ?, ?, ?)
+      `).run(
+        `del_${generateUuidV7()}`,
+        orderId,
+        input.motorizadoId || null,
+        driverName,
+        deliveryFeeUsdCents,
+        cashCollected,
+        cashAmount,
+        now
+      );
+    }
 
     // 4. Insertar líneas y modificadores
     const insertLineStmt = rawDb.prepare(`
@@ -430,15 +465,27 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
 /**
  * Consulta de orden por ID con sus líneas y modificadores
  */
-export function getOrderById(rawDb: Database.Database, orderId: string) {
+export function getOrderById(rawDb: Database.Database, orderId: string, userRole?: string) {
   const order = rawDb.prepare(`
-    SELECT o.*, u.name as created_by_name
+    SELECT o.*, u.name as created_by_name,
+           d.id as delivery_id, d.driver_id, d.motorizado_name, d.status as delivery_status,
+           d.cash_collected_by_driver, d.food_cash_amount_usd_cents as cash_amount_usd_cents, d.settled_to_motorizado,
+           dd.name as driver_name, dd.phone as driver_phone
     FROM orders o
     JOIN users u ON o.created_by_user_id = u.id
+    LEFT JOIN deliveries d ON o.id = d.order_id
+    LEFT JOIN delivery_drivers dd ON (d.driver_id = dd.id OR o.motorizado_id = dd.id)
     WHERE o.id = ?
   `).get(orderId) as any;
 
   if (!order) return null;
+
+  if (userRole && userRole !== 'admin' && userRole !== 'supervisor') {
+    if (order.customer_phone) {
+      const clean = order.customer_phone.trim();
+      order.customer_phone = clean.length <= 4 ? '***' : clean.slice(0, 4) + '***' + clean.slice(-2);
+    }
+  }
 
   const lines = rawDb.prepare(`
     SELECT ol.*, p.name as product_name
@@ -550,26 +597,77 @@ export function updateOrder(
         }
       }
 
+      const fee = input.deliveryFeeUsdCents !== undefined ? input.deliveryFeeUsdCents : current.delivery_fee_usd_cents;
+      const totalToCollect = grossSubtotal + fee;
+
       rawDb.prepare(`
         UPDATE orders
         SET gross_food_subtotal_usd_cents = ?,
             net_food_sales_usd_cents = ?,
-            total_to_collect_usd_cents = ? + delivery_fee_usd_cents,
+            delivery_fee_usd_cents = ?,
+            total_to_collect_usd_cents = ?,
             version = ?,
             notes = COALESCE(?, notes),
             table_number = COALESCE(?, table_number),
+            fulfillment_type = COALESCE(?, fulfillment_type),
+            customer_name = COALESCE(?, customer_name),
+            customer_phone = COALESCE(?, customer_phone),
+            delivery_address = COALESCE(?, delivery_address),
+            delivery_reference = COALESCE(?, delivery_reference),
+            motorizado_id = COALESCE(?, motorizado_id),
             updated_at_ms = ?
         WHERE id = ?
-      `).run(grossSubtotal, grossSubtotal, grossSubtotal, newVersion, input.notes, input.tableNumber, now, orderId);
+      `).run(
+        grossSubtotal,
+        grossSubtotal,
+        fee,
+        totalToCollect,
+        newVersion,
+        input.notes ?? null,
+        input.tableNumber ?? null,
+        input.fulfillmentType ?? null,
+        input.customerName ?? null,
+        input.customerPhone ?? null,
+        input.deliveryAddress ?? null,
+        input.deliveryReference ?? null,
+        input.motorizadoId ?? null,
+        now,
+        orderId
+      );
     } else {
+      const fee = input.deliveryFeeUsdCents !== undefined ? input.deliveryFeeUsdCents : current.delivery_fee_usd_cents;
+      const totalToCollect = current.net_food_sales_usd_cents + fee;
+
       rawDb.prepare(`
         UPDATE orders
-        SET notes = COALESCE(?, notes),
+        SET delivery_fee_usd_cents = ?,
+            total_to_collect_usd_cents = ?,
+            notes = COALESCE(?, notes),
             table_number = COALESCE(?, table_number),
+            fulfillment_type = COALESCE(?, fulfillment_type),
+            customer_name = COALESCE(?, customer_name),
+            customer_phone = COALESCE(?, customer_phone),
+            delivery_address = COALESCE(?, delivery_address),
+            delivery_reference = COALESCE(?, delivery_reference),
+            motorizado_id = COALESCE(?, motorizado_id),
             version = ?,
             updated_at_ms = ?
         WHERE id = ?
-      `).run(input.notes, input.tableNumber, newVersion, now, orderId);
+      `).run(
+        fee,
+        totalToCollect,
+        input.notes ?? null,
+        input.tableNumber ?? null,
+        input.fulfillmentType ?? null,
+        input.customerName ?? null,
+        input.customerPhone ?? null,
+        input.deliveryAddress ?? null,
+        input.deliveryReference ?? null,
+        input.motorizadoId ?? null,
+        newVersion,
+        now,
+        orderId
+      );
     }
 
     appendAuditEvent(rawDb, {

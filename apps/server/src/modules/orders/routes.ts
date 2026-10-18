@@ -97,7 +97,19 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
     const dbCtx = getDatabaseContext();
     const { id } = request.params as { id: string };
 
-    const order = getOrderById(dbCtx.rawDb, id);
+    const rawToken = extractSessionToken(request.headers.authorization);
+    let userRole: string | undefined = undefined;
+    if (rawToken) {
+      const tokenHash = hashToken(rawToken);
+      const session = dbCtx.rawDb.prepare(`
+        SELECT u.role FROM sessions s
+        JOIN users u ON s.user_id = u.id
+        WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
+      `).get(tokenHash) as { role: string } | undefined;
+      if (session) userRole = session.role;
+    }
+
+    const order = getOrderById(dbCtx.rawDb, id, userRole);
     if (!order) {
       return reply.status(404).send({ success: false, error: `Orden '${id}' no encontrada` });
     }

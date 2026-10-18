@@ -220,6 +220,23 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
               / {(totalBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs
             </span>
           </div>
+          {(order.discount_usd_cents > 0 || order.delivery_fee_usd_cents > 0) && (
+            <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px] font-mono">
+              <span className="text-tocineta-muted">
+                Comida: ${(order.gross_food_subtotal_usd_cents / 100).toFixed(2)}
+              </span>
+              {order.discount_usd_cents > 0 && (
+                <span className="text-emerald-400 font-bold">
+                  • Cupón: -${(order.discount_usd_cents / 100).toFixed(2)}
+                </span>
+              )}
+              {order.delivery_fee_usd_cents > 0 && (
+                <span className="text-amber-400 font-bold">
+                  • Delivery: +${(order.delivery_fee_usd_cents / 100).toFixed(2)}
+                </span>
+              )}
+            </div>
+          )}
         </div>
 
         {/* SALDO RESTANTE */}

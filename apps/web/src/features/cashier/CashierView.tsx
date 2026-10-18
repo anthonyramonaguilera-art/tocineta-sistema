@@ -7,6 +7,8 @@ import { DrinksChecklist } from './DrinksChecklist.js';
 import { MultiMethodCalculator } from './MultiMethodCalculator.js';
 import { PrintAttentionModal } from './PrintAttentionModal.js';
 import { TicketPreviewModal } from './TicketPreviewModal.js';
+import { ApplyCouponModal } from '../coupons/ApplyCouponModal.js';
+import { DriverSettlementModal } from '../delivery/DriverSettlementModal.js';
 import { usdToBsCents } from '@tocineta/shared';
 
 export const CashierView: React.FC = () => {
@@ -17,6 +19,8 @@ export const CashierView: React.FC = () => {
   const [successBanner, setSuccessBanner] = useState<string | null>(null);
   const [previewJobId, setPreviewJobId] = useState<string | null>(null);
   const [lastPaidOrderId, setLastPaidOrderId] = useState<string | null>(null);
+  const [showCouponModal, setShowCouponModal] = useState<boolean>(false);
+  const [showSettlementModal, setShowSettlementModal] = useState<boolean>(false);
 
   // Estados de Apertura de Jornada
   const [showOpenModal, setShowOpenModal] = useState<boolean>(false);
@@ -182,6 +186,14 @@ export const CashierView: React.FC = () => {
           )}
           <button
             type="button"
+            onClick={() => setShowSettlementModal(true)}
+            className="min-h-[46px] px-3.5 rounded-2xl bg-tocineta-bg border border-tocineta-yellow/60 hover:bg-tocineta-yellow hover:text-tocineta-bg text-xs font-black text-tocineta-yellow active:scale-95 transition-all flex items-center gap-1.5 shadow-md"
+          >
+            <span>🛵</span>
+            <span>Liquidación Motorizados</span>
+          </button>
+          <button
+            type="button"
             onClick={() => refetchOrders()}
             className="min-h-[46px] px-3.5 rounded-2xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow text-xs font-bold text-white active:scale-95 transition-all"
           >
@@ -345,6 +357,92 @@ export const CashierView: React.FC = () => {
         <div className="lg:col-span-7 space-y-4">
           {selectedOrder ? (
             <>
+              {/* BARRA INTERACTIVA DE CUPONES DUALES ("CUPONES PARA TI") */}
+              <div className="bg-tocineta-card border border-tocineta-border rounded-3xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-purple-500/20 border border-purple-500/40 flex items-center justify-center text-xl">
+                    🎁
+                  </div>
+                  <div>
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-tocineta-muted block">
+                      Cupones para ti:
+                    </span>
+                    <span className="text-xs font-black text-white">
+                      {selectedOrder.discount_usd_cents > 0 ? (
+                        <span className="text-emerald-400">
+                          Cupón de Descuento: -${(selectedOrder.discount_usd_cents / 100).toFixed(2)} USD
+                        </span>
+                      ) : (selectedOrder.lines || []).some(l => l.line_role === 'COURTESY_ITEM') ? (
+                        <span className="text-purple-300 font-bold">
+                          [OBSEQUIO CUPÓN - $0.00] Activo en Comanda
+                        </span>
+                      ) : (
+                        <span className="text-tocineta-muted">Ningún cupón aplicado a esta orden</span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setShowCouponModal(true)}
+                  className="min-h-[44px] px-4 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs transition-all active:scale-95 flex items-center gap-1.5 shadow-md shrink-0"
+                >
+                  <span>🎁</span>
+                  <span>
+                    {selectedOrder.discount_usd_cents > 0 || (selectedOrder.lines || []).some(l => l.line_role === 'COURTESY_ITEM')
+                      ? 'Modificar Cupón'
+                      : 'Aplicar Cupón'}
+                  </span>
+                </button>
+              </div>
+
+              {/* SI ES DELIVERY: FICHA OPERATIVA DE DESPACHO Y MOTORIZADO */}
+              {selectedOrder.fulfillment_type === 'delivery' && (
+                <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-3xl p-4 space-y-2.5 shadow-md text-xs">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🛵</span>
+                      <div>
+                        <h4 className="font-black text-white text-sm">Ficha Operativa de Delivery</h4>
+                        <span className="text-[11px] text-tocineta-muted">
+                          Tarifa de Despacho: <strong className="text-tocineta-yellow font-mono">+${(selectedOrder.delivery_fee_usd_cents / 100).toFixed(2)}</strong>
+                        </span>
+                      </div>
+                    </div>
+                    {Boolean((selectedOrder as any).cash_collected_by_driver) && (
+                      <span className="px-2.5 py-1 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-[10px] font-black uppercase">
+                        💵 Efectivo en poder del motorizado
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-[11px] pt-1 border-t border-amber-500/20">
+                    <div>
+                      <span className="text-tocineta-muted block">Dirección de Entrega:</span>
+                      <span className="text-white font-bold block">
+                        {(selectedOrder as any).delivery_address || 'Dirección no indicada'}
+                      </span>
+                      {(selectedOrder as any).delivery_reference && (
+                        <span className="text-amber-200/90 block italic mt-0.5">
+                          Ref: {(selectedOrder as any).delivery_reference}
+                        </span>
+                      )}
+                    </div>
+                    <div>
+                      <span className="text-tocineta-muted block">Cliente:</span>
+                      <span className="text-white font-bold block">
+                        {(selectedOrder as any).customer_name || 'Cliente'} 
+                        {(selectedOrder as any).customer_phone ? ` (${(selectedOrder as any).customer_phone})` : ''}
+                      </span>
+                      <span className="text-tocineta-yellow block font-bold mt-1">
+                        🛵 Motorizado: {(selectedOrder as any).driver_name || (selectedOrder as any).motorizado_name || 'Por asignar'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* CHECKLIST DE BEBIDAS EN NEVERA */}
               <DrinksChecklist lines={selectedOrder.lines || []} />
 
@@ -373,6 +471,30 @@ export const CashierView: React.FC = () => {
         </div>
 
       </div>
+
+      {/* MODAL DE APLICAR CUPÓN */}
+      {showCouponModal && selectedOrder && (
+        <ApplyCouponModal
+          isOpen={true}
+          onClose={() => setShowCouponModal(false)}
+          orderId={selectedOrder.id}
+          orderNumber={selectedOrder.order_number}
+          currentCouponId={(selectedOrder as any).coupon_id}
+          currentDiscountCents={selectedOrder.discount_usd_cents}
+          hasCourtesyLine={(selectedOrder.lines || []).some(l => l.line_role === 'COURTESY_ITEM')}
+          onSuccess={() => {
+            refetchOrders();
+          }}
+        />
+      )}
+
+      {/* MODAL DE LIQUIDACIÓN DE MOTORIZADOS */}
+      {showSettlementModal && (
+        <DriverSettlementModal
+          isOpen={true}
+          onClose={() => setShowSettlementModal(false)}
+        />
+      )}
 
       {/* MODAL ALERTA DE IMPRESORA CON FALLO */}
       <PrintAttentionModal onOpenTicketPreview={(jobId) => setPreviewJobId(jobId)} />

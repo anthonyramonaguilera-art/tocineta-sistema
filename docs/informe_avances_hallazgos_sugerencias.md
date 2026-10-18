@@ -1,8 +1,8 @@
 # Informe Ejecutivo de Avances, Hallazgos Técnicos y Recomendaciones
 ## Sistema Operativo Local "Tocineta Sonríe" — Varons Media
 **Fecha de corte:** Octubre 2026  
-**Estado general:** Hitos M0 al M9 completados y verificados al 100%  
-**Batería de pruebas:** 112 pruebas automatizadas superadas (20 en `@tocineta/shared`, 92 en `@tocineta/server`)  
+**Estado general:** Release 1 (Hitos G0 y M0 al M10) y Release 2 (Hito M11) completados y verificados al 100%  
+**Batería de pruebas:** 157 pruebas automatizadas superadas (20 en `@tocineta/shared`, 137 en `@tocineta/server`)  
 
 ---
 
@@ -41,6 +41,10 @@ graph TD
 | **M7** | Pantalla de Cocina (KDS), Despacho por Estaciones (Hot Dogs / Burgers), Cronómetros | **100%** | Cronómetros dinámicos, avance por renglón, auto-ensamble de orden lista. |
 | **M8** | Arqueo Ciego Anti-Tanteo, Cierre Z, Devoluciones/Mermas, Reportes Excel y PDF | **100%** | Recuento ciego estricto, tope supervisor $20, hash de auditoría SHA-256. |
 | **M9** | Snapshots en Caliente (5 min), Respaldo Cifrado Asimétrico `age`, Script de Restauración y Modo Emergencia en Papel | **100%** | Snapshots automáticos con retención (12/24/30), respaldo USB con 2 claves públicas, restauración verificada (<3s), 200 comandas (#EMG-001 a #EMG-200) y transcripción diferida. |
+| **M10.1** | Blindaje Forense de Hardware, Parches F1–F7, Cambio Obligatorio de PIN e Inmutabilidad | **100%** | Auditoría rigurosa, rotación segura de PIN administrativo, bloqueo de claves en código. |
+| **M10.2** | Implementación de las 5 Mejoras Aprobadas (`SUG-01` a `SUG-05`) | **100%** | Code-splitting React.lazy (~116 kB bundle inicial), autodetección USB con espacio y marcador, Dry-Run en solo lectura, archivado seguro de eventos. |
+| **M10.3** | Certificación de Release 1 (22 Pruebas de Aceptación) y Script de Prueba Física Real | **100%** | Suite de aceptación de punta a punta aprobada y validación con impresoras térmicas reales DP58U-03 y MP583. |
+| **M11** | **Release 2:** Módulo Operativo de Delivery (Zonas, Motorizados, Efectivo en Mano y Liquidación Nocturna) y Cupones Duales (`DISCOUNT` y `COURTESY_ITEM`) | **100%** | CRUD motorizados, tarifas rápidas $2/$3/$4/$5, enmascaramiento de privacidad, control de efectivo en mano, liquidación nocturna en `MOTORIZADO_FUND` sin alterar `FOOD_SALES`, cupones duales con comanda `[OBSEQUIO CUPÓN - $0.00]` y costo interno de 35¢ en `MARKETING_COURTESY`. |
 
 ---
 

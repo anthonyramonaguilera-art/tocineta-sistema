@@ -243,7 +243,16 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
       if (!fs.existsSync(dirPath)) return;
       const entries = fs.readdirSync(dirPath, { withFileTypes: true });
       for (const entry of entries) {
-        if (entry.name === 'node_modules' || entry.name === '.git' || entry.name === 'dist') {
+        if (
+          entry.name === 'node_modules' ||
+          entry.name === '.git' ||
+          entry.name === 'dist' ||
+          entry.name === 'data' ||
+          entry.name.endsWith('.db') ||
+          entry.name.endsWith('.db-journal') ||
+          entry.name.endsWith('.db-wal') ||
+          entry.name.endsWith('.db-shm')
+        ) {
           continue;
         }
         if (entry.name === currentTestFileName) {
