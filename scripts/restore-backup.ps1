@@ -44,22 +44,32 @@ Write-Host ""
 
 # 1. Solicitar ruta del archivo si no fue provista
 if (-not $BackupPath -or $BackupPath.Trim() -eq "") {
-    Write-Host "Archivos de respaldo detectados en ./data/backups/usb:" -ForegroundColor Gray
-    if (Test-Path "./data/backups/usb") {
-        Get-ChildItem "./data/backups/usb" -Filter "*.age" | Select-Object -First 5 | ForEach-Object {
-            Write-Host "  -> $($_.FullName)" -ForegroundColor DarkCyan
+    if ($DryRun -and (Test-Path "./data/snapshots")) {
+        $latestSnapshot = Get-ChildItem "./data/snapshots" -Filter "*.db" | Sort-Object LastWriteTime -Descending | Select-Object -First 1
+        if ($latestSnapshot) {
+            $BackupPath = $latestSnapshot.FullName
+            Write-Host "[DRY-RUN] Seleccionado automáticamente el snapshot más reciente: $BackupPath" -ForegroundColor Cyan
         }
     }
 
-    Write-Host "Snapshots detectados en ./data/snapshots:" -ForegroundColor Gray
-    if (Test-Path "./data/snapshots") {
-        Get-ChildItem "./data/snapshots" -Filter "*.db" | Select-Object -First 3 | ForEach-Object {
-            Write-Host "  -> $($_.FullName)" -ForegroundColor DarkCyan
+    if (-not $BackupPath -or $BackupPath.Trim() -eq "") {
+        Write-Host "Archivos de respaldo detectados en ./data/backups/usb:" -ForegroundColor Gray
+        if (Test-Path "./data/backups/usb") {
+            Get-ChildItem "./data/backups/usb" -Filter "*.age" | Select-Object -First 5 | ForEach-Object {
+                Write-Host "  -> $($_.FullName)" -ForegroundColor DarkCyan
+            }
         }
-    }
-    Write-Host ""
 
-    $BackupPath = Read-Host "Ingrese la ruta completa o relativa del archivo de respaldo (.db.age o .db)"
+        Write-Host "Snapshots detectados en ./data/snapshots:" -ForegroundColor Gray
+        if (Test-Path "./data/snapshots") {
+            Get-ChildItem "./data/snapshots" -Filter "*.db" | Select-Object -First 3 | ForEach-Object {
+                Write-Host "  -> $($_.FullName)" -ForegroundColor DarkCyan
+            }
+        }
+        Write-Host ""
+
+        $BackupPath = Read-Host "Ingrese la ruta completa o relativa del archivo de respaldo (.db.age o .db)"
+    }
 }
 
 if (-not (Test-Path $BackupPath)) {

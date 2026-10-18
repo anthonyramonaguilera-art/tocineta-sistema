@@ -446,7 +446,14 @@ export function closeJornadaZ(
     }
   });
 
-  // 8. Respaldo Cifrado Diario a USB (age) al cerrar jornada
+  // 8. SUG-04: Archivado seguro de events_log (> 30 días, preservando últimos 1.000) y purga de idempotency_keys
+  try {
+    archiveOldEventsAndPurgeIdempotency(rawDb, now);
+  } catch (err) {
+    console.error('[Cierre Z] Error en archivado seguro de eventos:', err);
+  }
+
+  // 9. Respaldo Cifrado Diario a USB (age) al cerrar jornada
   createEncryptedBackup(rawDb, {
     jornadaId,
     actorUserId: user.id,
@@ -458,5 +465,87 @@ export function closeJornadaZ(
   return {
     success: true,
     zReport: zReportData
+  };
+}
+
+export interface EventArchiveResult {
+  purgedIdempotencyKeys: number;
+  archivedEventsCount: number;
+  remainingEventsCount: number;
+}
+
+/**
+ * SUG-04: Purga de idempotency_keys expiradas y archivado de events_log antiguos.
+ * Regla de Oro: CONSERVAR SIEMPRE intactos los últimos 1.000 eventos en events_log
+ * para garantizar la reconexión móvil continua por WebSocket (?since=<seq>).
+ * Solo se mueven a events_log_archive los eventos previos a ese umbral que tengan
+ * más de 30 días de antigüedad.
+ * PROHIBIDO tocar orders, ledger_entries o audit_events.
+ */
+export function archiveOldEventsAndPurgeIdempotency(
+  rawDb: Database.Database,
+  now: number = Date.now()
+): EventArchiveResult {
+  // 1. Purga de claves de idempotencia expiradas
+  const purgeIdempotency = rawDb.prepare(`
+    DELETE FROM idempotency_keys WHERE expires_at_ms < ?
+  `).run(now);
+
+  // 2. Umbral de 30 días (30d * 24h * 60m * 60s * 1000ms = 2,592,000,000 ms)
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const cutoffTimeMs = now - thirtyDaysMs;
+
+  let archivedEventsCount = 0;
+
+  // Encontrar el seq del evento #1000 más reciente (orden DESC, offset 999)
+  const offsetRow = rawDb.prepare(`
+    SELECT seq FROM events_log ORDER BY seq DESC LIMIT 1 OFFSET 999
+  `).get() as { seq: number } | undefined;
+
+  // Si existen más de 1.000 eventos, offsetRow existe:
+  // Cualquier evento con seq >= offsetRow.seq pertenece al grupo protegido de los últimos 1.000.
+  // Solo los que tienen seq < offsetRow.seq Y created_at_ms < cutoffTimeMs son elegibles.
+  if (offsetRow) {
+    const cutoffSeq = offsetRow.seq;
+    const archiveTx = rawDb.transaction(() => {
+      rawDb.exec(`
+        CREATE TABLE IF NOT EXISTS events_log_archive (
+          seq INTEGER PRIMARY KEY,
+          event_type TEXT NOT NULL,
+          entity_id TEXT NOT NULL,
+          payload_json TEXT NOT NULL,
+          created_at_ms INTEGER NOT NULL,
+          archived_at_ms INTEGER NOT NULL
+        );
+        CREATE INDEX IF NOT EXISTS idx_events_log_archive_entity ON events_log_archive(entity_id);
+        CREATE INDEX IF NOT EXISTS idx_events_log_archive_created ON events_log_archive(created_at_ms);
+      `);
+
+      const insertResult = rawDb.prepare(`
+        INSERT OR IGNORE INTO events_log_archive (
+          seq, event_type, entity_id, payload_json, created_at_ms, archived_at_ms
+        )
+        SELECT seq, event_type, entity_id, payload_json, created_at_ms, ?
+        FROM events_log
+        WHERE seq < ? AND created_at_ms < ?
+      `).run(now, cutoffSeq, cutoffTimeMs);
+
+      rawDb.prepare(`
+        DELETE FROM events_log
+        WHERE seq < ? AND created_at_ms < ?
+      `).run(cutoffSeq, cutoffTimeMs);
+
+      return insertResult.changes;
+    });
+
+    archivedEventsCount = archiveTx();
+  }
+
+  const remaining = rawDb.prepare('SELECT count(*) as count FROM events_log').get() as { count: number };
+
+  return {
+    purgedIdempotencyKeys: purgeIdempotency.changes,
+    archivedEventsCount,
+    remainingEventsCount: remaining.count
   };
 }

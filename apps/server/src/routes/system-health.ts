@@ -9,6 +9,8 @@ import {
 } from '@tocineta/shared';
 import { getDatabaseContext } from '../db/connection.js';
 import { verifyAuditChain } from '../modules/audit/audit-service.js';
+import { getLastDryRun, detectUsbVault } from '../modules/backups/backup-service.js';
+import { DEFAULT_AGE_RECIPIENTS } from '../modules/backups/constants.js';
 
 function formatGigabytes(bytes: number): string {
   return `${(bytes / (1024 * 1024 * 1024)).toFixed(2)} GB`;
@@ -123,6 +125,43 @@ export const systemHealthRoutes: FastifyPluginAsync = async (fastify) => {
       // Si la tabla audit_events aún no existe (ej. tests tempranos)
     }
 
+    // SUG-03: Estado del último Dry-Run
+    const lastDryRun = getLastDryRun();
+    const dryRunData = lastDryRun ? {
+      status: lastDryRun.status,
+      snapshotVerified: lastDryRun.snapshotVerified,
+      auditChainValid: lastDryRun.auditChainValid,
+      checkedAtMs: lastDryRun.checkedAtMs,
+      message: lastDryRun.message,
+      error: lastDryRun.error
+    } : {
+      status: 'NEVER_RUN',
+      snapshotVerified: null,
+      auditChainValid: null,
+      checkedAtMs: null,
+      message: 'Simulacro aún no ejecutado'
+    };
+
+    // SUG-02: Detección y espacio de la bóveda USB (.tocineta-usb-vault)
+    const usbVaultDetection = detectUsbVault();
+    const usbVaultData = {
+      connected: usbVaultDetection.detected,
+      vaultPath: usbVaultDetection.detected ? usbVaultDetection.vaultPath : null,
+      percentUsed: usbVaultDetection.detected ? usbVaultDetection.percentUsed : null,
+      percentFree: usbVaultDetection.detected ? usbVaultDetection.percentFree : null,
+      warning: usbVaultDetection.warning || null
+    };
+
+    // SUG-05: Estado de custodia de claves age
+    const isAgeProvisioned = process.env.AGE_KEYS_PROVISIONED === 'true' ||
+      (process.env.AGE_RECIPIENT_OLINELCYS && process.env.AGE_RECIPIENT_OLINELCYS !== 'age1q5q9c7am7xx9e4flj0j8ugyfqejpyp5dc8qsvqpnv7uamg4wkcuqye3f0r');
+
+    const ageKeysData = {
+      mode: isAgeProvisioned ? ('PRODUCTION' as const) : ('DEVELOPMENT' as const),
+      recipientsCount: DEFAULT_AGE_RECIPIENTS.length,
+      isProduction: Boolean(isAgeProvisioned)
+    };
+
     const response: SystemHealthResponse = {
       status: 'ok',
       version: '0.1.0',
@@ -157,7 +196,10 @@ export const systemHealthRoutes: FastifyPluginAsync = async (fastify) => {
           heapTotalMb: Math.round(mem.heapTotal / (1024 * 1024))
         },
         disk: diskStats
-      }
+      },
+      dryRun: dryRunData,
+      usbVault: usbVaultData,
+      ageKeys: ageKeysData
     };
 
     return reply.status(200).send(response);

@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type Database from 'better-sqlite3';
 import { createHotSnapshot, listSnapshots } from './snapshot-service.js';
-import { createEncryptedBackup, getBackupsHistory } from './backup-service.js';
+import { createEncryptedBackup, getBackupsHistory, executeDryRunVerification } from './backup-service.js';
 import { extractSessionToken, hashToken } from '../../routes/auth.js';
 
 interface BackupsRoutesOptions {
@@ -70,7 +70,8 @@ export const backupsRoutes: FastifyPluginAsync<BackupsRoutesOptions> = async (fa
         jornadaId: body.jornadaId,
         actorUserId: user.id,
         backupType: 'MANUAL_EXPORT',
-        recipients: body.recipients
+        recipients: body.recipients,
+        scanRoots: body.scanRoots
       });
 
       return reply.status(201).send({
@@ -81,6 +82,23 @@ export const backupsRoutes: FastifyPluginAsync<BackupsRoutesOptions> = async (fa
     } catch (err: any) {
       fastify.log.error(err, 'Error al exportar respaldo cifrado');
       return reply.status(500).send({ error: 'Error al generar respaldo cifrado age', details: err.message });
+    }
+  });
+
+  /**
+   * SUG-03: Simulacro Automático de Restauración (Dry-Run)
+   */
+  fastify.post('/api/backups/dry-run-verify', async (_request, reply) => {
+    try {
+      const result = await executeDryRunVerification();
+      return reply.status(200).send(result);
+    } catch (err: any) {
+      fastify.log.error(err, 'Error al ejecutar simulacro dry-run');
+      return reply.status(500).send({
+        status: 'ERROR',
+        error: err.message,
+        checkedAtMs: Date.now()
+      });
     }
   });
 

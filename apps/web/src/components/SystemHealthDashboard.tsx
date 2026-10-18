@@ -8,7 +8,10 @@ import {
   AlertTriangle,
   Camera,
   Layers,
-  Printer
+  Printer,
+  ShieldCheck,
+  Usb,
+  KeyRound
 } from 'lucide-react';
 import { fetchSystemHealth } from '../api/client.js';
 import { StatusCard, MetricRow } from './StatusCard.js';
@@ -301,6 +304,102 @@ export const SystemHealthDashboard: React.FC = () => {
           <MetricRow
             label="Cliente de Estado"
             value="TanStack Query v5"
+          />
+        </StatusCard>
+
+        {/* Tarjeta 7: SUG-03 - Simulacro de Restauración (Dry-Run) */}
+        <StatusCard
+          title="Simulacro Dry-Run Restauración"
+          icon={<ShieldCheck className="w-5 h-5" />}
+          badge={{
+            text: data.dryRun?.status === 'OK' ? 'VERIFICADO' : (data.dryRun?.status === 'ERROR' ? 'FALLO' : 'PENDIENTE'),
+            variant: data.dryRun?.status === 'OK' ? 'success' : (data.dryRun?.status === 'ERROR' ? 'warning' : 'info')
+          }}
+        >
+          <MetricRow
+            label="Estado del Simulacro"
+            value={data.dryRun?.status === 'OK' ? '100% Íntegro' : (data.dryRun?.status || 'No ejecutado')}
+            highlight={data.dryRun?.status === 'OK'}
+          />
+          <MetricRow
+            label="Último Chequeo"
+            value={data.dryRun?.checkedAtMs ? new Date(data.dryRun.checkedAtMs).toLocaleTimeString('es-VE') : 'Pendiente al abrir jornada'}
+          />
+          <MetricRow
+            label="Snapshot Verificado"
+            value={data.dryRun?.snapshotVerified || 'Ninguno'}
+          />
+          <MetricRow
+            label="Cadena SHA-256"
+            value={data.dryRun?.auditChainValid ? 'Válida (Inmutable)' : 'No validada'}
+            highlight={Boolean(data.dryRun?.auditChainValid)}
+          />
+          <MetricRow
+            label="Impacto en Producción"
+            value="Solo Lectura (Cero Bloqueos)"
+          />
+        </StatusCard>
+
+        {/* Tarjeta 8: SUG-02 - Bóveda USB (.tocineta-usb-vault) */}
+        <StatusCard
+          title="Bóveda USB Vault (.tocineta-usb-vault)"
+          icon={<Usb className="w-5 h-5" />}
+          badge={{
+            text: data.usbVault?.connected ? 'USB DETECTADA' : 'CONTINGENCIA SSD',
+            variant: data.usbVault?.connected ? (data.usbVault?.warning ? 'warning' : 'success') : 'yellow'
+          }}
+        >
+          {data.usbVault?.warning && (
+            <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-300 font-bold mb-2 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 flex-shrink-0" />
+              <span>{data.usbVault.warning}</span>
+            </div>
+          )}
+          <MetricRow
+            label="Dispositivo USB"
+            value={data.usbVault?.connected ? 'Conectado (.tocineta-usb-vault)' : 'Desconectado (Ruta Local)'}
+            highlight={Boolean(data.usbVault?.connected)}
+          />
+          <MetricRow
+            label="Ruta de Respaldo"
+            value={data.usbVault?.vaultPath || './data/backups/usb'}
+          />
+          <MetricRow
+            label="Espacio Utilizado"
+            value={data.usbVault?.percentUsed !== null && data.usbVault?.percentUsed !== undefined ? `${data.usbVault.percentUsed}% ocupado` : 'N/A (Local SSD)'}
+          />
+          <MetricRow
+            label="Espacio Libre"
+            value={data.usbVault?.percentFree !== null && data.usbVault?.percentFree !== undefined ? `${data.usbVault.percentFree}% disponible` : 'Gestionado en disco'}
+          />
+        </StatusCard>
+
+        {/* Tarjeta 9: SUG-05 - Custodia Criptográfica age */}
+        <StatusCard
+          title="Custodia Criptográfica age"
+          icon={<KeyRound className="w-5 h-5" />}
+          badge={{
+            text: data.ageKeys?.mode === 'PRODUCTION' ? 'PRODUCCIÓN' : 'DESARROLLO',
+            variant: data.ageKeys?.mode === 'PRODUCTION' ? 'success' : 'yellow'
+          }}
+        >
+          <MetricRow
+            label="Modo de Claves"
+            value={data.ageKeys?.isProduction ? 'Claves Definitivas Producción' : 'Claves de Prueba (Dev)'}
+            highlight={Boolean(data.ageKeys?.isProduction)}
+          />
+          <MetricRow
+            label="Destinatarios Autorizados"
+            value={`${data.ageKeys?.recipientsCount || 2} (Sra. Olinelcys + Varons Media)`}
+          />
+          <MetricRow
+            label="Clave Privada en Laptop"
+            value="NUNCA (Cero claves privadas en disco)"
+            highlight
+          />
+          <MetricRow
+            label="Cifrado Dual Asimétrico"
+            value="X25519 + ChaCha20-Poly1305"
           />
         </StatusCard>
       </div>

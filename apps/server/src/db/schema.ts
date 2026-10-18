@@ -525,6 +525,15 @@ export const eventsLog = sqliteTable('events_log', {
   createdAtMs: integer('created_at_ms').notNull()
 });
 
+export const eventsLogArchive = sqliteTable('events_log_archive', {
+  seq: integer('seq').primaryKey(),
+  eventType: text('event_type').notNull(),
+  entityId: text('entity_id').notNull(),
+  payloadJson: text('payload_json').notNull(),
+  createdAtMs: integer('created_at_ms').notNull(),
+  archivedAtMs: integer('archived_at_ms').notNull()
+});
+
 export type BusinessSettings = typeof businessSettings.$inferSelect;
 export type ExchangeRate = typeof exchangeRates.$inferSelect;
 export type Jornada = typeof jornadas.$inferSelect;
@@ -555,6 +564,7 @@ export type RecipeItem = typeof recipeItems.$inferSelect;
 export type StockCount = typeof stockCounts.$inferSelect;
 export type OperatingExpense = typeof operatingExpenses.$inferSelect;
 export type EventLog = typeof eventsLog.$inferSelect;
+export type EventLogArchive = typeof eventsLogArchive.$inferSelect;
 
 export const BackupTypeValues = ['SNAPSHOT_HOT', 'ENCRYPTED_USB_DAILY', 'MANUAL_EXPORT'] as const;
 export type BackupType = (typeof BackupTypeValues)[number];

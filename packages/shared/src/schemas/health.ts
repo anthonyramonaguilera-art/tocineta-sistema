@@ -21,6 +21,35 @@ export const SnapshotInfoSchema = z.object({
 
 export type SnapshotInfo = z.infer<typeof SnapshotInfoSchema>;
 
+export const DryRunInfoSchema = z.object({
+  status: z.string(),
+  snapshotVerified: z.string().nullable(),
+  auditChainValid: z.boolean().nullable(),
+  checkedAtMs: z.number().nullable(),
+  message: z.string().optional(),
+  error: z.string().optional()
+});
+
+export type DryRunInfo = z.infer<typeof DryRunInfoSchema>;
+
+export const UsbVaultInfoSchema = z.object({
+  connected: z.boolean(),
+  vaultPath: z.string().nullable(),
+  percentUsed: z.number().nullable(),
+  percentFree: z.number().nullable(),
+  warning: z.string().nullable()
+});
+
+export type UsbVaultInfo = z.infer<typeof UsbVaultInfoSchema>;
+
+export const AgeKeysCustodySchema = z.object({
+  mode: z.enum(['PRODUCTION', 'DEVELOPMENT']),
+  recipientsCount: z.number(),
+  isProduction: z.boolean()
+});
+
+export type AgeKeysCustody = z.infer<typeof AgeKeysCustodySchema>;
+
 export const SystemHealthResponseSchema = z.object({
   status: z.literal('ok'),
   version: z.string(),
@@ -65,7 +94,11 @@ export const SystemHealthResponseSchema = z.object({
       totalFormatted: z.string(),
       percentFree: z.number()
     })
-  })
+  }),
+  dryRun: DryRunInfoSchema.optional(),
+  usbVault: UsbVaultInfoSchema.optional(),
+  ageKeys: AgeKeysCustodySchema.optional()
 });
 
 export type SystemHealthResponse = z.infer<typeof SystemHealthResponseSchema>;
+

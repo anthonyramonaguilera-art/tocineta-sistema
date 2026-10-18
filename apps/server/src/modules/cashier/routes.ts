@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
 import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { executeDryRunVerification } from '../backups/backup-service.js';
 import {
   openJornada,
   getCurrentJornada,
@@ -41,6 +42,11 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         initialCashUsdCents: body.initialCashUsdCents || 0,
         initialCashBsCents: body.initialCashBsCents || 0,
         notes: body.notes
+      });
+
+      // SUG-03: Disparar simulacro automático de restauración (Dry-Run) en segundo plano
+      executeDryRunVerification().catch((dryRunErr) => {
+        fastify.log.warn(dryRunErr, '[Dry-Run] Error en verificación de snapshot en background');
       });
 
       return reply.status(200).send({
