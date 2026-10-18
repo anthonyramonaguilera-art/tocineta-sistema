@@ -16,6 +16,7 @@ import { deliveryRoutes } from './modules/delivery/routes.js';
 import { couponRoutes } from './modules/coupons/routes.js';
 import { supportRoutes } from './modules/support/routes.js';
 import { updaterRoutes } from './modules/updater/routes.js';
+import { qrMenuRoutes } from './modules/qr-menu/routes.js';
 import { startSnapshotWorker } from './modules/backups/snapshot-service.js';
 import { PrintingWorker } from './modules/printing/worker.js';
 import { getDatabaseContext } from './db/connection.js';
@@ -107,6 +108,7 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   await server.register(couponRoutes);
   await server.register(supportRoutes);
   await server.register(updaterRoutes);
+  await server.register(qrMenuRoutes);
 
   if (!options.disableStatic) {
     await server.register(staticPlugin);

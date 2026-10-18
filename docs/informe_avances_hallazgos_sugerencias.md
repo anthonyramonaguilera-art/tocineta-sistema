@@ -94,11 +94,11 @@ Durante el desarrollo, pruebas de estrés y validaciones de campo se identificar
 ## 4. Estado Actual del Repositorio y Próximos Pasos
 
 - **Rama principal:** `main` al día, commits limpios y trazables.
-- **Tests unitarios e integración:** 112/112 en verde (100% de cobertura de reglas de negocio).
-- **Entorno de producción preparado:**
-  - Migraciones base (`0001` a `0009`) listas para despliegue inicial con Hot Snapshot automático previo.
-  - Generador de catálogo inicial (`seed-catalog.ts`) con precios, recetas y feature flag de malteadas inactivo.
-  - Documentación de soporte para recuperación ante desastres disponible en [docs/restore.md](file:///c:/Users/Shell/Documents/Varonsmedia/clientes/tocinetasonrie/SISTEMA/docs/restore.md).
+- **Tests unitarios e integración:** 150/150 en verde (100% de cobertura de reglas de negocio en `@tocineta/server`).
+- **Hitos M0 al M13 completados y certificados:**
+  - Hito M11: Delivery, Zonas, Motorizados, Liquidación Nocturna y Cupones Duales.
+  - Hito M12: Modo Soporte Auditado con Asistencia Rápida y Motor de Actualizaciones Ed25519 con Rollback.
+  - Hito M13: Menú Digital QR Estático (Vercel / Cloudflare Pages / `/qr`), Formateador WhatsApp (`0412-1928527` / `584121928527`) y Resumen Financiero en la Nube con Guard Estricto de Privacidad (Cero filtración de datos de clientes).
 
 ### Siguiente Paso Recomendado:
-Revisar este informe con la dirección, validar las sugerencias de la Sección 3 y definir la fecha para el ensayo operativo en seco (dry-run con impresoras y red Wi-Fi real del Food Truck).
+Validar despliegue en Vercel/Cloudflare Pages del bundle generado en `./data/qr-static-dist/` y coordinar pruebas operativas con la Sra. Olinelcys.
