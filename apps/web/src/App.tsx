@@ -13,6 +13,7 @@ const KdsView = React.lazy(() => import('./features/kds/KdsView.js').then(m => (
 const MenuAdminView = React.lazy(() => import('./components/MenuAdminView.js').then(m => ({ default: m.MenuAdminView })));
 const SystemHealthDashboard = React.lazy(() => import('./components/SystemHealthDashboard.js').then(m => ({ default: m.SystemHealthDashboard })));
 const DeferredPaperView = React.lazy(() => import('./features/emergency/DeferredPaperView.js').then(m => ({ default: m.DeferredPaperView })));
+const ProfitabilityDashboard = React.lazy(() => import('./features/profitability/ProfitabilityDashboard.js').then(m => ({ default: m.ProfitabilityDashboard })));
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -101,7 +102,7 @@ const queryClient = new QueryClient({
 
 const MainNavigator: React.FC = () => {
   const { user } = useAuth();
-  const [currentTab, setCurrentTab] = useState<'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency'>(() => {
+  const [currentTab, setCurrentTab] = useState<'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability'>(() => {
     if (user?.role === 'cocinero') return 'kds';
     return user?.role === 'cajera' ? 'cashier' : 'pos';
   });
@@ -134,6 +135,7 @@ const MainNavigator: React.FC = () => {
             {currentTab === 'menu-admin' && <MenuAdminView />}
             {currentTab === 'health' && <SystemHealthDashboard />}
             {currentTab === 'emergency' && <DeferredPaperView />}
+            {currentTab === 'profitability' && <ProfitabilityDashboard />}
           </Suspense>
         </ViewErrorBoundary>
       )}

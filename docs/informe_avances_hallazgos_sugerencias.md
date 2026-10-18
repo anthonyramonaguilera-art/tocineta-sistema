@@ -94,11 +94,12 @@ Durante el desarrollo, pruebas de estrés y validaciones de campo se identificar
 ## 4. Estado Actual del Repositorio y Próximos Pasos
 
 - **Rama principal:** `main` al día, commits limpios y trazables.
-- **Tests unitarios e integración:** 150/150 en verde (100% de cobertura de reglas de negocio en `@tocineta/server`).
-- **Hitos M0 al M13 completados y certificados:**
+- **Tests unitarios e integración:** 160/160 en verde (100% de cobertura de reglas de negocio en `@tocineta/server`).
+- **Hitos M0 al M14 completados y certificados:**
   - Hito M11: Delivery, Zonas, Motorizados, Liquidación Nocturna y Cupones Duales.
   - Hito M12: Modo Soporte Auditado con Asistencia Rápida y Motor de Actualizaciones Ed25519 con Rollback.
-  - Hito M13: Menú Digital QR Estático (Vercel / Cloudflare Pages / `/qr`), Formateador WhatsApp (`0412-1928527` / `584121928527`) y Resumen Financiero en la Nube con Guard Estricto de Privacidad (Cero filtración de datos de clientes).
+  - Hito M13: Menú Digital QR Estático (Vercel / Cloudflare Pages / `/qr`), Formateador WhatsApp (`0412-1928527` / `584121928527`) y Resumen Financiero en la Nube con Guard Estricto de Privacidad.
+  - Hito M14: Módulo de Rentabilidad Profesional (Niveles 1 al 4, Interruptor Maestro, 8 Insumos Críticos con Ahorro Sin Pan, Utilidad Neta Real con Ubii 0.75% y Matriz de Kasavana & Smith) y Módulo Fiscal Opcional.
 
 ### Siguiente Paso Recomendado:
-Validar despliegue en Vercel/Cloudflare Pages del bundle generado en `./data/qr-static-dist/` y coordinar pruebas operativas con la Sra. Olinelcys.
+Presentar a la Sra. Olinelcys el panel ejecutivo de Rentabilidad Pro, realizar el ensayo de arqueo físico nocturno de los 8 insumos críticos y validar la activación opcional del módulo fiscal informativo según necesidad comercial.

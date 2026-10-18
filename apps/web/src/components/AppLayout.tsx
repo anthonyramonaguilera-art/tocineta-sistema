@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext.js';
 import { useEventStream } from '../hooks/useEventStream.js';
 import { SupportBanner, StartSupportModal } from './SupportBanner.js';
 
 interface AppLayoutProps {
-  currentTab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency';
-  onTabChange: (tab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency') => void;
+  currentTab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability';
+  onTabChange: (tab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability') => void;
   formattedRate?: string;
   children: React.ReactNode;
 }
@@ -30,6 +31,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [changePinError, setChangePinError] = useState<string | null>(null);
   const [isChangingPin, setIsChangingPin] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+
+  const { data: profitSettings } = useQuery<{ profitabilityProEnabled: boolean }>({
+    queryKey: ['profitabilitySettings'],
+    queryFn: async () => {
+      const res = await fetch('/api/profitability/settings');
+      return res.json();
+    },
+    staleTime: 10000
+  });
 
   const handleUnlock = async () => {
     if (!unlockPin) return;
@@ -238,6 +248,25 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             <span>🩺</span>
             <span>Diagnóstico del Sistema</span>
           </button>
+
+          {isAdminOrSupervisor && (
+            <button
+              onClick={() => onTabChange('profitability')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                currentTab === 'profitability'
+                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                  : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
+              }`}
+            >
+              <span>📊</span>
+              <span>Rentabilidad Pro</span>
+              {!profitSettings?.profitabilityProEnabled && (
+                <span className="text-[9px] bg-zinc-800 text-zinc-400 px-1 py-0.2 rounded font-mono">
+                  Off
+                </span>
+              )}
+            </button>
+          )}
 
           {(user?.role === 'cajera' || isAdminOrSupervisor) && (
             <button

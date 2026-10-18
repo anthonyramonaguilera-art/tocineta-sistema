@@ -26,6 +26,8 @@ export interface OrderReceiptData {
   rateMicroBs: number;
   notes?: string | null;
   createdAtMs: number;
+  fiscalModuleEnabled?: boolean;
+  paidInUsdCents?: number;
 }
 
 export interface ReceiptLineItem {
@@ -178,6 +180,25 @@ export function buildReceiptTicketIR(
     totalBs: totalBsStr,
     bcvRate: bcvRateStr
   });
+
+  // Desglose fiscal informativo opcional (apagado por defecto)
+  if (order.fiscalModuleEnabled) {
+    const baseUsdCents = Math.round(order.totalToCollectUsdCents / 1.16);
+    const ivaUsdCents = order.totalToCollectUsdCents - baseUsdCents;
+    const baseBsCents = usdToBsCents(baseUsdCents, order.rateMicroBs);
+    const ivaBsCents = usdToBsCents(ivaUsdCents, order.rateMicroBs);
+
+    blocks.push({ type: 'separator', style: 'dashed' });
+    blocks.push({ type: 'text', text: '--- DESGLOSE FISCAL INFORMATIVO ---', align: 'center', bold: true });
+    blocks.push({ type: 'key_value', key: 'Base Imponible:', value: `$${(baseUsdCents / 100).toFixed(2)} (${formatBsCurrency(baseBsCents)})` });
+    blocks.push({ type: 'key_value', key: 'IVA Estimado (16%):', value: `$${(ivaUsdCents / 100).toFixed(2)} (${formatBsCurrency(ivaBsCents)})` });
+
+    if (order.paidInUsdCents && order.paidInUsdCents > 0) {
+      const igtfUsdCents = Math.round((order.paidInUsdCents * 3) / 100);
+      const igtfBsCents = usdToBsCents(igtfUsdCents, order.rateMicroBs);
+      blocks.push({ type: 'key_value', key: 'IGTF Divisas (3%):', value: `$${(igtfUsdCents / 100).toFixed(2)} (${formatBsCurrency(igtfBsCents)})` });
+    }
+  }
 
   if (order.notes) {
     blocks.push({ type: 'separator', style: 'dashed' });
