@@ -1,9 +1,27 @@
+import * as os from 'node:os';
+import * as fs from 'node:fs';
 import * as childProcess from 'node:child_process';
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
 import { verifyPin } from '../auth/pin.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
+
+export const SUPPORT_FALLBACK_OPTIONS = [
+  'Instalar Quick Assist desde Microsoft Store',
+  'Usar TeamViewer Portable bajo autorización',
+  'Soporte presencial'
+] as const;
+
+export type QuickAssistLaunchStatus = 'LAUNCHED_EXE' | 'LAUNCHED_PROTOCOL' | 'FALLBACK_OPTIONS_REQUIRED';
+
+export interface QuickAssistCascadeResult {
+  success: boolean;
+  launchStatus: QuickAssistLaunchStatus;
+  detectedOs: 'WINDOWS_10' | 'WINDOWS_11' | 'OTHER_OS';
+  fallbackOptions?: readonly string[];
+  message: string;
+}
 
 export interface SupportStatus {
   active: boolean;
@@ -14,6 +32,8 @@ export interface SupportStatus {
   expiresAtMs?: number | null;
   remainingSeconds: number;
   quickAssistLaunched: boolean;
+  launchStatus?: QuickAssistLaunchStatus;
+  fallbackOptions?: readonly string[];
   bannerText: string;
 }
 
@@ -31,10 +51,135 @@ let currentStartedByName: string | null = null;
 let currentStartedAtMs: number | null = null;
 let currentExpiresAtMs: number | null = null;
 let quickAssistLaunchedState = false;
+let currentLaunchStatus: QuickAssistLaunchStatus | undefined = undefined;
+let currentFallbackOptions: readonly string[] | undefined = undefined;
 let autoExpireTimer: NodeJS.Timeout | null = null;
 
 const SUPPORT_DURATION_MS = 2 * 60 * 60 * 1000; // 2 Horas exactas
 const BANNER_TEXT = '🛠️ MODO SOPORTE VARONS MEDIA ACTIVO — SESIÓN AUDITADA';
+
+/**
+ * Detección Real de Versión de Windows para compatibilidad dual Windows 10 / Windows 11.
+ * En Node.js sobre Windows, os.release() empieza por '10.0.' tanto en Win10 como en Win11.
+ * Win10: build < 22000 (ej. 19045)
+ * Win11: build >= 22000 (ej. 22631)
+ */
+export function detectWindowsVersion(releaseStr: string = os.release()): 'WINDOWS_10' | 'WINDOWS_11' | 'OTHER_OS' {
+  if (!releaseStr || typeof releaseStr !== 'string') {
+    return 'OTHER_OS';
+  }
+  const [major, , build] = releaseStr.split('.').map(Number);
+  if (major === 10 && build >= 22000) {
+    return 'WINDOWS_11';
+  }
+  if (major === 10 && build < 22000) {
+    return 'WINDOWS_10';
+  }
+  return 'OTHER_OS';
+}
+
+/**
+ * Fallback en Cascada para Quick Assist (Paso 1 -> Paso 2 -> Paso 3 con opciones de contingencia)
+ */
+export function launchQuickAssistCascade(options?: {
+  forceFallback?: boolean;
+  releaseStr?: string;
+}): QuickAssistCascadeResult {
+  const detectedOs = detectWindowsVersion(options?.releaseStr);
+
+  if (options?.forceFallback) {
+    return {
+      success: false,
+      launchStatus: 'FALLBACK_OPTIONS_REQUIRED',
+      detectedOs,
+      fallbackOptions: SUPPORT_FALLBACK_OPTIONS,
+      message: 'Quick Assist no disponible en esta estación. Seleccione una de las alternativas de soporte.'
+    };
+  }
+
+  // Paso 1: quickassist.exe en C:\Windows\System32 o en PATH
+  const system32Exe = 'C:\\Windows\\System32\\quickassist.exe';
+  const exeExists = process.platform === 'win32' && fs.existsSync(system32Exe);
+
+  if (process.platform === 'win32' && (exeExists || process.env.NODE_ENV !== 'test')) {
+    try {
+      const child = childProcess.spawn(exeExists ? system32Exe : 'quickassist.exe', [], {
+        detached: true,
+        stdio: 'ignore'
+      });
+      child.on('error', () => {});
+      child.unref();
+
+      return {
+        success: true,
+        launchStatus: 'LAUNCHED_EXE',
+        detectedOs,
+        message: 'Quick Assist iniciado exitosamente desde archivo ejecutable'
+      };
+    } catch {
+      // Intentar Paso 2
+    }
+  }
+
+  // Paso 2: ms-quick-assist: protocolo URI
+  if (process.platform === 'win32') {
+    try {
+      const child = childProcess.spawn('cmd.exe', ['/c', 'start', '""', 'ms-quick-assist:'], {
+        detached: true,
+        stdio: 'ignore',
+        windowsVerbatimArguments: true
+      });
+      child.on('error', () => {});
+      child.unref();
+
+      return {
+        success: true,
+        launchStatus: 'LAUNCHED_PROTOCOL',
+        detectedOs,
+        message: 'Quick Assist iniciado mediante protocolo URI ms-quick-assist:'
+      };
+    } catch {
+      // Fallback a Paso 3
+    }
+  }
+
+  // Paso 3: Fallback con las 3 opciones oficiales
+  return {
+    success: false,
+    launchStatus: 'FALLBACK_OPTIONS_REQUIRED',
+    detectedOs,
+    fallbackOptions: SUPPORT_FALLBACK_OPTIONS,
+    message: 'Quick Assist no instalado o no accesible. Opciones de contingencia requeridas.'
+  };
+}
+
+/**
+ * Registra la opción de soporte fallback seleccionada por el administrador en audit_events
+ */
+export function recordSupportFallbackSelection(
+  rawDb: Database.Database,
+  input: {
+    selectedOption: string;
+    actorUserId?: string;
+    sessionId?: string;
+  }
+) {
+  appendAuditEvent(rawDb, {
+    actorUserId: input.actorUserId || 'usr_admin_olinelcys',
+    action: 'SUPPORT_FALLBACK_SELECTED',
+    entityType: 'system_support',
+    entityId: input.sessionId || currentSessionId || 'sup_general',
+    payload: {
+      selectedOption: input.selectedOption,
+      timestampMs: Date.now()
+    }
+  });
+
+  return {
+    success: true,
+    selectedOption: input.selectedOption
+  };
+}
 
 /**
  * Consulta el estado actual del Modo Soporte (con verificación de expiración automática)
@@ -60,6 +205,8 @@ export function getSupportStatus(rawDb: Database.Database): SupportStatus {
     expiresAtMs: currentExpiresAtMs,
     remainingSeconds,
     quickAssistLaunched: quickAssistLaunchedState,
+    launchStatus: currentLaunchStatus,
+    fallbackOptions: currentFallbackOptions,
     bannerText: BANNER_TEXT
   };
 }
@@ -114,23 +261,20 @@ export function startSupportMode(
   const expiresAtMs = now + SUPPORT_DURATION_MS;
   const sessionId = `sup_${generateUuidV7()}`;
 
-  // 2. Ejecutar Asistencia Rápida nativa de Windows 11 (quickassist.exe)
+  // 2. Ejecutar Asistencia Rápida nativa de Windows con Cascada
   let quickAssistLaunched = false;
+  let launchStatus: QuickAssistLaunchStatus = 'FALLBACK_OPTIONS_REQUIRED';
+  let fallbackOptions: readonly string[] | undefined;
+
   try {
-    if (process.platform === 'win32') {
-      if (process.env.NODE_ENV !== 'test') {
-        const child = childProcess.spawn('quickassist.exe', [], {
-          detached: true,
-          stdio: 'ignore'
-        });
-        child.on('error', () => {});
-        child.unref();
-      }
-      quickAssistLaunched = true;
-    }
-  } catch (err: any) {
-    // Si no está en Windows o quickassist no está instalado, continúa sin bloquear la sesión auditada
+    const cascade = launchQuickAssistCascade();
+    quickAssistLaunched = cascade.success;
+    launchStatus = cascade.launchStatus;
+    fallbackOptions = cascade.fallbackOptions;
+  } catch {
     quickAssistLaunched = false;
+    launchStatus = 'FALLBACK_OPTIONS_REQUIRED';
+    fallbackOptions = SUPPORT_FALLBACK_OPTIONS;
   }
 
   // 3. Persistir sesión en SQLite
@@ -156,6 +300,8 @@ export function startSupportMode(
   currentStartedAtMs = now;
   currentExpiresAtMs = expiresAtMs;
   quickAssistLaunchedState = quickAssistLaunched;
+  currentLaunchStatus = launchStatus;
+  currentFallbackOptions = fallbackOptions;
 
   if (autoExpireTimer) {
     clearTimeout(autoExpireTimer);
@@ -207,6 +353,8 @@ export function startSupportMode(
     expiresAtMs,
     remainingSeconds: Math.floor(SUPPORT_DURATION_MS / 1000),
     quickAssistLaunched,
+    launchStatus,
+    fallbackOptions,
     bannerText: BANNER_TEXT
   };
 }
@@ -230,6 +378,8 @@ export function stopSupportMode(
   currentStartedAtMs = null;
   currentExpiresAtMs = null;
   quickAssistLaunchedState = false;
+  currentLaunchStatus = undefined;
+  currentFallbackOptions = undefined;
 
   if (autoExpireTimer) {
     clearTimeout(autoExpireTimer);
@@ -307,6 +457,8 @@ export function _resetSupportStateForTesting(): void {
   currentStartedAtMs = null;
   currentExpiresAtMs = null;
   quickAssistLaunchedState = false;
+  currentLaunchStatus = undefined;
+  currentFallbackOptions = undefined;
   if (autoExpireTimer) {
     clearTimeout(autoExpireTimer);
     autoExpireTimer = null;

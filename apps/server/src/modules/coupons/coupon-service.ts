@@ -97,7 +97,8 @@ export function validateCoupon(
   const now = Date.now();
 
   const coup = rawDb.prepare(`
-    SELECT c.*, p.name as courtesy_product_name, p.estimated_cost_usd_cents as courtesy_cost
+    SELECT c.*, p.name as courtesy_product_name, p.estimated_cost_usd_cents as courtesy_cost,
+           p.is_available as courtesy_is_available, p.is_active as courtesy_is_active
     FROM coupons c
     LEFT JOIN products p ON c.courtesy_product_id = p.id
     WHERE UPPER(c.code) = ?
@@ -150,6 +151,14 @@ export function validateCoupon(
   }
 
   if (coup.coupon_type === 'COURTESY_ITEM') {
+    if (coup.courtesy_is_available === 0 || coup.courtesy_is_active === 0) {
+      return {
+        valid: false,
+        error: 'CUPON_PRODUCTO_AGOTADO',
+        coupon: couponData
+      };
+    }
+
     return {
       valid: true,
       coupon: couponData,
@@ -207,7 +216,13 @@ export function applyCouponToOrder(
   // 2. Validar cupón
   const validation = validateCoupon(rawDb, couponCode, order.gross_food_subtotal_usd_cents);
   if (!validation.valid || !validation.coupon) {
-    const err: any = new Error(validation.error || 'Cupón no válido');
+    const isAgotado = validation.error === 'CUPON_PRODUCTO_AGOTADO';
+    const err: any = new Error(
+      isAgotado
+        ? 'El producto de cortesía está agotado temporalmente en este turno'
+        : (validation.error || 'Cupón no válido')
+    );
+    err.errorCode = isAgotado ? 'CUPON_PRODUCTO_AGOTADO' : (validation.error || 'CUPON_INVALIDO');
     err.statusCode = 400;
     throw err;
   }
@@ -240,6 +255,14 @@ export function applyCouponToOrder(
       const prod = rawDb.prepare('SELECT * FROM products WHERE id = ?').get(coupon.courtesyProductId) as any;
       if (!prod) {
         throw new Error(`Producto de cortesía '${coupon.courtesyProductId}' no encontrado en el catálogo`);
+      }
+
+      if (prod.is_available === 0 || prod.is_active === 0) {
+        const err: any = new Error('El producto de cortesía está agotado. Consulta al supervisor.');
+        err.statusCode = 400;
+        err.code = 'CUPON_PRODUCTO_AGOTADO';
+        err.errorCode = 'CUPON_PRODUCTO_AGOTADO';
+        throw err;
       }
 
       courtesyLineId = `line_${generateUuidV7()}`;
@@ -419,3 +442,37 @@ export function removeCouponFromOrder(
     order: getOrderById(rawDb, orderId)
   };
 }
+
+/**
+ * Revierte la redención de cupones para una orden cuando es reembolsada o anulada.
+ * Ajuste A1: actualiza reversed_at_ms y reversed_at, y decrementa used_count en coupons.
+ */
+export function reverseCouponRedemptionForOrder(
+  rawDb: Database.Database,
+  orderId: string,
+  now = Date.now()
+): number {
+  const redemptions = rawDb.prepare(`
+    SELECT id, coupon_id FROM coupon_redemptions
+    WHERE order_id = ? AND (reversed_at_ms IS NULL OR reversed_at_ms = 0)
+  `).all(orderId) as { id: string; coupon_id: string }[];
+
+  if (redemptions.length === 0) return 0;
+
+  for (const r of redemptions) {
+    rawDb.prepare(`
+      UPDATE coupon_redemptions
+      SET reversed_at_ms = ?, reversed_at = ?
+      WHERE id = ?
+    `).run(now, now, r.id);
+
+    rawDb.prepare(`
+      UPDATE coupons
+      SET used_count = MAX(0, used_count - 1)
+      WHERE id = ?
+    `).run(r.coupon_id);
+  }
+
+  return redemptions.length;
+}
+

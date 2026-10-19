@@ -102,7 +102,32 @@ Las partes dejan constancia de que la suite maestra de certificación (`acceptan
 
 ---
 
-### CLÁUSULA SEXTA: CONFORMIDAD Y CIERRE TÉCNICO
+### CLÁUSULA SEXTA: ALCANCE EXCLUIDO Y MÓDULOS EN STANDBY (FUERA DE ALCANCE V1.0)
+
+A fin de preservar la máxima estabilidad del Food Truck y evitar complejidades fiscales o de inventario prematuras, las partes acuerdan expresamente los siguientes módulos excluidos o en estado de reserva técnica (*standby*):
+1. **Malteadas y Helados:** Categoría y recetas sembradas con `is_active = 0` en base de datos. Permanecen inactivas y ocultas en el POS y Menú Digital QR hasta la finalización de pruebas de campo y autorización de la Propietaria.
+2. **Módulo Fiscal e IGTF en Standby:** Configurados apagados por defecto (`fiscal_module_enabled = 0`, `igtf_enabled = 0`). No alteran recibos ni reportes Z hasta la validación y confirmación formal con el contador del negocio.
+3. **Exclusión de Máquinas Fiscales SENIAT:** Se deja constancia de que la versión 1.0 emite Notas de Entrega y Comprobantes Internos de Venta en formato térmico estándar de 58 mm. No incluye ni contempla integración directa con impresoras fiscales seriales/fiscalizadas SENIAT en este hito.
+
+---
+
+### CLÁUSULA SÉPTIMA: ACUERDO DE NIVEL DE SERVICIO (SLA) Y GARANTÍA POST-INSTALACIÓN
+
+**EL PROVEEDOR** otorga un período formal de garantía y acompañamiento técnico bajo las siguientes condiciones:
+1. **Período de Acompañamiento:** Treinta (30) días calendario de acompañamiento prioritario continuo a partir de la firma de la presente acta.
+2. **Garantía de Software:** Sesenta (60) días continuos para corrección de incidencias o bugs de software atribuibles al sistema sin costo adicional para **EL CLIENTE**.
+3. **Tiempos de Respuesta por Severidad:**
+   Diferenciando el **Horario Operativo del Turno (Martes a Domingo de 6:00 p. m. a 12:00 a. m.)** vs. **Horas Hábiles Administrativas**:
+   - **Severidad 1 (Crítica — Caja o Impresión detenida durante el turno activo 6:00 p. m. – 12:00 a. m.):**  
+     Respuesta remota / telefónica en **< 30 minutos** y asistencia presencial en sitio en **< 2 horas**.
+   - **Severidad 2 (Alta — Falla parcial con workaround operativo disponible):**  
+     Respuesta y diagnóstico en **< 12 horas hábiles**.
+   - **Severidad 3 (Media/Baja — Consultas operativas o ajustes visuales menores):**  
+     Respuesta y atención en **< 48 horas hábiles**.
+
+---
+
+### CLÁUSULA OCTAVA: CONFORMIDAD Y CIERRE TÉCNICO
 
 Leída la presente acta por ambas partes y encontrándose conformes con todos sus términos, alcances técnicos y resultados de certificación, la firman y rubrican en dos (2) ejemplares de un mismo tenor y a un solo efecto, en la ciudad de Puerto Ordaz, a los 18 días del mes de Octubre del año 2026.
 

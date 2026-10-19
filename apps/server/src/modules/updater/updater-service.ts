@@ -348,3 +348,56 @@ export async function applySignedUpdatePackage(
     snapshotPath
   };
 }
+
+/**
+ * Recupera actualizaciones interrumpidas o atascadas en 'IN_PROGRESS' durante el arranque del sistema.
+ * Ajuste B2: Ejecuta PRAGMA integrity_check, pasa status a 'FAILED_ROLLBACK' y registra STUCK_UPDATE_RECOVERED_ON_BOOT en audit_events.
+ */
+export function recoverStuckUpdatesOnBoot(rawDb: Database.Database): number {
+  try {
+    const stuckUpdates = rawDb.prepare(`
+      SELECT id, version, previous_version FROM system_updates WHERE status = 'IN_PROGRESS'
+    `).all() as { id: string; version: string; previous_version?: string }[];
+
+    if (!stuckUpdates || stuckUpdates.length === 0) {
+      return 0;
+    }
+
+    // Ejecuta PRAGMA integrity_check
+    const integrityResult = rawDb.pragma('integrity_check') as any;
+    const isIntegrityOk = Array.isArray(integrityResult)
+      ? integrityResult[0]?.integrity_check === 'ok'
+      : true;
+
+    const now = Date.now();
+
+    for (const update of stuckUpdates) {
+      rawDb.prepare(`
+        UPDATE system_updates
+        SET status = 'FAILED_ROLLBACK',
+            error_details = 'STUCK_UPDATE_RECOVERED_ON_BOOT: Actualización interrumpida en arranque anterior revertida automáticamente.'
+        WHERE id = ?
+      `).run(update.id);
+
+      appendAuditEvent(rawDb, {
+        actorUserId: null,
+        action: 'STUCK_UPDATE_RECOVERED_ON_BOOT',
+        entityType: 'system_update',
+        entityId: update.id,
+        payload: {
+          updateId: update.id,
+          version: update.version,
+          previousVersion: update.previous_version,
+          integrityCheck: isIntegrityOk ? 'ok' : JSON.stringify(integrityResult),
+          recoveredAtMs: now
+        }
+      });
+    }
+
+    return stuckUpdates.length;
+  } catch {
+    // Si la tabla system_updates no existe u otro error no fatal en boot
+    return 0;
+  }
+}
+

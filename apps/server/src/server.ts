@@ -25,6 +25,7 @@ import { websocketPlugin } from './plugins/websocket.js';
 import { staticPlugin } from './plugins/static.js';
 import { idempotencyPlugin } from './modules/idempotency/idempotency-plugin.js';
 import { seedInitialUsers } from './modules/auth/seed-users.js';
+import { recoverStuckUpdatesOnBoot } from './modules/updater/updater-service.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -66,6 +67,14 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
       const count = seedInitialUsers(dbCtx.rawDb);
       server.log.info(`BOOTSTRAP: ${count} usuarios iniciales creados`);
       console.log(`BOOTSTRAP: ${count} usuarios iniciales creados`);
+    }
+  } catch {}
+
+  // Recuperar actualizaciones atascadas en 'IN_PROGRESS' durante el arranque anterior (Ajuste B2)
+  try {
+    const recovered = recoverStuckUpdatesOnBoot(dbCtx.rawDb);
+    if (recovered > 0) {
+      server.log.warn(`BOOTSTRAP: ${recovered} actualizaciones atascadas recuperadas a FAILED_ROLLBACK`);
     }
   } catch {}
 

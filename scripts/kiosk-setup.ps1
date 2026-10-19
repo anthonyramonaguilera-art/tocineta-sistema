@@ -16,8 +16,15 @@ param(
 )
 
 Write-Host "=============================================================" -ForegroundColor Cyan
-Write-Host "🍟 APROVISIONAMIENTO DE WINDOWS 11 - KIOSCO TOCINETA SONRÍE" -ForegroundColor Cyan
+Write-Host "🍟 APROVISIONAMIENTO DE WINDOWS 10 / 11 - KIOSCO TOCINETA SONRÍE" -ForegroundColor Cyan
 Write-Host "=============================================================`n"
+
+# Detección de Sistema Operativo (Compatibilidad Dual Windows 10 y Windows 11)
+$osInfo = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+$osCaption = if ($osInfo) { $osInfo.Caption } else { [System.Environment]::OSVersion.VersionString }
+$osBuild = if ($osInfo) { [int]$osInfo.BuildNumber } else { [System.Environment]::OSVersion.Version.Build }
+$detectedEdition = if ($osBuild -ge 22000) { "Windows 11" } else { "Windows 10" }
+Write-Host "🖥️ Sistema Operativo Detectado: $osCaption ($detectedEdition, Build $osBuild)" -ForegroundColor Cyan
 
 # 1. Comprobación de Privilegios de Administrador
 $isAdmin = ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)

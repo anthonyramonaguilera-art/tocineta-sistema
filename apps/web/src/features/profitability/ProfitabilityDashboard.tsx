@@ -35,6 +35,10 @@ export const ProfitabilityDashboard: React.FC = () => {
   const { data: settingsData } = useQuery<{
     profitabilityProEnabled: boolean;
     fiscalModuleEnabled: boolean;
+    fiscalPriceMode?: 'INCLUSIVE' | 'EXCLUSIVE';
+    igtfEnabled?: boolean;
+    igtfRateBps?: number;
+    igtfAppliesTo?: 'CASH_USD' | 'ALL_USD' | 'NONE';
   }>({
     queryKey: ['profitabilitySettings'],
     queryFn: async () => {
@@ -93,7 +97,14 @@ export const ProfitabilityDashboard: React.FC = () => {
 
   // Mutación para actualizar interruptores
   const updateSettingsMutation = useMutation({
-    mutationFn: async (payload: { profitabilityProEnabled?: boolean; fiscalModuleEnabled?: boolean }) => {
+    mutationFn: async (payload: {
+      profitabilityProEnabled?: boolean;
+      fiscalModuleEnabled?: boolean;
+      fiscalPriceMode?: 'INCLUSIVE' | 'EXCLUSIVE';
+      igtfEnabled?: boolean;
+      igtfRateBps?: number;
+      igtfAppliesTo?: 'CASH_USD' | 'ALL_USD' | 'NONE';
+    }) => {
       const res = await fetch('/api/profitability/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -470,71 +481,80 @@ export const ProfitabilityDashboard: React.FC = () => {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {/* ESTRELLAS ⭐ */}
-                    <div className="bg-emerald-500/5 border border-emerald-500/30 p-3.5 rounded-xl space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs font-black text-emerald-400 uppercase tracking-tight">
-                        <Star className="w-4 h-4 fill-emerald-400" />
-                        <span>Estrellas (Alta Pop / Alto Margen)</span>
-                      </div>
-                      <div className="space-y-1.5">
-                        {cat.dishes.filter((d: any) => d.quadrant === 'ESTRELLA').map((d: any) => (
-                          <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
-                            <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
-                            <span className="text-emerald-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
-                          </div>
-                        ))}
-                      </div>
+                  {cat.sampleStatus === 'DATOS_INSUFICIENTES' ? (
+                    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400" />
+                      <span>
+                        📊 Matriz preliminar. Faltan {cat.missingDays ?? 14} días de operación o {cat.missingUnits ?? 30} unidades para resultado definitivo.
+                      </span>
                     </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {/* ESTRELLAS ⭐ */}
+                      <div className="bg-emerald-500/5 border border-emerald-500/30 p-3.5 rounded-xl space-y-2">
+                        <div className="flex items-center gap-1.5 text-xs font-black text-emerald-400 uppercase tracking-tight">
+                          <Star className="w-4 h-4 fill-emerald-400" />
+                          <span>Estrellas (Alta Pop / Alto Margen)</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {cat.dishes.filter((d: any) => d.quadrant === 'ESTRELLA').map((d: any) => (
+                            <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
+                              <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
+                              <span className="text-emerald-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
 
-                    {/* CABALLOS DE BATALLA 🐴 */}
-                    <div className="bg-blue-500/5 border border-blue-500/30 p-3.5 rounded-xl space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs font-black text-blue-400 uppercase tracking-tight">
-                        <Award className="w-4 h-4" />
-                        <span>Caballos de Batalla (Alta Pop / Bajo Margen)</span>
+                      {/* CABALLOS DE BATALLA 🐴 */}
+                      <div className="bg-blue-500/5 border border-blue-500/30 p-3.5 rounded-xl space-y-2">
+                        <div className="flex items-center gap-1.5 text-xs font-black text-blue-400 uppercase tracking-tight">
+                          <Award className="w-4 h-4" />
+                          <span>Caballos de Batalla (Alta Pop / Bajo Margen)</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {cat.dishes.filter((d: any) => d.quadrant === 'CABALLO_DE_BATALLA').map((d: any) => (
+                            <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
+                              <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
+                              <span className="text-blue-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="space-y-1.5">
-                        {cat.dishes.filter((d: any) => d.quadrant === 'CABALLO_DE_BATALLA').map((d: any) => (
-                          <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
-                            <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
-                            <span className="text-blue-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
 
-                    {/* PUZZLES 🧩 */}
-                    <div className="bg-amber-500/5 border border-amber-500/30 p-3.5 rounded-xl space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs font-black text-amber-400 uppercase tracking-tight">
-                        <Activity className="w-4 h-4" />
-                        <span>Puzzles (Baja Pop / Alto Margen)</span>
+                      {/* PUZZLES 🧩 */}
+                      <div className="bg-amber-500/5 border border-amber-500/30 p-3.5 rounded-xl space-y-2">
+                        <div className="flex items-center gap-1.5 text-xs font-black text-amber-400 uppercase tracking-tight">
+                          <Activity className="w-4 h-4" />
+                          <span>Puzzles (Baja Pop / Alto Margen)</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {cat.dishes.filter((d: any) => d.quadrant === 'PUZZLE').map((d: any) => (
+                            <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
+                              <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
+                              <span className="text-amber-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
-                      <div className="space-y-1.5">
-                        {cat.dishes.filter((d: any) => d.quadrant === 'PUZZLE').map((d: any) => (
-                          <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
-                            <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
-                            <span className="text-amber-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
 
-                    {/* PERROS 🐕 */}
-                    <div className="bg-red-500/5 border border-red-500/30 p-3.5 rounded-xl space-y-2">
-                      <div className="flex items-center gap-1.5 text-xs font-black text-red-400 uppercase tracking-tight">
-                        <AlertTriangle className="w-4 h-4" />
-                        <span>Perros (Baja Pop / Bajo Margen)</span>
-                      </div>
-                      <div className="space-y-1.5">
-                        {cat.dishes.filter((d: any) => d.quadrant === 'PERRO').map((d: any) => (
-                          <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
-                            <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
-                            <span className="text-red-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
-                          </div>
-                        ))}
+                      {/* PERROS 🐕 */}
+                      <div className="bg-red-500/5 border border-red-500/30 p-3.5 rounded-xl space-y-2">
+                        <div className="flex items-center gap-1.5 text-xs font-black text-red-400 uppercase tracking-tight">
+                          <AlertTriangle className="w-4 h-4" />
+                          <span>Perros (Baja Pop / Bajo Margen)</span>
+                        </div>
+                        <div className="space-y-1.5">
+                          {cat.dishes.filter((d: any) => d.quadrant === 'PERRO').map((d: any) => (
+                            <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
+                              <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
+                              <span className="text-red-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               ))}
 
@@ -784,7 +804,7 @@ export const ProfitabilityDashboard: React.FC = () => {
               <div>
                 <span className="font-bold text-white text-xs block">Módulo Fiscal Informativo Opcional</span>
                 <span className="text-[11px] text-tocineta-muted">
-                  Imprime el desglose informativo de IVA (16%) e IGTF (3% divisas) en la Nota de Entrega.
+                  Imprime el desglose informativo de IVA (16%) en la Nota de Entrega y Cierre Z.
                 </span>
               </div>
               <button
@@ -796,6 +816,67 @@ export const ProfitabilityDashboard: React.FC = () => {
                 {isFiscalEnabled ? 'Activo' : 'Inactivo'}
               </button>
             </div>
+
+            {/* Modalidad de Precio Fiscal */}
+            {isFiscalEnabled && (
+              <div className="flex items-center justify-between p-4 bg-tocineta-bg border border-tocineta-border rounded-xl">
+                <div>
+                  <span className="font-bold text-white text-xs block">Modalidad de Precios de Carta</span>
+                  <span className="text-[11px] text-tocineta-muted">
+                    {settingsData?.fiscalPriceMode === 'EXCLUSIVE'
+                      ? 'EXCLUSIVE: El IVA se adiciona sobre el precio de comida.'
+                      : 'INCLUSIVE: Los precios de la carta ya contienen el 16% de IVA.'}
+                  </span>
+                </div>
+                <select
+                  value={settingsData?.fiscalPriceMode || 'INCLUSIVE'}
+                  onChange={e => updateSettingsMutation.mutate({ fiscalPriceMode: e.target.value as any })}
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-xs text-white font-bold outline-none"
+                >
+                  <option value="INCLUSIVE">Precios con IVA incluido (INCLUSIVE)</option>
+                  <option value="EXCLUSIVE">Precios sin IVA (EXCLUSIVE)</option>
+                </select>
+              </div>
+            )}
+
+            {/* Toggle IGTF (3% Divisas) */}
+            <div className="flex items-center justify-between p-4 bg-tocineta-bg border border-tocineta-border rounded-xl">
+              <div>
+                <span className="font-bold text-white text-xs block">Módulo IGTF (3.00% Divisas / Criptoactivos)</span>
+                <span className="text-[11px] text-tocineta-muted">
+                  Aplica alícuota legal del 3% (300 bps) sobre pagos en divisas según confirmación contable.
+                </span>
+              </div>
+              <button
+                onClick={() => updateSettingsMutation.mutate({ igtfEnabled: !settingsData?.igtfEnabled })}
+                className={`px-3 py-1.5 rounded-xl font-black text-xs uppercase transition ${
+                  settingsData?.igtfEnabled ? 'bg-emerald-500 text-black' : 'bg-zinc-700 text-zinc-300'
+                }`}
+              >
+                {settingsData?.igtfEnabled ? 'Activo' : 'Inactivo'}
+              </button>
+            </div>
+
+            {/* Ámbito de Aplicación IGTF */}
+            {settingsData?.igtfEnabled && (
+              <div className="flex items-center justify-between p-4 bg-tocineta-bg border border-tocineta-border rounded-xl">
+                <div>
+                  <span className="font-bold text-white text-xs block">Aplicación del IGTF</span>
+                  <span className="text-[11px] text-tocineta-muted">
+                    Selecciona sobre qué medios de pago en divisas se calcula la alícuota del 3%.
+                  </span>
+                </div>
+                <select
+                  value={settingsData?.igtfAppliesTo || 'CASH_USD'}
+                  onChange={e => updateSettingsMutation.mutate({ igtfAppliesTo: e.target.value as any })}
+                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-xs text-white font-bold outline-none"
+                >
+                  <option value="CASH_USD">Solo Efectivo USD (CASH_USD)</option>
+                  <option value="ALL_USD">Efectivo USD + Binance USDT (ALL_USD)</option>
+                  <option value="NONE">Ninguno (NONE)</option>
+                </select>
+              </div>
+            )}
           </div>
         </div>
       )}

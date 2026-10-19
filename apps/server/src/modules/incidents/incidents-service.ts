@@ -19,6 +19,7 @@ import {
   buildRefireTicketIR
 } from '../printing/templates.js';
 import { getPrinterConfig } from '../printing/worker.js';
+import { reverseCouponRedemptionForOrder } from '../coupons/coupon-service.js';
 
 export const SUPERVISOR_REFUND_LIMIT_USD_CENTS = 2000; // $20.00 USD límite para supervisor
 
@@ -303,6 +304,9 @@ export function reportOrderIncident(
           updated_at_ms = ?
       WHERE id = ?
     `).run(newPaymentStatus, now, orderId);
+
+    // Reversión de cupón si aplica (Ajuste A1)
+    reverseCouponRedemptionForOrder(rawDb, orderId, now);
 
     // Registrar en worker_incidents
     rawDb.prepare(`

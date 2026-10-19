@@ -161,6 +161,12 @@ export const businessSettings = sqliteTable('business_settings', {
   banescoPagoMovilPhone: text('banesco_pago_movil_phone').notNull().default('04249728209'),
   banescoPagoMovilId: text('banesco_pago_movil_id').notNull().default('17040918'),
   posFeeBps: integer('pos_fee_bps').notNull().default(75),
+  profitabilityProEnabled: integer('profitability_pro_enabled').notNull().default(0),
+  fiscalModuleEnabled: integer('fiscal_module_enabled').notNull().default(0),
+  fiscalPriceMode: text('fiscal_price_mode').notNull().default('INCLUSIVE'),
+  igtfEnabled: integer('igtf_enabled').notNull().default(0),
+  igtfRateBps: integer('igtf_rate_bps').notNull().default(300),
+  igtfAppliesTo: text('igtf_applies_to').notNull().default('CASH_USD'),
   updatedAtMs: integer('updated_at_ms').notNull()
 });
 
@@ -465,7 +471,9 @@ export const couponRedemptions = sqliteTable('coupon_redemptions', {
   orderId: text('order_id').notNull().references(() => orders.id),
   userId: text('user_id').notNull().references(() => users.id),
   benefitUsdCents: integer('benefit_usd_cents').notNull(),
-  redeemedAtMs: integer('redeemed_at_ms').notNull()
+  redeemedAtMs: integer('redeemed_at_ms').notNull(),
+  reversedAtMs: integer('reversed_at_ms'),
+  reversedAt: integer('reversed_at')
 });
 
 export const supplyItems = sqliteTable('supply_items', {
@@ -557,7 +565,10 @@ export type Printer = typeof printers.$inferSelect;
 export type PrintJob = typeof printJobs.$inferSelect;
 export type WorkerIncident = typeof workerIncidents.$inferSelect;
 export type Delivery = typeof deliveries.$inferSelect;
-export type CouponRedemption = typeof couponRedemptions.$inferSelect;
+export type CouponRedemption = typeof couponRedemptions.$inferSelect & {
+  reversed_at?: number | null;
+  reversed_at_ms?: number | null;
+};
 export type SupplyItem = typeof supplyItems.$inferSelect;
 export type Recipe = typeof recipes.$inferSelect;
 export type RecipeItem = typeof recipeItems.$inferSelect;
@@ -603,7 +614,7 @@ export const systemUpdates = sqliteTable('system_updates', {
   manifestSha256: text('manifest_sha256').notNull(),
   appliedByUserId: text('applied_by_user_id').references(() => users.id),
   appliedAtMs: integer('applied_at_ms').notNull(),
-  status: text('status', { enum: ['APPLIED', 'FAILED_ROLLBACK'] }).notNull(),
+  status: text('status', { enum: ['APPLIED', 'FAILED_ROLLBACK', 'IN_PROGRESS'] }).notNull(),
   errorDetails: text('error_details')
 });
 

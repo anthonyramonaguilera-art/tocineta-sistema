@@ -32,6 +32,9 @@ export interface KasavanaCategoryAnalysis {
   popularityThreshold: number; // 0.70 / N
   weightedAverageMarginUsdCents: number;
   dishes: KasavanaDishItem[];
+  sampleStatus: 'DATOS_INSUFICIENTES' | 'MUESTRA_VALIDA';
+  missingDays: number;
+  missingUnits: number;
 }
 
 export interface AbcSupplyItem {
@@ -52,6 +55,9 @@ export interface MenuEngineeringReport {
   endDateMs?: number;
   daysAnalyzed: number;
   totalUnitsSold: number;
+  sampleStatus: 'DATOS_INSUFICIENTES' | 'MUESTRA_VALIDA';
+  missingDays: number;
+  missingUnits: number;
   hasStatisticalWarning: boolean;
   statisticalWarningMessage?: string;
   categories: KasavanaCategoryAnalysis[];
@@ -254,6 +260,11 @@ export function generateMenuEngineeringReport(
       };
     });
 
+    const missingDays = Math.max(0, 14 - daysAnalyzed);
+    const missingUnits = Math.max(0, 30 - totalCatUnits);
+    const sampleStatus: 'DATOS_INSUFICIENTES' | 'MUESTRA_VALIDA' =
+      (daysAnalyzed < 14 || totalCatUnits < 30) ? 'DATOS_INSUFICIENTES' : 'MUESTRA_VALIDA';
+
     categoryAnalyses.push({
       categoryId: cat.categoryId,
       categoryName: cat.categoryName,
@@ -263,7 +274,10 @@ export function generateMenuEngineeringReport(
       dishCount: N,
       popularityThreshold: Number(popularityThreshold.toFixed(4)),
       weightedAverageMarginUsdCents: weightedAvgMargin,
-      dishes: classifiedDishes.sort((a, b) => b.totalContributionMarginUsdCents - a.totalContributionMarginUsdCents)
+      dishes: classifiedDishes.sort((a, b) => b.totalContributionMarginUsdCents - a.totalContributionMarginUsdCents),
+      sampleStatus,
+      missingDays,
+      missingUnits
     });
   }
 
@@ -396,6 +410,9 @@ export function generateMenuEngineeringReport(
     endDateMs: options.endDateMs,
     daysAnalyzed,
     totalUnitsSold: totalUnitsOverall,
+    sampleStatus: (daysAnalyzed < 14 || totalUnitsOverall < 30) ? 'DATOS_INSUFICIENTES' : 'MUESTRA_VALIDA',
+    missingDays: Math.max(0, 14 - daysAnalyzed),
+    missingUnits: Math.max(0, 30 - totalUnitsOverall),
     hasStatisticalWarning,
     statisticalWarningMessage,
     categories: categoryAnalyses,

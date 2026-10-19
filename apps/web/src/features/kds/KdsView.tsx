@@ -44,6 +44,9 @@ export interface KdsOrder {
   isRefire: boolean;
   refireReason?: string | null;
   lines: KdsLineItem[];
+  readyCount?: number;
+  totalCount?: number;
+  aggregateStatus?: 'pendiente' | 'preparando' | 'listo';
 }
 
 // Hook de cronómetro en vivo
@@ -208,18 +211,24 @@ export const KdsView: React.FC = () => {
         ? ord.lines
         : ord.lines.filter(l => l.station === stationFilter);
 
-      if (relevantLines.length === 0) continue;
+      const readyCount = relevantLines.filter(l => l.status === 'listo').length;
+      const totalCount = relevantLines.length;
+      const allLinesReady = totalCount > 0 && readyCount === totalCount;
+      const allLinesPending = totalCount > 0 && relevantLines.every(l => l.status === 'pendiente');
 
-      const allLinesReady = relevantLines.every(l => l.status === 'listo');
-      const anyLinePrepping = relevantLines.some(l => l.status === 'preparando');
-      const anyLineReady = relevantLines.some(l => l.status === 'listo');
+      const enrichedOrd: KdsOrder = {
+        ...ord,
+        readyCount,
+        totalCount,
+        aggregateStatus: allLinesReady ? 'listo' : (allLinesPending ? 'pendiente' : 'preparando')
+      };
 
       if (allLinesReady) {
-        ready.push(ord);
-      } else if (anyLinePrepping || anyLineReady) {
-        prep.push(ord);
+        ready.push(enrichedOrd);
+      } else if (allLinesPending) {
+        pend.push(enrichedOrd);
       } else {
-        pend.push(ord);
+        prep.push(enrichedOrd);
       }
     }
 
@@ -485,6 +494,8 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLin
     ? order.lines
     : order.lines.filter(l => l.station === stationFilter);
 
+  const readyCount = visibleLines.filter(l => l.status === 'listo').length;
+  const totalCount = visibleLines.length;
   const allVisibleReady = visibleLines.length > 0 && visibleLines.every(l => l.status === 'listo');
 
   // Tipo de entrega tag
@@ -519,7 +530,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLin
         </div>
       )}
 
-      {/* Cabecera de la Comanda: Turno Gigante y Cronómetro */}
+      {/* Cabecera de la Comanda: Turno Gigante, Contador de Platos y Cronómetro */}
       <div className="p-3 border-b border-zinc-700/60 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2">
           {/* Turno Gigante T-023 */}
@@ -527,7 +538,13 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLin
             {order.turnCode}
           </div>
           <div>
-            <div className="text-xs font-bold text-zinc-300">#{order.orderNumber}</div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-zinc-300">#{order.orderNumber}</span>
+              {/* Contador de avance: X/Y platos listos */}
+              <span className="px-2 py-0.5 rounded-lg bg-zinc-900 border border-zinc-700 text-xs font-mono font-bold text-amber-300">
+                {readyCount}/{totalCount} platos listos
+              </span>
+            </div>
             <div className="text-[11px] text-tocineta-muted font-medium">{fulfillmentTag()}</div>
           </div>
         </div>
@@ -564,55 +581,74 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLin
         </div>
       )}
 
-      {/* Lista de Líneas de Preparación */}
+      {/* Lista de Líneas de Preparación con control individual */}
       <div className="p-3 space-y-2.5">
         {visibleLines.map(line => (
           <div
             key={line.lineId}
             className={`p-2.5 rounded-xl border transition-all ${
               line.status === 'listo'
-                ? 'bg-emerald-950/30 border-emerald-500/40 opacity-70'
+                ? 'bg-emerald-950/30 border-emerald-500/40 opacity-75'
                 : line.status === 'preparando'
                 ? 'bg-amber-950/30 border-amber-500/50'
                 : 'bg-zinc-900/60 border-zinc-700/60'
             }`}
           >
-            {/* Título de la línea y botón interactivo de estado */}
+            {/* Título de la línea, badge individual y botón táctil */}
             <div className="flex items-start justify-between gap-2">
               <div className="flex-1">
-                <span className="font-extrabold text-sm text-white">
-                  {line.quantity}x {line.productName}
-                </span>
-                {line.flavorChoice && (
-                  <span className="ml-2 text-xs font-bold text-amber-300">
-                    ({line.flavorChoice})
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-extrabold text-sm text-white">
+                    {line.quantity}x {line.productName}
                   </span>
+                  {/* Badge de estado individual */}
+                  {line.status === 'pendiente' && (
+                    <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-mono font-bold text-[10px] uppercase border border-zinc-700">
+                      [PENDIENTE]
+                    </span>
+                  )}
+                  {line.status === 'preparando' && (
+                    <span className="px-1.5 py-0.5 rounded bg-amber-950/80 text-amber-300 font-mono font-bold text-[10px] uppercase border border-amber-500">
+                      [PREPARANDO]
+                    </span>
+                  )}
+                  {line.status === 'listo' && (
+                    <span className="px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-300 font-mono font-bold text-[10px] uppercase border border-emerald-500">
+                      [LISTO]
+                    </span>
+                  )}
+                </div>
+                {line.flavorChoice && (
+                  <div className="text-xs font-bold text-amber-300 mt-0.5">
+                    ({line.flavorChoice})
+                  </div>
                 )}
               </div>
 
-              {/* Botón táctil para avanzar estado de línea */}
-              <button
-                onClick={() => {
-                  const nextStatus =
-                    line.status === 'pendiente'
-                      ? 'preparando'
-                      : line.status === 'preparando'
-                      ? 'listo'
-                      : 'preparando';
-                  onUpdateLine(line.lineId, nextStatus);
-                }}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-black uppercase tracking-wider transition-all shrink-0 ${
-                  line.status === 'listo'
-                    ? 'bg-emerald-600 text-white shadow-sm hover:bg-emerald-500'
-                    : line.status === 'preparando'
-                    ? 'bg-amber-600 text-white shadow-sm hover:bg-amber-500'
-                    : 'bg-zinc-700 text-zinc-200 hover:bg-zinc-600'
-                }`}
-              >
-                {line.status === 'pendiente' && 'Iniciar Prep'}
-                {line.status === 'preparando' && '✓ Marcar Listo'}
-                {line.status === 'listo' && 'Listo ✓'}
-              </button>
+              {/* Botón táctil individual por línea */}
+              <div className="shrink-0 flex items-center gap-1.5">
+                {line.status === 'pendiente' && (
+                  <button
+                    onClick={() => onUpdateLine(line.lineId, 'preparando')}
+                    className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-amber-500 hover:bg-amber-400 text-black shadow-sm transition-all active:scale-95"
+                  >
+                    [▶ Empezar]
+                  </button>
+                )}
+                {line.status === 'preparando' && (
+                  <button
+                    onClick={() => onUpdateLine(line.lineId, 'listo')}
+                    className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-black shadow-sm transition-all active:scale-95"
+                  >
+                    [✓ Listo]
+                  </button>
+                )}
+                {line.status === 'listo' && (
+                  <span className="px-2 py-1 rounded-lg text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 flex items-center gap-1">
+                    ✓ Plato Listo
+                  </span>
+                )}
+              </div>
             </div>
 
             {/* Modificadores Críticos (Alto Contraste: Rojo / Ámbar) */}
@@ -645,18 +681,21 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLin
         ))}
       </div>
 
-      {/* Pie de la tarjeta: Acción de Entrega al Cliente si todo está listo */}
-      {order.fulfillmentStatus === 'listo' && (
-        <div className="p-3 pt-0">
-          <button
-            onClick={() => onDeliver(order.orderId)}
-            className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/60 transition-all active:scale-[0.98]"
-          >
-            <span>✅</span>
-            <span>ENTREGAR COMANDA AL CLIENTE</span>
-          </button>
-        </div>
-      )}
+      {/* Pie de la tarjeta: Botón general [🚀 Despachar / Entregar Orden] habilitado únicamente si X === Y */}
+      <div className="p-3 pt-0">
+        <button
+          disabled={!allVisibleReady}
+          onClick={() => allVisibleReady && onDeliver(order.orderId)}
+          className={`w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all ${
+            allVisibleReady
+              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/60 active:scale-[0.98] cursor-pointer'
+              : 'bg-zinc-800 text-zinc-500 border border-zinc-700/60 opacity-60 cursor-not-allowed'
+          }`}
+        >
+          <span>🚀</span>
+          <span>Despachar / Entregar Orden</span>
+        </button>
+      </div>
     </div>
   );
 };

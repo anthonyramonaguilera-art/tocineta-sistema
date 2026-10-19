@@ -80,9 +80,11 @@ export const couponRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.status(200).send(result);
     } catch (err: any) {
+      const errorCode = err.errorCode || err.code || err.message;
       return reply.status(err.statusCode || 400).send({
         success: false,
-        error: err.message
+        error: errorCode,
+        message: err.message
       });
     }
   });

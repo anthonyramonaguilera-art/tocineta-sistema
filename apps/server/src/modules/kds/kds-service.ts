@@ -43,6 +43,9 @@ export interface KdsOrderDto {
   isRefire: boolean;
   refireReason?: string | null;
   lines: KdsOrderLineDto[];
+  readyCount: number;
+  totalCount: number;
+  aggregateStatus: 'pendiente' | 'preparando' | 'listo';
 }
 
 export interface GetKdsOrdersOptions {
@@ -143,6 +146,16 @@ export function getKdsOrders(rawDb: Database.Database, options?: GetKdsOrdersOpt
     const turnCode = `T-${String(row.order_number).padStart(3, '0')}`;
     const isRefire = refireMap.has(row.order_id) || (row.notes ? row.notes.toUpperCase().includes('REPOSICION') : false);
 
+    const readyCount = visibleLines.filter(l => l.status === 'listo').length;
+    const totalCount = visibleLines.length;
+    const allLinesPending = totalCount > 0 && visibleLines.every(l => l.status === 'pendiente');
+    const allLinesReady = totalCount > 0 && readyCount === totalCount;
+    const aggregateStatus: 'pendiente' | 'preparando' | 'listo' = allLinesReady
+      ? 'listo'
+      : allLinesPending
+      ? 'pendiente'
+      : 'preparando';
+
     result.push({
       orderId: row.order_id,
       orderNumber: row.order_number,
@@ -162,7 +175,10 @@ export function getKdsOrders(rawDb: Database.Database, options?: GetKdsOrdersOpt
       missingStations,
       isRefire,
       refireReason: isRefire ? (refireMap.get(row.order_id) || 'Reposición urgente') : null,
-      lines: visibleLines
+      lines: visibleLines,
+      readyCount,
+      totalCount,
+      aggregateStatus
     });
   }
 

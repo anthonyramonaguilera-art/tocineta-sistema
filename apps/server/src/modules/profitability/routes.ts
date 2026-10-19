@@ -29,11 +29,12 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
     return dbCtx.rawDb.prepare('SELECT user_id FROM sessions WHERE token_hash = ? AND expires_at_ms > ?').get(tokenHash, Date.now()) as { user_id: string } | undefined;
   };
 
-  // 1. Configuración de Interruptores (profitability_pro_enabled & fiscal_module_enabled)
+  // 1. Configuración de Interruptores (profitability_pro_enabled, fiscal_module_enabled, IGTF)
   fastify.get('/api/profitability/settings', async (_request, reply) => {
     const dbCtx = getDatabaseContext();
     const row = dbCtx.rawDb.prepare(`
-      SELECT profitability_pro_enabled, fiscal_module_enabled
+      SELECT profitability_pro_enabled, fiscal_module_enabled, fiscal_price_mode,
+             igtf_enabled, igtf_rate_bps, igtf_applies_to
       FROM business_settings
       WHERE id = 'default'
     `).get() as any;
@@ -41,7 +42,11 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.status(200).send({
       success: true,
       profitabilityProEnabled: Boolean(row?.profitability_pro_enabled),
-      fiscalModuleEnabled: Boolean(row?.fiscal_module_enabled)
+      fiscalModuleEnabled: Boolean(row?.fiscal_module_enabled),
+      fiscalPriceMode: row?.fiscal_price_mode || 'INCLUSIVE',
+      igtfEnabled: Boolean(row?.igtf_enabled),
+      igtfRateBps: row?.igtf_rate_bps ?? 300,
+      igtfAppliesTo: row?.igtf_applies_to || 'CASH_USD'
     });
   });
 
@@ -50,10 +55,15 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
     const body = request.body as {
       profitabilityProEnabled?: boolean;
       fiscalModuleEnabled?: boolean;
+      fiscalPriceMode?: 'INCLUSIVE' | 'EXCLUSIVE';
+      igtfEnabled?: boolean;
+      igtfRateBps?: number;
+      igtfAppliesTo?: 'CASH_USD' | 'ALL_USD' | 'NONE';
     } | undefined;
 
     const row = dbCtx.rawDb.prepare(`
-      SELECT profitability_pro_enabled, fiscal_module_enabled
+      SELECT profitability_pro_enabled, fiscal_module_enabled, fiscal_price_mode,
+             igtf_enabled, igtf_rate_bps, igtf_applies_to
       FROM business_settings
       WHERE id = 'default'
     `).get() as any;
@@ -66,19 +76,36 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
       ? (body.fiscalModuleEnabled ? 1 : 0)
       : (row?.fiscal_module_enabled ?? 0);
 
+    const newPriceMode = body?.fiscalPriceMode || row?.fiscal_price_mode || 'INCLUSIVE';
+
+    const newIgtf = body?.igtfEnabled !== undefined
+      ? (body.igtfEnabled ? 1 : 0)
+      : (row?.igtf_enabled ?? 0);
+
+    const newIgtfRate = body?.igtfRateBps ?? row?.igtf_rate_bps ?? 300;
+    const newIgtfApplies = body?.igtfAppliesTo || row?.igtf_applies_to || 'CASH_USD';
+
     dbCtx.rawDb.prepare(`
       UPDATE business_settings
       SET profitability_pro_enabled = ?,
           fiscal_module_enabled = ?,
+          fiscal_price_mode = ?,
+          igtf_enabled = ?,
+          igtf_rate_bps = ?,
+          igtf_applies_to = ?,
           updated_at_ms = ?
       WHERE id = 'default'
-    `).run(newPro, newFiscal, Date.now());
+    `).run(newPro, newFiscal, newPriceMode, newIgtf, newIgtfRate, newIgtfApplies, Date.now());
 
     return reply.status(200).send({
       success: true,
       profitabilityProEnabled: Boolean(newPro),
       fiscalModuleEnabled: Boolean(newFiscal),
-      message: 'Configuración de Rentabilidad Pro y Módulo Fiscal actualizada'
+      fiscalPriceMode: newPriceMode,
+      igtfEnabled: Boolean(newIgtf),
+      igtfRateBps: newIgtfRate,
+      igtfAppliesTo: newIgtfApplies,
+      message: 'Configuración de Rentabilidad Pro, Módulo Fiscal e IGTF actualizada'
     });
   });
 

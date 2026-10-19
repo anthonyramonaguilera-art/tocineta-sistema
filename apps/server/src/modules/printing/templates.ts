@@ -14,12 +14,14 @@ import { getKitchenBuildableLines, type KitchenBuildableLine } from '../orders/k
 export interface OrderReceiptData {
   id: string;
   orderNumber: number;
+  turnCode?: string;
   fulfillmentType: 'salon' | 'para_llevar' | 'delivery';
   tableNumber?: string | null;
   customerName?: string | null;
   customerPhone?: string | null;
   deliveryAddress?: string | null;
-  grossFoodSubtotalUsdCents: number;
+  grossFoodSubtotalUsdCents?: number;
+  netFoodSalesUsdCents?: number;
   discountUsdCents: number;
   deliveryFeeUsdCents: number;
   totalToCollectUsdCents: number;
@@ -27,7 +29,128 @@ export interface OrderReceiptData {
   notes?: string | null;
   createdAtMs: number;
   fiscalModuleEnabled?: boolean;
+  fiscalSettings?: FiscalSettings;
   paidInUsdCents?: number;
+}
+
+export interface FiscalSettings {
+  fiscal_module_enabled?: number | boolean;
+  fiscalModuleEnabled?: number | boolean;
+  fiscal_price_mode?: 'INCLUSIVE' | 'EXCLUSIVE';
+  fiscalPriceMode?: 'INCLUSIVE' | 'EXCLUSIVE';
+  igtf_enabled?: number | boolean;
+  igtfEnabled?: number | boolean;
+  igtf_rate_bps?: number;
+  igtfRateBps?: number;
+  igtf_applies_to?: 'CASH_USD' | 'ALL_USD' | 'NONE';
+  igtfAppliesTo?: 'CASH_USD' | 'ALL_USD' | 'NONE';
+}
+
+export interface FiscalBreakdown {
+  enabled: boolean;
+  mode: 'INCLUSIVE' | 'EXCLUSIVE';
+  baseImponibleUsdCents: number;
+  ivaUsdCents: number;
+  igtfUsdCents: number;
+  totalFoodUsdCents: number;
+  baseImponibleBsCents: number;
+  ivaBsCents: number;
+  igtfBsCents: number;
+}
+
+export function roundHalfUp(val: number): number {
+  return Math.round(val);
+}
+
+/**
+ * Helper maestro para cálculo de desglose fiscal e IGTF según directrices SENIAT / Modo Standby
+ */
+export function computeFiscalBreakdown(
+  order: {
+    grossFoodSubtotalUsdCents?: number;
+    discountUsdCents?: number;
+    netFoodSalesUsdCents?: number;
+    totalToCollectUsdCents?: number;
+    netSalesUsdCents?: number;
+    rateMicroBs?: number;
+  },
+  payments?: any[] | { cashUsdCents?: number; binanceUsdCents?: number },
+  settings?: FiscalSettings
+): FiscalBreakdown | null {
+  const isEnabled = Boolean(
+    settings?.fiscal_module_enabled ?? settings?.fiscalModuleEnabled ?? 0
+  );
+  if (!isEnabled) {
+    return null;
+  }
+
+  const mode = (settings?.fiscal_price_mode || settings?.fiscalPriceMode || 'INCLUSIVE') as 'INCLUSIVE' | 'EXCLUSIVE';
+  const igtfEnabled = Boolean(settings?.igtf_enabled ?? settings?.igtfEnabled ?? 0);
+  const igtfRateBps = settings?.igtf_rate_bps ?? settings?.igtfRateBps ?? 300;
+  const igtfAppliesTo = (settings?.igtf_applies_to || settings?.igtfAppliesTo || 'CASH_USD') as 'CASH_USD' | 'ALL_USD' | 'NONE';
+  const rateMicroBs = order.rateMicroBs || 40_000_000;
+
+  const netFoodUsdCents = order.netFoodSalesUsdCents !== undefined
+    ? order.netFoodSalesUsdCents
+    : (order.netSalesUsdCents !== undefined
+      ? order.netSalesUsdCents
+      : ((order.grossFoodSubtotalUsdCents ?? 0) - (order.discountUsdCents ?? 0)));
+
+  let baseImponibleUsdCents = 0;
+  let ivaUsdCents = 0;
+
+  if (mode === 'INCLUSIVE') {
+    baseImponibleUsdCents = roundHalfUp((netFoodUsdCents * 10000) / 11600);
+    ivaUsdCents = netFoodUsdCents - baseImponibleUsdCents;
+  } else {
+    baseImponibleUsdCents = netFoodUsdCents;
+    ivaUsdCents = roundHalfUp((netFoodUsdCents * 1600) / 10000);
+  }
+
+  let igtfUsdCents = 0;
+  if (igtfEnabled && igtfAppliesTo !== 'NONE') {
+    let cashUsd = 0;
+    let binanceUsd = 0;
+
+    if (Array.isArray(payments)) {
+      for (const p of payments) {
+        const amt = p.amount_usd_cents ?? p.amountUsdCents ?? 0;
+        const method = p.method || p.payment_method;
+        if (method === 'CASH_USD') cashUsd += amt;
+        if (method === 'BINANCE') binanceUsd += amt;
+      }
+    } else if (payments && typeof payments === 'object') {
+      cashUsd = payments.cashUsdCents ?? 0;
+      binanceUsd = payments.binanceUsdCents ?? 0;
+    }
+
+    let igtfBase = 0;
+    if (igtfAppliesTo === 'CASH_USD') {
+      igtfBase = cashUsd;
+    } else if (igtfAppliesTo === 'ALL_USD') {
+      igtfBase = cashUsd + binanceUsd;
+    }
+
+    if (igtfBase > 0) {
+      igtfUsdCents = roundHalfUp((igtfBase * igtfRateBps) / 10000);
+    }
+  }
+
+  const baseImponibleBsCents = usdToBsCents(baseImponibleUsdCents, rateMicroBs);
+  const ivaBsCents = usdToBsCents(ivaUsdCents, rateMicroBs);
+  const igtfBsCents = usdToBsCents(igtfUsdCents, rateMicroBs);
+
+  return {
+    enabled: true,
+    mode,
+    baseImponibleUsdCents,
+    ivaUsdCents,
+    igtfUsdCents,
+    totalFoodUsdCents: netFoodUsdCents,
+    baseImponibleBsCents,
+    ivaBsCents,
+    igtfBsCents
+  };
 }
 
 export interface ReceiptLineItem {
@@ -78,9 +201,23 @@ export function formatBsCurrency(cents: number): string {
 
 export function buildReceiptTicketIR(
   order: OrderReceiptData,
-  lines: ReceiptLineItem[]
+  lines: ReceiptLineItem[],
+  settingsOrPayments?: any,
+  paymentsOrSettings?: any,
+  maybeSettings?: any
 ): TicketIR {
   const blocks: TicketBlock[] = [];
+
+  let settings: FiscalSettings | undefined;
+  let payments: any;
+
+  if (Array.isArray(settingsOrPayments)) {
+    payments = settingsOrPayments;
+    settings = maybeSettings || (paymentsOrSettings && typeof paymentsOrSettings === 'object' && 'fiscal_module_enabled' in paymentsOrSettings ? paymentsOrSettings : undefined);
+  } else {
+    settings = settingsOrPayments;
+    payments = paymentsOrSettings;
+  }
 
   // 1. Logo Tocineta Sonríe Oficial
   blocks.push({ type: 'header_logo' });
@@ -157,8 +294,8 @@ export function buildReceiptTicketIR(
 
   blocks.push({ type: 'separator', style: 'single' });
 
-  // 6. Totales en USD y Bolívares (Bs) a tasa BCV. Cero menciones a COP.
-  const subtotalStr = `$${(order.grossFoodSubtotalUsdCents / 100).toFixed(2)}`;
+  const grossForTotals = order.grossFoodSubtotalUsdCents ?? order.netFoodSalesUsdCents ?? order.totalToCollectUsdCents ?? 0;
+  const subtotalStr = `$${(grossForTotals / 100).toFixed(2)}`;
   const discountStr = order.discountUsdCents > 0
     ? `-$${(order.discountUsdCents / 100).toFixed(2)}`
     : undefined;
@@ -181,22 +318,40 @@ export function buildReceiptTicketIR(
     bcvRate: bcvRateStr
   });
 
-  // Desglose fiscal informativo opcional (apagado por defecto)
-  if (order.fiscalModuleEnabled) {
-    const baseUsdCents = Math.round(order.totalToCollectUsdCents / 1.16);
-    const ivaUsdCents = order.totalToCollectUsdCents - baseUsdCents;
-    const baseBsCents = usdToBsCents(baseUsdCents, order.rateMicroBs);
-    const ivaBsCents = usdToBsCents(ivaUsdCents, order.rateMicroBs);
+  // Desglose fiscal e IGTF conectado (apagado si fiscal_module_enabled === 0)
+  const grossCents = order.grossFoodSubtotalUsdCents ?? order.netFoodSalesUsdCents ?? order.totalToCollectUsdCents ?? 0;
+  const netCents = order.netFoodSalesUsdCents ?? (grossCents - (order.discountUsdCents || 0));
+  const effectiveSettings: FiscalSettings | undefined = settings || order.fiscalSettings || (order.fiscalModuleEnabled ? { fiscal_module_enabled: 1, igtf_enabled: 1 } : undefined);
+  const fiscalBreakdown = computeFiscalBreakdown(
+    {
+      grossFoodSubtotalUsdCents: grossCents,
+      discountUsdCents: order.discountUsdCents || 0,
+      netFoodSalesUsdCents: netCents,
+      rateMicroBs: order.rateMicroBs
+    },
+    payments || (order.paidInUsdCents ? { cashUsdCents: order.paidInUsdCents } : undefined),
+    effectiveSettings
+  );
 
+  if (fiscalBreakdown) {
     blocks.push({ type: 'separator', style: 'dashed' });
     blocks.push({ type: 'text', text: '--- DESGLOSE FISCAL INFORMATIVO ---', align: 'center', bold: true });
-    blocks.push({ type: 'key_value', key: 'Base Imponible:', value: `$${(baseUsdCents / 100).toFixed(2)} (${formatBsCurrency(baseBsCents)})` });
-    blocks.push({ type: 'key_value', key: 'IVA Estimado (16%):', value: `$${(ivaUsdCents / 100).toFixed(2)} (${formatBsCurrency(ivaBsCents)})` });
-
-    if (order.paidInUsdCents && order.paidInUsdCents > 0) {
-      const igtfUsdCents = Math.round((order.paidInUsdCents * 3) / 100);
-      const igtfBsCents = usdToBsCents(igtfUsdCents, order.rateMicroBs);
-      blocks.push({ type: 'key_value', key: 'IGTF Divisas (3%):', value: `$${(igtfUsdCents / 100).toFixed(2)} (${formatBsCurrency(igtfBsCents)})` });
+    blocks.push({
+      type: 'key_value',
+      key: 'Base Imponible:',
+      value: `$${(fiscalBreakdown.baseImponibleUsdCents / 100).toFixed(2)} (${formatBsCurrency(fiscalBreakdown.baseImponibleBsCents)})`
+    });
+    blocks.push({
+      type: 'key_value',
+      key: 'IVA Estimado (16%):',
+      value: `$${(fiscalBreakdown.ivaUsdCents / 100).toFixed(2)} (${formatBsCurrency(fiscalBreakdown.ivaBsCents)})`
+    });
+    if (fiscalBreakdown.igtfUsdCents > 0) {
+      blocks.push({
+        type: 'key_value',
+        key: 'IGTF Divisas (3%):',
+        value: `$${(fiscalBreakdown.igtfUsdCents / 100).toFixed(2)} (${formatBsCurrency(fiscalBreakdown.igtfBsCents)})`
+      });
     }
   }
 
@@ -648,12 +803,13 @@ export interface ZReportData {
   mermasLossUsdCents: number;
   ordersCount: number;
   auditHeadHash: string;
+  fiscalSettings?: FiscalSettings;
 }
 
 /**
  * Plantilla de Cierre Z Oficial con Desglose y Hash de Auditoría SHA-256
  */
-export function buildZReportTicketIR(data: ZReportData): TicketIR {
+export function buildZReportTicketIR(data: ZReportData, settings?: FiscalSettings): TicketIR {
   const blocks: TicketBlock[] = [];
   const rateBs = (data.rateMicroBs / 1_000_000).toFixed(2);
   const netBs = Math.round((data.netSalesUsdCents * data.rateMicroBs) / 1_000_000);
@@ -787,6 +943,42 @@ export function buildZReportTicketIR(data: ZReportData): TicketIR {
     key: 'Mermas/Incidentes:',
     value: `$${(data.mermasLossUsdCents / 100).toFixed(2)}`
   });
+
+  // Desglose fiscal e IGTF en Cierre Z si está habilitado
+  const effectiveSettings = settings || data.fiscalSettings;
+  const fiscalBreakdown = computeFiscalBreakdown(
+    {
+      netSalesUsdCents: data.netSalesUsdCents,
+      rateMicroBs: data.rateMicroBs
+    },
+    {
+      cashUsdCents: data.cashUsdCents,
+      binanceUsdCents: data.binanceUsdCents
+    },
+    effectiveSettings
+  );
+
+  if (fiscalBreakdown) {
+    blocks.push({ type: 'separator', style: 'dashed' });
+    blocks.push({ type: 'text', text: '--- DESGLOSE FISCAL INFORMATIVO ---', align: 'center', bold: true });
+    blocks.push({
+      type: 'key_value',
+      key: 'Base Imponible:',
+      value: `$${(fiscalBreakdown.baseImponibleUsdCents / 100).toFixed(2)} (${formatBsCurrency(fiscalBreakdown.baseImponibleBsCents)})`
+    });
+    blocks.push({
+      type: 'key_value',
+      key: 'IVA Estimado (16%):',
+      value: `$${(fiscalBreakdown.ivaUsdCents / 100).toFixed(2)} (${formatBsCurrency(fiscalBreakdown.ivaBsCents)})`
+    });
+    if (fiscalBreakdown.igtfUsdCents > 0) {
+      blocks.push({
+        type: 'key_value',
+        key: 'IGTF Divisas (3%):',
+        value: `$${(fiscalBreakdown.igtfUsdCents / 100).toFixed(2)} (${formatBsCurrency(fiscalBreakdown.igtfBsCents)})`
+      });
+    }
+  }
 
   // Bloque Criptográfico de Auditoría
   blocks.push({ type: 'separator', style: 'double' });

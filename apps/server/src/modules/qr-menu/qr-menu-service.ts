@@ -127,6 +127,14 @@ export const OFFICIAL_STORE_NAME = 'Tocineta Sonríe';
 export const OFFICIAL_SLOGAN = 'Cocinamos con amor, te servimos como mereces y damos gloria a Dios';
 export const OFFICIAL_SCHEDULE = 'Martes a Domingo de 6:00 p. m. a 12:00 a. m.';
 export const OFFICIAL_LOCATION = 'Alta Vista detrás de Torre Movistar, Puerto Ordaz';
+export const MAX_WHATSAPP_MSG_LENGTH = 3500;
+
+export const OFFICIAL_DELIVERY_ZONES = [
+  { zoneId: 'zona_1', name: 'Zona 1 (Cercana / Alta Vista)', feeUsdCents: 200, feeFormatted: '$2.00' },
+  { zoneId: 'zona_2', name: 'Zona 2 (Media / Unare / Los Olivos)', feeUsdCents: 300, feeFormatted: '$3.00' },
+  { zoneId: 'zona_3', name: 'Zona 3 (Extendida / Chilemex / Villa Alianza)', feeUsdCents: 400, feeFormatted: '$4.00' },
+  { zoneId: 'zona_4', name: 'Zona 4 (Periférica / San Félix / El Rosario)', feeUsdCents: 500, feeFormatted: '$5.00' }
+] as const;
 
 /**
  * Obtiene la fecha/hora en formato legible en zona horaria America/Caracas (Venezuela)
@@ -501,13 +509,55 @@ export function formatWhatsAppOrderMessage(
   lines.push(`• Subtotal Comida: ${formatUsd(foodTotalUsdCents)} / ${formatBs(foodTotalBsCents)}`);
   if (input.fulfillmentType === 'delivery') {
     lines.push(`• Tarifa Delivery: ${formatUsd(deliveryFeeUsdCents)} / ${formatBs(deliveryFeeBsCents)}`);
+    lines.push(`  *(Tarifa de Delivery sujeta a validación de zona ($2.00 a $5.00))*`);
   }
   lines.push(`• *TOTAL ESTIMADO: ${formatUsd(totalUsdCents)} / ${formatBs(totalBsCents)}*`);
   lines.push(`*(Tasa BCV oficial: ${rateFormatted} Bs/$ - Actualizada: ${nowStr})*`);
   lines.push(``);
   lines.push(`"${OFFICIAL_SLOGAN}"`);
 
-  const text = lines.join('\n');
+  let text = lines.join('\n');
+
+  // Ajuste C1: Límite estricto MAX_WHATSAPP_MSG_LENGTH = 3500 caracteres
+  if (text.length > MAX_WHATSAPP_MSG_LENGTH) {
+    const summaryLines: string[] = [];
+    summaryLines.push(`*¡HOLA, TOCINETA SONRÍE!* 🥓`);
+    summaryLines.push(`Quisiera realizar el siguiente pedido resumido desde el Menú Digital QR:\n`);
+    summaryLines.push(`📋 *DETALLE DEL PEDIDO (RESUMIDO):*`);
+    for (const item of input.items) {
+      const itemTotalUsd = item.priceUsdCents * item.quantity;
+      summaryLines.push(`• *${item.quantity}x ${item.name}* (${formatUsd(itemTotalUsd)})`);
+      if (item.flavor) summaryLines.push(`  - Sabor: ${item.flavor}`);
+      if (item.notes) summaryLines.push(`  - Nota: ${item.notes}`);
+    }
+    summaryLines.push(``);
+    summaryLines.push(`📦 *MODALIDAD:* ${input.fulfillmentType === 'delivery' ? '🛵 Delivery a Domicilio' : '🍔 Para Llevar / Retiro en Food Truck'}`);
+    if (input.customerName) summaryLines.push(`👤 *Cliente:* ${input.customerName}`);
+    if (input.customerPhone) summaryLines.push(`📞 *Teléfono:* ${input.customerPhone}`);
+    if (input.fulfillmentType === 'delivery') {
+      if (input.deliveryAddress) summaryLines.push(`📍 *Dirección:* ${input.deliveryAddress}`);
+      if (input.deliveryReference) summaryLines.push(`🗺️ *Ref:* ${input.deliveryReference}`);
+    }
+    summaryLines.push(``);
+    summaryLines.push(`💵 *RESUMEN DE PAGO ESTIMADO:*`);
+    summaryLines.push(`• Subtotal Comida: ${formatUsd(foodTotalUsdCents)} / ${formatBs(foodTotalBsCents)}`);
+    if (input.fulfillmentType === 'delivery') {
+      summaryLines.push(`• Tarifa Delivery: ${formatUsd(deliveryFeeUsdCents)} / ${formatBs(deliveryFeeBsCents)}`);
+      summaryLines.push(`  *(Tarifa de Delivery sujeta a validación de zona ($2.00 a $5.00))*`);
+    }
+    summaryLines.push(`• *TOTAL ESTIMADO: ${formatUsd(totalUsdCents)} / ${formatBs(totalBsCents)}*`);
+    summaryLines.push(`*(Tasa BCV oficial: ${rateFormatted} Bs/$ - Actualizada: ${nowStr})*`);
+    summaryLines.push(``);
+    summaryLines.push(`"${OFFICIAL_SLOGAN}"`);
+
+    let summaryText = summaryLines.join('\n');
+    if (summaryText.length > MAX_WHATSAPP_MSG_LENGTH) {
+      const notice = '\n... [PEDIDO EXTENSO TRUNCADO]';
+      summaryText = summaryText.slice(0, MAX_WHATSAPP_MSG_LENGTH - notice.length) + notice;
+    }
+    text = summaryText;
+  }
+
   const url = `https://wa.me/${OFFICIAL_WHATSAPP_NUMBER}?text=${encodeURIComponent(text)}`;
 
   return { text, url };
@@ -940,6 +990,16 @@ export function generateSelfContainedHtml(menuData: PublicQrMenuPayload): string
         <input type="text" id="custName" placeholder="Tu Nombre" style="padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: #fff; font-size: 13px;">
         <input type="tel" id="custPhone" placeholder="Teléfono (ej: 0414-1234567)" style="padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: #fff; font-size: 13px;">
         <div id="deliveryFields" style="display: none; flex-direction: column; gap: 10px;">
+          <div>
+            <label style="font-size: 11px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 4px;">Zona de Delivery:</label>
+            <select id="deliveryZoneSelect" onchange="onDeliveryZoneChange()" style="width: 100%; padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: #fff; font-size: 13px;">
+              <option value="200" selected>Zona 1 — Alta Vista / Cercanías ($2.00)</option>
+              <option value="300">Zona 2 — Unare / Los Olivos / Chilemex ($3.00)</option>
+              <option value="400">Zona 3 — Villa Alianza / Castillito ($4.00)</option>
+              <option value="500">Zona 4 — San Félix / Periférica ($5.00)</option>
+            </select>
+            <p style="font-size: 11px; color: var(--yellow); margin-top: 4px;">* Tarifa de Delivery sujeta a validación de zona ($2.00 a $5.00)</p>
+          </div>
           <input type="text" id="custAddress" placeholder="Dirección de Entrega" style="padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: #fff; font-size: 13px;">
           <input type="text" id="custReference" placeholder="Punto de Referencia (ej: frente al parque)" style="padding: 12px; border-radius: 12px; border: 1px solid var(--border); background: var(--bg); color: #fff; font-size: 13px;">
         </div>
@@ -953,7 +1013,7 @@ export function generateSelfContainedHtml(menuData: PublicQrMenuPayload): string
         </div>
         <div id="deliveryRow" style="display: none; justify-content: space-between; font-size: 14px; margin-bottom: 6px;">
           <span style="color: var(--muted);">Delivery:</span>
-          <span style="font-weight: 700;">$2.00</span>
+          <span style="font-weight: 700;" id="deliveryFeeLabel">$2.00</span>
         </div>
         <div style="display: flex; justify-content: space-between; font-size: 18px; font-weight: 900; color: var(--yellow); margin-bottom: 14px;">
           <span>TOTAL ESTIMADO:</span>
@@ -1050,6 +1110,16 @@ export function generateSelfContainedHtml(menuData: PublicQrMenuPayload): string
       }
     }
 
+    let selectedDeliveryFeeCents = 200;
+
+    function onDeliveryZoneChange() {
+      const sel = document.getElementById('deliveryZoneSelect');
+      if (sel) {
+        selectedDeliveryFeeCents = parseInt(sel.value, 10) || 200;
+        renderCartItems();
+      }
+    }
+
     function renderCartItems() {
       const list = document.getElementById('cartItemsList');
       list.innerHTML = '';
@@ -1073,11 +1143,15 @@ export function generateSelfContainedHtml(menuData: PublicQrMenuPayload): string
         list.appendChild(row);
       });
 
-      const deliveryFee = fulfillment === 'delivery' ? 200 : 0;
+      const deliveryFee = fulfillment === 'delivery' ? selectedDeliveryFeeCents : 0;
       const totalUsd = subtotalUsd + deliveryFee;
       const totalBs = Math.round((totalUsd * MENU.currency.rateMicroBs) / 1000000);
 
       document.getElementById('modalSubtotal').innerText = \`$\${(subtotalUsd/100).toFixed(2)}\`;
+      const feeLabel = document.getElementById('deliveryFeeLabel');
+      if (feeLabel) {
+        feeLabel.innerText = \`$\${(deliveryFee/100).toFixed(2)}\`;
+      }
       document.getElementById('modalTotal').innerText = \`$\${(totalUsd/100).toFixed(2)} / Bs. \${(totalBs/100).toFixed(2)}\`;
     }
 
@@ -1140,7 +1214,7 @@ export function generateSelfContainedHtml(menuData: PublicQrMenuPayload): string
         text += \`• \${i.quantity}x \${i.name} ($\${(itemTotal/100).toFixed(2)} / Bs. \${(itemBs/100).toFixed(2)})\\n\`;
       });
 
-      const deliveryFee = fulfillment === 'delivery' ? 200 : 0;
+      const deliveryFee = fulfillment === 'delivery' ? selectedDeliveryFeeCents : 0;
       const totalUsd = subtotalUsd + deliveryFee;
       const totalBs = Math.round((totalUsd * MENU.currency.rateMicroBs) / 1000000);
 
@@ -1148,6 +1222,8 @@ export function generateSelfContainedHtml(menuData: PublicQrMenuPayload): string
       if (custName) text += \`👤 *Cliente:* \${custName}\\n\`;
       if (custPhone) text += \`📞 *Teléfono:* \${custPhone}\\n\`;
       if (fulfillment === 'delivery') {
+        const sel = document.getElementById('deliveryZoneSelect');
+        const zoneText = sel ? sel.options[sel.selectedIndex].text : 'Delivery';
         if (custAddress) text += \`📍 *Dirección:* \${custAddress}\\n\`;
         if (custReference) text += \`🗺️ *Referencia:* \${custReference}\\n\`;
       }
@@ -1155,7 +1231,10 @@ export function generateSelfContainedHtml(menuData: PublicQrMenuPayload): string
       text += \`\\n💵 *RESUMEN DE PAGO ESTIMADO:*\\n\`;
       text += \`• Subtotal Comida: $\${(subtotalUsd/100).toFixed(2)}\\n\`;
       if (fulfillment === 'delivery') {
-        text += \`• Tarifa Delivery: $2.00\\n\`;
+        const sel = document.getElementById('deliveryZoneSelect');
+        const zoneText = sel ? sel.options[sel.selectedIndex].text : 'Tarifa';
+        text += \`• Tarifa Delivery (\${zoneText}): $\${(deliveryFee/100).toFixed(2)}\\n\`;
+        text += \`  *(Tarifa de Delivery sujeta a validación de zona ($2.00 a $5.00))*\\n\`;
       }
       text += \`• *TOTAL ESTIMADO: $\${(totalUsd/100).toFixed(2)} / Bs. \${(totalBs/100).toFixed(2)}*\\n\`;
       text += \`*(Tasa BCV oficial: \${MENU.currency.rateFormatted} Bs/$ - Actualizada: \${MENU.currency.rateUpdatedAtCaracas})*\\n\\n\`;

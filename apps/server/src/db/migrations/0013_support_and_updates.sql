@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS system_updates (
   manifest_sha256 TEXT NOT NULL,
   applied_by_user_id TEXT REFERENCES users(id),
   applied_at_ms INTEGER NOT NULL,
-  status TEXT NOT NULL CHECK(status IN ('APPLIED', 'FAILED_ROLLBACK')),
+  status TEXT NOT NULL CHECK(status IN ('APPLIED', 'FAILED_ROLLBACK', 'IN_PROGRESS')),
   error_details TEXT
 );
 

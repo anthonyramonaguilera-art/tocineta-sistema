@@ -26,6 +26,13 @@ if (-not $isAdmin) {
     Write-Warning "Por favor, ejecute PowerShell como Administrador."
 }
 
+# Detección de Sistema Operativo (Compatibilidad Dual Windows 10 y Windows 11)
+$osInfo = Get-CimInstance Win32_OperatingSystem -ErrorAction SilentlyContinue
+$osCaption = if ($osInfo) { $osInfo.Caption } else { [System.Environment]::OSVersion.VersionString }
+$osBuild = if ($osInfo) { [int]$osInfo.BuildNumber } else { [System.Environment]::OSVersion.Version.Build }
+$detectedEdition = if ($osBuild -ge 22000) { "Windows 11" } else { "Windows 10" }
+Write-Host "🖥️ Sistema Operativo Detectado: $osCaption ($detectedEdition, Build $osBuild)" -ForegroundColor Cyan
+
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..")).Path
 $nodeExe = (Get-Command node -ErrorAction SilentlyContinue).Source
 if (-not $nodeExe) {

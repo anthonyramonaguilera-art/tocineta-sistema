@@ -376,6 +376,16 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
       deliveryQuickTiersJson?: string;
       businessName?: string;
       phone?: string;
+      fiscalModuleEnabled?: boolean | number;
+      fiscal_module_enabled?: boolean | number;
+      fiscalPriceMode?: 'INCLUSIVE' | 'EXCLUSIVE';
+      fiscal_price_mode?: 'INCLUSIVE' | 'EXCLUSIVE';
+      igtfEnabled?: boolean | number;
+      igtf_enabled?: boolean | number;
+      igtfRateBps?: number;
+      igtf_rate_bps?: number;
+      igtfAppliesTo?: 'CASH_USD' | 'ALL_USD' | 'NONE';
+      igtf_applies_to?: 'CASH_USD' | 'ALL_USD' | 'NONE';
     } | undefined;
 
     const current = dbCtx.rawDb.prepare('SELECT * FROM business_settings WHERE id = \'default\'').get() as any;
@@ -383,21 +393,57 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
     const tiersJson = body?.deliveryQuickTiersJson || current.delivery_quick_tiers_json;
     const name = body?.businessName || current.business_name;
     const phone = body?.phone || current.phone;
+
+    const fiscalEnabledVal = body?.fiscalModuleEnabled !== undefined
+      ? (body.fiscalModuleEnabled ? 1 : 0)
+      : (body?.fiscal_module_enabled !== undefined ? (body.fiscal_module_enabled ? 1 : 0) : current.fiscal_module_enabled);
+
+    const fiscalPriceModeVal = body?.fiscalPriceMode || body?.fiscal_price_mode || current.fiscal_price_mode || 'INCLUSIVE';
+
+    const igtfEnabledVal = body?.igtfEnabled !== undefined
+      ? (body.igtfEnabled ? 1 : 0)
+      : (body?.igtf_enabled !== undefined ? (body.igtf_enabled ? 1 : 0) : current.igtf_enabled);
+
+    const igtfRateBpsVal = body?.igtfRateBps ?? body?.igtf_rate_bps ?? current.igtf_rate_bps ?? 300;
+
+    const igtfAppliesToVal = body?.igtfAppliesTo || body?.igtf_applies_to || current.igtf_applies_to || 'CASH_USD';
+
     const now = Date.now();
 
     dbCtx.rawDb.prepare(`
       UPDATE business_settings
       SET delivery_accounting_mode = ?, delivery_quick_tiers_json = ?,
-          business_name = ?, phone = ?, updated_at_ms = ?
+          business_name = ?, phone = ?,
+          fiscal_module_enabled = ?, fiscal_price_mode = ?,
+          igtf_enabled = ?, igtf_rate_bps = ?, igtf_applies_to = ?,
+          updated_at_ms = ?
       WHERE id = 'default'
-    `).run(deliveryMode, tiersJson, name, phone, now);
+    `).run(
+      deliveryMode,
+      tiersJson,
+      name,
+      phone,
+      fiscalEnabledVal,
+      fiscalPriceModeVal,
+      igtfEnabledVal,
+      igtfRateBpsVal,
+      igtfAppliesToVal,
+      now
+    );
 
     appendAuditEvent(dbCtx.rawDb, {
       actorUserId: user.userId,
       action: 'BUSINESS_SETTINGS_UPDATED',
       entityType: 'business_settings',
       entityId: 'default',
-      payload: { deliveryMode }
+      payload: {
+        deliveryMode,
+        fiscalModuleEnabled: Boolean(fiscalEnabledVal),
+        fiscalPriceMode: fiscalPriceModeVal,
+        igtfEnabled: Boolean(igtfEnabledVal),
+        igtfRateBps: igtfRateBpsVal,
+        igtfAppliesTo: igtfAppliesToVal
+      }
     });
 
     publishDomainEvent(dbCtx.rawDb, {
@@ -406,7 +452,20 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
       payload: { deliveryMode }
     });
 
-    return reply.status(200).send({ success: true });
+    return reply.status(200).send({
+      success: true,
+      settings: {
+        deliveryAccountingMode: deliveryMode,
+        deliveryQuickTiersJson: tiersJson,
+        businessName: name,
+        phone,
+        fiscalModuleEnabled: Boolean(fiscalEnabledVal),
+        fiscalPriceMode: fiscalPriceModeVal,
+        igtfEnabled: Boolean(igtfEnabledVal),
+        igtfRateBps: igtfRateBpsVal,
+        igtfAppliesTo: igtfAppliesToVal
+      }
+    });
   });
 
   // 13. Endpoint de Recuperación Secuencial de Eventos (GET /api/events?since=<lastSeq>)

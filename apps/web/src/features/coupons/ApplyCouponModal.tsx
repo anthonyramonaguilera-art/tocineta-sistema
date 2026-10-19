@@ -53,7 +53,11 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'No se pudo aplicar el cupón');
+        if (data.error === 'CUPON_PRODUCTO_AGOTADO' || data.message?.includes('agotado')) {
+          setErrorMsg(data.message || 'El producto de cortesía está agotado. Consulta al supervisor.');
+          return;
+        }
+        throw new Error(data.message || data.error || 'No se pudo aplicar el cupón');
       }
 
       setSuccessMsg(data.message || `Cupón ${cleanCode} aplicado con éxito`);

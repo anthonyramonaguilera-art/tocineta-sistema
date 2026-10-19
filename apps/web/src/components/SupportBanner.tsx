@@ -113,6 +113,8 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
   const [notes, setNotes] = useState('');
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [fallbackRequired, setFallbackRequired] = useState(false);
+  const [fallbackOptions, setFallbackOptions] = useState<string[]>([]);
 
   if (!isOpen) return null;
 
@@ -138,12 +140,33 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
       }
 
       queryClient.invalidateQueries({ queryKey: ['supportStatus'] });
+
+      if (data.support?.launchStatus === 'FALLBACK_OPTIONS_REQUIRED' && data.support?.fallbackOptions?.length) {
+        setFallbackRequired(true);
+        setFallbackOptions(data.support.fallbackOptions);
+        return;
+      }
+
       onClose();
     } catch (err: any) {
       setErrorMsg(err.message || 'Error al iniciar modo soporte');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleSelectFallback = async (option: string) => {
+    try {
+      await fetch('/api/support/fallback-selection', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ selectedOption: option })
+      });
+    } catch (err) {
+      console.error('Error al registrar fallback:', err);
+    }
+    queryClient.invalidateQueries({ queryKey: ['supportStatus'] });
+    onClose();
   };
 
   return (
@@ -177,52 +200,81 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
           </div>
         )}
 
-        <form onSubmit={handleStart} className="space-y-4">
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-tocineta-muted block">
-              PIN de Administrador (6 dígitos — Sra. Olinelcys):
-            </label>
-            <input
-              type="password"
-              maxLength={6}
-              autoFocus
-              value={adminPin}
-              onChange={e => setAdminPin(e.target.value.replace(/\D/g, ''))}
-              placeholder="••••••"
-              className="w-full min-h-[48px] bg-tocineta-bg border border-tocineta-border rounded-xl px-4 text-center font-mono font-black text-xl text-amber-400 tracking-widest outline-none focus:border-amber-400"
-            />
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="text-xs font-bold text-tocineta-muted block">
-              Motivo o Notas de Asistencia (Opcional):
-            </label>
-            <input
-              type="text"
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              placeholder="Ej: Mantenimiento preventivo, revisión de impresoras..."
-              className="w-full min-h-[44px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-white outline-none focus:border-amber-400"
-            />
-          </div>
-
-          <div className="pt-2 flex gap-2">
+        {fallbackRequired ? (
+          <div className="space-y-3 py-2 animate-in fade-in">
+            <div className="p-3 bg-amber-500/15 border border-amber-500/40 rounded-2xl text-amber-200 text-xs font-semibold">
+              <p className="font-bold">⚠️ Quick Assist no se inició automáticamente.</p>
+              <p className="text-[11px] mt-1 text-amber-300/80">Seleccione una de las alternativas autorizadas por Varons Media:</p>
+            </div>
+            <div className="space-y-2">
+              {fallbackOptions.map(opt => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => handleSelectFallback(opt)}
+                  className="w-full text-left p-3 rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-amber-400 text-xs font-bold text-white transition-all flex items-center justify-between group hover:bg-amber-500/10"
+                >
+                  <span>{opt}</span>
+                  <span className="text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">➔</span>
+                </button>
+              ))}
+            </div>
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 min-h-[46px] rounded-xl bg-tocineta-bg border border-tocineta-border text-tocineta-muted hover:text-white font-bold text-xs"
+              className="w-full min-h-[40px] rounded-xl bg-tocineta-bg border border-tocineta-border text-tocineta-muted hover:text-white font-bold text-xs mt-2"
             >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting || adminPin.length !== 6}
-              className="flex-1 min-h-[46px] rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs active:scale-95 transition-all disabled:opacity-40"
-            >
-              {isSubmitting ? 'Iniciando...' : 'Iniciar Modo Soporte'}
+              Cerrar
             </button>
           </div>
-        </form>
+        ) : (
+          <form onSubmit={handleStart} className="space-y-4">
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-tocineta-muted block">
+                PIN de Administrador (6 dígitos — Sra. Olinelcys):
+              </label>
+              <input
+                type="password"
+                maxLength={6}
+                autoFocus
+                value={adminPin}
+                onChange={e => setAdminPin(e.target.value.replace(/\D/g, ''))}
+                placeholder="••••••"
+                className="w-full min-h-[48px] bg-tocineta-bg border border-tocineta-border rounded-xl px-4 text-center font-mono font-black text-xl text-amber-400 tracking-widest outline-none focus:border-amber-400"
+              />
+            </div>
+
+            <div className="space-y-1.5">
+              <label className="text-xs font-bold text-tocineta-muted block">
+                Motivo o Notas de Asistencia (Opcional):
+              </label>
+              <input
+                type="text"
+                value={notes}
+                onChange={e => setNotes(e.target.value)}
+                placeholder="Ej: Mantenimiento preventivo, revisión de impresoras..."
+                className="w-full min-h-[44px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-white outline-none focus:border-amber-400"
+              />
+            </div>
+
+            <div className="pt-2 flex gap-2">
+              <button
+                type="button"
+                onClick={onClose}
+                className="flex-1 min-h-[46px] rounded-xl bg-tocineta-bg border border-tocineta-border text-tocineta-muted hover:text-white font-bold text-xs"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || adminPin.length !== 6}
+                className="flex-1 min-h-[46px] rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs active:scale-95 transition-all disabled:opacity-40"
+              >
+                {isSubmitting ? 'Iniciando...' : 'Iniciar Modo Soporte'}
+              </button>
+            </div>
+          </form>
+        )}
       </div>
     </div>
   );

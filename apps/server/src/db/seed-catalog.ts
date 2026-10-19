@@ -18,7 +18,7 @@ export function seedCatalog(rawDb: Database.Database): void {
     // 1. Configuración de Negocio (Business Settings)
     // ------------------------------------------------------------------------
     rawDb.prepare(`
-      INSERT OR REPLACE INTO business_settings (
+      INSERT OR IGNORE INTO business_settings (
         id, business_name, rif, phone, address,
         delivery_accounting_mode, delivery_quick_tiers_json,
         banesco_pago_movil_phone, banesco_pago_movil_id, pos_fee_bps,
