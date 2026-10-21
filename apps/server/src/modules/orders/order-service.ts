@@ -31,7 +31,7 @@ export interface NormalizedOrderModifier {
   internalCostUsdCents: number;
 }
 
-export function normalizeModifier(raw: ModifierRawInput): NormalizedOrderModifier {
+export function normalizeModifier(raw: any): NormalizedOrderModifier {
   if (typeof raw === 'string') {
     const text = raw.trim();
     const lower = text.toLowerCase();
@@ -48,8 +48,8 @@ export function normalizeModifier(raw: ModifierRawInput): NormalizedOrderModifie
     };
   }
 
-  const name = raw.modifierName || raw.ingredientName || raw.name || 'Modificador';
-  const type = raw.modifierType || raw.type || (raw.extraPriceUsdCents ? 'EXTRA_INGREDIENTE' : 'BASE_INGREDIENT');
+  const name = raw.modifierName || raw.modifier_name || raw.ingredientName || raw.ingredient_name || raw.name || 'Modificador';
+  const type = raw.modifierType || raw.modifier_type || raw.type || ((raw.extraPriceUsdCents || raw.extra_price_usd_cents) ? 'PAID_EXTRA' : 'BASE_INGREDIENT');
   let state = raw.state;
   if (!state) {
     if (type === 'SIN_INGREDIENTE') state = 'sin';
@@ -58,15 +58,18 @@ export function normalizeModifier(raw: ModifierRawInput): NormalizedOrderModifie
     else state = 'normal';
   }
 
-  const price = raw.extraPriceUsdCents || raw.extraPriceCents || 0;
+  const price = raw.extraPriceUsdCents ?? raw.extra_price_usd_cents ?? raw.extraPriceCents ?? 0;
+  const cost = raw.internalCostUsdCents ?? raw.internal_cost_usd_cents ?? 0;
+  const ingId = raw.ingredientId || raw.ingredient_id || null;
+
   return {
-    ingredientId: raw.ingredientId || null,
+    ingredientId: ingId,
     ingredientName: name,
     modifierName: name,
     modifierType: type,
     state,
     extraPriceUsdCents: price,
-    internalCostUsdCents: raw.internalCostUsdCents || 0
+    internalCostUsdCents: cost
   };
 }
 

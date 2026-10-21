@@ -9,9 +9,12 @@ import { AuthorizeModal } from './AuthorizeModal.js';
 import {
   saveOrderToOutbox,
   subscribeToOutboxCount,
-  flushOutbox
+  flushOutbox,
+  clearOutbox
 } from './outbox.js';
-import { generateUuidV7, createIdempotencyKey, usdToBsCents } from '@tocineta/shared';
+import { generateUuidV7, createIdempotencyKey, usdToBsCents, canUserProcessPayments } from '@tocineta/shared';
+import { MultiMethodCalculator } from '../cashier/MultiMethodCalculator.js';
+import { ApplyCouponModal } from '../coupons/ApplyCouponModal.js';
 
 interface ExistingOrder {
   id: string;
@@ -27,7 +30,7 @@ interface ExistingOrder {
 }
 
 export const PosComandero: React.FC = () => {
-  const { currency, token } = useAuth();
+  const { currency, token, user } = useAuth();
 
   // Estados de catálogo y filtros
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -47,7 +50,7 @@ export const PosComandero: React.FC = () => {
   const [notes, setNotes] = useState<string>('');
   const [couponCode, setCouponCode] = useState<string>('');
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [statusNotification, setStatusNotification] = useState<{ type: 'success' | 'error' | 'warning'; message: string } | null>(null);
+  const [statusNotification, setStatusNotification] = useState<{ type: 'success' | 'error' | 'warning' | 'info'; message: string } | null>(null);
 
   // Estado de edición de orden existente (para Concurrencia Optimista)
   const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
@@ -59,6 +62,10 @@ export const PosComandero: React.FC = () => {
   const [comboWizardProduct, setComboWizardProduct] = useState<PosProduct | null>(null);
   const [authorizingOrder, setAuthorizingOrder] = useState<ExistingOrder | null>(null);
   const [showOrdersList, setShowOrdersList] = useState<boolean>(false);
+
+  // Estados de Cobro Express (Hito M19 C.1)
+  const [expressCheckoutOrder, setExpressCheckoutOrder] = useState<any | null>(null);
+  const [isExpressCouponOpen, setIsExpressCouponOpen] = useState<boolean>(false);
 
   // Estado del Outbox Offline (IndexedDB)
   const [outboxCount, setOutboxCount] = useState<number>(0);
@@ -259,7 +266,7 @@ export const PosComandero: React.FC = () => {
   // --------------------------------------------------------------------------
   // ENVÍO DE PEDIDO A CAJA CON IDEMPOTENCIA Y MANEJO OFFLINE / CONFLICTOS 409
   // --------------------------------------------------------------------------
-  const handleSubmitOrder = async () => {
+  const handleSubmitOrder = async (payNow: boolean = false) => {
     if (cart.length === 0) return;
 
     setIsSubmitting(true);
@@ -367,8 +374,9 @@ export const PosComandero: React.FC = () => {
       lines: linesPayload
     };
 
+    let res: Response;
     try {
-      const res = await fetch('/api/orders', {
+      res = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -377,21 +385,51 @@ export const PosComandero: React.FC = () => {
         },
         body: JSON.stringify(orderPayload)
       });
+    } catch (networkErr: any) {
+      // REGLA DE ORO DEL OUTBOX: SOLO guardar en cola IndexedDB si es error real de red
+      const isRealNetworkError =
+        (typeof navigator !== 'undefined' && !navigator.onLine) ||
+        networkErr instanceof TypeError ||
+        networkErr?.name === 'TypeError' ||
+        networkErr?.message?.toLowerCase().includes('failed to fetch') ||
+        networkErr?.message?.toLowerCase().includes('network');
 
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error en el servidor al crear la orden');
+      if (isRealNetworkError) {
+        console.warn('Fallo de red real al enviar pedido. Encolando en IndexedDB outbox_orders:', networkErr);
+        try {
+          await saveOrderToOutbox({
+            idempotencyKey,
+            payload: orderPayload,
+            token: token || undefined,
+            createdAtMs: Date.now(),
+            attempts: 1,
+            lastError: networkErr?.message || 'Error de conexión'
+          });
+
+          setStatusNotification({
+            type: 'warning',
+            message: '⚠️ Wi-Fi desconectado. Pedido encolado en IndexedDB con clave de idempotencia. Se enviará automáticamente al reconectar.'
+          });
+          handleClearCart();
+        } catch (idbErr: any) {
+          setStatusNotification({
+            type: 'error',
+            message: `Fallo al guardar en cola offline: ${idbErr?.message}`
+          });
+        }
+      } else {
+        setStatusNotification({
+          type: 'error',
+          message: `Error al enviar pedido: ${networkErr?.message}`
+        });
       }
+      setIsSubmitting(false);
+      return;
+    }
 
-      setStatusNotification({
-        type: 'success',
-        message: `✓ Pedido enviado a Caja: Orden #${data.order.order_number} (${data.order.table_number})`
-      });
-      handleClearCart();
-      refetchOrders();
-    } catch (err: any) {
-      // CAÍDA DE WI-FI O ERROR DE RED -> Guardar automáticamente en Outbox IndexedDB
-      console.warn('Fallo de red al enviar pedido. Encolando en IndexedDB outbox_orders:', err);
+    // Si el servidor devolvió un error de gateway 502, 503, 504 -> Encolar en outbox
+    if (res.status === 502 || res.status === 503 || res.status === 504) {
+      console.warn(`Gateway status ${res.status}. Encolando en Outbox:`, idempotencyKey);
       try {
         await saveOrderToOutbox({
           idempotencyKey,
@@ -399,12 +437,11 @@ export const PosComandero: React.FC = () => {
           token: token || undefined,
           createdAtMs: Date.now(),
           attempts: 1,
-          lastError: err?.message || 'Error de conexión'
+          lastError: `Gateway ${res.status}`
         });
-
         setStatusNotification({
           type: 'warning',
-          message: '⚠️ Wi-Fi desconectado. Pedido encolado en IndexedDB con clave de idempotencia. Se enviará automáticamente al reconectar.'
+          message: '⚠️ Servidor temporalmente inalcanzable. Pedido encolado en IndexedDB.'
         });
         handleClearCart();
       } catch (idbErr: any) {
@@ -413,8 +450,43 @@ export const PosComandero: React.FC = () => {
           message: `Fallo al guardar en cola offline: ${idbErr?.message}`
         });
       }
-    } finally {
       setIsSubmitting(false);
+      return;
+    }
+
+    // Si el servidor respondió con error 4xx o 500 (¡PROHIBIDO GUARDARLO EN EL OUTBOX!)
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.success) {
+      setStatusNotification({
+        type: 'error',
+        message: `❌ Error del servidor (${res.status}): ${data.error || data.message || 'Error al procesar el pedido'}`
+      });
+      setIsSubmitting(false);
+      return;
+    }
+
+    // Pedido creado con éxito en backend
+    setIsSubmitting(false);
+    if (payNow) {
+      // Abre inmediatamente el modal de Cobro Express en la misma pantalla
+      setExpressCheckoutOrder(data.order);
+    } else {
+      setStatusNotification({
+        type: 'success',
+        message: `✓ Pedido enviado a Caja: Orden #${data.order.order_number} (${data.order.table_number})`
+      });
+      handleClearCart();
+      refetchOrders();
+    }
+  };
+
+  const handleClearOutbox = async () => {
+    if (window.confirm('¿Seguro que deseas vaciar la cola de pedidos pendientes en este dispositivo?')) {
+      await clearOutbox();
+      setStatusNotification({
+        type: 'info',
+        message: 'Cola offline vaciada correctamente.'
+      });
     }
   };
 
@@ -517,14 +589,25 @@ export const PosComandero: React.FC = () => {
               </p>
             </div>
           </div>
-          <button
-            type="button"
-            onClick={handleManualFlushOutbox}
-            disabled={isFlushingOutbox}
-            className="min-h-[48px] px-4 rounded-xl bg-amber-500 text-black font-black text-xs hover:bg-amber-400 active:scale-95 transition-all flex items-center gap-1.5 shadow"
-          >
-            {isFlushingOutbox ? 'Sincronizando...' : '🔄 Sincronizar Ahora'}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleClearOutbox}
+              className="min-h-[48px] px-3.5 rounded-xl bg-red-500/20 border border-red-500/50 text-red-300 font-black text-xs hover:bg-red-500/30 active:scale-95 transition-all flex items-center gap-1 shadow"
+              title="Limpiar cola de pedidos atascados"
+            >
+              <span>🗑️</span>
+              <span>Limpiar cola</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleManualFlushOutbox}
+              disabled={isFlushingOutbox}
+              className="min-h-[48px] px-4 rounded-xl bg-amber-500 text-black font-black text-xs hover:bg-amber-400 active:scale-95 transition-all flex items-center gap-1.5 shadow"
+            >
+              {isFlushingOutbox ? 'Sincronizando...' : '🔄 Sincronizar Ahora'}
+            </button>
+          </div>
         </div>
       )}
 
@@ -1078,21 +1161,60 @@ export const PosComandero: React.FC = () => {
             </div>
           </div>
 
-          {/* BOTÓN GRANDE TÁCTIL: ENVIAR A CAJA (Mínimo 54px de alto) */}
-          <button
-            type="button"
-            onClick={handleSubmitOrder}
-            disabled={cart.length === 0 || isSubmitting}
-            className="w-full min-h-[54px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base disabled:opacity-40 disabled:pointer-events-none hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl"
-          >
-            {isSubmitting ? (
-              <span className="animate-spin inline-block text-xl">⏳</span>
-            ) : editingOrderId ? (
-              <span>✓ Actualizar Pedido #{editingOrderNumber} (v{editingOrderVersion})</span>
-            ) : (
-              <span>🚀 Enviar a Caja ({tableNumber})</span>
-            )}
-          </button>
+          {/* BOTONES DE ACCIÓN PRINCIPALES DEL CARRITO (H-01 / Hito M19 C.1) */}
+          {editingOrderId ? (
+            <button
+              type="button"
+              onClick={() => handleSubmitOrder(false)}
+              disabled={cart.length === 0 || isSubmitting}
+              className="w-full min-h-[54px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base disabled:opacity-40 disabled:pointer-events-none hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl"
+            >
+              {isSubmitting ? (
+                <span className="animate-spin inline-block text-xl">⏳</span>
+              ) : (
+                <span>✓ Actualizar Pedido #{editingOrderNumber} (v{editingOrderVersion})</span>
+              )}
+            </button>
+          ) : canUserProcessPayments(user?.role) ? (
+            <div className="space-y-2">
+              {/* Botón principal destacado en amarillo: [💳 Enviar y Cobrar Ahora] (min-h-[52px]) */}
+              <button
+                type="button"
+                onClick={() => handleSubmitOrder(true)}
+                disabled={cart.length === 0 || isSubmitting}
+                className="w-full min-h-[52px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base disabled:opacity-40 disabled:pointer-events-none hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl"
+              >
+                {isSubmitting ? (
+                  <span className="animate-spin inline-block text-xl">⏳</span>
+                ) : (
+                  <span>💳 Enviar y Cobrar Ahora ({tableNumber})</span>
+                )}
+              </button>
+
+              {/* Botón secundario: [📤 Solo Enviar a Caja] (min-h-[48px]) */}
+              <button
+                type="button"
+                onClick={() => handleSubmitOrder(false)}
+                disabled={cart.length === 0 || isSubmitting}
+                className="w-full min-h-[48px] rounded-2xl bg-tocineta-card border border-tocineta-border text-white font-bold text-xs hover:border-tocineta-yellow/60 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+              >
+                <span>📤 Solo Enviar a Caja</span>
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => handleSubmitOrder(false)}
+              disabled={cart.length === 0 || isSubmitting}
+              className="w-full min-h-[54px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base disabled:opacity-40 disabled:pointer-events-none hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl"
+            >
+              {isSubmitting ? (
+                <span className="animate-spin inline-block text-xl">⏳</span>
+              ) : (
+                <span>🚀 Enviar a Caja ({tableNumber})</span>
+              )}
+            </button>
+          )}
 
         </div>
 
@@ -1165,6 +1287,91 @@ export const PosComandero: React.FC = () => {
               message: `✓ Orden #${authorizingOrder.order_number} autorizada sin pago y enviada a cocina`
             });
             refetchOrders();
+          }}
+        />
+      )}
+
+      {/* MODAL DE COBRO EXPRESS EN COMANDERO (Hito M19 C.1) */}
+      {expressCheckoutOrder && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in overflow-y-auto">
+          <div className="bg-tocineta-card border border-tocineta-border rounded-3xl p-5 max-w-2xl w-full shadow-2xl space-y-4 my-8">
+            <div className="flex items-center justify-between pb-3 border-b border-tocineta-border">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">💳</span>
+                <div>
+                  <h3 className="font-black text-base text-white">
+                    Cobro Express — Orden #{expressCheckoutOrder.order_number} ({expressCheckoutOrder.table_number})
+                  </h3>
+                  <p className="text-xs text-tocineta-muted">
+                    Total a Cobrar: <strong className="text-tocineta-yellow font-mono">${(expressCheckoutOrder.total_to_collect_usd_cents / 100).toFixed(2)} USD</strong>
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setIsExpressCouponOpen(true)}
+                  className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs transition-all flex items-center gap-1 shadow"
+                >
+                  <span>🎁</span>
+                  <span>Aplicar Cupón</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const num = expressCheckoutOrder.order_number;
+                    setExpressCheckoutOrder(null);
+                    handleClearCart();
+                    refetchOrders();
+                    setStatusNotification({
+                      type: 'info',
+                      message: `Orden #${num} guardada en caja para cobro posterior.`
+                    });
+                  }}
+                  className="p-1.5 rounded-lg text-tocineta-muted hover:text-white text-sm"
+                  title="Cerrar y dejar pendiente en caja"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <MultiMethodCalculator
+              order={expressCheckoutOrder}
+              rateMicroBs={expressCheckoutOrder.rate_micro_bs || menu?.rateMicroBs || 40000000}
+              onPaymentSuccess={() => {
+                const paidOrderNum = expressCheckoutOrder.order_number;
+                setExpressCheckoutOrder(null);
+                handleClearCart();
+                refetchOrders();
+                setStatusNotification({
+                  type: 'success',
+                  message: `✓ ¡Orden #${paidOrderNum} cobrada con éxito!`
+                });
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* MODAL DE APLICAR CUPÓN EN COBRO EXPRESS */}
+      {isExpressCouponOpen && expressCheckoutOrder && (
+        <ApplyCouponModal
+          isOpen={true}
+          onClose={() => setIsExpressCouponOpen(false)}
+          orderId={expressCheckoutOrder.id}
+          orderNumber={expressCheckoutOrder.order_number}
+          currentCouponId={expressCheckoutOrder.coupon_id}
+          currentDiscountCents={expressCheckoutOrder.discount_usd_cents}
+          onSuccess={async () => {
+            setIsExpressCouponOpen(false);
+            try {
+              const res = await fetch(`/api/orders/${expressCheckoutOrder.id}`);
+              const data = await res.json();
+              if (data.success && data.order) {
+                setExpressCheckoutOrder(data.order);
+              }
+            } catch {}
           }}
         />
       )}

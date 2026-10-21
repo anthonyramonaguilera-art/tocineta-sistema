@@ -104,7 +104,7 @@ export async function syncBcvRateFromInternet(
       `).run(newRateId, rateMicroBs, now);
 
       appendAuditEvent(rawDb, {
-        actorUserId: 'system_bcv_sync',
+        actorUserId: null,
         action: 'BCV_RATE_AUTO_UPDATED',
         entityType: 'exchange_rate',
         entityId: newRateId,

@@ -17,21 +17,29 @@ import {
 
 export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
   // Helper para resolver el usuario actuante desde cookie, cabecera x-user-id, payload o token Bearer
-  const resolveActingUser = (req: any, body?: any): { id: string; role: string; name?: string } => {
+  const resolveActingUser = (req: any, body?: any): { id: string; role: string; name?: string; permissions?: string[] } => {
     const dbCtx = getDatabaseContext();
+
+    const parsePermissions = (json?: string): string[] => {
+      try {
+        return JSON.parse(json || '[]');
+      } catch {
+        return [];
+      }
+    };
 
     // 1. Cabecera explícita x-user-id
     const headerUserId = req.headers['x-user-id'] as string | undefined;
     if (headerUserId) {
-      const u = dbCtx.rawDb.prepare('SELECT id, name, role FROM users WHERE id = ?').get(headerUserId) as any;
-      if (u) return { id: u.id, name: u.name, role: u.role };
+      const u = dbCtx.rawDb.prepare('SELECT id, name, role, permissions_json FROM users WHERE id = ?').get(headerUserId) as any;
+      if (u) return { id: u.id, name: u.name, role: u.role, permissions: parsePermissions(u.permissions_json) };
     }
 
     // 2. Campo de usuario en el payload (userId, cashierUserId, actorUserId)
     const payloadUserId = body?.cashierUserId || body?.userId || body?.actorUserId;
     if (payloadUserId) {
-      const u = dbCtx.rawDb.prepare('SELECT id, name, role FROM users WHERE id = ?').get(payloadUserId) as any;
-      if (u) return { id: u.id, name: u.name, role: u.role };
+      const u = dbCtx.rawDb.prepare('SELECT id, name, role, permissions_json FROM users WHERE id = ?').get(payloadUserId) as any;
+      if (u) return { id: u.id, name: u.name, role: u.role, permissions: parsePermissions(u.permissions_json) };
     }
 
     // 3. Token Bearer en Authorization
@@ -48,34 +56,34 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
     if (rawToken) {
       const tokenHash = hashToken(rawToken);
       const session = dbCtx.rawDb.prepare(`
-        SELECT s.user_id, u.name, u.role
+        SELECT s.user_id, u.name, u.role, u.permissions_json
         FROM sessions s
         JOIN users u ON s.user_id = u.id
         WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
-      `).get(tokenHash) as { user_id: string; name: string; role: string } | undefined;
+      `).get(tokenHash) as { user_id: string; name: string; role: string; permissions_json?: string } | undefined;
 
       if (session) {
-        return { id: session.user_id, name: session.name, role: session.role };
+        return { id: session.user_id, name: session.name, role: session.role, permissions: parsePermissions(session.permissions_json) };
       }
     }
 
     // 5. Fallback para tests previos sin usuario explícito:
     // Buscar la cajera de la sesión de caja activa actual
     const activeSession = dbCtx.rawDb.prepare(`
-      SELECT cs.user_id, u.name, u.role
+      SELECT cs.user_id, u.name, u.role, u.permissions_json
       FROM cash_sessions cs
       JOIN users u ON cs.user_id = u.id
       WHERE cs.status = 'abierta'
       ORDER BY cs.opened_at_ms DESC
       LIMIT 1
-    `).get() as { user_id: string; name: string; role: string } | undefined;
+    `).get() as any;
 
     if (activeSession) {
-      return { id: activeSession.user_id, name: activeSession.name, role: activeSession.role };
+      return { id: activeSession.user_id, name: activeSession.name, role: activeSession.role, permissions: parsePermissions(activeSession.permissions_json) };
     }
 
     // Fallback por defecto si no hay sesión abierta
-    return { id: 'usr_cajera_principal', name: 'Cajera Principal', role: 'cajera' };
+    return { id: 'usr_cajera_principal', name: 'Cajera Principal', role: 'cajera', permissions: [] };
   };
 
   // 1. Abrir o confirmar Jornada Diaria (POST /api/jornadas/open)
@@ -127,7 +135,7 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
     const body = (request.body || {}) as Partial<OpenCashSessionInput>;
     const user = resolveActingUser(request, body);
 
-    if (!canUserProcessPayments(user.role)) {
+    if (!canUserProcessPayments(user)) {
       appendAuditEvent(dbCtx.rawDb, {
         actorUserId: user.id,
         action: 'UNAUTHORIZED_PAYMENT_ATTEMPT',
@@ -183,7 +191,7 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
     const body = request.body as Partial<ProcessOrderPaymentInput> | undefined;
     const user = resolveActingUser(request, body);
 
-    if (!canUserProcessPayments(user.role)) {
+    if (!canUserProcessPayments(user)) {
       appendAuditEvent(dbCtx.rawDb, {
         actorUserId: user.id,
         action: 'UNAUTHORIZED_PAYMENT_ATTEMPT',

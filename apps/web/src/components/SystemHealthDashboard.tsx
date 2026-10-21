@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { fetchSystemHealth } from '../api/client.js';
 import { StatusCard, MetricRow } from './StatusCard.js';
+import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
 
 export const SystemHealthDashboard: React.FC = () => {
   const { data, error, isLoading, isFetching, refetch } = useQuery({
@@ -28,7 +29,7 @@ export const SystemHealthDashboard: React.FC = () => {
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
         <RefreshCw className="w-8 h-8 text-tocineta-yellow animate-spin" />
         <p className="text-sm font-semibold text-tocineta-muted">
-          Conectando al proceso del servidor local Fastify...
+          Conectando al sistema local del Food Truck...
         </p>
       </div>
     );
@@ -39,10 +40,10 @@ export const SystemHealthDashboard: React.FC = () => {
       <div className="max-w-2xl mx-auto my-12 p-6 bg-tocineta-card border border-tocineta-red/40 rounded-xl text-center space-y-4">
         <AlertTriangle className="w-12 h-12 text-tocineta-red mx-auto" />
         <h2 className="text-lg font-bold text-white uppercase">
-          Error de Conexión con el Servidor Local
+          Error de Conexión con el Sistema Local
         </h2>
         <p className="text-sm text-tocineta-muted">
-          {(error as Error)?.message || 'No se pudo obtener el diagnóstico desde /api/system-health.'}
+          {(error as Error)?.message || 'No se pudo obtener el estado del sistema.'}
         </p>
         <button
           onClick={() => refetch()}
@@ -62,6 +63,13 @@ export const SystemHealthDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Guía Pedagógica sin jerga técnica */}
+      <PedagogicalGuideBanner
+        title="Guía de Impresoras y Respaldos"
+        description="Aquí puedes revisar que la impresora de tickets y comandas esté conectada, descargar respaldos de seguridad de tus ventas y verificar la salud del equipo."
+        storageKey="tocineta_guide_health"
+      />
+
       {/* Banner Principal de Estado de Producción */}
       <div className="bg-gradient-to-r from-tocineta-card via-[#1A1F2B] to-tocineta-card border border-tocineta-border rounded-2xl p-6 relative overflow-hidden shadow-2xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -69,14 +77,14 @@ export const SystemHealthDashboard: React.FC = () => {
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-tocineta-green animate-ping" />
               <span className="text-xs font-bold text-tocineta-green tracking-wider uppercase">
-                Sistema Operativo Local Activo
+                🟢 Sistema Conectado al Food Truck
               </span>
             </div>
             <h2 className="text-2xl font-black text-white uppercase tracking-tight">
-              Arquitectura de Proceso Único • M0
+              🖨️ Impresoras y Respaldos
             </h2>
             <p className="text-xs text-tocineta-muted max-w-xl">
-              API Fastify, WebSockets, servidor estático y cola de impresión unificados bajo un solo proceso para garantizar Single-Writer en SQLite sin contención de bloqueos.
+              Estado de impresoras térmicas, copias de seguridad de las ventas y base de datos local blindada.
             </p>
           </div>
 

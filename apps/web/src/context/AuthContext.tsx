@@ -5,6 +5,10 @@ export interface UserSession {
   name: string;
   role: 'admin' | 'supervisor' | 'cajera' | 'mesonero' | 'cocinero' | 'despachador';
   mustChangePin?: boolean;
+  cedula?: string;
+  phone?: string;
+  permissions?: string[];
+  approvalStatus?: string;
 }
 
 interface AuthContextType {
@@ -13,7 +17,7 @@ interface AuthContextType {
   currency: 'USD' | 'BS';
   setCurrency: (c: 'USD' | 'BS') => void;
   isSensitiveLocked: boolean;
-  login: (userId: string, pin: string) => Promise<{ success: boolean; error?: string }>;
+  login: (credentialsOrUserId: string | { userId?: string; pin?: string; cedula?: string; password?: string }, maybePin?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   unlockSensitive: (pin: string) => Promise<{ success: boolean; error?: string }>;
   changePin: (currentPin: string, newPin: string) => Promise<{ success: boolean; error?: string }>;
@@ -43,12 +47,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Monitor de Auto-Lock por 2 minutos de inactividad (120,000 ms)
+  // Cero Bloqueos por Inactividad en MODO TURNO
   useEffect(() => {
     if (!user || (user.role !== 'admin' && user.role !== 'supervisor')) {
       return;
     }
 
     const checkInactivity = () => {
+      try {
+        const mode = localStorage.getItem('tocineta_ui_mode') || 'turno';
+        if (mode === 'turno') {
+          return; // En MODO TURNO la pantalla nunca se bloquea
+        }
+      } catch {}
+
       const now = Date.now();
       const elapsed = now - lastActivityRef.current;
       if (elapsed >= 120_000 && !isSensitiveLocked) {
@@ -76,17 +88,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, [user, isSensitiveLocked]);
 
-  const login = async (userId: string, pin: string) => {
+  const login = async (credentialsOrUserId: string | { userId?: string; pin?: string; cedula?: string; password?: string }, maybePin?: string) => {
     try {
+      const payload = typeof credentialsOrUserId === 'string'
+        ? { userId: credentialsOrUserId, pin: maybePin }
+        : credentialsOrUserId;
+
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ userId, pin })
+        body: JSON.stringify(payload)
       });
 
       const data = await res.json();
       if (!res.ok || !data.success) {
-        return { success: false, error: data.error || 'Error al iniciar sesión' };
+        return {
+          success: false,
+          error: data.message || data.error || 'Error al iniciar sesión'
+        };
       }
 
       setUser(data.user);

@@ -19,8 +19,48 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   formattedRate = '40,00',
   children
 }) => {
-  const { user, logout, currency, setCurrency, isSensitiveLocked, unlockSensitive, changePin } = useAuth();
-  const { isConnected, latestSeq } = useEventStream();
+  const { user, token, logout, currency, setCurrency, isSensitiveLocked, unlockSensitive, changePin } = useAuth();
+  const { isConnected } = useEventStream();
+  const [isSyncingBcv, setIsSyncingBcv] = useState(false);
+  const [uiMode, setUiMode] = useState<'turno' | 'duena'>(() => {
+    try {
+      const saved = localStorage.getItem('tocineta_ui_mode');
+      if (saved === 'duena' || saved === 'turno') return saved;
+    } catch {}
+    return 'turno';
+  });
+
+  const handleToggleUiMode = (newMode: 'turno' | 'duena') => {
+    setUiMode(newMode);
+    try {
+      localStorage.setItem('tocineta_ui_mode', newMode);
+    } catch {}
+    if (newMode === 'turno') {
+      const adminTabs: TabType[] = ['menu-admin', 'staff', 'profitability', 'health', 'emergency'];
+      if (adminTabs.includes(currentTab)) {
+        onTabChange('pos');
+      }
+    }
+  };
+
+  const handleSyncBcv = async () => {
+    setIsSyncingBcv(true);
+    try {
+      const res = await fetch('/api/menu/exchange-rate/sync-now', {
+        method: 'POST',
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      const data = await res.json();
+      if (data.updated) {
+        queryClient.invalidateQueries({ queryKey: ['posMenu'] });
+        queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
+      }
+    } catch {
+      // Ignorar fallo de conexión
+    } finally {
+      setIsSyncingBcv(false);
+    }
+  };
 
   const handleLogout = async () => {
     queryClient.clear();
@@ -28,10 +68,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     await logout();
   };
 
-  const allowedTabs: TabType[] = user?.role ? (ALLOWED_TABS_BY_ROLE[user.role] || ['pos']) : ['pos'];
+  const canPay = canUserProcessPayments(user);
+  const baseAllowed: TabType[] = user?.role ? (ALLOWED_TABS_BY_ROLE[user.role] || ['pos']) : ['pos'];
+  const allowedTabs: TabType[] = [...baseAllowed];
+  if (canPay && !allowedTabs.includes('cashier')) {
+    allowedTabs.push('cashier');
+  }
 
   const handleTabClick = (tab: TabType) => {
-    if (tab === 'cashier' && !canUserProcessPayments(user?.role)) {
+    if (tab === 'cashier' && !canPay) {
       onTabChange(user?.role === 'cocinero' ? 'kds' : 'pos');
       return;
     }
@@ -136,20 +181,59 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                       isConnected ? 'bg-tocineta-green animate-pulse' : 'bg-red-500'
                     }`}
                   />
-                  <span className={`text-[11px] font-mono ${isConnected ? 'text-tocineta-green' : 'text-red-400'}`}>
-                    {isConnected ? `LAN Online (Seq #${latestSeq})` : 'Reconectando LAN...'}
+                  <span className={`text-[11px] font-bold ${isConnected ? 'text-tocineta-green' : 'text-red-400'}`}>
+                    {isConnected ? '🟢 Sistema Conectado al Food Truck' : 'Reconectando con el Food Truck...'}
                   </span>
                 </div>
               </div>
             </div>
           </div>
 
-          {/* Selector de Moneda y Tasa BCV */}
-          <div className="flex items-center gap-3">
+          {/* Selector de Moneda, Conmutador Dual y Usuario */}
+          <div className="flex items-center flex-wrap gap-3">
+            {/* Conmutador Prominente: [🔥 MODO TURNO] vs [👑 MODO DUEÑA] */}
+            {isAdminOrSupervisor && (
+              <div className="flex items-center bg-neutral-900/90 p-1 rounded-2xl border border-neutral-700/80 shadow-inner min-h-[44px]">
+                <button
+                  type="button"
+                  onClick={() => handleToggleUiMode('turno')}
+                  className={`min-h-[40px] px-3 sm:px-4 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                    uiMode === 'turno'
+                      ? 'bg-amber-500 text-black shadow-md scale-[1.02]'
+                      : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
+                  }`}
+                >
+                  <span>🔥</span>
+                  <span>MODO TURNO</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleToggleUiMode('duena')}
+                  className={`min-h-[40px] px-3 sm:px-4 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 ${
+                    uiMode === 'duena'
+                      ? 'bg-amber-400 text-black shadow-md scale-[1.02]'
+                      : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
+                  }`}
+                >
+                  <span>👑</span>
+                  <span>MODO DUEÑA</span>
+                </button>
+              </div>
+            )}
+
             {/* Tasa BCV Oficial */}
             <div className="hidden sm:flex items-center gap-1.5 bg-tocineta-bg px-3 py-1.5 rounded-lg border border-tocineta-border text-xs">
               <span className="text-tocineta-muted">BCV:</span>
               <span className="font-bold text-white font-mono">{formattedRate} Bs/$</span>
+              <button
+                type="button"
+                onClick={handleSyncBcv}
+                disabled={isSyncingBcv}
+                title="Sincronizar BCV por Internet"
+                className="ml-1 p-0.5 hover:bg-tocineta-card rounded text-xs text-tocineta-yellow hover:text-white transition-all disabled:opacity-40"
+              >
+                {isSyncingBcv ? '⏳' : '🔄'}
+              </button>
             </div>
 
             {/* Conmutador USD / Bs */}
@@ -208,8 +292,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           </div>
         </div>
 
-        {/* Pestañas de Navegación Operativa */}
+        {/* Pestañas de Navegación Operativa (Cero Jerga Técnica) */}
         <div className="max-w-7xl mx-auto flex items-center gap-2 mt-3 pt-2 border-t border-tocineta-border/60 overflow-x-auto">
+          {/* 🍔 Tomar Pedido (pos) */}
           {allowedTabs.includes('pos') && (
             <button
               onClick={() => handleTabClick('pos')}
@@ -220,10 +305,26 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               }`}
             >
               <span>🍔</span>
-              <span>Comandero / POS</span>
+              <span>Tomar Pedido</span>
             </button>
           )}
 
+          {/* 💵 Caja y Cobros (cashier) */}
+          {(allowedTabs.includes('cashier') || canPay) && (
+            <button
+              onClick={() => handleTabClick('cashier')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                currentTab === 'cashier'
+                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                  : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
+              }`}
+            >
+              <span>💵</span>
+              <span>Caja y Cobros</span>
+            </button>
+          )}
+
+          {/* 🍳 Cocina y Plancha (kds) */}
           {allowedTabs.includes('kds') && (
             <button
               onClick={() => handleTabClick('kds')}
@@ -234,72 +335,87 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               }`}
             >
               <span>🍳</span>
-              <span>KDS / Cocina</span>
+              <span>Cocina y Plancha</span>
             </button>
           )}
 
-          {allowedTabs.includes('cashier') && canUserProcessPayments(user?.role) && (
-            <button
-              onClick={() => handleTabClick('cashier')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
-                currentTab === 'cashier'
-                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                  : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
-              }`}
-            >
-              <span>💵</span>
-              <span>Caja y Cobro</span>
-            </button>
+          {/* Pestañas exclusivas de MODO DUEÑA (Ocultas en MODO TURNO) */}
+          {isAdminOrSupervisor && uiMode === 'duena' && (
+            <>
+              {/* 📋 Carta, Precios y Cupones */}
+              <button
+                onClick={() => handleTabClick('menu-admin')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                  currentTab === 'menu-admin'
+                    ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                    : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
+                }`}
+              >
+                <span>📋</span>
+                <span>Carta, Precios y Cupones</span>
+              </button>
+
+              {/* 👥 Mi Equipo y Permisos */}
+              <button
+                onClick={() => handleTabClick('staff')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                  currentTab === 'staff'
+                    ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                    : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
+                }`}
+              >
+                <span>👥</span>
+                <span>Mi Equipo y Permisos</span>
+              </button>
+
+              {/* 💰 Mis Ganancias e Inventario */}
+              <button
+                onClick={() => handleTabClick('profitability')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                  currentTab === 'profitability'
+                    ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                    : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
+                }`}
+              >
+                <span>💰</span>
+                <span>Mis Ganancias e Inventario</span>
+                {!profitSettings?.profitabilityProEnabled && (
+                  <span className="text-[9px] bg-zinc-800 text-zinc-400 px-1 py-0.2 rounded font-mono">
+                    Off
+                  </span>
+                )}
+              </button>
+
+              {/* 🖨️ Impresoras y Respaldos */}
+              <button
+                onClick={() => handleTabClick('health')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                  currentTab === 'health'
+                    ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                    : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
+                }`}
+              >
+                <span>🖨️</span>
+                <span>Impresoras y Respaldos</span>
+              </button>
+
+              {/* 📝 Ventas en Talonario */}
+              <button
+                onClick={() => handleTabClick('emergency')}
+                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                  currentTab === 'emergency'
+                    ? 'bg-amber-500 text-tocineta-bg shadow-md'
+                    : 'text-amber-400/80 hover:text-amber-300 hover:bg-tocineta-bg border border-amber-500/30'
+                }`}
+              >
+                <span>📝</span>
+                <span>Ventas en Talonario</span>
+              </button>
+            </>
           )}
 
-          {allowedTabs.includes('menu-admin') && isAdminOrSupervisor && (
-            <button
-              onClick={() => handleTabClick('menu-admin')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
-                currentTab === 'menu-admin'
-                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                  : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
-              }`}
-            >
-              <span>⚙️</span>
-              <span>Gestor de Menú (Admin)</span>
-            </button>
-          )}
-
-          {allowedTabs.includes('health') && (
-            <button
-              onClick={() => handleTabClick('health')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
-                currentTab === 'health'
-                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                  : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
-              }`}
-            >
-              <span>🩺</span>
-              <span>Diagnóstico del Sistema</span>
-            </button>
-          )}
-
-          {allowedTabs.includes('profitability') && isAdminOrSupervisor && (
-            <button
-              onClick={() => handleTabClick('profitability')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
-                currentTab === 'profitability'
-                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                  : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
-              }`}
-            >
-              <span>📊</span>
-              <span>Rentabilidad Pro</span>
-              {!profitSettings?.profitabilityProEnabled && (
-                <span className="text-[9px] bg-zinc-800 text-zinc-400 px-1 py-0.2 rounded font-mono">
-                  Off
-                </span>
-              )}
-            </button>
-          )}
-
-          {allowedTabs.includes('emergency') && (user?.role === 'cajera' || isAdminOrSupervisor) && (
+          {/* Si el usuario NO es admin/supervisor pero tiene permisos para talonario o diagnóstico */}
+          {!isAdminOrSupervisor && allowedTabs.includes('emergency') && (
             <button
               onClick={() => handleTabClick('emergency')}
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
@@ -308,8 +424,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   : 'text-amber-400/80 hover:text-amber-300 hover:bg-tocineta-bg border border-amber-500/30'
               }`}
             >
-              <span>📋</span>
-              <span>Modo Emergencia Papel</span>
+              <span>📝</span>
+              <span>Ventas en Talonario</span>
             </button>
           )}
         </div>
@@ -320,8 +436,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         {children}
       </main>
 
-      {/* Modal de Auto-Lock por Inactividad (2 Minutos en Vistas Sensibles) */}
-      {isSensitiveLocked && (
+      {/* Modal de Auto-Lock por Inactividad (2 Minutos en Vistas Sensibles) - Desactivado en MODO TURNO */}
+      {isSensitiveLocked && uiMode !== 'turno' && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
           <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
             <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-2xl mb-3">

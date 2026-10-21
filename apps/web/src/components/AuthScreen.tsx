@@ -27,6 +27,16 @@ export const AuthScreen: React.FC = () => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
+  // Estados para auto-registro de nuevos trabajadores (Bloque C.2)
+  const [isRegistering, setIsRegistering] = useState(false);
+  const [registeredSuccess, setRegisteredSuccess] = useState(false);
+  const [regName, setRegName] = useState('');
+  const [regCedula, setRegCedula] = useState('');
+  const [regPhone, setRegPhone] = useState('');
+  const [regPassword, setRegPassword] = useState('');
+  const [regLoading, setRegLoading] = useState(false);
+  const [regError, setRegError] = useState<string | null>(null);
+
   const { data, refetch } = useQuery<{ success: boolean; users: PublicUser[] }>({
     queryKey: ['publicUsers'],
     queryFn: async () => {
@@ -38,6 +48,43 @@ export const AuthScreen: React.FC = () => {
 
   const users = data?.users || [];
 
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!regName.trim() || !regCedula.trim() || !regPassword.trim()) {
+      setRegError('Por favor complete su nombre, cédula y contraseña / PIN.');
+      return;
+    }
+
+    setRegLoading(true);
+    setRegError(null);
+
+    try {
+      const res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: regName.trim(),
+          cedula: regCedula.trim(),
+          phone: regPhone.trim(),
+          password: regPassword.trim(),
+          pin: regPassword.trim().slice(0, 4)
+        })
+      });
+
+      const resData = await res.json();
+      if (!res.ok || !resData.success) {
+        setRegError(resData.message || resData.error || 'Error al procesar el registro');
+        return;
+      }
+
+      setRegisteredSuccess(true);
+    } catch {
+      setRegError('Error de conexión LAN con el Food Truck');
+    } finally {
+      setRegLoading(false);
+    }
+  };
+
   // Reset PIN cuando se selecciona otro usuario
   useEffect(() => {
     setPin('');
@@ -47,7 +94,7 @@ export const AuthScreen: React.FC = () => {
   // Teclado físico
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (!selectedUser || isLoading) return;
+      if (!selectedUser || isLoading || isRegistering) return;
       if (/^[0-9]$/.test(e.key)) {
         appendDigit(e.key);
       } else if (e.key === 'Backspace') {
@@ -59,7 +106,7 @@ export const AuthScreen: React.FC = () => {
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedUser, pin, isLoading]);
+  }, [selectedUser, pin, isLoading, isRegistering]);
 
   const appendDigit = (digit: string) => {
     if (!selectedUser) return;
@@ -100,19 +147,156 @@ export const AuthScreen: React.FC = () => {
   return (
     <div className="min-h-screen bg-tocineta-bg text-white flex flex-col items-center justify-center p-4 sm:p-6 select-none">
       {/* Encabezado Principal */}
-      <div className="text-center mb-8">
+      <div className="text-center mb-6">
         <div className="inline-flex items-center gap-3 bg-tocineta-card px-5 py-2.5 rounded-full border border-tocineta-border shadow-lg mb-3">
           <span className="text-2xl">🍔</span>
           <span className="font-bold text-lg tracking-wider text-tocineta-yellow">TOCINETA SONRÍE</span>
           <span className="bg-tocineta-border px-2 py-0.5 rounded text-xs text-tocineta-muted font-mono">LAN POS</span>
         </div>
-        <h1 className="text-2xl sm:text-3xl font-extrabold text-white">Inicio de Sesión Operativo</h1>
-        <p className="text-sm text-tocineta-muted mt-1">Selecciona tu usuario e ingresa tu PIN de acceso</p>
+        <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
+          {isRegistering ? 'Registro de Nuevo Trabajador' : 'Inicio de Sesión Operativo'}
+        </h1>
+        <p className="text-sm text-tocineta-muted mt-1">
+          {isRegistering
+            ? 'Ingresa tus datos para solicitar acceso al equipo del Food Truck'
+            : 'Selecciona tu usuario e ingresa tu PIN de acceso'}
+        </p>
+
+        {/* Botón para alternar formulario de registro */}
+        {!isRegistering ? (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegistering(true);
+                setRegisteredSuccess(false);
+                setRegError(null);
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border border-amber-500/30 text-xs font-bold transition shadow-sm"
+            >
+              <span>📝</span>
+              <span>¿Eres nuevo en el equipo? Regístrate aquí</span>
+            </button>
+          </div>
+        ) : (
+          <div className="mt-3">
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegistering(false);
+                setRegisteredSuccess(false);
+                setRegError(null);
+              }}
+              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-neutral-800 hover:bg-neutral-700 text-neutral-300 border border-neutral-700 text-xs font-bold transition"
+            >
+              <span>←</span>
+              <span>Volver al Inicio de Sesión</span>
+            </button>
+          </div>
+        )}
       </div>
 
-      <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-        {/* Columna Izquierda: Tarjetas de Usuarios */}
-        <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-xl">
+      {isRegistering ? (
+        <div className="w-full max-w-md bg-tocineta-card border border-tocineta-border rounded-2xl p-6 shadow-2xl">
+          {registeredSuccess ? (
+            <div className="text-center py-6 space-y-4">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 flex items-center justify-center text-3xl mx-auto">
+                ✓
+              </div>
+              <h3 className="text-lg font-bold text-white">¡Solicitud Enviada con Éxito!</h3>
+              <p className="text-xs text-tocineta-muted leading-relaxed">
+                Tu cuenta está en espera de aprobación.
+                La Sra. Olinelcys recibirá la notificación en su pantalla para activar tu acceso.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsRegistering(false);
+                  setRegisteredSuccess(false);
+                  refetch();
+                }}
+                className="w-full min-h-[44px] bg-tocineta-yellow hover:bg-tocineta-yellow/90 text-black font-bold rounded-xl text-xs transition"
+              >
+                Volver a Pantalla de Acceso
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={handleRegisterSubmit} className="space-y-4">
+              <div>
+                <label className="text-xs font-bold text-neutral-300 block mb-1">
+                  Nombre Completo *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={regName}
+                  onChange={e => setRegName(e.target.value)}
+                  placeholder="Ej: Anthony Aguilera"
+                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-tocineta-yellow outline-none min-h-[44px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-neutral-300 block mb-1">
+                  Cédula de Identidad *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={regCedula}
+                  onChange={e => setRegCedula(e.target.value)}
+                  placeholder="Ej: V-28123456"
+                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-tocineta-yellow outline-none min-h-[44px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-neutral-300 block mb-1">
+                  Teléfono / WhatsApp (Opcional)
+                </label>
+                <input
+                  type="tel"
+                  value={regPhone}
+                  onChange={e => setRegPhone(e.target.value)}
+                  placeholder="Ej: 0414-1234567"
+                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-tocineta-yellow outline-none min-h-[44px]"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-neutral-300 block mb-1">
+                  Contraseña o PIN de 4 dígitos *
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={regPassword}
+                  onChange={e => setRegPassword(e.target.value)}
+                  placeholder="Contraseña o PIN numérico"
+                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3.5 py-2.5 text-xs text-white focus:border-tocineta-yellow outline-none min-h-[44px]"
+                />
+              </div>
+
+              {regError && (
+                <div className="p-3 rounded-xl bg-red-500/15 border border-red-500/30 text-red-300 text-xs font-medium">
+                  {regError}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={regLoading}
+                className="w-full min-h-[48px] bg-amber-500 hover:bg-amber-400 text-black font-extrabold rounded-xl text-xs uppercase tracking-wider transition shadow-lg disabled:opacity-50 flex items-center justify-center gap-2 mt-2"
+              >
+                {regLoading ? 'Enviando solicitud...' : 'Enviar Solicitud de Registro'}
+              </button>
+            </form>
+          )}
+        </div>
+      ) : (
+        <div className="w-full max-w-4xl grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
+          {/* Columna Izquierda: Tarjetas de Usuarios */}
+          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-xl">
           <h2 className="text-sm font-bold uppercase tracking-wider text-tocineta-muted mb-4 flex items-center justify-between">
             <span>Usuarios del Turno</span>
             <span className="text-xs text-tocineta-yellow font-normal">Toca para seleccionar</span>
@@ -252,6 +436,7 @@ export const AuthScreen: React.FC = () => {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 };

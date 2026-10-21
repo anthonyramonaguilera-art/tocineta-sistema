@@ -17,6 +17,10 @@ import {
   resetLockout
 } from '../modules/auth/lockout.js';
 import { appendAuditEvent } from '../modules/audit/audit-service.js';
+import { publishDomainEvent } from '../modules/events/event-bus.js';
+import { generateUuidV7 } from '@tocineta/shared';
+
+export const SESSION_TTL_MS = 30 * 24 * 3600 * 1000; // 30 días persistentes (Hito M20 C.1)
 
 export function hashToken(token: string): string {
   return crypto.createHash('sha256').update(token).digest('hex');
@@ -68,23 +72,133 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.status(200).send({ success: true, users: usersList });
   });
 
-  // 2. Inicio de sesión mediante PIN
-  fastify.post('/api/auth/login', async (request, reply) => {
-    const body = request.body as { userId?: string; pin?: string } | undefined;
-    const userId = body?.userId?.trim();
-    const pin = body?.pin?.trim();
+  // 1.1 Auto-registro de nuevos trabajadores (Hito M20 C.2)
+  fastify.post('/api/auth/register', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const body = request.body as {
+      name?: string;
+      cedula?: string;
+      phone?: string;
+      password?: string;
+      pin?: string;
+    } | undefined;
 
-    if (!userId || !pin) {
+    const name = body?.name?.trim();
+    const cedula = body?.cedula?.trim() || null;
+    const phone = body?.phone?.trim() || null;
+    const password = body?.password?.trim() || '';
+    const pin = body?.pin?.trim() || '';
+
+    if (!name || (!password && !pin)) {
       return reply.status(400).send({
         success: false,
-        error: 'Debe especificar userId y pin'
+        error: 'Debe especificar su nombre completo y una contraseña o PIN'
+      });
+    }
+
+    if (cedula) {
+      const existing = dbCtx.rawDb.prepare('SELECT id FROM users WHERE cedula = ?').get(cedula) as any;
+      if (existing) {
+        return reply.status(409).send({
+          success: false,
+          error: `Ya existe un registro con la cédula ${cedula}`
+        });
+      }
+    }
+
+    const now = Date.now();
+    const newUserId = `usr_${generateUuidV7()}`;
+
+    // Hashear contraseña con scrypt
+    const salt = crypto.randomBytes(16).toString('hex');
+    const passwordHash = password ? crypto.scryptSync(password, salt, 64).toString('hex') : null;
+
+    // PIN: si se proporcionó un PIN de 4 dígitos usarlo, sino derivar de password o cédula
+    let effectivePin = '0000';
+    if (pin && /^\d{4}$/.test(pin)) {
+      effectivePin = pin;
+    } else if (password && /^\d{4}$/.test(password)) {
+      effectivePin = password;
+    } else if (cedula && /\d{4}$/.test(cedula)) {
+      effectivePin = cedula.slice(-4);
+    }
+    const { hash: pinHash, salt: pinSalt } = hashPin(effectivePin);
+
+    dbCtx.rawDb.prepare(`
+      INSERT INTO users (
+        id, name, cedula, phone, role, password_hash, password_salt,
+        pin_hash, pin_salt, pin_length, approval_status, is_active,
+        must_change_pin, failed_attempts, lockout_stage, permissions_json,
+        created_at_ms, updated_at_ms
+      ) VALUES (
+        ?, ?, ?, ?, 'mesonero', ?, ?,
+        ?, ?, 4, 'PENDING', 0,
+        0, 0, 0, '[]',
+        ?, ?
+      )
+    `).run(
+      newUserId,
+      name,
+      cedula,
+      phone,
+      passwordHash,
+      salt,
+      pinHash,
+      pinSalt,
+      now,
+      now
+    );
+
+    appendAuditEvent(dbCtx.rawDb, {
+      actorUserId: null,
+      action: 'STAFF_REGISTERED',
+      entityType: 'user',
+      entityId: newUserId,
+      payload: { name, cedula, phone, approvalStatus: 'PENDING' }
+    });
+
+    publishDomainEvent(dbCtx.rawDb, {
+      eventType: 'NEW_STAFF_REQUEST',
+      entityId: newUserId,
+      payload: { userId: newUserId, name, cedula, phone }
+    });
+
+    return reply.status(201).send({
+      success: true,
+      message: 'Solicitud de registro enviada. Esperando aprobación de la Sra. Olinelcys.',
+      userId: newUserId
+    });
+  });
+
+  // 2. Inicio de sesión mediante PIN o Cédula/Contraseña
+  fastify.post('/api/auth/login', async (request, reply) => {
+    const body = request.body as { userId?: string; pin?: string; cedula?: string; password?: string } | undefined;
+    const userId = body?.userId?.trim();
+    const pin = body?.pin?.trim();
+    const cedula = body?.cedula?.trim();
+    const password = body?.password?.trim();
+
+    if (!userId && !cedula) {
+      return reply.status(400).send({
+        success: false,
+        error: 'Debe especificar userId o cedula'
+      });
+    }
+
+    if (!pin && !password) {
+      return reply.status(400).send({
+        success: false,
+        error: 'Debe especificar pin o password'
       });
     }
 
     const dbCtx = getDatabaseContext();
-    const rawUser = dbCtx.rawDb.prepare(`
-      SELECT * FROM users WHERE id = ?
-    `).get(userId);
+    let rawUser: any = null;
+    if (userId) {
+      rawUser = dbCtx.rawDb.prepare('SELECT * FROM users WHERE id = ?').get(userId);
+    } else if (cedula) {
+      rawUser = dbCtx.rawDb.prepare('SELECT * FROM users WHERE cedula = ?').get(cedula);
+    }
 
     if (!rawUser) {
       return reply.status(404).send({
@@ -95,10 +209,26 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const user = mapUserRow(rawUser);
 
+    // Hito M20 C.2: Verificación de estado de aprobación
+    if (user.approvalStatus === 'PENDING') {
+      return reply.status(403).send({
+        error: 'ACCOUNT_PENDING_APPROVAL',
+        message: 'Tu cuenta está esperando la aprobación de la Sra. Olinelcys.'
+      });
+    }
+
+    if (user.approvalStatus === 'REJECTED') {
+      return reply.status(403).send({
+        error: 'ACCOUNT_REJECTED',
+        message: 'Tu cuenta ha sido rechazada por la administración.'
+      });
+    }
+
     if (!user.isActive) {
-      return reply.status(404).send({
+      return reply.status(403).send({
         success: false,
-        error: 'Usuario no encontrado o inactivo'
+        error: 'ACCOUNT_INACTIVE',
+        message: 'Usuario no encontrado o inactivo'
       });
     }
 
@@ -114,9 +244,22 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    const isPinValid = verifyPin(pin, user.pinSalt, user.pinHash);
+    let isCredentialValid = false;
+    if (password && user.passwordHash && user.passwordSalt) {
+      const derived = crypto.scryptSync(password, user.passwordSalt, 64).toString('hex');
+      try {
+        isCredentialValid = crypto.timingSafeEqual(Buffer.from(derived, 'hex'), Buffer.from(user.passwordHash, 'hex'));
+      } catch {
+        isCredentialValid = false;
+      }
+    } else if (pin) {
+      isCredentialValid = verifyPin(pin, user.pinSalt, user.pinHash);
+    } else if (password) {
+      // Si ingresó contraseña pero solo tiene pin_hash configurado, probar verifyPin si es numérico
+      isCredentialValid = verifyPin(password, user.pinSalt, user.pinHash);
+    }
 
-    if (!isPinValid) {
+    if (!isCredentialValid) {
       const failResult = recordFailedAttempt(
         dbCtx.rawDb,
         user.id,
@@ -147,19 +290,19 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       return reply.status(401).send({
         success: false,
-        error: `PIN incorrecto. Le quedan ${failResult.remainingAttemptsBeforeLock} intento(s) antes del bloqueo.`,
+        error: `Credenciales incorrectas. Le quedan ${failResult.remainingAttemptsBeforeLock} intento(s) antes del bloqueo.`,
         remainingAttempts: failResult.remainingAttemptsBeforeLock
       });
     }
 
-    // PIN correcto: Resetear intentos fallidos
+    // Credenciales correctas: Resetear intentos fallidos
     resetLockout(dbCtx.rawDb, user.id, now);
 
-    // Crear nueva sesión con token criptográfico
+    // Crear nueva sesión con token criptográfico de 30 días persistentes (Hito M20 C.1)
     const rawToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = hashToken(rawToken);
     const sessionId = `ses_${crypto.randomBytes(16).toString('hex')}`;
-    const expiresAtMs = now + 24 * 3600 * 1000; // 24 horas
+    const expiresAtMs = now + SESSION_TTL_MS;
 
     dbCtx.rawDb.prepare(`
       INSERT INTO sessions (
@@ -179,6 +322,11 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       payload: { role: user.role }
     });
 
+    let permissions: string[] = [];
+    try {
+      permissions = JSON.parse(user.permissionsJson || '[]');
+    } catch {}
+
     return reply.status(200).send({
       success: true,
       token: rawToken,
@@ -187,6 +335,9 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         id: user.id,
         name: user.name,
         role: user.role,
+        cedula: user.cedula,
+        approvalStatus: user.approvalStatus,
+        permissions,
         mustChangePin: Boolean(user.mustChangePin)
       }
     });
@@ -237,7 +388,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const now = Date.now();
 
     const rawSession = dbCtx.rawDb.prepare(`
-      SELECT s.*, u.name, u.must_change_pin, u.is_active
+      SELECT s.*, u.name, u.cedula, u.phone, u.must_change_pin, u.is_active, u.approval_status, u.permissions_json
       FROM sessions s
       JOIN users u ON s.user_id = u.id
       WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL AND s.expires_at_ms > ?
@@ -249,12 +400,21 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const session = mapSessionRow(rawSession);
 
+    let permissions: string[] = [];
+    try {
+      permissions = JSON.parse(rawSession.permissions_json || '[]');
+    } catch {}
+
     return reply.status(200).send({
       success: true,
       user: {
         id: session.userId,
         name: rawSession.name,
         role: session.role,
+        cedula: rawSession.cedula,
+        phone: rawSession.phone,
+        approvalStatus: rawSession.approval_status,
+        permissions,
         mustChangePin: Boolean(rawSession.must_change_pin)
       },
       session: {
@@ -490,13 +650,16 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       ORDER BY name ASC
     `).all();
 
-    const users = rawUsers.map(r => {
+    const users = (rawUsers as any[]).map((r: any) => {
       const u = mapUserRow(r);
       const { pinHash, pinSalt, ...rest } = u;
-      return rest;
+      return {
+        ...rest,
+        permissions: JSON.parse(r.permissions_json || '[]')
+      };
     });
 
-    return reply.status(200).send({ success: true, users });
+    return reply.status(200).send({ success: true, users, staff: users });
   });
 
   // 9. Admin: Crear nuevo usuario
@@ -560,6 +723,136 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         id: newUserId,
         name: body.name.trim(),
         role: body.role
+      }
+    });
+  });
+
+  // 10. Aprobar trabajador (PATCH /api/admin/users/:id/approve) - Hito M20 C.3
+  fastify.patch('/api/admin/users/:id/approve', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const { id } = request.params as { id: string };
+    const body = (request.body || {}) as { role?: string; permissions?: string[] };
+
+    const rawToken = extractSessionToken(request.headers.authorization);
+    let actingUserId: string | null = null;
+    if (rawToken) {
+      const tokenHash = hashToken(rawToken);
+      const session = dbCtx.rawDb.prepare(`
+        SELECT s.user_id, u.role FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
+      `).get(tokenHash) as { user_id: string; role: string } | undefined;
+      if (session) {
+        actingUserId = session.user_id;
+        if (session.role !== 'admin' && session.role !== 'supervisor') {
+          return reply.status(403).send({ error: 'FORBIDDEN', message: 'Solo la administración puede aprobar trabajadores.' });
+        }
+      }
+    }
+
+    const targetUser = dbCtx.rawDb.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
+    if (!targetUser) {
+      return reply.status(404).send({ error: 'Usuario no encontrado' });
+    }
+
+    const newRole = body.role || targetUser.role || 'mesonero';
+    const permissions = Array.isArray(body.permissions) ? body.permissions : [];
+    const permissionsJson = JSON.stringify(permissions);
+    const now = Date.now();
+
+    dbCtx.rawDb.prepare(`
+      UPDATE users
+      SET approval_status = 'APPROVED',
+          is_active = 1,
+          role = ?,
+          permissions_json = ?,
+          updated_at_ms = ?
+      WHERE id = ?
+    `).run(newRole, permissionsJson, now, id);
+
+    appendAuditEvent(dbCtx.rawDb, {
+      actorUserId: actingUserId,
+      action: 'USER_APPROVED',
+      entityType: 'user',
+      entityId: id,
+      payload: { role: newRole, permissions, approvedBy: actingUserId }
+    });
+
+    publishDomainEvent(dbCtx.rawDb, {
+      eventType: 'STAFF_PERMISSIONS_UPDATED',
+      entityId: id,
+      payload: { userId: id, approvalStatus: 'APPROVED', role: newRole, permissions }
+    });
+
+    const updated = dbCtx.rawDb.prepare('SELECT id, name, role, cedula, phone, approval_status, is_active, permissions_json FROM users WHERE id = ?').get(id) as any;
+
+    return reply.status(200).send({
+      success: true,
+      user: {
+        ...updated,
+        permissions: JSON.parse(updated.permissions_json || '[]')
+      }
+    });
+  });
+
+  // 11. Modificar permisos de trabajador (PATCH /api/admin/users/:id/permissions) - Hito M20 C.3
+  fastify.patch('/api/admin/users/:id/permissions', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const { id } = request.params as { id: string };
+    const body = (request.body || {}) as { permissions: string[]; role?: string };
+
+    const rawToken = extractSessionToken(request.headers.authorization);
+    let actingUserId: string | null = null;
+    if (rawToken) {
+      const tokenHash = hashToken(rawToken);
+      const session = dbCtx.rawDb.prepare(`
+        SELECT s.user_id, u.role FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
+      `).get(tokenHash) as { user_id: string; role: string } | undefined;
+      if (session) {
+        actingUserId = session.user_id;
+        if (session.role !== 'admin' && session.role !== 'supervisor') {
+          return reply.status(403).send({ error: 'FORBIDDEN', message: 'Solo la administración puede modificar permisos.' });
+        }
+      }
+    }
+
+    const targetUser = dbCtx.rawDb.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
+    if (!targetUser) {
+      return reply.status(404).send({ error: 'Usuario no encontrado' });
+    }
+
+    const permissions = Array.isArray(body.permissions) ? body.permissions : [];
+    const permissionsJson = JSON.stringify(permissions);
+    const newRole = body.role || targetUser.role;
+    const now = Date.now();
+
+    dbCtx.rawDb.prepare(`
+      UPDATE users
+      SET permissions_json = ?,
+          role = ?,
+          updated_at_ms = ?
+      WHERE id = ?
+    `).run(permissionsJson, newRole, now, id);
+
+    appendAuditEvent(dbCtx.rawDb, {
+      actorUserId: actingUserId,
+      action: 'USER_PERMISSIONS_UPDATED',
+      entityType: 'user',
+      entityId: id,
+      payload: { role: newRole, permissions, updatedBy: actingUserId }
+    });
+
+    publishDomainEvent(dbCtx.rawDb, {
+      eventType: 'STAFF_PERMISSIONS_UPDATED',
+      entityId: id,
+      payload: { userId: id, role: newRole, permissions }
+    });
+
+    const updated = dbCtx.rawDb.prepare('SELECT id, name, role, cedula, phone, approval_status, is_active, permissions_json FROM users WHERE id = ?').get(id) as any;
+
+    return reply.status(200).send({
+      success: true,
+      user: {
+        ...updated,
+        permissions: JSON.parse(updated.permissions_json || '[]')
       }
     });
   });

@@ -17,6 +17,7 @@ export interface UserContext {
   id: string;
   name: string;
   role: 'admin' | 'supervisor' | 'cajera' | 'mesonero' | 'cocinero' | 'despachador';
+  permissions?: string[];
 }
 
 export interface BlindCountResult {

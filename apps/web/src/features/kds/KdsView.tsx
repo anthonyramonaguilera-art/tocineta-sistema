@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '../../context/AuthContext.js';
 import { useEventStream } from '../../hooks/useEventStream.js';
 import { kdsSound } from './sound-effects.js';
 
@@ -111,11 +112,14 @@ const StopwatchBadge: React.FC<{ passedAtMs: number }> = ({ passedAtMs }) => {
 };
 
 export const KdsView: React.FC = () => {
+  const { user, token } = useAuth();
   const queryClient = useQueryClient();
   const { latestSeq } = useEventStream();
   const [stationFilter, setStationFilter] = useState<StationFilter>('all');
   const [soundActive, setSoundActive] = useState<boolean>(kdsSound.isEnabled());
   const [mobileTab, setMobileTab] = useState<'pendiente' | 'preparando' | 'listo'>('pendiente');
+
+  const isGodModeUser = user?.role === 'admin' || user?.role === 'supervisor' || Boolean(user?.permissions?.includes('KDS_FORCE_COMPLETE'));
 
   const knownOrderIdsRef = useRef<Set<string>>(new Set());
 
@@ -192,6 +196,27 @@ export const KdsView: React.FC = () => {
       if (!res.ok) {
         const err = await res.json();
         throw new Error(err.error || 'Error al entregar comanda');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['kdsOrders'] });
+    }
+  });
+
+  // Mutación: Forzar Despacho Total (Super-Operadora / God Mode)
+  const forceCompleteMutation = useMutation({
+    mutationFn: async (orderId: string) => {
+      const res = await fetch(`/api/kds/orders/${orderId}/force-complete`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.message || err.error || 'Error al forzar despacho total');
       }
       return res.json();
     },
@@ -399,6 +424,8 @@ export const KdsView: React.FC = () => {
                       stationFilter={stationFilter}
                       onUpdateLine={(lineId, st) => updateLineMutation.mutate({ lineId, status: st })}
                       onDeliver={(orderId) => deliverOrderMutation.mutate({ orderId })}
+                      canForceComplete={isGodModeUser}
+                      onForceComplete={(orderId) => forceCompleteMutation.mutate(orderId)}
                     />
                   ))
                 )}
@@ -435,6 +462,8 @@ export const KdsView: React.FC = () => {
                       stationFilter={stationFilter}
                       onUpdateLine={(lineId, st) => updateLineMutation.mutate({ lineId, status: st })}
                       onDeliver={(orderId) => deliverOrderMutation.mutate({ orderId })}
+                      canForceComplete={isGodModeUser}
+                      onForceComplete={(orderId) => forceCompleteMutation.mutate(orderId)}
                     />
                   ))
                 )}
@@ -471,6 +500,8 @@ export const KdsView: React.FC = () => {
                       stationFilter={stationFilter}
                       onUpdateLine={(lineId, st) => updateLineMutation.mutate({ lineId, status: st })}
                       onDeliver={(orderId) => deliverOrderMutation.mutate({ orderId })}
+                      canForceComplete={isGodModeUser}
+                      onForceComplete={(orderId) => forceCompleteMutation.mutate(orderId)}
                     />
                   ))
                 )}
@@ -489,9 +520,18 @@ interface OrderCardProps {
   stationFilter: StationFilter;
   onUpdateLine: (lineId: string, status: 'pendiente' | 'preparando' | 'listo') => void;
   onDeliver: (orderId: string) => void;
+  canForceComplete?: boolean;
+  onForceComplete?: (orderId: string) => void;
 }
 
-const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLine, onDeliver }) => {
+const OrderCard: React.FC<OrderCardProps> = ({
+  order,
+  stationFilter,
+  onUpdateLine,
+  onDeliver,
+  canForceComplete,
+  onForceComplete
+}) => {
   const visibleLines = stationFilter === 'all'
     ? order.lines
     : order.lines.filter(l => l.station === stationFilter);
@@ -564,7 +604,7 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLin
       {/* Indicador de Estación Compuesta y Coordinación de Cocina */}
       {order.isComposite && (
         <div className="px-3 py-1.5 bg-zinc-900/80 border-b border-zinc-800 flex items-center justify-between text-[11px]">
-          <span className="text-zinc-400">Orden Compuesta:</span>
+          <span className="text-zinc-400">Pedido con varios platos:</span>
           {order.missingStations.length === 0 ? (
             <span className="text-emerald-400 font-bold">✅ Todas las estaciones listas</span>
           ) : order.missingStations.includes('hot_dogs') && !order.missingStations.includes('hamburguesas') ? (
@@ -732,6 +772,18 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLin
           >
             <span>🚀</span>
             <span>Despachar / Entregar Orden</span>
+          </button>
+        )}
+
+        {/* Botón God Mode: [⚡ Forzar Despacho Total] (Sra. Olinelcys / Supervisores) */}
+        {canForceComplete && (
+          <button
+            type="button"
+            onClick={() => onForceComplete?.(order.orderId)}
+            className="w-full min-h-[48px] mt-2 py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black shadow-lg shadow-amber-950/40 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
+          >
+            <span>⚡</span>
+            <span>Forzar Despacho Total</span>
           </button>
         )}
       </div>

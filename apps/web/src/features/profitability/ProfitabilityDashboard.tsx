@@ -17,6 +17,7 @@ import {
   Percent,
   Calculator
 } from 'lucide-react';
+import { PedagogicalGuideBanner } from '../../components/PedagogicalGuideBanner.js';
 
 export const ProfitabilityDashboard: React.FC = () => {
   const queryClient = useQueryClient();
@@ -174,6 +175,13 @@ export const ProfitabilityDashboard: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Guía Pedagógica sin jerga */}
+      <PedagogicalGuideBanner
+        title="Guía de Ganancias e Inventario"
+        description="Aquí puedes ver la utilidad real de cada turno deduciendo costos de ingredientes, registrar gastos de caja chica (hielo, gas, transporte) y controlar las existencias de insumos críticos."
+        storageKey="tocineta_guide_profitability"
+      />
+
       {/* Cabecera del Módulo */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-tocineta-card border border-tocineta-border p-5 rounded-2xl shadow-xl">
         <div className="flex items-center gap-3">

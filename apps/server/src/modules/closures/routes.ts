@@ -26,10 +26,18 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     // Header opcional x-user-id
+    const parsePermissions = (json?: string): string[] => {
+      try {
+        return JSON.parse(json || '[]');
+      } catch {
+        return [];
+      }
+    };
+
     const customUserId = req.headers['x-user-id'] || body?.userId || body?.cashierUserId || body?.actorUserId;
     if (customUserId) {
-      const u = dbCtx.rawDb.prepare('SELECT id, name, role FROM users WHERE id = ?').get(customUserId) as any;
-      if (u) return { id: u.id, name: u.name, role: u.role };
+      const u = dbCtx.rawDb.prepare('SELECT id, name, role, permissions_json FROM users WHERE id = ?').get(customUserId) as any;
+      if (u) return { id: u.id, name: u.name, role: u.role, permissions: parsePermissions(u.permissions_json) };
     }
 
     // Verificar token Bearer si existe o cookie tocineta_session
@@ -42,18 +50,18 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
     if (rawToken) {
       const tokenHash = hashToken(rawToken);
       const session = dbCtx.rawDb.prepare(`
-        SELECT s.user_id, u.name, u.role
+        SELECT s.user_id, u.name, u.role, u.permissions_json
         FROM sessions s
         JOIN users u ON s.user_id = u.id
         WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
-      `).get(tokenHash) as { user_id: string; name: string; role: any } | undefined;
+      `).get(tokenHash) as { user_id: string; name: string; role: any; permissions_json?: string } | undefined;
 
       if (session) {
-        return { id: session.user_id, name: session.name, role: session.role };
+        return { id: session.user_id, name: session.name, role: session.role, permissions: parsePermissions(session.permissions_json) };
       }
     }
 
-    return { id: 'usr_cajera_principal', name: 'Cajera Principal', role: 'cajera' };
+    return { id: 'usr_cajera_principal', name: 'Cajera Principal', role: 'cajera', permissions: [] };
   };
 
   // 1. Arqueo Ciego de Sesión de Caja (POST /api/cash-sessions/:id/blind-count)
@@ -64,7 +72,7 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
 
     const user = getUserFromRequest(request, body.supervisorPin || body.adminPin, body);
 
-    if (!canUserProcessPayments(user.role)) {
+    if (!canUserProcessPayments(user)) {
       appendAuditEvent(dbCtx.rawDb, {
         actorUserId: user.id,
         action: 'UNAUTHORIZED_PAYMENT_ATTEMPT',

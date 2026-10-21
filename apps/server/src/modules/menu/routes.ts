@@ -274,7 +274,7 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // 9.1 Sincronización Automática de Tasa BCV por Internet (POST /api/menu/exchange-rate/sync-now)
-  fastify.post('/api/menu/exchange-rate/sync-now', async (request, reply) => {
+  fastify.post('/api/menu/exchange-rate/sync-now', async (_request, reply) => {
     const dbCtx = getDatabaseContext();
     try {
       const result = await syncBcvRateFromInternet(dbCtx.rawDb);
@@ -381,6 +381,45 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
     });
 
     return reply.status(200).send({ success: true, couponId: id, isActive: Boolean(newActive) });
+  });
+
+  // 11.1 Eliminar Cupón (DELETE /api/menu/coupons/:id)
+  fastify.delete('/api/menu/coupons/:id', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const user = requireRoles(request, reply, dbCtx.rawDb, ['admin', 'supervisor']);
+    if (!user) return;
+
+    const { id } = request.params as { id: string };
+    const current = dbCtx.rawDb.prepare('SELECT id, code FROM coupons WHERE id = ?').get(id) as { id: string; code: string } | undefined;
+    if (!current) {
+      return reply.status(404).send({ success: false, error: `Cupón '${id}' no encontrado` });
+    }
+
+    try {
+      dbCtx.rawDb.transaction(() => {
+        dbCtx.rawDb.prepare('UPDATE orders SET coupon_id = NULL WHERE coupon_id = ?').run(id);
+        dbCtx.rawDb.prepare('DELETE FROM coupon_redemptions WHERE coupon_id = ?').run(id);
+        dbCtx.rawDb.prepare('DELETE FROM coupons WHERE id = ?').run(id);
+
+        appendAuditEvent(dbCtx.rawDb, {
+          actorUserId: user.userId,
+          action: 'COUPON_DELETED',
+          entityType: 'coupon',
+          entityId: id,
+          payload: { code: current.code }
+        });
+
+        publishDomainEvent(dbCtx.rawDb, {
+          eventType: 'COUPON_DELETED',
+          entityId: id,
+          payload: { couponId: id, code: current.code }
+        });
+      })();
+
+      return reply.status(200).send({ success: true, message: `Cupón '${current.code}' eliminado correctamente` });
+    } catch (err: any) {
+      return reply.status(400).send({ success: false, error: err.message });
+    }
   });
 
   // 12. Actualización de Configuración de Negocio (PATCH /api/menu/settings)

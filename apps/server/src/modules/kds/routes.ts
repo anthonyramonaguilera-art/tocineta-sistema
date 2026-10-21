@@ -1,7 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
-import { getKdsOrders, updateKdsLineStatus, deliverKdsOrder } from './kds-service.js';
+import { getKdsOrders, updateKdsLineStatus, deliverKdsOrder, forceCompleteKdsOrder } from './kds-service.js';
 import { type Station } from '../../db/schema.js';
+import { extractSessionToken, hashToken } from '../../routes/auth.js';
 
 export const kdsRoutes: FastifyPluginAsync = async (server) => {
   /**
@@ -74,6 +75,71 @@ export const kdsRoutes: FastifyPluginAsync = async (server) => {
       const code = err.statusCode || 500;
       return reply.status(code).send({
         error: err.code || err.message || 'Error al entregar comanda',
+        message: err.message
+      });
+    }
+  });
+
+  /**
+   * POST /api/kds/orders/:orderId/force-complete
+   * Despacho Forzado en 1 toque en cocina (God Mode Dueña / Admin / Supervisor)
+   * Valida rol 'admin' o 'supervisor' o permiso 'KDS_FORCE_COMPLETE'
+   */
+  server.post<{
+    Params: { orderId: string };
+    Body: {
+      userId?: string;
+    };
+  }>('/api/kds/orders/:orderId/force-complete', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const { orderId } = request.params;
+    const body = (request.body || {}) as { userId?: string };
+
+    let userRole = '';
+    let userId = body.userId;
+    let permissions: string[] = [];
+
+    const rawToken = extractSessionToken(request.headers.authorization);
+    if (rawToken) {
+      const tokenHash = hashToken(rawToken);
+      const session = dbCtx.rawDb.prepare(`
+        SELECT s.user_id, u.role, u.permissions_json
+        FROM sessions s
+        JOIN users u ON s.user_id = u.id
+        WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
+      `).get(tokenHash) as { user_id: string; role: string; permissions_json: string } | undefined;
+      if (session) {
+        userId = session.user_id;
+        userRole = session.role;
+        try {
+          permissions = JSON.parse(session.permissions_json || '[]');
+        } catch {}
+      }
+    } else if (userId) {
+      const u = dbCtx.rawDb.prepare('SELECT role, permissions_json FROM users WHERE id = ?').get(userId) as any;
+      if (u) {
+        userRole = u.role;
+        try {
+          permissions = JSON.parse(u.permissions_json || '[]');
+        } catch {}
+      }
+    }
+
+    const hasPermission = userRole === 'admin' || userRole === 'supervisor' || permissions.includes('KDS_FORCE_COMPLETE');
+    if (!hasPermission) {
+      return reply.status(403).send({
+        error: 'FORBIDDEN_KDS_FORCE_COMPLETE',
+        message: 'No tienes permisos para forzar el despacho completo de cocina.'
+      });
+    }
+
+    try {
+      const result = forceCompleteKdsOrder(dbCtx.rawDb, orderId, { actorUserId: userId });
+      return reply.status(200).send(result);
+    } catch (err: any) {
+      const code = err.statusCode || 500;
+      return reply.status(code).send({
+        error: err.code || err.message || 'Error al forzar despacho de comanda',
         message: err.message
       });
     }

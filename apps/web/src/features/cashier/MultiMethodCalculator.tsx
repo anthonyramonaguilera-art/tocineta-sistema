@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { CashierOrder, CashierTender, CashierPaymentMethod } from './types.js';
 import { usdToBsCents, generateUuidV7 } from '@tocineta/shared';
 
@@ -26,6 +26,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
   const [selectedMethod, setSelectedMethod] = useState<CashierPaymentMethod>('cash_usd');
   const [amountInput, setAmountInput] = useState<string>('');
   const [referenceInput, setReferenceInput] = useState<string>('');
+  const referenceInputRef = useRef<HTMLInputElement>(null);
 
   // Estado del vuelto mixto
   const [changeGivenUsdInput, setChangeGivenUsdInput] = useState<string>('');
@@ -185,7 +186,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
     const tendersPayload = tenders.map(t => ({
       method: t.method,
       amountCents: t.amountCents,
-      referenceCode: t.referenceCode
+      referenceCode: t.referenceCode?.trim() || (t.method === 'pago_movil' ? 'SIN-REF' : undefined)
     }));
 
     const changePayload = changeTotalUsdCents > 0 ? {
@@ -280,12 +281,12 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
         {/* SALDO RESTANTE */}
         <div className="text-left sm:text-right">
           <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted block">
-            {remainingUsdCents > 0 ? 'Saldo Restante:' : 'Totalmente Cubierto:'}
+            {remainingUsdCents > 0 ? 'Falta por Cobrar:' : 'Totalmente Cubierto:'}
           </span>
           <div className="text-xl font-black font-mono mt-0.5">
             {remainingUsdCents > 0 ? (
               <span className="text-red-400">
-                ${(remainingUsdCents / 100).toFixed(2)} ({ (remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 }) } Bs)
+                Falta por cobrar: ${(remainingUsdCents / 100).toFixed(2)} USD ⇄ Bs. {(remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
             ) : (
               <span className="text-emerald-400">✓ $0.00</span>
@@ -442,10 +443,11 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
           </div>
 
           {(selectedMethod === 'pago_movil' || selectedMethod === 'ubii' || selectedMethod === 'binance') && (
-            <div className="relative w-full sm:w-48">
+            <div className="relative w-full sm:w-64">
               <input
+                ref={referenceInputRef}
                 type="text"
-                placeholder="N° Referencia..."
+                placeholder="N° Referencia (4 a 6 dígitos - Opcional)"
                 value={referenceInput}
                 onChange={e => setReferenceInput(e.target.value)}
                 className="w-full min-h-[50px] bg-tocineta-bg border border-tocineta-border rounded-2xl px-4 text-xs font-mono font-bold text-tocineta-yellow placeholder-tocineta-muted focus:border-tocineta-yellow outline-none"
@@ -463,21 +465,28 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
           </button>
         </div>
 
-        {/* Botón Exacto Bs. explícito para métodos en Bolívares (H-06) */}
+        {/* Botón Exacto Bs. explícito para métodos en Bolívares (H-06 / M19) */}
         {(selectedMethod === 'cash_bs' || selectedMethod === 'pago_movil' || selectedMethod === 'ubii') && remainingBsCents > 0 && (
           <div className="flex justify-end pt-1">
             <button
               type="button"
-              onClick={() => handleAddTender(remainingBsCents, selectedMethod)}
+              onClick={() => {
+                handleAddTender(remainingBsCents, selectedMethod);
+                if (selectedMethod === 'pago_movil') {
+                  setTimeout(() => {
+                    referenceInputRef.current?.focus();
+                  }, 50);
+                }
+              }}
               className="min-h-[48px] px-4 rounded-2xl bg-emerald-500/20 border border-emerald-500 text-emerald-300 hover:bg-emerald-500 hover:text-black font-black text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow"
             >
               <span>🇻🇪</span>
               <span>
                 {selectedMethod === 'pago_movil'
-                  ? `Exacto Bs. Pago Móvil (${(remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs)`
+                  ? `Exacto Bs. Pago Móvil: Bs. ${(remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} (Equiv. $${(remainingUsdCents / 100).toFixed(2)} USD)`
                   : selectedMethod === 'ubii'
-                  ? `Exacto Bs. Ubii (${(remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs)`
-                  : `Exacto Bs. Efectivo (${(remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs)`}
+                  ? `Exacto Bs. Ubii: Bs. ${(remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} (Equiv. $${(remainingUsdCents / 100).toFixed(2)} USD)`
+                  : `Exacto Bs. Efectivo: Bs. ${(remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} (Equiv. $${(remainingUsdCents / 100).toFixed(2)} USD)`}
               </span>
             </button>
           </div>
@@ -494,28 +503,37 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
             {tenders.map(t => (
               <div
                 key={t.id}
-                className={`p-3 border rounded-2xl flex items-center justify-between text-xs transition-colors duration-300 ${
+                className={`p-3 border rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between text-xs gap-2 transition-colors duration-300 ${
                   recentlyAddedTenderId === t.id
                     ? 'bg-[#FFE600]/20 border-[#FFE600]'
                     : 'bg-tocineta-bg border-tocineta-border'
                 }`}
               >
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-bold text-white uppercase">{t.method}</span>
-                  {t.referenceCode && (
-                    <span className="px-2 py-0.5 rounded font-mono text-[10px] bg-tocineta-card text-tocineta-yellow border border-tocineta-border">
-                      Ref: {t.referenceCode}
-                    </span>
+                  {(t.method === 'pago_movil' || t.method === 'ubii' || t.method === 'binance') && (
+                    <input
+                      type="text"
+                      placeholder="Ref (Opcional)"
+                      value={t.referenceCode ?? ''}
+                      onChange={e => {
+                        const val = e.target.value;
+                        setTenders(prev => prev.map(item => item.id === t.id ? { ...item, referenceCode: val } : item));
+                      }}
+                      className="px-2 py-1 rounded font-mono text-xs bg-tocineta-card text-tocineta-yellow border border-tocineta-border focus:border-tocineta-yellow outline-none w-36"
+                    />
                   )}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between sm:justify-end gap-3">
                   <span className="font-mono font-black text-sm text-white">
-                    {t.currency === 'USD' ? `$${(t.amountCents / 100).toFixed(2)}` : `${(t.amountCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs`}
+                    {t.currency === 'USD'
+                      ? `$${(t.amountCents / 100).toFixed(2)}`
+                      : `Bs. ${(t.amountCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} (Equivale a $${(t.usdEquivalentCents / 100).toFixed(2)} USD)`}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveTender(t.id)}
-                    className="w-7 h-7 rounded-lg bg-tocineta-card hover:bg-red-500/20 text-tocineta-muted hover:text-red-400 font-bold flex items-center justify-center"
+                    className="w-7 h-7 rounded-lg bg-tocineta-card hover:bg-red-500/20 text-tocineta-muted hover:text-red-400 font-bold flex items-center justify-center shrink-0"
                   >
                     ✕
                   </button>

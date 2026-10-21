@@ -15,16 +15,17 @@ const MenuAdminView = React.lazy(() => import('./components/MenuAdminView.js').t
 const SystemHealthDashboard = React.lazy(() => import('./components/SystemHealthDashboard.js').then(m => ({ default: m.SystemHealthDashboard })));
 const DeferredPaperView = React.lazy(() => import('./features/emergency/DeferredPaperView.js').then(m => ({ default: m.DeferredPaperView })));
 const ProfitabilityDashboard = React.lazy(() => import('./features/profitability/ProfitabilityDashboard.js').then(m => ({ default: m.ProfitabilityDashboard })));
+const StaffManagementView = React.lazy(() => import('./features/staff/StaffManagementView.js').then(m => ({ default: m.StaffManagementView })));
 
-export type TabType = 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability';
+export type TabType = 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability' | 'staff';
 
-// Mapa canónico de pestañas permitidas y por defecto por rol (Hito M18 RBAC)
+// Mapa canónico de pestañas permitidas y por defecto por rol (Hito M18/M20 RBAC)
 export const ALLOWED_TABS_BY_ROLE: Record<string, TabType[]> = {
   mesonero: ['pos', 'kds', 'health'],
   cocinero: ['kds', 'health'],
   cajera: ['cashier', 'pos', 'kds', 'emergency', 'health'],
-  supervisor: ['pos', 'cashier', 'kds', 'menu-admin', 'health', 'emergency', 'profitability'],
-  admin: ['pos', 'cashier', 'kds', 'menu-admin', 'health', 'emergency', 'profitability']
+  supervisor: ['pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability'],
+  admin: ['pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability']
 };
 
 export const DEFAULT_TAB_BY_ROLE: Record<string, TabType> = {
@@ -124,17 +125,17 @@ export const queryClient = new QueryClient({
 
 // Guardia de Renderizado para Caja
 const CashierRoleGuard: React.FC<{
-  userRole?: string;
+  user?: any;
   onRedirect: (tab: TabType) => void;
-}> = ({ userRole, onRedirect }) => {
+}> = ({ user, onRedirect }) => {
   React.useEffect(() => {
-    if (!canUserProcessPayments(userRole)) {
-      const fallbackTab: TabType = userRole === 'cocinero' ? 'kds' : 'pos';
+    if (!canUserProcessPayments(user)) {
+      const fallbackTab: TabType = user?.role === 'cocinero' ? 'kds' : 'pos';
       onRedirect(fallbackTab);
     }
-  }, [userRole, onRedirect]);
+  }, [user, onRedirect]);
 
-  if (!canUserProcessPayments(userRole)) {
+  if (!canUserProcessPayments(user)) {
     return null;
   }
 
@@ -156,16 +157,20 @@ const MainNavigator: React.FC = () => {
       return;
     }
     const defaultTab = DEFAULT_TAB_BY_ROLE[user.role] || 'pos';
-    const allowed = ALLOWED_TABS_BY_ROLE[user.role] || ['pos'];
+    const allowed = [...(ALLOWED_TABS_BY_ROLE[user.role] || ['pos'])];
+    if (canUserProcessPayments(user) && !allowed.includes('cashier')) {
+      allowed.push('cashier');
+    }
+
     if (!allowed.includes(currentTab)) {
       queryClient.clear();
       setCurrentTab(defaultTab);
     }
-  }, [user?.id, user?.role]);
+  }, [user?.id, user?.role, user?.permissions]);
 
   // Guardia activa para redireccionar si se intenta entrar a caja sin permisos
   React.useEffect(() => {
-    if (currentTab === 'cashier' && user && !canUserProcessPayments(user.role)) {
+    if (currentTab === 'cashier' && user && !canUserProcessPayments(user)) {
       const fallback = user.role === 'cocinero' ? 'kds' : 'pos';
       setCurrentTab(fallback);
     }
@@ -195,10 +200,11 @@ const MainNavigator: React.FC = () => {
         <ViewErrorBoundary onFallbackToPos={() => setCurrentTab('pos')}>
           <Suspense fallback={<ViewLoadingFallback />}>
             {currentTab === 'cashier' && (
-              <CashierRoleGuard userRole={user?.role} onRedirect={setCurrentTab} />
+              <CashierRoleGuard user={user} onRedirect={setCurrentTab} />
             )}
             {currentTab === 'kds' && <KdsView />}
             {currentTab === 'menu-admin' && <MenuAdminView />}
+            {currentTab === 'staff' && <StaffManagementView />}
             {currentTab === 'health' && <SystemHealthDashboard />}
             {currentTab === 'emergency' && <DeferredPaperView />}
             {currentTab === 'profitability' && <ProfitabilityDashboard />}

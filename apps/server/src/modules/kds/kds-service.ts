@@ -500,11 +500,120 @@ export function deliverKdsOrder(
     }
   });
 
-  return {
-    success: true,
-    orderId,
-    orderNumber: order.order_number,
-    fulfillmentStatus: newFulfillmentStatus,
-    closedAtMs
-  };
-}
+    return {
+      success: true,
+      orderId,
+      orderNumber: order.order_number,
+      fulfillmentStatus: newFulfillmentStatus,
+      closedAtMs
+    };
+  }
+
+  export interface ForceCompleteOrderOptions {
+    actorUserId?: string | null;
+  }
+
+  /**
+   * Poder de Super-Operadora (Dueña / Admin / Supervisor):
+   * Despacho forzado en 1 toque en cocina (POST /api/kds/orders/:id/force-complete)
+   * Marca todas las líneas de cocina como 'listo' y la orden como 'entregado'
+   * (o 'cerrado' si ya estaba pagada) de forma atómica.
+   */
+  export function forceCompleteKdsOrder(
+    rawDb: Database.Database,
+    orderId: string,
+    options?: ForceCompleteOrderOptions
+  ): {
+    success: boolean;
+    orderId: string;
+    orderNumber: number;
+    fulfillmentStatus: string;
+    closedAtMs: number | null;
+  } {
+    const order = rawDb.prepare(`
+      SELECT id, order_number, payment_status, fulfillment_status
+      FROM orders
+      WHERE id = ?
+    `).get(orderId) as {
+      id: string;
+      order_number: number;
+      payment_status: string;
+      fulfillment_status: string;
+    } | undefined;
+
+    if (!order) {
+      const err: any = new Error(`Orden con ID '${orderId}' no encontrada`);
+      err.statusCode = 404;
+      throw err;
+    }
+
+    const now = Date.now();
+
+    const updateTx = rawDb.transaction(() => {
+      // 1. Marcar todas las líneas de cocina como 'listo'
+      rawDb.prepare(`
+        UPDATE order_lines
+        SET status = 'listo',
+            prepared_at_ms = COALESCE(prepared_at_ms, ?),
+            ready_at_ms = COALESCE(ready_at_ms, ?)
+        WHERE order_id = ?
+          AND line_role != 'COMBO_PARENT'
+          AND station IN ('hamburguesas', 'hot_dogs')
+      `).run(now, now, orderId);
+
+      // 2. Determinar si se cierra o queda entregado
+      // Si está pagada, puede cerrarse con closed_at_ms. Si está autorizada sin pago, NO cerrar para respetar trg_orders_no_close_with_debt
+      const isPaid = order.payment_status === 'pagado';
+      const newFulfillmentStatus = isPaid ? 'cerrado' : 'entregado';
+      const closedAtMs = isPaid ? now : null;
+
+      rawDb.prepare(`
+        UPDATE orders
+        SET fulfillment_status = ?,
+            station_status_hot_dogs = 'listo',
+            station_status_hamburguesas = 'listo',
+            closed_at_ms = COALESCE(?, closed_at_ms),
+            updated_at_ms = ?
+        WHERE id = ?
+      `).run(newFulfillmentStatus, closedAtMs, now, orderId);
+
+      // 3. Auditoría y evento de dominio
+      appendAuditEvent(rawDb, {
+        actorUserId: options?.actorUserId || null,
+        action: 'KDS_ORDER_FORCE_COMPLETED',
+        entityType: 'order',
+        entityId: orderId,
+        payload: {
+          orderNumber: order.order_number,
+          fulfillmentStatus: newFulfillmentStatus,
+          paymentStatus: order.payment_status,
+          forcedBy: options?.actorUserId || 'admin_godmode',
+          closedAtMs
+        }
+      });
+
+      publishDomainEvent(rawDb, {
+        eventType: 'ORDER_DELIVERED',
+        entityId: orderId,
+        payload: {
+          orderId,
+          orderNumber: order.order_number,
+          fulfillmentStatus: newFulfillmentStatus,
+          closedAtMs,
+          forced: true
+        }
+      });
+
+      return { newFulfillmentStatus, closedAtMs };
+    });
+
+    const { newFulfillmentStatus, closedAtMs } = updateTx();
+
+    return {
+      success: true,
+      orderId,
+      orderNumber: order.order_number,
+      fulfillmentStatus: newFulfillmentStatus,
+      closedAtMs
+    };
+  }

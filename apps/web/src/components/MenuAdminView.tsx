@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext.js';
 import type { AdminMenuResponse, AdminProduct, Station } from '../types/menu.js';
+import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
 
 export const MenuAdminView: React.FC = () => {
   const { token } = useAuth();
@@ -25,12 +26,13 @@ export const MenuAdminView: React.FC = () => {
   const [newRateInput, setNewRateInput] = useState('');
   const [rateMessage, setRateMessage] = useState<string | null>(null);
 
-  // Formulario nuevo cupón
   const [couponCode, setCouponCode] = useState('');
   const [couponType, setCouponType] = useState<'DISCOUNT' | 'COURTESY_ITEM'>('DISCOUNT');
   const [discountMode, setDiscountMode] = useState<'FIXED_USD' | 'PERCENTAGE_BPS'>('PERCENTAGE_BPS');
   const [discountValue, setDiscountValue] = useState('10');
   const [couponDesc, setCouponDesc] = useState('');
+  const [showAllCoupons, setShowAllCoupons] = useState<boolean>(false);
+  const [isSyncingBcv, setIsSyncingBcv] = useState<boolean>(false);
 
   const { data: adminMenu, isLoading } = useQuery<AdminMenuResponse>({
     queryKey: ['adminMenu'],
@@ -44,7 +46,7 @@ export const MenuAdminView: React.FC = () => {
     enabled: Boolean(token)
   });
 
-  // Mutación: Toggle Categoría Activa (Feature Flag Malteadas)
+  // Mutación: Toggle Categoría Activa (Línea Malteadas)
   const toggleCategoryMutation = useMutation({
     mutationFn: async (categoryId: string) => {
       const res = await fetch(`/api/menu/categories/${categoryId}/toggle-active`, {
@@ -241,6 +243,20 @@ export const MenuAdminView: React.FC = () => {
     }
   });
 
+  // Mutación: Eliminar Cupón
+  const deleteCouponMutation = useMutation({
+    mutationFn: async (couponId: string) => {
+      const res = await fetch(`/api/menu/coupons/${couponId}`, {
+        method: 'DELETE',
+        headers: { authorization: `Bearer ${token}` }
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
+    }
+  });
+
   const openCreateModal = () => {
     setEditingProduct(null);
     setFormName('');
@@ -306,8 +322,15 @@ export const MenuAdminView: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Guía Rápida Pedagógica */}
+      <PedagogicalGuideBanner
+        title="Guía Rápida de la Carta"
+        description="Aquí puedes agregar nuevos platos o cambiar precios. Si un producto se acaba en la noche, toca el botón verde 'Disponible' para apagarlo al instante."
+        storageKey="tocineta_guide_menu"
+      />
+
       {/* -------------------------------------------------------------------- */}
-      {/* 1. BANNER FEATURE FLAG: MALTEADAS Y HELADOS                          */}
+      {/* 1. SECCIÓN MALTEADAS Y HELADOS                                       */}
       {/* -------------------------------------------------------------------- */}
       <div
         className={`border rounded-2xl p-5 shadow-lg transition-all flex flex-col sm:flex-row items-center justify-between gap-4 ${
@@ -330,7 +353,7 @@ export const MenuAdminView: React.FC = () => {
                     : 'bg-amber-500/20 border-amber-500/40 text-amber-400'
                 }`}
               >
-                {isMalteadasActive ? 'Activo en POS y Caja' : 'Oculto en POS (Feature Flag)'}
+                {isMalteadasActive ? 'Activo en POS y Caja' : 'Guardado (No visible para mesoneros)'}
               </span>
             </div>
             <p className="text-xs text-tocineta-muted mt-1 max-w-xl">
@@ -577,8 +600,8 @@ export const MenuAdminView: React.FC = () => {
                   onChange={e => setCouponType(e.target.value as any)}
                   className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
                 >
-                  <option value="DISCOUNT">Descuento en Monto/Porcentaje</option>
-                  <option value="COURTESY_ITEM">Cortesía / Obsequio (Café/Snacks)</option>
+                  <option value="DISCOUNT">🏷️ Descuento ($ o %)</option>
+                  <option value="COURTESY_ITEM">🎁 Regalo / Cortesía</option>
                 </select>
               </div>
 
@@ -633,39 +656,90 @@ export const MenuAdminView: React.FC = () => {
           </div>
 
           {/* Listado de Cupones */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {adminMenu.coupons.map(c => (
-              <div
-                key={c.id}
-                className="bg-tocineta-card border border-tocineta-border rounded-2xl p-4 flex items-center justify-between"
-              >
-                <div>
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono font-extrabold text-sm text-tocineta-yellow">
-                      {c.code}
-                    </span>
-                    <span className="text-[10px] px-2 py-0.5 rounded-md bg-tocineta-border text-tocineta-muted uppercase">
-                      {c.coupon_type}
-                    </span>
-                  </div>
-                  <p className="text-xs text-tocineta-muted mt-1">{c.description || 'Sin descripción'}</p>
-                  <div className="text-[10px] text-tocineta-muted font-mono mt-1">
-                    Usos: {c.used_count} {c.max_uses ? `/ ${c.max_uses}` : ''}
-                  </div>
-                </div>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-white">
+                Cupones ({adminMenu.coupons.filter(c => {
+                  const isExhausted = c.max_uses !== null && c.max_uses !== undefined && c.used_count >= c.max_uses;
+                  if (showAllCoupons) return true;
+                  return c.is_active === 1 && !isExhausted;
+                }).length} de {adminMenu.coupons.length})
+              </span>
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-tocineta-muted hover:text-white">
+                <input
+                  type="checkbox"
+                  checked={showAllCoupons}
+                  onChange={e => setShowAllCoupons(e.target.checked)}
+                  className="rounded bg-tocineta-bg border-tocineta-border text-tocineta-yellow focus:ring-0"
+                />
+                <span>Mostrar cupones agotados / inactivos</span>
+              </label>
+            </div>
 
-                <button
-                  onClick={() => toggleCouponMutation.mutate(c.id)}
-                  className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${
-                    c.is_active
-                      ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                      : 'bg-red-500/20 text-red-400 border-red-500/40'
-                  }`}
-                >
-                  {c.is_active ? 'Activo' : 'Inactivo'}
-                </button>
-              </div>
-            ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {adminMenu.coupons
+                .filter(c => {
+                  const isExhausted = c.max_uses !== null && c.max_uses !== undefined && c.used_count >= c.max_uses;
+                  if (showAllCoupons) return true;
+                  return c.is_active === 1 && !isExhausted;
+                })
+                .map(c => {
+                  const isExhausted = c.max_uses !== null && c.max_uses !== undefined && c.used_count >= c.max_uses;
+                  return (
+                    <div
+                      key={c.id}
+                      className="bg-tocineta-card border border-tocineta-border rounded-2xl p-4 flex items-center justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-extrabold text-sm text-tocineta-yellow">
+                            {c.code}
+                          </span>
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-tocineta-border text-tocineta-muted uppercase font-bold">
+                            {c.coupon_type === 'COURTESY_ITEM' ? '🎁 Regalo / Cortesía' : '🏷️ Descuento ($ o %)'}
+                          </span>
+                        </div>
+                        <p className="text-xs text-tocineta-muted mt-1">{c.description || 'Sin descripción'}</p>
+                        <div className="text-[10px] text-tocineta-muted font-mono mt-1">
+                          Usos: {c.used_count} {c.max_uses ? `/ ${c.max_uses}` : ''}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {isExhausted ? (
+                          <span className="px-3 py-1 rounded-full text-xs font-bold border bg-amber-500/20 text-amber-300 border-amber-500/40">
+                            Agotado ({c.used_count}/{c.max_uses})
+                          </span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => toggleCouponMutation.mutate(c.id)}
+                            className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${
+                              c.is_active
+                                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
+                                : 'bg-red-500/20 text-red-400 border-red-500/40'
+                            }`}
+                          >
+                            {c.is_active ? 'Activo' : 'Inactivo'}
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (window.confirm(`¿Deseas eliminar el cupón "${c.code}" permanentemente?`)) {
+                              deleteCouponMutation.mutate(c.id);
+                            }
+                          }}
+                          className="p-1.5 rounded-lg text-xs font-bold text-tocineta-muted hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center gap-1"
+                          title="Eliminar cupón"
+                        >
+                          🗑️
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
           </div>
         </div>
       )}
@@ -700,13 +774,45 @@ export const MenuAdminView: React.FC = () => {
             <p className="text-xs text-center text-tocineta-yellow font-medium">{rateMessage}</p>
           )}
 
-          <button
-            onClick={() => updateRateMutation.mutate()}
-            disabled={!newRateInput || updateRateMutation.isPending}
-            className="w-full py-3 rounded-xl bg-tocineta-yellow text-tocineta-bg font-extrabold text-xs uppercase tracking-wider hover:bg-tocineta-yellow/90 transition-all disabled:opacity-50"
-          >
-            {updateRateMutation.isPending ? 'Actualizando Tasa...' : 'Actualizar Tasa BCV Oficial'}
-          </button>
+          <div className="space-y-2 pt-2">
+            <button
+              onClick={() => updateRateMutation.mutate()}
+              disabled={!newRateInput || updateRateMutation.isPending}
+              className="w-full min-h-[48px] rounded-xl bg-tocineta-yellow text-tocineta-bg font-extrabold text-xs uppercase tracking-wider hover:bg-tocineta-yellow/90 transition-all disabled:opacity-50 flex items-center justify-center shadow"
+            >
+              {updateRateMutation.isPending ? 'Actualizando Tasa...' : 'Actualizar Tasa BCV Oficial'}
+            </button>
+
+            <button
+              type="button"
+              onClick={async () => {
+                setIsSyncingBcv(true);
+                try {
+                  const res = await fetch('/api/menu/exchange-rate/sync-now', {
+                    method: 'POST',
+                    headers: { authorization: `Bearer ${token}` }
+                  });
+                  const data = await res.json();
+                  if (data.updated) {
+                    setRateMessage(`✓ Tasa BCV sincronizada automáticamente por internet: ${data.formattedRate} Bs/$`);
+                    queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
+                    queryClient.invalidateQueries({ queryKey: ['posMenu'] });
+                  } else {
+                    setRateMessage(data.message || data.error || 'La tasa BCV ya se encuentra actualizada');
+                  }
+                } catch {
+                  setRateMessage('Fallo al contactar el servidor para sincronizar BCV');
+                } finally {
+                  setIsSyncingBcv(false);
+                }
+              }}
+              disabled={isSyncingBcv}
+              className="w-full min-h-[46px] rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow/50 text-white font-bold text-xs transition-all flex items-center justify-center gap-2"
+            >
+              <span>🔄</span>
+              <span>{isSyncingBcv ? 'Sincronizando con BCV oficial...' : 'Sincronizar BCV por Internet'}</span>
+            </button>
+          </div>
         </div>
       )}
 

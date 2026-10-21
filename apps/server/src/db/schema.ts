@@ -27,6 +27,12 @@ export const users = sqliteTable('users', {
   failedAttempts: integer('failed_attempts').notNull().default(0),
   lockoutStage: integer('lockout_stage').notNull().default(0),
   lockedUntilMs: integer('locked_until_ms'),
+  cedula: text('cedula'),
+  phone: text('phone'),
+  passwordHash: text('password_hash'),
+  passwordSalt: text('password_salt'),
+  approvalStatus: text('approval_status', { enum: ['PENDING', 'APPROVED', 'REJECTED'] }).notNull().default('APPROVED'),
+  permissionsJson: text('permissions_json').notNull().default('[]'),
   createdAtMs: integer('created_at_ms').notNull(),
   updatedAtMs: integer('updated_at_ms').notNull()
 });
@@ -93,6 +99,12 @@ export function mapUserRow(row: any): User {
     failedAttempts: row.failed_attempts ?? row.failedAttempts ?? 0,
     lockoutStage: row.lockout_stage ?? row.lockoutStage ?? 0,
     lockedUntilMs: row.locked_until_ms ?? row.lockedUntilMs ?? null,
+    cedula: row.cedula ?? null,
+    phone: row.phone ?? null,
+    passwordHash: row.password_hash ?? row.passwordHash ?? null,
+    passwordSalt: row.password_salt ?? row.passwordSalt ?? null,
+    approvalStatus: row.approval_status ?? row.approvalStatus ?? 'APPROVED',
+    permissionsJson: row.permissions_json ?? row.permissionsJson ?? '[]',
     createdAtMs: row.created_at_ms ?? row.createdAtMs,
     updatedAtMs: row.updated_at_ms ?? row.updatedAtMs
   };
