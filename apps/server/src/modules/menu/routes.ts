@@ -18,6 +18,7 @@ import {
 import { getEventsSince } from '../events/event-bus.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
+import { syncBcvRateFromInternet } from './bcv-auto-sync.js';
 
 function getSessionUser(
   rawDb: Database.Database,
@@ -269,6 +270,23 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(200).send({ success: true, ...result });
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
+
+  // 9.1 Sincronización Automática de Tasa BCV por Internet (POST /api/menu/exchange-rate/sync-now)
+  fastify.post('/api/menu/exchange-rate/sync-now', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    try {
+      const result = await syncBcvRateFromInternet(dbCtx.rawDb);
+      return reply.status(200).send({
+        success: true,
+        ...result
+      });
+    } catch (err: any) {
+      return reply.status(500).send({
+        success: false,
+        error: err?.message || 'Error al sincronizar tasa BCV'
+      });
     }
   });
 

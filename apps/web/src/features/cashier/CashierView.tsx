@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
-import type { CashierOrder } from './types.js';
+import type { CashierOrder, CashierOrderLine } from './types.js';
 import { useMultiTabCashierGuard } from './useMultiTabCashierGuard.js';
 import { DrinksChecklist } from './DrinksChecklist.js';
 import { MultiMethodCalculator } from './MultiMethodCalculator.js';
@@ -21,6 +21,48 @@ export const CashierView: React.FC = () => {
   const [lastPaidOrderId, setLastPaidOrderId] = useState<string | null>(null);
   const [showCouponModal, setShowCouponModal] = useState<boolean>(false);
   const [showSettlementModal, setShowSettlementModal] = useState<boolean>(false);
+  const [expandedOrderIds, setExpandedOrderIds] = useState<Set<string>>(new Set());
+
+  // Helper para alternar acordeón de orden
+  const toggleAccordion = (orderId: string, e?: React.MouseEvent) => {
+    if (e) e.stopPropagation();
+    setExpandedOrderIds(prev => {
+      const next = new Set(prev);
+      if (next.has(orderId)) {
+        next.delete(orderId);
+      } else {
+        next.add(orderId);
+      }
+      return next;
+    });
+  };
+
+  // Helper para formatear desglose de línea de orden con modificadores y comboChildren
+  const renderLineDescription = (line: CashierOrderLine) => {
+    const qty = line.qty || line.quantity || 1;
+    const price = (line.unit_price_usd_cents / 100).toFixed(2);
+
+    const mods = (line.modifiers || []).map((m: any) => {
+      const modName = m.ingredient_name || m.name || '';
+      if (m.modifier_type === 'SIN') return `Sin ${modName}`;
+      if (m.modifier_type === 'EXTRA') return `+ Extra ${modName}`;
+      if (m.modifier_type === 'BARRA_LIBRE') return `+ Barra Libre: ${modName}`;
+      return modName;
+    }).filter(Boolean);
+
+    const comboKids = line.comboChildren || line.combo_children || [];
+    const comboStr = comboKids.length > 0
+      ? ` [${comboKids.map((c: any) => {
+          const kidMods = (c.modifiers || []).map((m: any) => (m.modifier_type === 'SIN' ? `Sin ${m.ingredient_name || m.name}` : (m.ingredient_name || m.name))).filter(Boolean);
+          return kidMods.length > 0 ? `${c.product_name} (${kidMods.join(', ')})` : c.product_name;
+        }).join(' + ')}]`
+      : '';
+
+    const notesStr = line.custom_instructions || line.notes ? ` — ${line.custom_instructions || line.notes}` : '';
+    const modsStr = mods.length > 0 ? ` — ${mods.join(', ')}` : '';
+
+    return `${qty}x ${line.product_name} ($${price})${comboStr}${modsStr}${notesStr}`;
+  };
 
   // Estados de Apertura de Jornada
   const [showOpenModal, setShowOpenModal] = useState<boolean>(false);
@@ -318,13 +360,17 @@ export const CashierView: React.FC = () => {
             <div className="space-y-2.5 max-h-[78vh] overflow-y-auto pr-1">
               {pendingOrders.map(o => {
                 const isSelected = o.id === selectedOrderId;
+                const isExpanded = expandedOrderIds.has(o.id);
                 const bsAmount = usdToBsCents(o.total_to_collect_usd_cents, currentRateMicroBs);
+                const platesCount = o.itemsCount || o.lines?.reduce((acc, l) => acc + (l.qty || l.quantity || 1), 0) || 1;
                 return (
-                  <button
+                  <div
                     key={o.id}
-                    type="button"
                     onClick={() => setSelectedOrderId(o.id)}
-                    className={`w-full min-h-[58px] p-4 rounded-3xl border text-left transition-all flex flex-col justify-between gap-2 active:scale-98 shadow-md ${
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') setSelectedOrderId(o.id); }}
+                    className={`w-full min-h-[58px] p-4 rounded-3xl border text-left transition-all flex flex-col justify-between gap-2 active:scale-98 shadow-md cursor-pointer ${
                       isSelected
                         ? 'bg-tocineta-yellow/15 border-tocineta-yellow shadow-xl ring-2 ring-tocineta-yellow/30'
                         : 'bg-tocineta-card border-tocineta-border hover:border-tocineta-yellow/60'
@@ -339,7 +385,7 @@ export const CashierView: React.FC = () => {
                           </span>
                         </div>
                         <p className="text-[11px] text-tocineta-muted mt-0.5">
-                          {o.lines?.length || 0} plato(s) • Mesonero: {o.created_by_name || 'Carlos'}
+                          {platesCount} plato(s) • Mesonero: {o.created_by_name || 'Carlos'}
                         </p>
                       </div>
 
@@ -357,15 +403,42 @@ export const CashierView: React.FC = () => {
                       <span className="text-tocineta-muted uppercase tracking-wider font-semibold">
                         {o.fulfillment_type === 'salon' ? '🍽️ Salón' : o.fulfillment_type === 'delivery' ? '🛵 Delivery' : '🛍️ Para Llevar'}
                       </span>
-                      <span className={`px-2 py-0.5 rounded font-bold uppercase ${
-                        o.payment_status === 'autorizado_sin_pago'
-                          ? 'bg-purple-500/20 text-purple-300'
-                          : 'bg-amber-500/20 text-amber-300'
-                      }`}>
-                        {o.payment_status === 'autorizado_sin_pago' ? '⚠️ Deuda Abierta' : 'Por Cobrar'}
-                      </span>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          onClick={(e) => toggleAccordion(o.id, e)}
+                          className="px-2 py-0.5 rounded text-[10px] font-bold text-tocineta-yellow hover:text-white bg-tocineta-bg border border-tocineta-border/60 hover:border-tocineta-yellow transition-all flex items-center gap-1"
+                        >
+                          <span>{isExpanded ? '▲ Ocultar' : '▼ Desglose'}</span>
+                        </button>
+                        <span className={`px-2 py-0.5 rounded font-bold uppercase ${
+                          o.payment_status === 'autorizado_sin_pago'
+                            ? 'bg-purple-500/20 text-purple-300'
+                            : 'bg-amber-500/20 text-amber-300'
+                        }`}>
+                          {o.payment_status === 'autorizado_sin_pago' ? '⚠️ Deuda Abierta' : 'Por Cobrar'}
+                        </span>
+                      </div>
                     </div>
-                  </button>
+
+                    {/* Acordeón desplegable de detalle de ítems de la orden */}
+                    {isExpanded && (
+                      <div className="mt-2 pt-2 border-t border-tocineta-border/40 space-y-1.5 w-full animate-in fade-in">
+                        <span className="text-[10px] font-bold text-tocineta-muted block uppercase tracking-wider">
+                          Detalle de ítems ({platesCount} platos):
+                        </span>
+                        {(o.lines && o.lines.length > 0) ? (
+                          o.lines.map((line, idx) => (
+                            <div key={line.id || idx} className="text-[11px] bg-tocineta-bg/80 p-2 rounded-xl border border-tocineta-border/40 text-white font-medium">
+                              {renderLineDescription(line)}
+                            </div>
+                          ))
+                        ) : (
+                          <span className="italic text-[10px] text-tocineta-muted">Sin desglose disponible</span>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -376,6 +449,27 @@ export const CashierView: React.FC = () => {
         <div className="lg:col-span-7 space-y-4">
           {selectedOrder ? (
             <>
+              {/* DESGLOSE DETALLADO DE PRODUCTOS Y MODIFICADORES EN ENCABEZADO */}
+              <div className="bg-tocineta-card border border-tocineta-border rounded-3xl p-4 space-y-2.5 shadow-md">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">🍔</span>
+                    <h4 className="text-xs font-black text-white uppercase tracking-wider">
+                      Desglose de la Orden ({selectedOrder.itemsCount || selectedOrder.lines?.reduce((acc, l) => acc + (l.qty || l.quantity || 1), 0) || 1} platos)
+                    </h4>
+                  </div>
+                  <span className="text-[11px] font-mono text-tocineta-muted">
+                    {selectedOrder.lines?.length || 0} línea(s)
+                  </span>
+                </div>
+                <div className="space-y-1.5">
+                  {(selectedOrder.lines || []).map((line, idx) => (
+                    <div key={line.id || idx} className="p-2.5 rounded-2xl bg-tocineta-bg border border-tocineta-border/60 text-xs text-white font-medium flex items-start justify-between gap-2">
+                      <span>{renderLineDescription(line)}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
               {/* BARRA INTERACTIVA DE CUPONES DUALES ("CUPONES PARA TI") */}
               <div className="bg-tocineta-card border border-tocineta-border rounded-3xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-md">
                 <div className="flex items-center gap-3">

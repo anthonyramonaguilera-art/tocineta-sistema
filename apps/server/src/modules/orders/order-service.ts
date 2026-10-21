@@ -8,13 +8,69 @@ import { checkUserLockout, recordFailedAttempt, resetLockout } from '../auth/loc
 import { mapUserRow } from '../../db/schema.js';
 import { enqueueOrderPrintJobs } from '../printing/worker.js';
 
-export interface OrderModifierInput {
-  ingredientId?: string;
-  ingredientName: string;
-  modifierType: 'SIN_INGREDIENTE' | 'EXTRA_INGREDIENTE' | 'BARRA_LIBRE';
+export type ModifierRawInput = string | {
+  ingredientId?: string | null;
+  ingredientName?: string;
+  name?: string;
+  modifierName?: string;
+  modifierType?: string;
+  type?: string;
+  state?: string;
   extraPriceUsdCents?: number;
+  extraPriceCents?: number;
   internalCostUsdCents?: number;
+};
+
+export interface NormalizedOrderModifier {
+  ingredientId: string | null;
+  ingredientName: string;
+  modifierName: string;
+  modifierType: string;
+  state: string;
+  extraPriceUsdCents: number;
+  internalCostUsdCents: number;
 }
+
+export function normalizeModifier(raw: ModifierRawInput): NormalizedOrderModifier {
+  if (typeof raw === 'string') {
+    const text = raw.trim();
+    const lower = text.toLowerCase();
+    const isSin = lower.includes('sin');
+    const isPoco = lower.includes('poco');
+    return {
+      ingredientId: null,
+      ingredientName: text,
+      modifierName: text,
+      modifierType: 'GLOBAL_INSTRUCTION',
+      state: isSin ? 'sin' : isPoco ? 'poco' : 'normal',
+      extraPriceUsdCents: 0,
+      internalCostUsdCents: 0
+    };
+  }
+
+  const name = raw.modifierName || raw.ingredientName || raw.name || 'Modificador';
+  const type = raw.modifierType || raw.type || (raw.extraPriceUsdCents ? 'EXTRA_INGREDIENTE' : 'BASE_INGREDIENT');
+  let state = raw.state;
+  if (!state) {
+    if (type === 'SIN_INGREDIENTE') state = 'sin';
+    else if (type === 'POCO_INGREDIENTE') state = 'poco';
+    else if (type === 'EXTRA_INGREDIENTE' || type === 'PAID_EXTRA') state = 'extra';
+    else state = 'normal';
+  }
+
+  const price = raw.extraPriceUsdCents || raw.extraPriceCents || 0;
+  return {
+    ingredientId: raw.ingredientId || null,
+    ingredientName: name,
+    modifierName: name,
+    modifierType: type,
+    state,
+    extraPriceUsdCents: price,
+    internalCostUsdCents: raw.internalCostUsdCents || 0
+  };
+}
+
+export type OrderModifierInput = ModifierRawInput;
 
 export interface ComboChildInput {
   productId: string;
@@ -139,7 +195,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
       flavorChoice: string | null;
       customInstructions: string | null;
       snapshotJson: string;
-      modifiers: OrderModifierInput[];
+      modifiers: NormalizedOrderModifier[];
     }
 
     const processedLines: ProcessedLine[] = [];
@@ -154,11 +210,10 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
       const lineId = `line_${generateUuidV7()}`;
       const qty = lineInput.quantity || 1;
 
-      // Calcular modificadores extras pagados
-      const lineMods = lineInput.modifiers || [];
-      const extraPriceMods = lineMods
-        .filter(m => m.modifierType === 'EXTRA_INGREDIENTE')
-        .reduce((sum, m) => sum + (m.extraPriceUsdCents || 0), 0);
+      // Calcular modificadores extras pagados y normalizar
+      const rawLineMods = lineInput.modifiers || [];
+      const lineMods = rawLineMods.map(normalizeModifier);
+      const extraPriceMods = lineMods.reduce((sum, m) => sum + (m.extraPriceUsdCents || 0), 0);
 
       if (prod.is_combo) {
         // --- PROCESAR LÍNEA PADRE DEL COMBO ---
@@ -220,7 +275,8 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
             const childQty = (cp.childInput.quantity || 1) * qty;
             const slotKey = `${cp.order}_${childProd.id}`;
             const proratedPrice = allocatedMap.get(slotKey) ?? childProd.price_usd_cents;
-            const childMods = cp.childInput.modifiers || [];
+            const rawChildMods = cp.childInput.modifiers || [];
+            const childMods = rawChildMods.map(normalizeModifier);
 
             const childSnapshot = JSON.stringify({
               productName: childProd.name,
@@ -398,9 +454,9 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
 
     const insertModStmt = rawDb.prepare(`
       INSERT INTO order_line_modifiers (
-        id, order_line_id, ingredient_id, ingredient_name, modifier_type,
-        extra_price_usd_cents, internal_cost_usd_cents
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+        id, order_line_id, ingredient_id, ingredient_name, modifier_name, modifier_type,
+        state, extra_price_usd_cents, internal_cost_usd_cents
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     for (const pl of processedLines) {
@@ -427,7 +483,9 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
           pl.id,
           mod.ingredientId || null,
           mod.ingredientName,
+          mod.modifierName || mod.ingredientName,
           mod.modifierType,
+          mod.state || 'normal',
           mod.extraPriceUsdCents || 0,
           mod.internalCostUsdCents || 0
         );
@@ -465,7 +523,82 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
 /**
  * Consulta de orden por ID con sus líneas y modificadores
  */
-export function getOrderById(rawDb: Database.Database, orderId: string, userRole?: string) {
+export function hydrateOrderLines(rawDb: Database.Database, orderId: string, options?: { forCashier?: boolean }) {
+  const allLines = rawDb.prepare(`
+    SELECT ol.*, p.name as product_name
+    FROM order_lines ol
+    JOIN products p ON ol.product_id = p.id
+    WHERE ol.order_id = ?
+    ORDER BY ol.created_at_ms ASC
+  `).all(orderId) as any[];
+
+  const allMods = rawDb.prepare(`
+    SELECT olm.*
+    FROM order_line_modifiers olm
+    JOIN order_lines ol ON olm.order_line_id = ol.id
+    WHERE ol.order_id = ?
+    ORDER BY olm.id ASC
+  `).all(orderId) as any[];
+
+  const modsByLine = new Map<string, any[]>();
+  for (const m of allMods) {
+    const list = modsByLine.get(m.order_line_id) || [];
+    list.push({
+      ...m,
+      name: m.modifier_name || m.ingredient_name || m.name,
+      ingredientName: m.ingredient_name || m.name,
+      modifierName: m.modifier_name || m.ingredient_name || m.name
+    });
+    modsByLine.set(m.order_line_id, list);
+  }
+
+  const comboChildrenByParent = new Map<string, any[]>();
+  for (const l of allLines) {
+    if (l.line_role === 'COMBO_CHILD' && l.parent_line_id) {
+      const list = comboChildrenByParent.get(l.parent_line_id) || [];
+      list.push({
+        ...l,
+        qty: l.quantity,
+        modifiers: modsByLine.get(l.id) || []
+      });
+      comboChildrenByParent.set(l.parent_line_id, list);
+    }
+  }
+
+  const mainLines = allLines.filter(l =>
+    l.line_role === 'STANDARD' || l.line_role === 'COMBO_PARENT' || l.line_role === 'COURTESY_ITEM'
+  );
+
+  const billableLines = (mainLines.length > 0 ? mainLines : allLines).map(l => ({
+    ...l,
+    qty: l.quantity,
+    modifiers: modsByLine.get(l.id) || [],
+    comboChildren: comboChildrenByParent.get(l.id) || []
+  }));
+
+  const itemsCount = billableLines.reduce((acc, l) => acc + (l.quantity || 1), 0);
+
+  if (options?.forCashier) {
+    return {
+      lines: billableLines,
+      itemsCount: Math.max(itemsCount, allLines.length > 0 ? 1 : 0)
+    };
+  }
+
+  const linesWithChildren = allLines.map(l => ({
+    ...l,
+    qty: l.quantity,
+    modifiers: modsByLine.get(l.id) || [],
+    ...(l.line_role === 'COMBO_PARENT' ? { comboChildren: comboChildrenByParent.get(l.id) || [] } : {})
+  }));
+
+  return {
+    lines: linesWithChildren,
+    itemsCount: Math.max(itemsCount, allLines.length > 0 ? 1 : 0)
+  };
+}
+
+export function getOrderById(rawDb: Database.Database, orderId: string, userRole?: string, options?: { forCashier?: boolean }) {
   const order = rawDb.prepare(`
     SELECT o.*, u.name as created_by_name,
            d.id as delivery_id, d.driver_id, d.motorizado_name, d.status as delivery_status,
@@ -487,37 +620,12 @@ export function getOrderById(rawDb: Database.Database, orderId: string, userRole
     }
   }
 
-  const lines = rawDb.prepare(`
-    SELECT ol.*, p.name as product_name
-    FROM order_lines ol
-    JOIN products p ON ol.product_id = p.id
-    WHERE ol.order_id = ?
-    ORDER BY ol.created_at_ms ASC
-  `).all(orderId) as any[];
-
-  const mods = rawDb.prepare(`
-    SELECT olm.*
-    FROM order_line_modifiers olm
-    JOIN order_lines ol ON olm.order_line_id = ol.id
-    WHERE ol.order_id = ?
-    ORDER BY olm.id ASC
-  `).all(orderId) as any[];
-
-  const modsByLine = new Map<string, any[]>();
-  for (const m of mods) {
-    const list = modsByLine.get(m.order_line_id) || [];
-    list.push(m);
-    modsByLine.set(m.order_line_id, list);
-  }
-
-  const structuredLines = lines.map(l => ({
-    ...l,
-    modifiers: modsByLine.get(l.id) || []
-  }));
+  const { lines, itemsCount } = hydrateOrderLines(rawDb, orderId, options);
 
   return {
     ...order,
-    lines: structuredLines
+    lines,
+    itemsCount
   };
 }
 
@@ -587,12 +695,23 @@ export function updateOrder(
         );
 
         if (line.modifiers) {
-          for (const m of line.modifiers) {
+          for (const rawM of line.modifiers) {
+            const m = normalizeModifier(rawM);
             rawDb.prepare(`
               INSERT INTO order_line_modifiers (
-                id, order_line_id, ingredient_id, ingredient_name, modifier_type, extra_price_usd_cents, internal_cost_usd_cents
-              ) VALUES (?, ?, ?, ?, ?, ?, ?)
-            `).run(`olm_${generateUuidV7()}`, lineId, m.ingredientId || null, m.ingredientName, m.modifierType, m.extraPriceUsdCents || 0, m.internalCostUsdCents || 0);
+                id, order_line_id, ingredient_id, ingredient_name, modifier_name, modifier_type, state, extra_price_usd_cents, internal_cost_usd_cents
+              ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            `).run(
+              `olm_${generateUuidV7()}`,
+              lineId,
+              m.ingredientId || null,
+              m.ingredientName,
+              m.modifierName || m.ingredientName,
+              m.modifierType,
+              m.state || 'normal',
+              m.extraPriceUsdCents || 0,
+              m.internalCostUsdCents || 0
+            );
           }
         }
       }

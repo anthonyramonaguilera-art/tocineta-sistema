@@ -26,6 +26,7 @@ import { staticPlugin } from './plugins/static.js';
 import { idempotencyPlugin } from './modules/idempotency/idempotency-plugin.js';
 import { seedInitialUsers } from './modules/auth/seed-users.js';
 import { recoverStuckUpdatesOnBoot } from './modules/updater/updater-service.js';
+import { syncBcvRateFromInternet } from './modules/menu/bcv-auto-sync.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -84,15 +85,23 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   server.decorate('printingWorker', worker);
 
   let snapshotWorker: { stop: () => void } | null = null;
-  if (process.env.NODE_ENV !== 'test') {
+  let bcvInterval: NodeJS.Timeout | null = null;
+  if (process.env.NODE_ENV !== 'test' && process.env.VITEST !== 'true') {
     worker.start(1500);
     snapshotWorker = startSnapshotWorker(dbCtx.rawDb);
+    void syncBcvRateFromInternet(dbCtx.rawDb).catch(() => {});
+    bcvInterval = setInterval(() => {
+      void syncBcvRateFromInternet(dbCtx.rawDb).catch(() => {});
+    }, 30 * 60 * 1000);
   }
 
   server.addHook('onClose', async () => {
     worker.stop();
     if (snapshotWorker) {
       snapshotWorker.stop();
+    }
+    if (bcvInterval) {
+      clearInterval(bcvInterval);
     }
   });
 

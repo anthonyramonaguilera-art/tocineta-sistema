@@ -68,32 +68,43 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
   const remainingUsdCents = Math.max(0, totalUsdCents - totalPaidUsdEquivalentCents);
   const remainingBsCents = remainingUsdCents > 0 ? usdToBsCents(remainingUsdCents, rateMicroBs) : 0;
 
-  // Vuelto total en USD
-  const changeTotalUsdCents = Math.max(0, totalPaidUsdEquivalentCents - totalUsdCents);
+  // Vuelto total en USD y Bs
+  const totalChangeUsdCents = Math.max(0, totalPaidUsdEquivalentCents - totalUsdCents);
+  const changeTotalUsdCents = totalChangeUsdCents;
+  const totalChangeBsCents = totalChangeUsdCents > 0 ? usdToBsCents(totalChangeUsdCents, rateMicroBs) : 0;
 
   // Desglose de Vuelto Mixto
   const { changeGivenUsdCents, remChangeUsdCents, changeGivenBsCents } = useMemo(() => {
-    const givenUsd = Math.min(changeTotalUsdCents, Math.round((parseFloat(changeGivenUsdInput || '0') * 100)));
-    const remUsd = Math.max(0, changeTotalUsdCents - givenUsd);
+    const givenUsd = Math.min(totalChangeUsdCents, Math.round((parseFloat(changeGivenUsdInput || '0') * 100)));
+    const remUsd = Math.max(0, totalChangeUsdCents - givenUsd);
     const givenBs = remUsd > 0 ? usdToBsCents(remUsd, rateMicroBs) : 0;
     return {
       changeGivenUsdCents: givenUsd,
       remChangeUsdCents: remUsd,
       changeGivenBsCents: givenBs
     };
-  }, [changeTotalUsdCents, changeGivenUsdInput, rateMicroBs]);
+  }, [totalChangeUsdCents, changeGivenUsdInput, rateMicroBs]);
 
-  // H-11: Sincroniza/resetea el input de vuelto en efectivo USD cada vez que cambie changeTotalUsdCents o la lista de pagos
+  const changeDeliveredUsdCents = changeGivenUsdCents;
+  const changeDeliveredBsEquivalentUsdCents = changeGivenBsCents > 0 ? Math.round((changeGivenBsCents * 1_000_000) / rateMicroBs) : 0;
+  const unreturnedSurplusUsdCents = Math.max(0, totalChangeUsdCents - changeDeliveredUsdCents - changeDeliveredBsEquivalentUsdCents);
+
+  // Sincroniza/resetea el input de vuelto en efectivo USD cuando cambie el vuelto total
+  const [lastTotalChange, setLastTotalChange] = useState<number>(0);
   useEffect(() => {
-    if (changeTotalUsdCents <= 0) {
+    if (totalChangeUsdCents <= 0) {
       setChangeGivenUsdInput('');
+      setLastTotalChange(0);
+    } else if (lastTotalChange !== totalChangeUsdCents) {
+      setChangeGivenUsdInput((totalChangeUsdCents / 100).toFixed(2));
+      setLastTotalChange(totalChangeUsdCents);
     } else {
       const currentVal = Math.round(parseFloat(changeGivenUsdInput || '0') * 100);
-      if (currentVal > changeTotalUsdCents || currentVal === 0) {
-        setChangeGivenUsdInput((changeTotalUsdCents / 100).toFixed(2));
+      if (currentVal > totalChangeUsdCents) {
+        setChangeGivenUsdInput((totalChangeUsdCents / 100).toFixed(2));
       }
     }
-  }, [changeTotalUsdCents, tenders]);
+  }, [totalChangeUsdCents, lastTotalChange, changeGivenUsdInput]);
 
   // Agregar un tender
   const handleAddTender = (overrideAmountCents?: number, overrideMethod?: CashierPaymentMethod) => {
@@ -191,9 +202,8 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
       confirmWarning: overrideConfirmWarning || warningConfirmationRequired
     };
 
-    // Si hay sobrepago no cubierto por vuelto
-    const totalDeliveredChangeUsdEq = changeGivenUsdCents + (changeGivenBsCents > 0 ? Math.round((changeGivenBsCents * 1_000_000) / rateMicroBs) : 0);
-    if (changeTotalUsdCents > totalDeliveredChangeUsdEq) {
+    // Si hay sobrepago no cubierto por vuelto (excedente real no devuelto al cliente)
+    if (unreturnedSurplusUsdCents > 1) {
       body.overpaymentDisposition = overpaymentDisposition;
       body.overpaymentReason = overpaymentReason.trim() || undefined;
     }
@@ -517,29 +527,53 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
       )}
 
       {/* SECCIÓN DE VUELTO MIXTO (SI HAY SOBREPAGO) */}
-      {changeTotalUsdCents > 0 && (
+      {totalChangeUsdCents > 0 && (
         <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-3xl p-4 space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <span className="text-xl">💰</span>
               <div>
                 <h4 className="text-sm font-black text-white">Control de Vuelto Mixto</h4>
-                <p className="text-[11px] text-amber-200/80">
-                  Total de vuelto a entregar: <span className="font-bold font-mono text-tocineta-yellow">${(changeTotalUsdCents / 100).toFixed(2)}</span>
+                <p className="text-xs font-bold text-tocineta-yellow">
+                  Vuelto Total a Entregar: ${(totalChangeUsdCents / 100).toFixed(2)} USD (Equivalente total: Bs. {(totalChangeBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* BOTONES RÁPIDOS DE ENTREGA DE VUELTO EN BS O USD */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button
+              type="button"
+              onClick={() => setChangeGivenUsdInput('0.00')}
+              className="min-h-[48px] px-3.5 rounded-2xl bg-emerald-500/20 border border-emerald-500 text-emerald-300 hover:bg-emerald-500 hover:text-black font-black text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow text-center"
+            >
+              <span>🇻🇪</span>
+              <span>
+                Entregar todo el vuelto en Bolívares (Bs. {(totalChangeBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setChangeGivenUsdInput((totalChangeUsdCents / 100).toFixed(2))}
+              className="min-h-[48px] px-3.5 rounded-2xl bg-tocineta-yellow/20 border border-tocineta-yellow text-tocineta-yellow hover:bg-tocineta-yellow hover:text-tocineta-bg font-black text-xs transition-all active:scale-95 flex items-center justify-center gap-1.5 shadow text-center"
+            >
+              <span>💵</span>
+              <span>
+                Entregar todo el vuelto en USD (${(totalChangeUsdCents / 100).toFixed(2)})
+              </span>
+            </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Vuelto en Efectivo USD */}
             <div>
               <span className="text-[11px] font-bold text-tocineta-muted block mb-1">
-                Entregar en Dólares ($):
+                Vuelto en Efectivo USD ($):
               </span>
               <input
                 type="number"
-                step="1"
+                step="0.01"
                 placeholder="Ej: 6.00"
                 value={changeGivenUsdInput}
                 onChange={e => setChangeGivenUsdInput(e.target.value)}
@@ -560,6 +594,20 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
               </span>
             </div>
           </div>
+
+          {/* Autocompletado inteligente / confirmación de vuelto cubierto */}
+          {unreturnedSurplusUsdCents <= 1 ? (
+            <div className="p-3 bg-emerald-500/15 border border-emerald-500/40 rounded-2xl text-xs font-bold text-emerald-300 flex items-center gap-2">
+              <span>✓</span>
+              <span>
+                ${(changeGivenUsdCents / 100).toFixed(2)} en Efectivo USD + Bs. {(changeGivenBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} en Bolívares = Vuelto Exacto Cubierto ✓
+              </span>
+            </div>
+          ) : (
+            <div className="p-3 bg-amber-500/15 border border-amber-500/40 rounded-2xl text-xs font-bold text-amber-300 flex items-center justify-between">
+              <span>⚠️ Vuelto retenido como excedente o propina: ${(unreturnedSurplusUsdCents / 100).toFixed(2)} USD</span>
+            </div>
+          )}
 
           {/* Modalidad de entrega del remanente en Bolívares */}
           {changeGivenBsCents > 0 && (
@@ -604,45 +652,47 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
             </div>
           )}
 
-          {/* CLASIFICACIÓN DE EXCEDENTE / PROPINA */}
-          <div className="space-y-1.5 pt-2 border-t border-amber-500/20">
-            <span className="text-[11px] font-bold text-tocineta-muted block">
-              Destino de Excedente / Propina (si el cliente no retira todo el vuelto):
-            </span>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={() => setOverpaymentDisposition('tip_in')}
-                className={`min-h-[40px] px-3.5 rounded-xl text-xs font-bold transition-all ${
-                  overpaymentDisposition === 'tip_in'
-                    ? 'bg-emerald-500 text-white shadow'
-                    : 'bg-tocineta-bg border border-tocineta-border text-tocineta-muted'
-                }`}
-              >
-                🎉 Propina para Equipo
-              </button>
-              <button
-                type="button"
-                onClick={() => setOverpaymentDisposition('adjustment')}
-                className={`min-h-[40px] px-3.5 rounded-xl text-xs font-bold transition-all ${
-                  overpaymentDisposition === 'adjustment'
-                    ? 'bg-amber-500 text-black shadow'
-                    : 'bg-tocineta-bg border border-tocineta-border text-tocineta-muted'
-                }`}
-              >
-                ⚖️ Ajuste / Redondeo
-              </button>
+          {/* CLASIFICACIÓN DE EXCEDENTE / PROPINA (SOLO SI unreturnedSurplusUsdCents > 1) */}
+          {unreturnedSurplusUsdCents > 1 && (
+            <div className="space-y-1.5 pt-2 border-t border-amber-500/20">
+              <span className="text-[11px] font-bold text-tocineta-muted block">
+                Destino de Excedente / Propina (si el cliente no retira todo el vuelto):
+              </span>
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOverpaymentDisposition('tip_in')}
+                  className={`min-h-[40px] px-3.5 rounded-xl text-xs font-bold transition-all ${
+                    overpaymentDisposition === 'tip_in'
+                      ? 'bg-emerald-500 text-white shadow'
+                      : 'bg-tocineta-bg border border-tocineta-border text-tocineta-muted'
+                  }`}
+                >
+                  🎉 Propina para Equipo
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setOverpaymentDisposition('adjustment')}
+                  className={`min-h-[40px] px-3.5 rounded-xl text-xs font-bold transition-all ${
+                    overpaymentDisposition === 'adjustment'
+                      ? 'bg-amber-500 text-black shadow'
+                      : 'bg-tocineta-bg border border-tocineta-border text-tocineta-muted'
+                  }`}
+                >
+                  ⚖️ Ajuste / Redondeo
+                </button>
+              </div>
+              {overpaymentDisposition === 'adjustment' && (
+                <input
+                  type="text"
+                  placeholder="Motivo del ajuste..."
+                  value={overpaymentReason}
+                  onChange={e => setOverpaymentReason(e.target.value)}
+                  className="w-full min-h-[42px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-white outline-none mt-1"
+                />
+              )}
             </div>
-            {overpaymentDisposition === 'adjustment' && (
-              <input
-                type="text"
-                placeholder="Motivo del ajuste..."
-                value={overpaymentReason}
-                onChange={e => setOverpaymentReason(e.target.value)}
-                className="w-full min-h-[42px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-white outline-none mt-1"
-              />
-            )}
-          </div>
+          )}
         </div>
       )}
 

@@ -30,9 +30,20 @@ export async function runMigrations(
   const rawDb = customRawDb || dbContext!.rawDb;
   const dbFilePath = options.dbPath || (dbContext ? dbContext.dbPath : ':memory:');
 
-  const migrationsFolder = options.migrationsDir
+  let migrationsFolder = options.migrationsDir
     ? path.resolve(options.migrationsDir)
     : path.resolve(__dirname, 'migrations');
+
+  // Si la carpeta de migraciones no existe o no tiene archivos .sql (ej. dist/ sin compilar assets), buscar en src/db/migrations
+  if (!fs.existsSync(migrationsFolder) || fs.readdirSync(migrationsFolder).filter(f => f.endsWith('.sql')).length === 0) {
+    const candidateSrc = path.resolve(__dirname, '../../src/db/migrations');
+    const cwdSrc = path.resolve(process.cwd(), 'src/db/migrations');
+    if (fs.existsSync(candidateSrc) && fs.readdirSync(candidateSrc).filter(f => f.endsWith('.sql')).length > 0) {
+      migrationsFolder = candidateSrc;
+    } else if (fs.existsSync(cwdSrc) && fs.readdirSync(cwdSrc).filter(f => f.endsWith('.sql')).length > 0) {
+      migrationsFolder = cwdSrc;
+    }
+  }
 
   const snapshotsFolder = options.snapshotsDir
     ? path.resolve(options.snapshotsDir)

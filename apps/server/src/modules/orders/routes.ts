@@ -4,6 +4,7 @@ import { extractSessionToken, hashToken } from '../../routes/auth.js';
 import {
   createOrder,
   getOrderById,
+  hydrateOrderLines,
   updateOrder,
   authorizeWithoutPayment,
   type CreateOrderInput,
@@ -80,14 +81,23 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const whereClause = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : '';
-    const orders = dbCtx.rawDb.prepare(`
+    const rawOrders = dbCtx.rawDb.prepare(`
       SELECT o.*, u.name as created_by_name
       FROM orders o
       JOIN users u ON o.created_by_user_id = u.id
       ${whereClause}
       ORDER BY o.order_number DESC
       LIMIT 100
-    `).all(...params);
+    `).all(...params) as any[];
+
+    const orders = rawOrders.map(o => {
+      const { lines, itemsCount } = hydrateOrderLines(dbCtx.rawDb, o.id, { forCashier: true });
+      return {
+        ...o,
+        lines,
+        itemsCount
+      };
+    });
 
     return reply.status(200).send({ success: true, orders });
   });

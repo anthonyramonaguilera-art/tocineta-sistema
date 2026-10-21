@@ -14,17 +14,43 @@ export interface CashierOrderLine {
   product_id: string;
   product_name: string;
   quantity: number;
+  qty?: number;
   unit_price_usd_cents: number;
   subtotal_usd_cents: number;
   station: string;
   flavor_choice?: string;
   custom_instructions?: string;
+  notes?: string;
   line_role: string;
   modifiers?: Array<{
-    id: string;
-    ingredient_name: string;
+    id?: string;
+    ingredient_name?: string;
+    name?: string;
     modifier_type: string;
-    extra_price_usd_cents: number;
+    extra_price_usd_cents?: number;
+    extra_price_cents?: number;
+  }>;
+  comboChildren?: Array<{
+    id?: string;
+    product_id?: string;
+    product_name: string;
+    qty?: number;
+    modifiers?: Array<{
+      ingredient_name?: string;
+      name?: string;
+      modifier_type: string;
+    }>;
+  }>;
+  combo_children?: Array<{
+    id?: string;
+    product_id?: string;
+    product_name: string;
+    qty?: number;
+    modifiers?: Array<{
+      ingredient_name?: string;
+      name?: string;
+      modifier_type: string;
+    }>;
   }>;
 }
 
@@ -43,5 +69,6 @@ export interface CashierOrder {
   created_at_ms: number;
   created_by_name?: string;
   notes?: string;
+  itemsCount?: number;
   lines: CashierOrderLine[];
 }

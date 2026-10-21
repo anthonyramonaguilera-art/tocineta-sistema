@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { canUserProcessPayments } from '@tocineta/shared';
 import { useAuth } from '../context/AuthContext.js';
 import { useEventStream } from '../hooks/useEventStream.js';
 import { SupportBanner, StartSupportModal } from './SupportBanner.js';
+import { queryClient, ALLOWED_TABS_BY_ROLE, DEFAULT_TAB_BY_ROLE, type TabType } from '../App.js';
 
 interface AppLayoutProps {
-  currentTab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability';
-  onTabChange: (tab: 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability') => void;
+  currentTab: TabType;
+  onTabChange: (tab: TabType) => void;
   formattedRate?: string;
   children: React.ReactNode;
 }
@@ -19,6 +21,26 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 }) => {
   const { user, logout, currency, setCurrency, isSensitiveLocked, unlockSensitive, changePin } = useAuth();
   const { isConnected, latestSeq } = useEventStream();
+
+  const handleLogout = async () => {
+    queryClient.clear();
+    onTabChange('pos');
+    await logout();
+  };
+
+  const allowedTabs: TabType[] = user?.role ? (ALLOWED_TABS_BY_ROLE[user.role] || ['pos']) : ['pos'];
+
+  const handleTabClick = (tab: TabType) => {
+    if (tab === 'cashier' && !canUserProcessPayments(user?.role)) {
+      onTabChange(user?.role === 'cocinero' ? 'kds' : 'pos');
+      return;
+    }
+    if (!allowedTabs.includes(tab)) {
+      onTabChange(DEFAULT_TAB_BY_ROLE[user?.role || 'mesonero'] || 'pos');
+      return;
+    }
+    onTabChange(tab);
+  };
 
   const [unlockPin, setUnlockPin] = useState('');
   const [unlockError, setUnlockError] = useState<string | null>(null);
@@ -175,7 +197,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   </button>
                 )}
                 <button
-                  onClick={logout}
+                  onClick={handleLogout}
                   title="Cerrar Sesión"
                   className="p-2 rounded-lg bg-tocineta-bg border border-tocineta-border hover:border-red-500/50 text-tocineta-muted hover:text-red-400 transition-colors"
                 >
@@ -188,33 +210,37 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
         {/* Pestañas de Navegación Operativa */}
         <div className="max-w-7xl mx-auto flex items-center gap-2 mt-3 pt-2 border-t border-tocineta-border/60 overflow-x-auto">
-          <button
-            onClick={() => onTabChange('pos')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
-              currentTab === 'pos'
-                ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
-            }`}
-          >
-            <span>🍔</span>
-            <span>Comandero / POS</span>
-          </button>
-
-          <button
-            onClick={() => onTabChange('kds')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
-              currentTab === 'kds'
-                ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
-            }`}
-          >
-            <span>🍳</span>
-            <span>KDS / Cocina</span>
-          </button>
-
-          {(user?.role === 'cajera' || isAdminOrSupervisor) && (
+          {allowedTabs.includes('pos') && (
             <button
-              onClick={() => onTabChange('cashier')}
+              onClick={() => handleTabClick('pos')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                currentTab === 'pos'
+                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                  : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
+              }`}
+            >
+              <span>🍔</span>
+              <span>Comandero / POS</span>
+            </button>
+          )}
+
+          {allowedTabs.includes('kds') && (
+            <button
+              onClick={() => handleTabClick('kds')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                currentTab === 'kds'
+                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                  : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
+              }`}
+            >
+              <span>🍳</span>
+              <span>KDS / Cocina</span>
+            </button>
+          )}
+
+          {allowedTabs.includes('cashier') && canUserProcessPayments(user?.role) && (
+            <button
+              onClick={() => handleTabClick('cashier')}
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
                 currentTab === 'cashier'
                   ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
@@ -226,9 +252,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             </button>
           )}
 
-          {isAdminOrSupervisor && (
+          {allowedTabs.includes('menu-admin') && isAdminOrSupervisor && (
             <button
-              onClick={() => onTabChange('menu-admin')}
+              onClick={() => handleTabClick('menu-admin')}
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
                 currentTab === 'menu-admin'
                   ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
@@ -240,21 +266,23 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             </button>
           )}
 
-          <button
-            onClick={() => onTabChange('health')}
-            className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
-              currentTab === 'health'
-                ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
-            }`}
-          >
-            <span>🩺</span>
-            <span>Diagnóstico del Sistema</span>
-          </button>
-
-          {isAdminOrSupervisor && (
+          {allowedTabs.includes('health') && (
             <button
-              onClick={() => onTabChange('profitability')}
+              onClick={() => handleTabClick('health')}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                currentTab === 'health'
+                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                  : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
+              }`}
+            >
+              <span>🩺</span>
+              <span>Diagnóstico del Sistema</span>
+            </button>
+          )}
+
+          {allowedTabs.includes('profitability') && isAdminOrSupervisor && (
+            <button
+              onClick={() => handleTabClick('profitability')}
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
                 currentTab === 'profitability'
                   ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
@@ -271,9 +299,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             </button>
           )}
 
-          {(user?.role === 'cajera' || isAdminOrSupervisor) && (
+          {allowedTabs.includes('emergency') && (user?.role === 'cajera' || isAdminOrSupervisor) && (
             <button
-              onClick={() => onTabChange('emergency')}
+              onClick={() => handleTabClick('emergency')}
               className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
                 currentTab === 'emergency'
                   ? 'bg-amber-500 text-tocineta-bg shadow-md'

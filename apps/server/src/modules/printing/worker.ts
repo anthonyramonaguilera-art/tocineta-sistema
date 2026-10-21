@@ -181,6 +181,10 @@ export async function sendWindowsRawEscPos(
   docName = 'TocinetaSonrie_Ticket',
   timeoutMs = 4000
 ): Promise<{ bytesWritten: number }> {
+  if (process.platform !== 'win32' || process.env.PRINTER_DEV_SIMULATION === 'true') {
+    return { bytesWritten: payload.length };
+  }
+
   const tempFile = path.join(os.tmpdir(), `tocineta_raw_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.bin`);
   const psScript = resolveRawSpoolerScript();
 
@@ -324,8 +328,15 @@ export class PrintingWorker {
 
     try {
       // 2. Enviar por el transporte físico correspondiente
-      if (this.mockTransports || job.address.startsWith('mock:')) {
-        // Modo simulado para tests o desarrollo
+      const connType = job.connection_type.toLowerCase();
+      const isSimulated =
+        this.mockTransports ||
+        job.address.startsWith('mock:') ||
+        process.env.PRINTER_DEV_SIMULATION === 'true' ||
+        (process.platform !== 'win32' && (connType === 'windows_raw' || connType === 'spooler_raw_usb'));
+
+      if (isSimulated) {
+        // Modo simulado para tests, desarrollo o macOS sin impresoras físicas Windows
         if (this.mockFailures.has(job.id) || this.mockFailures.has(job.printer_id)) {
           throw new Error('Fallo simulado de hardware térmico (papel atascado)');
         }
@@ -335,8 +346,6 @@ export class PrintingWorker {
         const payload = Buffer.isBuffer(job.payload_bytes)
           ? job.payload_bytes
           : Buffer.from(job.payload_bytes);
-
-        const connType = job.connection_type.toLowerCase();
 
         if (connType === 'tcp' || connType === 'tcp_9100') {
           const [host, portStr] = job.address.split(':');

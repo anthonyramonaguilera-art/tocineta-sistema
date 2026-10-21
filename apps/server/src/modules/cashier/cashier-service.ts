@@ -3,8 +3,10 @@ import {
   generateUuidV7,
   calculateSettlement,
   parseRateToMicroBs,
+  canUserProcessPayments,
   type SettlementResult
 } from '@tocineta/shared';
+export { canUserProcessPayments };
 import { verifyPin } from '../auth/pin.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
@@ -252,8 +254,11 @@ export function processOrderPayment(
   const thirtyDaysAgoMs = now - 30 * 24 * 3600 * 1000;
   for (const t of input.tenders) {
     const m = t.method.toUpperCase();
-    if (m === 'PAGO_MOVIL' && t.referenceCode && t.referenceCode.trim() !== '') {
-      const cleanRef = t.referenceCode.trim();
+    const rawRef = t.referenceCode?.trim() || '';
+    const isSinRef = !rawRef || rawRef.toUpperCase() === 'SIN-REF';
+
+    if (m === 'PAGO_MOVIL' && !isSinRef) {
+      const cleanRef = rawRef;
       const existingPayments = rawDb.prepare(`
         SELECT p.id, p.amount_cents, p.reference_code, p.created_at_ms, o.order_number
         FROM payments p
@@ -462,7 +467,7 @@ export function processOrderPayment(
         t.amountCents,
         rateMicroBs,
         usdEquivalentCents,
-        t.referenceCode?.trim() || null,
+        t.referenceCode?.trim() || (mLower === 'pago_movil' ? 'SIN-REF' : null),
         input.cashierUserId,
         now
       );

@@ -20,9 +20,20 @@ export interface DatabaseContext {
 
 let activeContext: DatabaseContext | null = null;
 
-export function initSqlite(dbFilePath = './data/tocineta.db'): DatabaseContext {
-  const isMemory = dbFilePath === ':memory:';
-  const resolvedPath = isMemory ? ':memory:' : path.resolve(process.cwd(), dbFilePath);
+export function getDefaultDbPath(): string {
+  if (process.env.DB_PATH) {
+    return process.env.DB_PATH;
+  }
+  if (process.env.NODE_ENV === 'test' || process.env.VITEST === 'true') {
+    return './data/tocineta.test.db';
+  }
+  return './data/tocineta.db';
+}
+
+export function initSqlite(dbFilePath?: string): DatabaseContext {
+  const effectivePath = dbFilePath || getDefaultDbPath();
+  const isMemory = effectivePath === ':memory:';
+  const resolvedPath = isMemory ? ':memory:' : path.resolve(process.cwd(), effectivePath);
 
   if (!isMemory) {
     const dir = path.dirname(resolvedPath);

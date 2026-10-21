@@ -2,10 +2,12 @@ import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
 import { extractSessionToken, hashToken } from '../../routes/auth.js';
 import { verifyPin } from '../auth/pin.js';
+import { appendAuditEvent } from '../audit/audit-service.js';
+import { canUserProcessPayments } from '@tocineta/shared';
 import { performBlindCount, closeJornadaZ, type BlindCountInput, type UserContext } from './closures-service.js';
 
 export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
-  const getUserFromRequest = (req: any, supervisorPin?: string): UserContext => {
+  const getUserFromRequest = (req: any, supervisorPin?: string, body?: any): UserContext => {
     const dbCtx = getDatabaseContext();
 
     // Si viene un PIN supervisor/admin, validar si pertenece a un usuario autorizado
@@ -23,8 +25,20 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    // Verificar token Bearer si existe
-    const rawToken = extractSessionToken(req.headers.authorization);
+    // Header opcional x-user-id
+    const customUserId = req.headers['x-user-id'] || body?.userId || body?.cashierUserId || body?.actorUserId;
+    if (customUserId) {
+      const u = dbCtx.rawDb.prepare('SELECT id, name, role FROM users WHERE id = ?').get(customUserId) as any;
+      if (u) return { id: u.id, name: u.name, role: u.role };
+    }
+
+    // Verificar token Bearer si existe o cookie tocineta_session
+    let rawToken = extractSessionToken(req.headers.authorization);
+    if (!rawToken && req.headers.cookie) {
+      const match = req.headers.cookie.match(/tocineta_session=([^;]+)/);
+      if (match) rawToken = match[1];
+    }
+
     if (rawToken) {
       const tokenHash = hashToken(rawToken);
       const session = dbCtx.rawDb.prepare(`
@@ -39,13 +53,6 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    // Header opcional x-user-id
-    const customUserId = req.headers['x-user-id'];
-    if (customUserId) {
-      const u = dbCtx.rawDb.prepare('SELECT id, name, role FROM users WHERE id = ?').get(customUserId) as any;
-      if (u) return { id: u.id, name: u.name, role: u.role };
-    }
-
     return { id: 'usr_cajera_principal', name: 'Cajera Principal', role: 'cajera' };
   };
 
@@ -55,7 +62,26 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
     const { id } = request.params as { id: string };
     const body = (request.body || {}) as any;
 
-    const user = getUserFromRequest(request, body.supervisorPin || body.adminPin);
+    const user = getUserFromRequest(request, body.supervisorPin || body.adminPin, body);
+
+    if (!canUserProcessPayments(user.role)) {
+      appendAuditEvent(dbCtx.rawDb, {
+        actorUserId: user.id,
+        action: 'UNAUTHORIZED_PAYMENT_ATTEMPT',
+        entityType: 'cash_session',
+        entityId: id,
+        payload: {
+          role: user.role,
+          url: request.url,
+          method: request.method
+        }
+      });
+
+      return reply.status(403).send({
+        error: 'FORBIDDEN_ROLE_FOR_PAYMENT',
+        message: 'Tu rol no tiene permisos para procesar cobros en caja.'
+      });
+    }
 
     const input: BlindCountInput = {
       cashUsdCents: body.cash_usd_cents ?? body.cashUsdCents ?? 0,

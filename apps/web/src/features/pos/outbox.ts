@@ -111,6 +111,44 @@ async function notifyCountChange() {
   }
 }
 
+export async function clearOutbox(): Promise<void> {
+  try {
+    const db = await openDb();
+    return new Promise((resolve, reject) => {
+      const tx = db.transaction(STORE_NAME, 'readwrite');
+      const store = tx.objectStore(STORE_NAME);
+      const req = store.clear();
+
+      req.onsuccess = () => {
+        notifyCountChange();
+        resolve();
+      };
+      req.onerror = () => reject(req.error);
+    });
+  } catch {}
+}
+
+export async function purgeCorruptedOutboxOrders(): Promise<number> {
+  try {
+    const pending = await getPendingOutboxOrders();
+    let purged = 0;
+    for (const item of pending) {
+      if (
+        !item.idempotencyKey ||
+        !item.payload ||
+        !Array.isArray(item.payload.items) ||
+        (item.lastError && (item.lastError.includes('Status 4') || item.lastError.includes('400') || item.lastError.includes('500')))
+      ) {
+        await removeOrderFromOutbox(item.idempotencyKey);
+        purged++;
+      }
+    }
+    return purged;
+  } catch {
+    return 0;
+  }
+}
+
 /**
  * Worker para reintentar sincronización de pedidos pendientes
  */
@@ -151,8 +189,14 @@ export async function flushOutbox(fallbackToken?: string): Promise<{ sent: numbe
           // Si respondió 200/201 (creada) o 409 (ya procesada/idempotente)
           await removeOrderFromOutbox(item.idempotencyKey);
           sent++;
+        } else if (res.status >= 400 && res.status < 500) {
+          // Rechazado por validación de payload o regla de negocio del servidor:
+          // Descartar de inmediato para no atascar la cola
+          console.warn(`[Outbox] Descartando pedido rechazado por el servidor con error HTTP ${res.status}:`, item.idempotencyKey);
+          await removeOrderFromOutbox(item.idempotencyKey);
+          failed++;
         } else {
-          // Error 4xx/5xx del servidor
+          // Error 5xx del servidor
           item.attempts += 1;
           item.lastError = `Status ${res.status}`;
           await saveOrderToOutbox(item);
@@ -175,8 +219,10 @@ export async function flushOutbox(fallbackToken?: string): Promise<{ sent: numbe
   return { sent, failed };
 }
 
-// Escuchar eventos globales de reconexión de red
+// Escuchar eventos globales de reconexión de red y purgar corruptos al iniciar
 if (typeof window !== 'undefined') {
+  purgeCorruptedOutboxOrders().catch(() => {});
+
   window.addEventListener('online', () => {
     flushOutbox();
   });

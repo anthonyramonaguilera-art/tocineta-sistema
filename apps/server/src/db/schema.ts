@@ -365,9 +365,11 @@ export const orderLines = sqliteTable('order_lines', {
 export const orderLineModifiers = sqliteTable('order_line_modifiers', {
   id: text('id').primaryKey(),
   orderLineId: text('order_line_id').notNull().references(() => orderLines.id, { onDelete: 'cascade' }),
-  ingredientId: text('ingredient_id').references(() => ingredients.id),
+  ingredientId: text('ingredient_id'),
   ingredientName: text('ingredient_name').notNull(),
-  modifierType: text('modifier_type', { enum: ModifierTypeValues }).notNull(),
+  modifierName: text('modifier_name'),
+  modifierType: text('modifier_type').notNull(),
+  state: text('state').default('normal'),
   extraPriceUsdCents: integer('extra_price_usd_cents').notNull().default(0),
   internalCostUsdCents: integer('internal_cost_usd_cents').notNull().default(0)
 });

@@ -1,6 +1,7 @@
 import React, { useState, Suspense, Component, type ErrorInfo, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { RefreshCw, WifiOff, ArrowLeft } from 'lucide-react';
+import { canUserProcessPayments } from '@tocineta/shared';
 import { AuthProvider, useAuth } from './context/AuthContext.js';
 import { AuthScreen } from './components/AuthScreen.js';
 import { AppLayout } from './components/AppLayout.js';
@@ -14,6 +15,27 @@ const MenuAdminView = React.lazy(() => import('./components/MenuAdminView.js').t
 const SystemHealthDashboard = React.lazy(() => import('./components/SystemHealthDashboard.js').then(m => ({ default: m.SystemHealthDashboard })));
 const DeferredPaperView = React.lazy(() => import('./features/emergency/DeferredPaperView.js').then(m => ({ default: m.DeferredPaperView })));
 const ProfitabilityDashboard = React.lazy(() => import('./features/profitability/ProfitabilityDashboard.js').then(m => ({ default: m.ProfitabilityDashboard })));
+
+export type TabType = 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability';
+
+// Mapa canónico de pestañas permitidas y por defecto por rol (Hito M18 RBAC)
+export const ALLOWED_TABS_BY_ROLE: Record<string, TabType[]> = {
+  mesonero: ['pos', 'kds', 'health'],
+  cocinero: ['kds', 'health'],
+  cajera: ['cashier', 'pos', 'kds', 'emergency', 'health'],
+  supervisor: ['pos', 'cashier', 'kds', 'menu-admin', 'health', 'emergency', 'profitability'],
+  admin: ['pos', 'cashier', 'kds', 'menu-admin', 'health', 'emergency', 'profitability']
+};
+
+export const DEFAULT_TAB_BY_ROLE: Record<string, TabType> = {
+  mesonero: 'pos',
+  cocinero: 'kds',
+  cajera: 'cashier',
+  supervisor: 'cashier',
+  admin: 'pos'
+};
+
+export { canUserProcessPayments };
 
 interface ErrorBoundaryProps {
   children: ReactNode;
@@ -91,7 +113,7 @@ const ViewLoadingFallback: React.FC = () => (
   </div>
 );
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       retry: 2,
@@ -100,12 +122,54 @@ const queryClient = new QueryClient({
   }
 });
 
+// Guardia de Renderizado para Caja
+const CashierRoleGuard: React.FC<{
+  userRole?: string;
+  onRedirect: (tab: TabType) => void;
+}> = ({ userRole, onRedirect }) => {
+  React.useEffect(() => {
+    if (!canUserProcessPayments(userRole)) {
+      const fallbackTab: TabType = userRole === 'cocinero' ? 'kds' : 'pos';
+      onRedirect(fallbackTab);
+    }
+  }, [userRole, onRedirect]);
+
+  if (!canUserProcessPayments(userRole)) {
+    return null;
+  }
+
+  return <CashierView />;
+};
+
 const MainNavigator: React.FC = () => {
   const { user } = useAuth();
-  const [currentTab, setCurrentTab] = useState<'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability'>(() => {
-    if (user?.role === 'cocinero') return 'kds';
-    return user?.role === 'cajera' ? 'cashier' : 'pos';
+  const [currentTab, setCurrentTab] = useState<TabType>(() => {
+    if (!user) return 'pos';
+    return DEFAULT_TAB_BY_ROLE[user.role] || 'pos';
   });
+
+  // Reseteo limpio de pestaña y caché al cambiar de usuario o hacer logout
+  React.useEffect(() => {
+    if (!user) {
+      queryClient.clear();
+      setCurrentTab('pos');
+      return;
+    }
+    const defaultTab = DEFAULT_TAB_BY_ROLE[user.role] || 'pos';
+    const allowed = ALLOWED_TABS_BY_ROLE[user.role] || ['pos'];
+    if (!allowed.includes(currentTab)) {
+      queryClient.clear();
+      setCurrentTab(defaultTab);
+    }
+  }, [user?.id, user?.role]);
+
+  // Guardia activa para redireccionar si se intenta entrar a caja sin permisos
+  React.useEffect(() => {
+    if (currentTab === 'cashier' && user && !canUserProcessPayments(user.role)) {
+      const fallback = user.role === 'cocinero' ? 'kds' : 'pos';
+      setCurrentTab(fallback);
+    }
+  }, [currentTab, user]);
 
   const { data: menuData } = useQuery<{ formattedRate?: string }>({
     queryKey: ['posMenu'],
@@ -130,7 +194,9 @@ const MainNavigator: React.FC = () => {
       {currentTab !== 'pos' && (
         <ViewErrorBoundary onFallbackToPos={() => setCurrentTab('pos')}>
           <Suspense fallback={<ViewLoadingFallback />}>
-            {currentTab === 'cashier' && <CashierView />}
+            {currentTab === 'cashier' && (
+              <CashierRoleGuard userRole={user?.role} onRedirect={setCurrentTab} />
+            )}
             {currentTab === 'kds' && <KdsView />}
             {currentTab === 'menu-admin' && <MenuAdminView />}
             {currentTab === 'health' && <SystemHealthDashboard />}

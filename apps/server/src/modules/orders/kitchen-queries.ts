@@ -99,7 +99,9 @@ export function getKitchenBuildableLines(
     SELECT 
       olm.order_line_id,
       olm.ingredient_name,
-      olm.modifier_type
+      olm.modifier_name,
+      olm.modifier_type,
+      olm.state
     FROM order_line_modifiers olm
     JOIN order_lines ol ON olm.order_line_id = ol.id
     WHERE ol.order_id = ?
@@ -107,7 +109,9 @@ export function getKitchenBuildableLines(
   `).all(orderId) as Array<{
     order_line_id: string;
     ingredient_name: string;
-    modifier_type: 'SIN_INGREDIENTE' | 'EXTRA_INGREDIENTE' | 'BARRA_LIBRE';
+    modifier_name?: string | null;
+    modifier_type: string;
+    state?: string | null;
   }>;
 
   const modsByLine = new Map<string, typeof modRows>();
@@ -137,16 +141,31 @@ export function getKitchenBuildableLines(
     const allFormattedModifiers: string[] = [];
 
     for (const mod of lineMods) {
-      if (mod.modifier_type === 'SIN_INGREDIENTE') {
-        const text = `SIN ${mod.ingredient_name}`;
+      const name = mod.modifier_name || mod.ingredient_name;
+      const type = (mod.modifier_type || '').toUpperCase();
+      const state = (mod.state || '').toLowerCase();
+
+      if (type === 'SIN_INGREDIENTE' || state === 'sin') {
+        const text = name.toUpperCase().startsWith('SIN ') ? name.toUpperCase() : `SIN ${name}`;
         exclusions.push(text);
         allFormattedModifiers.push(text);
-      } else if (mod.modifier_type === 'EXTRA_INGREDIENTE') {
-        const text = `+ EXTRA ${mod.ingredient_name}`;
+      } else if (type === 'POCO_INGREDIENTE' || state === 'poco') {
+        const text = name.toUpperCase().startsWith('POCO ') ? name.toUpperCase() : `POCO ${name}`;
+        exclusions.push(text);
+        allFormattedModifiers.push(text);
+      } else if (type === 'EXTRA_INGREDIENTE' || type === 'PAID_EXTRA' || state === 'extra') {
+        const text = name.toUpperCase().startsWith('+ EXTRA ') ? name : `+ EXTRA ${name}`;
         extras.push(text);
         allFormattedModifiers.push(text);
-      } else if (mod.modifier_type === 'BARRA_LIBRE') {
-        barraLibreList.push(mod.ingredient_name);
+      } else if (type === 'BARRA_LIBRE') {
+        barraLibreList.push(name);
+      } else if (type === 'GLOBAL_INSTRUCTION') {
+        allFormattedModifiers.push(name);
+        if (state === 'sin' || state === 'poco') {
+          exclusions.push(name);
+        }
+      } else {
+        allFormattedModifiers.push(name);
       }
     }
 
