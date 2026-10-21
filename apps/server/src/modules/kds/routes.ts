@@ -72,7 +72,10 @@ export const kdsRoutes: FastifyPluginAsync = async (server) => {
       return reply.status(200).send(result);
     } catch (err: any) {
       const code = err.statusCode || 500;
-      return reply.status(code).send({ error: err.message || 'Error al entregar comanda' });
+      return reply.status(code).send({
+        error: err.code || err.message || 'Error al entregar comanda',
+        message: err.message
+      });
     }
   });
 };

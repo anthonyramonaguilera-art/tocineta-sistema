@@ -338,6 +338,14 @@ describe('Hito M7 - Pantalla de Cocina (KDS) y Ensamble Automático (@tocineta/s
       payload: { tenders: [{ method: 'cash_usd', amountCents: order.total_to_collect_usd_cents }] }
     });
 
+    // Marcar línea de cocina como lista antes de entregar
+    const orderLines = rawDb.prepare('SELECT id FROM order_lines WHERE order_id = ?').all(order.id) as any[];
+    await app.inject({
+      method: 'POST',
+      url: `/api/kds/lines/${orderLines[0].id}/status`,
+      payload: { status: 'listo' }
+    });
+
     // Entregar desde KDS
     const resDeliver = await app.inject({
       method: 'POST',
@@ -378,6 +386,14 @@ describe('Hito M7 - Pantalla de Cocina (KDS) y Ensamble Automático (@tocineta/s
       url: `/api/orders/${order.id}/pay`,
       headers: { authorization: `Bearer ${cajeraToken}` },
       payload: { tenders: [{ method: 'cash_usd', amountCents: order.total_to_collect_usd_cents }] }
+    });
+
+    // Marcar línea de cocina como lista antes de entregar
+    const refireLines = rawDb.prepare('SELECT id FROM order_lines WHERE order_id = ?').all(order.id) as any[];
+    await app.inject({
+      method: 'POST',
+      url: `/api/kds/lines/${refireLines[0].id}/status`,
+      payload: { status: 'listo' }
     });
 
     // Marcarla como entregada

@@ -40,14 +40,16 @@ export const CashierView: React.FC = () => {
   });
 
   // Consultar órdenes por cobrar
-  const { data: ordersData, refetch: refetchOrders, isLoading: isLoadingOrders } = useQuery<{
+  const { data: ordersData, refetch: refetchOrders, isLoading: isLoadingOrders, isError } = useQuery<{
     success: boolean;
     orders: CashierOrder[];
   }>({
     queryKey: ['cashierOrders'],
     queryFn: async () => {
       const res = await fetch('/api/orders');
-      if (!res.ok) return { success: false, orders: [] };
+      if (!res.ok) {
+        throw new Error('NETWORK_OR_SERVER_ERROR');
+      }
       return res.json();
     },
     refetchInterval: 5000
@@ -282,15 +284,32 @@ export const CashierView: React.FC = () => {
             <span className="text-[11px] text-tocineta-muted">Mesoneros y Salón</span>
           </div>
 
-          {isLoadingOrders ? (
+          {isError ? (
+            <div className="bg-rose-950/80 border-2 border-rose-500 rounded-3xl p-6 text-center space-y-3 shadow-xl">
+              <span className="text-3xl block animate-bounce">⚠️</span>
+              <p className="text-sm font-black text-rose-200">
+                ⚠️ Sin conexión con el servidor local. Verifica la red Wi-Fi del Food Truck.
+              </p>
+              <p className="text-xs text-rose-300/80">
+                No se pudo sincronizar la cola de comandas pendientes.
+              </p>
+              <button
+                type="button"
+                onClick={() => refetchOrders()}
+                className="w-full min-h-[48px] px-4 py-2.5 rounded-xl bg-rose-500 hover:bg-rose-400 text-white font-black text-xs uppercase tracking-wider transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
+              >
+                🔄 Reintentar conexión
+              </button>
+            </div>
+          ) : isLoadingOrders ? (
             <div className="py-12 text-center text-tocineta-yellow">
               <span className="text-2xl animate-spin inline-block">⏳</span>
               <p className="text-xs font-bold mt-2">Cargando comandas en vivo...</p>
             </div>
-          ) : pendingOrders.length === 0 ? (
+          ) : !isError && !isLoadingOrders && pendingOrders.length === 0 ? (
             <div className="bg-tocineta-card border border-tocineta-border rounded-3xl p-8 text-center space-y-2">
               <span className="text-3xl block opacity-40">🎉</span>
-              <p className="text-sm font-bold text-white">¡No hay pedidos pendientes de cobro!</p>
+              <p className="text-sm font-bold text-white">¡No hay pedidos por cobrar!</p>
               <p className="text-xs text-tocineta-muted">
                 Todas las órdenes recibidas han sido cobradas o están en preparación.
               </p>

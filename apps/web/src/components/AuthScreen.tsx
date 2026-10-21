@@ -199,6 +199,7 @@ export const AuthScreen: React.FC = () => {
                 {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
                   <button
                     key={num}
+                    type="button"
                     onClick={() => appendDigit(num)}
                     disabled={isLoading}
                     className="min-h-[56px] text-2xl font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow active:bg-tocineta-yellow/20 active:scale-95 text-white transition-all shadow flex items-center justify-center"
@@ -209,6 +210,7 @@ export const AuthScreen: React.FC = () => {
 
                 {/* Fila Inferior: C, 0, Backspace */}
                 <button
+                  type="button"
                   onClick={clearPin}
                   disabled={isLoading}
                   className="min-h-[56px] text-sm font-bold uppercase rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-red-500/50 text-tocineta-muted hover:text-red-400 active:scale-95 transition-all flex items-center justify-center"
@@ -217,6 +219,7 @@ export const AuthScreen: React.FC = () => {
                 </button>
 
                 <button
+                  type="button"
                   onClick={() => appendDigit('0')}
                   disabled={isLoading}
                   className="min-h-[56px] text-2xl font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow active:bg-tocineta-yellow/20 active:scale-95 text-white transition-all shadow flex items-center justify-center"
@@ -225,6 +228,7 @@ export const AuthScreen: React.FC = () => {
                 </button>
 
                 <button
+                  type="button"
                   onClick={deleteDigit}
                   disabled={isLoading}
                   className="min-h-[56px] text-lg font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-amber-500/50 text-tocineta-muted hover:text-amber-400 active:scale-95 transition-all flex items-center justify-center"

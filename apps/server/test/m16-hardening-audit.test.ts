@@ -42,7 +42,7 @@ import { generateMenuEngineeringReport } from '../src/modules/profitability/menu
 describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win10/Win11', () => {
   let app: FastifyInstance;
   let rawDb: Database.Database;
-  const testJornadaId = 'jornada_m16_test';
+  const testJornadaId = `jornada_m16_${Date.now()}`;
 
   beforeAll(async () => {
     app = await buildServer({ disableStatic: true, logger: false });

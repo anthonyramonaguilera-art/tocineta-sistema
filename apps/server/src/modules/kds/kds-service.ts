@@ -40,6 +40,7 @@ export interface KdsOrderDto {
   stationStatusHamburguesas: 'na' | 'pendiente' | 'en_preparacion' | 'listo';
   isComposite: boolean;
   missingStations: Station[];
+  allStationsReady: boolean;
   isRefire: boolean;
   refireReason?: string | null;
   lines: KdsOrderLineDto[];
@@ -134,14 +135,28 @@ export function getKdsOrders(rawDb: Database.Database, options?: GetKdsOrdersOpt
       ? allKitchenLines.filter(l => l.station === options.station)
       : allKitchenLines;
 
+    // Líneas requeridas de cocina: line_role != 'COMBO_PARENT' AND station IN ('hamburguesas', 'hot_dogs')
+    const kitchenReqLines = rawDb.prepare(`
+      SELECT station, status
+      FROM order_lines
+      WHERE order_id = ?
+        AND line_role != 'COMBO_PARENT'
+        AND station IN ('hamburguesas', 'hot_dogs')
+    `).all(row.order_id) as Array<{ station: Station; status: string }>;
+
+    const hasBurgersInOrder = kitchenReqLines.some(l => l.station === 'hamburguesas');
+    const hasHotDogsInOrder = kitchenReqLines.some(l => l.station === 'hot_dogs');
+
     // Calcular estaciones faltantes para ensamble
     const missingStations: Station[] = [];
-    if (hasBurgers && row.station_status_hamburguesas !== 'listo') {
+    if (hasBurgersInOrder && kitchenReqLines.some(l => l.station === 'hamburguesas' && l.status !== 'listo')) {
       missingStations.push('hamburguesas');
     }
-    if (hasHotDogs && row.station_status_hot_dogs !== 'listo') {
+    if (hasHotDogsInOrder && kitchenReqLines.some(l => l.station === 'hot_dogs' && l.status !== 'listo')) {
       missingStations.push('hot_dogs');
     }
+
+    const allStationsReady = kitchenReqLines.length === 0 || kitchenReqLines.every(l => l.status === 'listo');
 
     const turnCode = `T-${String(row.order_number).padStart(3, '0')}`;
     const isRefire = refireMap.has(row.order_id) || (row.notes ? row.notes.toUpperCase().includes('REPOSICION') : false);
@@ -173,6 +188,7 @@ export function getKdsOrders(rawDb: Database.Database, options?: GetKdsOrdersOpt
       stationStatusHamburguesas: row.station_status_hamburguesas,
       isComposite,
       missingStations,
+      allStationsReady,
       isRefire,
       refireReason: isRefire ? (refireMap.get(row.order_id) || 'Reposición urgente') : null,
       lines: visibleLines,
@@ -224,6 +240,10 @@ export function updateKdsLineStatus(
     throw err;
   }
 
+  const previousStatus = line.status;
+  const isReversal = (previousStatus === 'listo' && (newStatus === 'preparando' || newStatus === 'pendiente')) ||
+                     (previousStatus === 'preparando' && newStatus === 'pendiente');
+
   const now = Date.now();
   let preparedAtMs: number | null = null;
   let readyAtMs: number | null = null;
@@ -238,10 +258,17 @@ export function updateKdsLineStatus(
   rawDb.prepare(`
     UPDATE order_lines
     SET status = ?,
-        prepared_at_ms = CASE WHEN ? IS NOT NULL THEN ? ELSE prepared_at_ms END,
-        ready_at_ms = CASE WHEN ? IS NOT NULL THEN ? ELSE ready_at_ms END
+        prepared_at_ms = CASE 
+          WHEN ? = 'pendiente' THEN NULL 
+          WHEN ? IS NOT NULL THEN ? 
+          ELSE prepared_at_ms 
+        END,
+        ready_at_ms = CASE 
+          WHEN ? = 'listo' THEN ? 
+          ELSE NULL 
+        END
     WHERE id = ?
-  `).run(newStatus, preparedAtMs, preparedAtMs, readyAtMs, readyAtMs, lineId);
+  `).run(newStatus, newStatus, preparedAtMs, preparedAtMs, newStatus, readyAtMs, lineId);
 
   // 2. Obtener todas las líneas de cocina de la orden
   const kitchenLines = rawDb.prepare(`
@@ -311,13 +338,14 @@ export function updateKdsLineStatus(
   // Registrar auditoría
   appendAuditEvent(rawDb, {
     actorUserId: actorUserId || null,
-    action: 'KDS_LINE_STATUS_UPDATED',
+    action: isReversal ? 'KDS_LINE_STATUS_REVERTED' : 'KDS_LINE_STATUS_UPDATED',
     entityType: 'order_line',
     entityId: lineId,
     payload: {
       orderId: line.order_id,
       orderNumber: orderInfo.order_number,
       station: line.station,
+      previousStatus,
       newStatus,
       orderFulfillmentStatus: newFulfillmentStatus,
       allReady
@@ -349,13 +377,14 @@ export function updateKdsLineStatus(
 
   // Notificar cambio de estado de línea en KDS
   publishDomainEvent(rawDb, {
-    eventType: 'KDS_LINE_STATUS_UPDATED',
+    eventType: isReversal ? 'KDS_LINE_STATUS_REVERTED' : 'KDS_LINE_STATUS_UPDATED',
     entityId: line.order_id,
     payload: {
       orderId: line.order_id,
       orderNumber: orderInfo.order_number,
       lineId,
       station: line.station,
+      previousStatus,
       status: newStatus,
       orderFulfillmentStatus: newFulfillmentStatus,
       stationStatusHotDogs,
@@ -411,6 +440,25 @@ export function deliverKdsOrder(
   if (!order) {
     const err: any = new Error(`Orden con ID '${orderId}' no encontrada`);
     err.statusCode = 404;
+    throw err;
+  }
+
+  // REGLA EXACTA DE FILTRADO DE LÍNEAS DE COCINA (INVARIANTE KDS)
+  // Líneas que EXIGEN estar en 'listo' antes de permitir /deliver:
+  // line_role != 'COMBO_PARENT' AND station IN ('hamburguesas', 'hot_dogs')
+  const incompleteKitchenLines = rawDb.prepare(`
+    SELECT id, station, status
+    FROM order_lines
+    WHERE order_id = ?
+      AND line_role != 'COMBO_PARENT'
+      AND station IN ('hamburguesas', 'hot_dogs')
+      AND status != 'listo'
+  `).all(orderId) as Array<{ id: string; station: Station; status: string }>;
+
+  if (incompleteKitchenLines.length > 0) {
+    const err: any = new Error('Aún faltan estaciones por terminar esta orden.');
+    err.statusCode = 409;
+    err.code = 'ORDER_STATIONS_INCOMPLETE';
     throw err;
   }
 

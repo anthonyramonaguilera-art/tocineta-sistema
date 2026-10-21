@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import type { CashierOrder, CashierTender, CashierPaymentMethod } from './types.js';
 import { usdToBsCents, generateUuidV7 } from '@tocineta/shared';
 
@@ -17,6 +17,10 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
 }) => {
   // Estado de los pagos ingresados
   const [tenders, setTenders] = useState<CashierTender[]>([]);
+
+  // Feedback táctil visual de billetes rápidos (H-07)
+  const [activeQuickBill, setActiveQuickBill] = useState<number | null>(null);
+  const [recentlyAddedTenderId, setRecentlyAddedTenderId] = useState<string | null>(null);
 
   // Método actualmente seleccionado para ingresar un pago
   const [selectedMethod, setSelectedMethod] = useState<CashierPaymentMethod>('cash_usd');
@@ -79,6 +83,18 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
     };
   }, [changeTotalUsdCents, changeGivenUsdInput, rateMicroBs]);
 
+  // H-11: Sincroniza/resetea el input de vuelto en efectivo USD cada vez que cambie changeTotalUsdCents o la lista de pagos
+  useEffect(() => {
+    if (changeTotalUsdCents <= 0) {
+      setChangeGivenUsdInput('');
+    } else {
+      const currentVal = Math.round(parseFloat(changeGivenUsdInput || '0') * 100);
+      if (currentVal > changeTotalUsdCents || currentVal === 0) {
+        setChangeGivenUsdInput((changeTotalUsdCents / 100).toFixed(2));
+      }
+    }
+  }, [changeTotalUsdCents, tenders]);
+
   // Agregar un tender
   const handleAddTender = (overrideAmountCents?: number, overrideMethod?: CashierPaymentMethod) => {
     const method = overrideMethod || selectedMethod;
@@ -100,8 +116,9 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
       ? amountCents
       : Math.round((amountCents * 1_000_000) / rateMicroBs);
 
+    const newId = `ten_${generateUuidV7()}`;
     const newTender: CashierTender = {
-      id: `ten_${generateUuidV7()}`,
+      id: newId,
       method,
       amountCents,
       currency,
@@ -110,26 +127,37 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
     };
 
     setTenders(prev => [...prev, newTender]);
+    setRecentlyAddedTenderId(newId);
+    setTimeout(() => setRecentlyAddedTenderId(null), 500);
+
     setAmountInput('');
     setReferenceInput('');
     setErrorMessage(null);
   };
 
-  // Botón billete rápido USD
+  // Botón billete rápido USD con feedback táctil (H-07)
   const handleQuickBill = (cents: number) => {
-    handleAddTender(cents, 'cash_usd');
+    setActiveQuickBill(cents);
+    setTimeout(() => setActiveQuickBill(null), 200);
+
+    const newId = `ten_${generateUuidV7()}`;
+    const newTender: CashierTender = {
+      id: newId,
+      method: 'cash_usd',
+      amountCents: cents,
+      currency: 'USD',
+      usdEquivalentCents: cents
+    };
+
+    setTenders(prev => [...prev, newTender]);
+    setRecentlyAddedTenderId(newId);
+    setTimeout(() => setRecentlyAddedTenderId(null), 500);
+
+    setAmountInput('');
+    setReferenceInput('');
+    setErrorMessage(null);
   };
 
-  // Botón pago exacto restante
-  const handlePayExactRemaining = () => {
-    if (remainingUsdCents <= 0) return;
-    const isUsd = selectedMethod === 'cash_usd' || selectedMethod === 'binance';
-    if (isUsd) {
-      handleAddTender(remainingUsdCents, selectedMethod);
-    } else {
-      handleAddTender(remainingBsCents, selectedMethod);
-    }
-  };
 
   // Remover un tender
   const handleRemoveTender = (id: string) => {
@@ -317,7 +345,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
         </div>
       )}
 
-      {/* BOTONES RÁPIDOS DE BILLETES USD ($1, $5, $10, $20, $50, $100, EXACTO) */}
+      {/* BOTONES RÁPIDOS DE BILLETES USD ($1, $5, $10, $20, $50, $100, EXACTO USD) */}
       <div>
         <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted block mb-2">
           💵 Billetes Rápidos en Efectivo USD:
@@ -328,18 +356,22 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
               key={cents}
               type="button"
               onClick={() => handleQuickBill(cents)}
-              className="min-h-[48px] rounded-2xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow text-white font-mono font-black text-sm active:scale-95 transition-all flex items-center justify-center shadow"
+              className={`min-h-[48px] rounded-2xl bg-tocineta-bg border font-mono font-black text-sm active:scale-95 transition-all flex items-center justify-center shadow ${
+                activeQuickBill === cents
+                  ? 'scale-95 ring-2 ring-[#FFE600] border-[#FFE600] text-tocineta-yellow'
+                  : 'border-tocineta-border hover:border-tocineta-yellow text-white'
+              }`}
             >
               ${cents / 100}
             </button>
           ))}
           <button
             type="button"
-            onClick={handlePayExactRemaining}
+            onClick={() => handleAddTender(remainingUsdCents, 'cash_usd')}
             disabled={remainingUsdCents <= 0}
-            className="min-h-[48px] rounded-2xl bg-tocineta-yellow/20 border border-tocineta-yellow text-tocineta-yellow font-black text-xs active:scale-95 transition-all flex items-center justify-center shadow col-span-4 sm:col-span-1 disabled:opacity-30 disabled:pointer-events-none"
+            className="min-h-[48px] px-2 rounded-2xl bg-tocineta-yellow/20 border border-tocineta-yellow text-tocineta-yellow font-black text-xs active:scale-95 transition-all flex items-center justify-center shadow col-span-4 sm:col-span-1 disabled:opacity-30 disabled:pointer-events-none text-center"
           >
-            Exacto
+            Exacto USD (${(remainingUsdCents / 100).toFixed(2)})
           </button>
         </div>
       </div>
@@ -420,6 +452,26 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
             <span>+ Agregar Pago</span>
           </button>
         </div>
+
+        {/* Botón Exacto Bs. explícito para métodos en Bolívares (H-06) */}
+        {(selectedMethod === 'cash_bs' || selectedMethod === 'pago_movil' || selectedMethod === 'ubii') && remainingBsCents > 0 && (
+          <div className="flex justify-end pt-1">
+            <button
+              type="button"
+              onClick={() => handleAddTender(remainingBsCents, selectedMethod)}
+              className="min-h-[48px] px-4 rounded-2xl bg-emerald-500/20 border border-emerald-500 text-emerald-300 hover:bg-emerald-500 hover:text-black font-black text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow"
+            >
+              <span>🇻🇪</span>
+              <span>
+                {selectedMethod === 'pago_movil'
+                  ? `Exacto Bs. Pago Móvil (${(remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs)`
+                  : selectedMethod === 'ubii'
+                  ? `Exacto Bs. Ubii (${(remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs)`
+                  : `Exacto Bs. Efectivo (${(remainingBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs)`}
+              </span>
+            </button>
+          </div>
+        )}
       </div>
 
       {/* LISTA DE PAGOS AGREGADOS */}
@@ -432,7 +484,11 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
             {tenders.map(t => (
               <div
                 key={t.id}
-                className="p-3 bg-tocineta-bg border border-tocineta-border rounded-2xl flex items-center justify-between text-xs"
+                className={`p-3 border rounded-2xl flex items-center justify-between text-xs transition-colors duration-300 ${
+                  recentlyAddedTenderId === t.id
+                    ? 'bg-[#FFE600]/20 border-[#FFE600]'
+                    : 'bg-tocineta-bg border-tocineta-border'
+                }`}
               >
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-white uppercase">{t.method}</span>

@@ -41,6 +41,7 @@ export interface KdsOrder {
   stationStatusHamburguesas: 'na' | 'pendiente' | 'en_preparacion' | 'listo';
   isComposite: boolean;
   missingStations: Array<'hot_dogs' | 'hamburguesas'>;
+  allStationsReady: boolean;
   isRefire: boolean;
   refireReason?: string | null;
   lines: KdsLineItem[];
@@ -49,7 +50,7 @@ export interface KdsOrder {
   aggregateStatus?: 'pendiente' | 'preparando' | 'listo';
 }
 
-// Hook de cronómetro en vivo
+// Hook de cronómetro en vivo con guardia H-12
 function useLiveStopwatch(passedAtMs: number) {
   const [now, setNow] = useState(Date.now());
 
@@ -58,7 +59,8 @@ function useLiveStopwatch(passedAtMs: number) {
     return () => clearInterval(timer);
   }, []);
 
-  const elapsedMs = Math.max(0, now - passedAtMs);
+  const safePassed = (!passedAtMs || passedAtMs <= 0 || isNaN(passedAtMs)) ? now : passedAtMs;
+  const elapsedMs = Math.max(0, now - safePassed);
   const totalSeconds = Math.floor(elapsedMs / 1000);
   const minutes = Math.floor(totalSeconds / 60);
   const seconds = totalSeconds % 60;
@@ -549,8 +551,14 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLin
           </div>
         </div>
 
-        {/* Cronómetro en vivo */}
-        <StopwatchBadge passedAtMs={order.kitchenPassedAtMs} />
+        {/* Cronómetro en vivo con guardia H-12 */}
+        <StopwatchBadge
+          passedAtMs={
+            !order.kitchenPassedAtMs || order.kitchenPassedAtMs <= 0 || isNaN(order.kitchenPassedAtMs)
+              ? (order.createdAtMs && order.createdAtMs > 0 ? order.createdAtMs : Date.now())
+              : order.kitchenPassedAtMs
+          }
+        />
       </div>
 
       {/* Indicador de Estación Compuesta y Coordinación de Cocina */}
@@ -625,28 +633,52 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLin
                 )}
               </div>
 
-              {/* Botón táctil individual por línea */}
+              {/* Botones táctiles de acción individual por línea (min-h-[48px] y Revertir - H-09) */}
               <div className="shrink-0 flex items-center gap-1.5">
                 {line.status === 'pendiente' && (
                   <button
+                    type="button"
                     onClick={() => onUpdateLine(line.lineId, 'preparando')}
-                    className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-amber-500 hover:bg-amber-400 text-black shadow-sm transition-all active:scale-95"
+                    className="min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-amber-500 hover:bg-amber-400 text-black shadow-sm transition-all active:scale-95 flex items-center justify-center"
                   >
                     [▶ Empezar]
                   </button>
                 )}
+
                 {line.status === 'preparando' && (
-                  <button
-                    onClick={() => onUpdateLine(line.lineId, 'listo')}
-                    className="px-2.5 py-1 rounded-lg text-xs font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-black shadow-sm transition-all active:scale-95"
-                  >
-                    [✓ Listo]
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      onClick={() => onUpdateLine(line.lineId, 'listo')}
+                      className="min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider bg-emerald-500 hover:bg-emerald-400 text-black shadow-sm transition-all active:scale-95 flex items-center justify-center"
+                    >
+                      [✓ Listo]
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => onUpdateLine(line.lineId, 'pendiente')}
+                      className="min-h-[48px] px-2.5 py-2 rounded-xl text-[11px] font-bold text-zinc-400 hover:text-white bg-zinc-800 border border-zinc-700 hover:border-zinc-500 transition-all active:scale-95 flex items-center justify-center"
+                      title="Revertir a Pendiente"
+                    >
+                      ↺ Revertir
+                    </button>
+                  </div>
                 )}
+
                 {line.status === 'listo' && (
-                  <span className="px-2 py-1 rounded-lg text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 flex items-center gap-1">
-                    ✓ Plato Listo
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-500/40 flex items-center gap-1">
+                      ✓ Plato Listo
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => onUpdateLine(line.lineId, 'preparando')}
+                      className="min-h-[48px] px-2.5 py-2 rounded-xl text-[11px] font-bold text-zinc-400 hover:text-amber-300 bg-zinc-800 border border-zinc-700 hover:border-amber-500/50 transition-all active:scale-95 flex items-center justify-center"
+                      title="Revertir a Preparando"
+                    >
+                      ↺ Revertir
+                    </button>
+                  </div>
                 )}
               </div>
             </div>
@@ -681,20 +713,27 @@ const OrderCard: React.FC<OrderCardProps> = ({ order, stationFilter, onUpdateLin
         ))}
       </div>
 
-      {/* Pie de la tarjeta: Botón general [🚀 Despachar / Entregar Orden] habilitado únicamente si X === Y */}
+      {/* Pie de la tarjeta: Botón general [🚀 Despachar / Entregar Orden] evaluando allStationsReady (H-03) */}
       <div className="p-3 pt-0">
-        <button
-          disabled={!allVisibleReady}
-          onClick={() => allVisibleReady && onDeliver(order.orderId)}
-          className={`w-full py-2.5 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all ${
-            allVisibleReady
-              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/60 active:scale-[0.98] cursor-pointer'
-              : 'bg-zinc-800 text-zinc-500 border border-zinc-700/60 opacity-60 cursor-not-allowed'
-          }`}
-        >
-          <span>🚀</span>
-          <span>Despachar / Entregar Orden</span>
-        </button>
+        {allVisibleReady && (!order.allStationsReady || (order.missingStations && order.missingStations.length > 0)) ? (
+          <div className="w-full min-h-[48px] py-2.5 px-3 rounded-xl bg-amber-950/40 border border-amber-500/50 text-amber-300 font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 text-center cursor-not-allowed shadow">
+            <span>✓ Estación completada (esperando otras estaciones)</span>
+          </div>
+        ) : (
+          <button
+            type="button"
+            disabled={!allVisibleReady || !order.allStationsReady}
+            onClick={() => allVisibleReady && order.allStationsReady && onDeliver(order.orderId)}
+            className={`w-full min-h-[48px] py-2.5 rounded-xl font-black text-xs uppercase tracking-wider flex items-center justify-center gap-2 shadow-lg transition-all ${
+              allVisibleReady && order.allStationsReady
+                ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-emerald-950/60 active:scale-[0.98] cursor-pointer'
+                : 'bg-zinc-800 text-zinc-500 border border-zinc-700/60 opacity-60 cursor-not-allowed'
+            }`}
+          >
+            <span>🚀</span>
+            <span>Despachar / Entregar Orden</span>
+          </button>
+        )}
       </div>
     </div>
   );

@@ -135,6 +135,15 @@ export const PosComandero: React.FC = () => {
     return `$${(usdCents / 100).toFixed(2)}`;
   }, [currency, menu]);
 
+  // Formato dual simultáneo USD + Bs para pie de carrito y botón flotante móvil (H-04)
+  const formatDualPrice = useCallback((usdCents: number) => {
+    const usdStr = `$${(usdCents / 100).toFixed(2)}`;
+    const rate = menu?.rateMicroBs || 36600000;
+    const bsCents = usdToBsCents(usdCents, rate);
+    const bsStr = `Bs. ${(bsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    return `${usdStr} / ${bsStr}`;
+  }, [menu]);
+
   // --------------------------------------------------------------------------
   // ACCIÓN RÁPIDA: AGREGAR PRODUCTO EN 1 TOQUE (< 1 SEGUNDO)
   // --------------------------------------------------------------------------
@@ -778,7 +787,7 @@ export const PosComandero: React.FC = () => {
               <button
                 type="button"
                 onClick={handleClearCart}
-                className="text-xs text-tocineta-muted hover:text-red-400 font-bold px-2 py-1"
+                className="min-h-[48px] px-3 py-2 text-xs text-tocineta-muted hover:text-red-400 font-bold rounded-xl hover:bg-red-500/10 flex items-center justify-center transition-all"
               >
                 Limpiar
               </button>
@@ -818,7 +827,7 @@ export const PosComandero: React.FC = () => {
                   key={type}
                   type="button"
                   onClick={() => setFulfillmentType(type)}
-                  className={`min-h-[42px] rounded-xl text-[11px] font-bold transition-all flex items-center justify-center ${
+                  className={`min-h-[48px] rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
                     fulfillmentType === type
                       ? 'bg-tocineta-yellow text-tocineta-bg shadow'
                       : 'text-tocineta-muted hover:text-white'
@@ -848,7 +857,7 @@ export const PosComandero: React.FC = () => {
                         key={t.cents}
                         type="button"
                         onClick={() => setDeliveryTierCents(t.cents)}
-                        className={`min-h-[42px] rounded-xl text-xs font-mono font-black transition-all ${
+                        className={`min-h-[48px] rounded-xl text-xs font-mono font-black transition-all ${
                           deliveryTierCents === t.cents
                             ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
                             : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
@@ -961,22 +970,22 @@ export const PosComandero: React.FC = () => {
                       </span>
                     </div>
 
-                    {/* Controles Táctiles de Cantidad (+/-) */}
+                    {/* Controles Táctiles de Cantidad (+/-) (WCAG min 48x48px) */}
                     <div className="flex items-center gap-1.5 bg-tocineta-card border border-tocineta-border rounded-xl p-1">
                       <button
                         type="button"
                         onClick={() => handleChangeQty(item.clientLineId, -1)}
-                        className="w-8 h-8 rounded-lg bg-tocineta-bg text-white hover:text-red-400 font-bold flex items-center justify-center active:scale-95"
+                        className="min-h-[48px] min-w-[48px] rounded-lg bg-tocineta-bg text-white hover:text-red-400 font-black text-lg flex items-center justify-center active:scale-95"
                       >
                         -
                       </button>
-                      <span className="w-6 text-center font-mono font-black text-xs text-white">
+                      <span className="w-8 text-center font-mono font-black text-sm text-white">
                         {item.quantity}
                       </span>
                       <button
                         type="button"
                         onClick={() => handleChangeQty(item.clientLineId, 1)}
-                        className="w-8 h-8 rounded-lg bg-tocineta-yellow text-tocineta-bg font-bold flex items-center justify-center active:scale-95"
+                        className="min-h-[48px] min-w-[48px] rounded-lg bg-tocineta-yellow text-tocineta-bg font-black text-lg flex items-center justify-center active:scale-95"
                       >
                         +
                       </button>
@@ -1051,25 +1060,25 @@ export const PosComandero: React.FC = () => {
             />
           </div>
 
-          {/* TOTALES FINANCIEROS EN CENTAVOS EXACTOS */}
+          {/* TOTALES FINANCIEROS EN CENTAVOS EXACTOS (SIMULTÁNEO USD + Bs - H-04) */}
           <div className="p-3 bg-tocineta-bg border border-tocineta-border rounded-2xl space-y-1.5 font-mono text-xs">
             <div className="flex justify-between text-tocineta-muted">
               <span>Subtotal Alimentos:</span>
-              <span>{formatPrice(subtotalCents)}</span>
+              <span>{formatDualPrice(subtotalCents)}</span>
             </div>
             {fulfillmentType === 'delivery' && (
               <div className="flex justify-between text-tocineta-muted">
                 <span>Fondo Delivery Motorizado:</span>
-                <span>{formatPrice(deliveryFeeCents)}</span>
+                <span>{formatDualPrice(deliveryFeeCents)}</span>
               </div>
             )}
-            <div className="flex justify-between text-base font-black text-white pt-1.5 border-t border-tocineta-border">
+            <div className="flex justify-between text-sm sm:text-base font-black text-white pt-1.5 border-t border-tocineta-border">
               <span>Total a Cobrar:</span>
-              <span className="text-tocineta-yellow">{formatPrice(totalToCollectCents)}</span>
+              <span className="text-tocineta-yellow text-right">{formatDualPrice(totalToCollectCents)}</span>
             </div>
           </div>
 
-          {/* BOTÓN GRANDE TÁCTIL: ENVIAR A CAJA (Mínimo 52px de alto) */}
+          {/* BOTÓN GRANDE TÁCTIL: ENVIAR A CAJA (Mínimo 54px de alto) */}
           <button
             type="button"
             onClick={handleSubmitOrder}
@@ -1088,6 +1097,28 @@ export const PosComandero: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Botón Flotante Móvil del Comandero con Total Dual Simultáneo USD + Bs (H-04 / H-05) */}
+      {cart.length > 0 && (
+        <div className="lg:hidden fixed bottom-4 left-4 right-4 z-30">
+          <button
+            type="button"
+            onClick={() => {
+              const cartElem = document.getElementById('pos-cart-panel');
+              cartElem?.scrollIntoView({ behavior: 'smooth' });
+            }}
+            className="w-full min-h-[48px] bg-tocineta-yellow text-tocineta-bg font-black text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between border-2 border-yellow-300 active:scale-98 transition-all"
+          >
+            <span className="flex items-center gap-2">
+              <span>🛒</span>
+              <span>Pedido ({cart.reduce((s, i) => s + i.quantity, 0)})</span>
+            </span>
+            <span className="font-mono text-right">
+              {formatDualPrice(totalToCollectCents)}
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* MODAL DE PERSONALIZACIÓN DE INGREDIENTES */}
       {customizingProduct && (

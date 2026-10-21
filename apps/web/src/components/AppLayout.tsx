@@ -28,9 +28,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [currentPinInput, setCurrentPinInput] = useState('');
   const [newPinInput, setNewPinInput] = useState('');
   const [confirmPinInput, setConfirmPinInput] = useState('');
+  const [activePinField, setActivePinField] = useState<'current' | 'new' | 'confirm'>('current');
   const [changePinError, setChangePinError] = useState<string | null>(null);
   const [isChangingPin, setIsChangingPin] = useState(false);
   const [isSupportModalOpen, setIsSupportModalOpen] = useState(false);
+
+  const requiredPinLength = (user?.role === 'admin' || user?.role === 'supervisor') ? 6 : 4;
 
   const { data: profitSettings } = useQuery<{ profitabilityProEnabled: boolean }>({
     queryKey: ['profitabilitySettings'],
@@ -62,8 +65,8 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       setChangePinError('Debe ingresar su PIN actual');
       return;
     }
-    if (newPinInput.length !== 6) {
-      setChangePinError('El nuevo PIN debe tener exactamente 6 dígitos');
+    if (newPinInput.length !== requiredPinLength) {
+      setChangePinError(`El nuevo PIN debe tener exactamente ${requiredPinLength} dígitos`);
       return;
     }
     if (newPinInput !== confirmPinInput) {
@@ -301,31 +304,74 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               Han transcurrido 2 minutos sin actividad en el panel sensible. Ingrese su PIN de {user?.name} para continuar.
             </p>
 
-            <div className="my-4">
+            <div className="my-3">
               <input
                 type="password"
-                maxLength={6}
+                inputMode="numeric"
+                pattern="[0-9]*"
+                maxLength={requiredPinLength}
                 value={unlockPin}
                 onChange={e => setUnlockPin(e.target.value.replace(/\D/g, ''))}
-                placeholder="PIN de acceso"
-                className="w-full text-center text-2xl font-mono tracking-widest bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl py-3 text-white outline-none"
+                placeholder={`PIN (${requiredPinLength} dígitos)`}
+                className="w-full text-center text-2xl font-mono tracking-widest bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl py-2.5 text-white outline-none"
                 autoFocus
                 onKeyDown={e => e.key === 'Enter' && handleUnlock()}
               />
               {unlockError && <p className="text-xs text-red-400 mt-2 font-medium">{unlockError}</p>}
             </div>
 
-            <div className="flex gap-2">
+            {/* Teclado Numérico Táctil Auto-Lock */}
+            <div className="grid grid-cols-3 gap-2 w-full max-w-[260px] mx-auto my-3">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => {
+                    if (unlockPin.length < requiredPinLength) setUnlockPin(prev => prev + num);
+                  }}
+                  className="min-h-[48px] text-xl font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow active:bg-tocineta-yellow/20 active:scale-95 text-white transition-all shadow flex items-center justify-center"
+                >
+                  {num}
+                </button>
+              ))}
               <button
+                type="button"
+                onClick={() => setUnlockPin('')}
+                className="min-h-[48px] text-xs font-bold uppercase rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-red-500/50 text-tocineta-muted hover:text-red-400 active:scale-95 transition-all flex items-center justify-center"
+              >
+                Limpiar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (unlockPin.length < requiredPinLength) setUnlockPin(prev => prev + '0');
+                }}
+                className="min-h-[48px] text-xl font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow active:bg-tocineta-yellow/20 active:scale-95 text-white transition-all shadow flex items-center justify-center"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                onClick={() => setUnlockPin(prev => prev.slice(0, -1))}
+                className="min-h-[48px] text-base font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-amber-500/50 text-tocineta-muted hover:text-amber-400 active:scale-95 transition-all flex items-center justify-center"
+              >
+                ⌫
+              </button>
+            </div>
+
+            <div className="flex gap-2 mt-4">
+              <button
+                type="button"
                 onClick={logout}
-                className="flex-1 py-2.5 rounded-xl border border-tocineta-border text-xs font-bold text-tocineta-muted hover:text-white hover:bg-tocineta-bg transition-all"
+                className="flex-1 min-h-[48px] py-2.5 rounded-xl border border-tocineta-border text-xs font-bold text-tocineta-muted hover:text-white hover:bg-tocineta-bg transition-all flex items-center justify-center"
               >
                 Cerrar Sesión
               </button>
               <button
+                type="button"
                 onClick={handleUnlock}
                 disabled={isUnlocking || !unlockPin}
-                className="flex-1 py-2.5 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-bold hover:bg-tocineta-yellow/90 transition-all disabled:opacity-50"
+                className="flex-1 min-h-[48px] py-2.5 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-bold hover:bg-tocineta-yellow/90 transition-all disabled:opacity-50 flex items-center justify-center"
               >
                 {isUnlocking ? 'Verificando...' : 'Desbloquear'}
               </button>
@@ -337,41 +383,64 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       {/* Modal Obligatorio de Cambio de PIN (B.4 / F4) */}
       {user?.mustChangePin && (
         <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-tocineta-card border border-amber-500/40 rounded-3xl p-6 max-w-md w-full shadow-2xl">
-            <div className="w-14 h-14 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto text-3xl mb-3 shadow-inner">
+          <div className="bg-tocineta-card border border-amber-500/40 rounded-3xl p-5 max-w-md w-full shadow-2xl max-h-[92vh] overflow-y-auto">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 border border-amber-500/40 text-amber-400 flex items-center justify-center mx-auto text-2xl mb-2 shadow-inner">
               🔑
             </div>
-            <h3 className="text-xl font-black text-white text-center">Cambio Obligatorio de PIN</h3>
-            <p className="text-xs text-tocineta-muted mt-1 text-center">
-              Hola, <span className="text-white font-bold">{user.name}</span>. Por seguridad física y auditoría, debe establecer su PIN de 6 dígitos antes de continuar.
+            <h3 className="text-lg font-black text-white text-center">Cambio Obligatorio de PIN</h3>
+            <p className="text-xs text-tocineta-muted mt-0.5 text-center">
+              Hola, <span className="text-white font-bold">{user.name}</span>. Por seguridad física y auditoría, debe establecer su PIN de {requiredPinLength} dígitos antes de continuar.
             </p>
 
-            <div className="space-y-3 my-5">
+            <div className="space-y-2.5 my-3">
               <div>
                 <label className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider block mb-1">
                   PIN Actual:
                 </label>
                 <input
                   type="password"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   maxLength={6}
                   value={currentPinInput}
+                  onFocus={() => setActivePinField('current')}
                   onChange={e => setCurrentPinInput(e.target.value.replace(/\D/g, ''))}
                   placeholder="Ingrese PIN actual"
-                  className="w-full text-center text-lg font-mono bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl py-2.5 text-white outline-none"
+                  className={`w-full text-center text-lg font-mono bg-tocineta-bg border rounded-xl py-2 text-white outline-none transition-all ${
+                    activePinField === 'current' ? 'border-tocineta-yellow ring-1 ring-tocineta-yellow/40' : 'border-tocineta-border'
+                  }`}
                 />
               </div>
 
               <div>
-                <label className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider block mb-1">
-                  Nuevo PIN (6 dígitos):
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider block">
+                    {`Nuevo PIN (${requiredPinLength} dígitos):`}
+                  </label>
+                  {/* Indicadores visuales de longitud de PIN */}
+                  <div className="flex items-center gap-1.5">
+                    {Array.from({ length: requiredPinLength }).map((_, idx) => (
+                      <span
+                        key={idx}
+                        className={`inline-block w-2.5 h-2.5 rounded-full transition-all ${
+                          idx < newPinInput.length ? 'bg-tocineta-yellow scale-110 shadow-sm' : 'bg-zinc-700'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                </div>
                 <input
                   type="password"
-                  maxLength={6}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={requiredPinLength}
                   value={newPinInput}
+                  onFocus={() => setActivePinField('new')}
                   onChange={e => setNewPinInput(e.target.value.replace(/\D/g, ''))}
-                  placeholder="Nuevo PIN (6 dígitos)"
-                  className="w-full text-center text-xl font-mono tracking-widest bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl py-2.5 text-white outline-none"
+                  placeholder={`Nuevo PIN (${requiredPinLength} dígitos)`}
+                  className={`w-full text-center text-lg font-mono tracking-widest bg-tocineta-bg border rounded-xl py-2 text-white outline-none transition-all ${
+                    activePinField === 'new' ? 'border-tocineta-yellow ring-1 ring-tocineta-yellow/40' : 'border-tocineta-border'
+                  }`}
                 />
               </div>
 
@@ -381,34 +450,98 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 </label>
                 <input
                   type="password"
-                  maxLength={6}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={requiredPinLength}
                   value={confirmPinInput}
+                  onFocus={() => setActivePinField('confirm')}
                   onChange={e => setConfirmPinInput(e.target.value.replace(/\D/g, ''))}
                   placeholder="Repita nuevo PIN"
-                  className="w-full text-center text-xl font-mono tracking-widest bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl py-2.5 text-white outline-none"
+                  className={`w-full text-center text-lg font-mono tracking-widest bg-tocineta-bg border rounded-xl py-2 text-white outline-none transition-all ${
+                    activePinField === 'confirm' ? 'border-tocineta-yellow ring-1 ring-tocineta-yellow/40' : 'border-tocineta-border'
+                  }`}
                 />
               </div>
 
               {changePinError && (
-                <div className="p-2.5 bg-red-500/20 border border-red-500/40 rounded-xl text-xs text-red-300 text-center font-medium">
+                <div className="p-2 bg-red-500/20 border border-red-500/40 rounded-xl text-xs text-red-300 text-center font-medium">
                   {changePinError}
                 </div>
               )}
             </div>
 
-            <div className="flex gap-2">
+            {/* Teclado Numérico Táctil Cambio de PIN */}
+            <div className="grid grid-cols-3 gap-1.5 w-full max-w-[260px] mx-auto my-2">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => {
+                    if (activePinField === 'current' && currentPinInput.length < 6) {
+                      setCurrentPinInput(prev => prev + num);
+                    } else if (activePinField === 'new' && newPinInput.length < requiredPinLength) {
+                      setNewPinInput(prev => prev + num);
+                    } else if (activePinField === 'confirm' && confirmPinInput.length < requiredPinLength) {
+                      setConfirmPinInput(prev => prev + num);
+                    }
+                  }}
+                  className="min-h-[48px] text-lg font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow active:bg-tocineta-yellow/20 active:scale-95 text-white transition-all shadow flex items-center justify-center"
+                >
+                  {num}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => {
+                  if (activePinField === 'current') setCurrentPinInput('');
+                  else if (activePinField === 'new') setNewPinInput('');
+                  else if (activePinField === 'confirm') setConfirmPinInput('');
+                }}
+                className="min-h-[48px] text-xs font-bold uppercase rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-red-500/50 text-tocineta-muted hover:text-red-400 active:scale-95 transition-all flex items-center justify-center"
+              >
+                Limpiar
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (activePinField === 'current' && currentPinInput.length < 6) {
+                    setCurrentPinInput(prev => prev + '0');
+                  } else if (activePinField === 'new' && newPinInput.length < requiredPinLength) {
+                    setNewPinInput(prev => prev + '0');
+                  } else if (activePinField === 'confirm' && confirmPinInput.length < requiredPinLength) {
+                    setConfirmPinInput(prev => prev + '0');
+                  }
+                }}
+                className="min-h-[48px] text-lg font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow active:bg-tocineta-yellow/20 active:scale-95 text-white transition-all shadow flex items-center justify-center"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (activePinField === 'current') setCurrentPinInput(prev => prev.slice(0, -1));
+                  else if (activePinField === 'new') setNewPinInput(prev => prev.slice(0, -1));
+                  else if (activePinField === 'confirm') setConfirmPinInput(prev => prev.slice(0, -1));
+                }}
+                className="min-h-[48px] text-base font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-amber-500/50 text-tocineta-muted hover:text-amber-400 active:scale-95 transition-all flex items-center justify-center"
+              >
+                ⌫
+              </button>
+            </div>
+
+            <div className="flex gap-2 mt-3">
               <button
                 type="button"
                 onClick={logout}
-                className="flex-1 py-3 rounded-xl border border-tocineta-border text-xs font-bold text-tocineta-muted hover:text-white hover:bg-tocineta-bg transition-all"
+                className="flex-1 min-h-[48px] py-2.5 rounded-xl border border-tocineta-border text-xs font-bold text-tocineta-muted hover:text-white hover:bg-tocineta-bg transition-all flex items-center justify-center"
               >
                 Cerrar Sesión
               </button>
               <button
                 type="button"
                 onClick={handleChangePin}
-                disabled={isChangingPin || !currentPinInput || newPinInput.length !== 6 || confirmPinInput.length !== 6}
-                className="flex-1 py-3 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-black uppercase tracking-wider hover:bg-tocineta-yellow-hover active:scale-95 transition-all disabled:opacity-40"
+                disabled={isChangingPin || !currentPinInput || newPinInput.length !== requiredPinLength || confirmPinInput.length !== requiredPinLength}
+                className="flex-1 min-h-[48px] py-2.5 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-black uppercase tracking-wider hover:bg-tocineta-yellow-hover active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center"
               >
                 {isChangingPin ? 'Guardando...' : 'Establecer PIN'}
               </button>
