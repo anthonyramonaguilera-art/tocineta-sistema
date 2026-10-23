@@ -89,7 +89,7 @@ export const kdsRoutes: FastifyPluginAsync = async (server) => {
 
   /**
    * POST /api/kds/orders/:orderId/force-complete
-   * Despacho Forzado en 1 toque en cocina (God Mode Dueña / Admin / Supervisor)
+   * Despacho Forzado en 1 toque en cocina (Supervisión Dueña / Admin / Supervisor)
    * Valida rol 'admin' o 'supervisor' o permiso 'KDS_FORCE_COMPLETE'
    */
   server.post<{

@@ -514,7 +514,7 @@ export function deliverKdsOrder(
   }
 
   /**
-   * Poder de Super-Operadora (Dueña / Admin / Supervisor):
+   * Facultad de Supervisión (Dueña / Admin / Supervisor):
    * Despacho forzado en 1 toque en cocina (POST /api/kds/orders/:id/force-complete)
    * Marca todas las líneas de cocina como 'listo' y la orden como 'entregado'
    * (o 'cerrado' si ya estaba pagada) de forma atómica.
@@ -587,7 +587,7 @@ export function deliverKdsOrder(
           orderNumber: order.order_number,
           fulfillmentStatus: newFulfillmentStatus,
           paymentStatus: order.payment_status,
-          forcedBy: options?.actorUserId || 'admin_godmode',
+          forcedBy: options?.actorUserId || 'admin_supervisor',
           closedAtMs
         }
       });

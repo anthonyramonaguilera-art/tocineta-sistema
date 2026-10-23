@@ -2,7 +2,21 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import { PedagogicalGuideBanner } from '../../components/PedagogicalGuideBanner.js';
-import { Users, UserCheck, Check, X, Loader2, AlertCircle } from 'lucide-react';
+import {
+  Users,
+  UserCheck,
+  Check,
+  X,
+  Loader2,
+  AlertCircle,
+  Crown,
+  Trash2,
+  ShoppingCart,
+  Undo2,
+  ClipboardList,
+  TrendingUp,
+  Bell
+} from 'lucide-react';
 
 interface StaffUser {
   id: string;
@@ -18,10 +32,10 @@ interface StaffUser {
 }
 
 const GRANULAR_PERMISSIONS = [
-  { key: 'CASHIER_PAY', label: '💵 Cobrar en Caja', desc: 'Permite procesar cobros y vuelto en Caja' },
-  { key: 'VOID_OR_REFUND', label: '↩️ Anular Órdenes', desc: 'Permite anular pedidos o aplicar devoluciones' },
-  { key: 'EDIT_MENU', label: '📋 Editar Menú', desc: 'Permite cambiar precios y disponibilidad de platos' },
-  { key: 'VIEW_PROFITABILITY', label: '💰 Ver Ganancias', desc: 'Permite ver márgenes y costos de ingredientes' },
+  { key: 'CASHIER_PAY', label: 'Cobrar en Caja', icon: ShoppingCart, desc: 'Permite procesar cobros y vuelto en Caja' },
+  { key: 'VOID_OR_REFUND', label: 'Anular Órdenes', icon: Undo2, desc: 'Permite anular pedidos o aplicar devoluciones' },
+  { key: 'EDIT_MENU', label: 'Editar Menú', icon: ClipboardList, desc: 'Permite cambiar precios y disponibilidad de platos' },
+  { key: 'VIEW_PROFITABILITY', label: 'Ver Ganancias', icon: TrendingUp, desc: 'Permite ver márgenes y costos de ingredientes' },
 ] as const;
 
 export const StaffManagementView: React.FC = () => {
@@ -91,6 +105,48 @@ export const StaffManagementView: React.FC = () => {
       queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
       setSuccessMessage('Permisos actualizados correctamente en tiempo real');
       setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  });
+
+  const changeRoleMutation = useMutation({
+    mutationFn: async ({ userId, role }: { userId: string; role: string }) => {
+      const res = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ role })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || 'Error al cambiar rol');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      setSuccessMessage('Rol de trabajador actualizado exitosamente');
+      setTimeout(() => setSuccessMessage(null), 3000);
+    }
+  });
+
+  const deleteUserMutation = useMutation({
+    mutationFn: async (userId: string) => {
+      const res = await fetch(`/api/admin/users/${userId}`, {
+        method: 'DELETE',
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error || err.message || 'Error al eliminar usuario');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminUsers'] });
+      setSuccessMessage('Trabajador dado de baja del sistema exitosamente');
+      setTimeout(() => setSuccessMessage(null), 3500);
     }
   });
 
@@ -172,7 +228,7 @@ export const StaffManagementView: React.FC = () => {
       <section className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-lg space-y-4">
         <div className="flex items-center justify-between border-b border-tocineta-border/60 pb-3">
           <div className="flex items-center gap-2">
-            <span className="text-lg">🔔</span>
+            <Bell className="w-5 h-5 text-amber-400" />
             <h2 className="text-base font-bold text-white tracking-wide">
               Solicitudes Pendientes de Aprobación
             </h2>
@@ -286,21 +342,51 @@ export const StaffManagementView: React.FC = () => {
                           {member.name}
                         </h3>
                         {isOwner && (
-                          <span className="text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-bold">
-                            👑 DUEÑA
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-bold tracking-wide uppercase">
+                            <Crown className="w-3 h-3" />
+                            DUEÑA
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-tocineta-muted flex items-center gap-2">
-                        <span className="capitalize font-semibold text-neutral-300">{member.role}</span>
+                      <div className="text-xs text-tocineta-muted flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] font-bold tracking-wide uppercase px-2 py-0.5 rounded bg-neutral-800 text-neutral-300 border border-neutral-700">{member.role}</span>
                         {member.cedula && <span>• Cédula: {member.cedula}</span>}
                       </div>
                     </div>
                   </div>
 
-                  {isOwner && (
+                  {isOwner ? (
                     <div className="text-xs text-amber-300/80 italic font-medium">
-                      Poder Omnipotente (Super-Operadora total)
+                      Administración Total
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-2">
+                      <select
+                        value={member.role}
+                        onChange={e => changeRoleMutation.mutate({ userId: member.id, role: e.target.value })}
+                        disabled={changeRoleMutation.isPending}
+                        className="bg-neutral-800 border border-neutral-700 text-white rounded-lg px-2.5 py-1.5 text-xs font-semibold focus:border-tocineta-yellow outline-none min-h-[38px]"
+                      >
+                        <option value="mesonero">🍔 Mesonero</option>
+                        <option value="cajera">💵 Cajera</option>
+                        <option value="cocinero">🍳 Cocinero</option>
+                        <option value="supervisor">⭐ Supervisor</option>
+                      </select>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (window.confirm(`¿Estás seguro de que deseas dar de baja a ${member.name}? Ya no podrá ingresar al sistema.`)) {
+                            deleteUserMutation.mutate(member.id);
+                          }
+                        }}
+                        disabled={deleteUserMutation.isPending}
+                        className="px-2.5 py-1.5 rounded-lg bg-red-950/60 border border-red-800/80 hover:bg-red-900 text-red-300 hover:text-white text-xs font-bold transition flex items-center gap-1.5 shadow min-h-[38px]"
+                        title="Eliminar / Dar de Baja"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        <span className="hidden sm:inline">Dar de Baja</span>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -325,7 +411,10 @@ export const StaffManagementView: React.FC = () => {
                           } ${isDefaultRolePerm ? 'opacity-70 cursor-not-allowed' : ''}`}
                         >
                           <div>
-                            <div className="leading-tight">{p.label}</div>
+                            <div className="leading-tight flex items-center gap-1.5">
+                              <p.icon className="w-3.5 h-3.5 shrink-0 opacity-80" />
+                              <span>{p.label}</span>
+                            </div>
                             {isDefaultRolePerm && (
                               <div className="text-[10px] text-neutral-500 font-normal">Por rol ({member.role})</div>
                             )}

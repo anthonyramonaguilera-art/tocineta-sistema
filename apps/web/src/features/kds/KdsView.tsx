@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import { useEventStream } from '../../hooks/useEventStream.js';
 import { kdsSound } from './sound-effects.js';
+import { Flame, ChefHat, Utensils, Volume2, VolumeX, RotateCw } from 'lucide-react';
 
 export type StationFilter = 'all' | 'hamburguesas' | 'hot_dogs';
 
@@ -120,7 +121,7 @@ export const KdsView: React.FC = () => {
   const [mobileTab, setMobileTab] = useState<'pendiente' | 'preparando' | 'listo'>('pendiente');
   const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
-  const isGodModeUser = user?.role === 'admin' || user?.role === 'supervisor' || Boolean(user?.permissions?.includes('KDS_FORCE_COMPLETE'));
+  const isSupervisorUser = user?.role === 'admin' || user?.role === 'supervisor' || Boolean(user?.permissions?.includes('KDS_FORCE_COMPLETE'));
 
   const knownOrderIdsRef = useRef<Set<string>>(new Set());
 
@@ -207,7 +208,7 @@ export const KdsView: React.FC = () => {
     }
   });
 
-  // Mutación: Forzar Despacho Total (Super-Operadora / God Mode)
+  // Mutación: Despacho Completo (Supervisión / Dueña)
   const forceCompleteMutation = useMutation({
     mutationFn: async (orderId: string) => {
       const res = await fetch(`/api/kds/orders/${orderId}/force-complete`, {
@@ -295,33 +296,36 @@ export const KdsView: React.FC = () => {
             <div className="flex items-center bg-tocineta-bg p-1 rounded-xl border border-tocineta-border">
               <button
                 onClick={() => setStationFilter('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                   stationFilter === 'all'
                     ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
                     : 'text-tocineta-muted hover:text-white'
                 }`}
               >
-                🥓 Todas las Estaciones
+                <Flame className="w-3.5 h-3.5" />
+                <span>Todas las Estaciones</span>
               </button>
               <button
                 onClick={() => setStationFilter('hamburguesas')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                   stationFilter === 'hamburguesas'
                     ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
                     : 'text-tocineta-muted hover:text-white'
                 }`}
               >
-                🍔 Plancha / Burgers
+                <ChefHat className="w-3.5 h-3.5" />
+                <span>Plancha / Burgers</span>
               </button>
               <button
                 onClick={() => setStationFilter('hot_dogs')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 ${
                   stationFilter === 'hot_dogs'
                     ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
                     : 'text-tocineta-muted hover:text-white'
                 }`}
               >
-                🌭 Hot Dogs
+                <Utensils className="w-3.5 h-3.5" />
+                <span>Hot Dogs</span>
               </button>
             </div>
           </div>
@@ -337,7 +341,7 @@ export const KdsView: React.FC = () => {
                   : 'bg-zinc-800/80 border-zinc-700 text-zinc-400'
               }`}
             >
-              <span>{soundActive ? '🔊' : '🔇'}</span>
+              {soundActive ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
               <span className="hidden sm:inline">{soundActive ? 'Sonido ON' : 'Silencio'}</span>
             </button>
 
@@ -346,7 +350,7 @@ export const KdsView: React.FC = () => {
               className="p-2 rounded-xl bg-tocineta-bg border border-tocineta-border text-tocineta-muted hover:text-white transition-colors"
               title="Refrescar Comandas"
             >
-              🔄
+              <RotateCw className="w-4 h-4" />
             </button>
           </div>
         </div>
@@ -436,7 +440,7 @@ export const KdsView: React.FC = () => {
                       stationFilter={stationFilter}
                       onUpdateLine={(lineId, st) => updateLineMutation.mutate({ lineId, status: st })}
                       onDeliver={(orderId) => deliverOrderMutation.mutate({ orderId })}
-                      canForceComplete={isGodModeUser}
+                      canForceComplete={isSupervisorUser}
                       onForceComplete={(orderId) => forceCompleteMutation.mutate(orderId)}
                     />
                   ))
@@ -474,7 +478,7 @@ export const KdsView: React.FC = () => {
                       stationFilter={stationFilter}
                       onUpdateLine={(lineId, st) => updateLineMutation.mutate({ lineId, status: st })}
                       onDeliver={(orderId) => deliverOrderMutation.mutate({ orderId })}
-                      canForceComplete={isGodModeUser}
+                      canForceComplete={isSupervisorUser}
                       onForceComplete={(orderId) => forceCompleteMutation.mutate(orderId)}
                     />
                   ))
@@ -787,7 +791,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           </button>
         )}
 
-        {/* Botón God Mode: [⚡ Despachar Orden Completa] (Columnas 1 y 2) */}
+        {/* Botón Supervisión / Dueña: [⚡ Despachar Orden Completa] (Columnas 1 y 2) */}
         {canForceComplete && (
           <button
             type="button"

@@ -1,4 +1,5 @@
 import Fastify, { type FastifyInstance, type FastifyServerOptions } from 'fastify';
+import cors from '@fastify/cors';
 import { healthRoutes } from './routes/health.js';
 import { systemHealthRoutes } from './routes/system-health.js';
 import { authRoutes } from './routes/auth.js';
@@ -59,13 +60,15 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   });
 
   // Parser tolerante a cuerpos vacíos (Evita 400 Bad Request FST_ERR_CTP_EMPTY_JSON_BODY)
-  server.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, body, done) => {
-    if (!body || (typeof body === 'string' && body.trim() === '')) {
+  server.addContentTypeParser('application/json', { parseAs: 'string' }, function (_req, body, done) {
+    if (!body || body === '') {
       return done(null, {});
     }
     try {
-      done(null, JSON.parse(body as string));
-    } catch (err) {
+      const json = JSON.parse(body as string);
+      done(null, json);
+    } catch (err: any) {
+      err.statusCode = 400;
       done(err as Error, undefined);
     }
   });
@@ -118,6 +121,7 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   });
 
   // Registro de Plugins
+  await server.register(cors, { origin: '*', methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'] });
   await server.register(idempotencyPlugin);
   await server.register(websocketPlugin);
 

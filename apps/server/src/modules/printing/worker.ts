@@ -331,7 +331,7 @@ export class PrintingWorker {
       const connType = job.connection_type.toLowerCase();
       const isSimulated =
         this.mockTransports ||
-        job.address.startsWith('mock:') ||
+        Boolean(job.address && job.address.startsWith('mock:')) ||
         process.env.PRINTER_DEV_SIMULATION === 'true' ||
         (process.platform !== 'win32' && (connType === 'windows_raw' || connType === 'spooler_raw_usb'));
 
@@ -347,12 +347,14 @@ export class PrintingWorker {
           ? job.payload_bytes
           : Buffer.from(job.payload_bytes);
 
-        if (connType === 'tcp' || connType === 'tcp_9100') {
-          const [host, portStr] = job.address.split(':');
+        if (connType === 'windows_raw' || connType === 'spooler_raw_usb') {
+          // Usar prioritariamente el nombre de la impresora registrado en base de datos para WinSpool
+          const printerTarget = job.printer_name || job.address;
+          await sendWindowsRawEscPos(printerTarget, payload, `Tocineta_${job.job_type}`, 4000);
+        } else if (connType === 'tcp' || connType === 'tcp_9100') {
+          const [host, portStr] = (job.address || '').split(':');
           const port = portStr ? parseInt(portStr, 10) : 9100;
           await sendTcpEscPos(host, port, payload, 4000);
-        } else if (connType === 'windows_raw' || connType === 'spooler_raw_usb') {
-          await sendWindowsRawEscPos(job.address, payload, `Tocineta_${job.job_type}`, 4000);
         } else {
           throw new Error(`Tipo de conexión desconocido: ${job.connection_type}`);
         }

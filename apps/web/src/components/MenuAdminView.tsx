@@ -3,6 +3,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext.js';
 import type { AdminMenuResponse, AdminProduct, AdminProductIngredient, Station } from '../types/menu.js';
 import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
+import { ProductImagePlaceholder } from './ProductImagePlaceholder.js';
+import { ClipboardList, Plus, Utensils, Ticket, Banknote } from 'lucide-react';
 
 export const MenuAdminView: React.FC = () => {
   const { token } = useAuth();
@@ -453,8 +455,8 @@ export const MenuAdminView: React.FC = () => {
       {/* -------------------------------------------------------------------- */}
       <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-tocineta-yellow/10 border border-tocineta-yellow/30 text-tocineta-yellow flex items-center justify-center text-xl">
-            📋
+          <div className="w-10 h-10 rounded-xl bg-tocineta-yellow/10 border border-tocineta-yellow/30 text-tocineta-yellow flex items-center justify-center">
+            <ClipboardList className="w-5 h-5 text-tocineta-yellow" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-white">Categorías y Organización de la Carta</h3>
@@ -469,7 +471,7 @@ export const MenuAdminView: React.FC = () => {
           onClick={() => setIsCategoryModalOpen(true)}
           className="px-4 py-2 rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow text-xs font-bold text-white hover:text-tocineta-yellow transition-all flex items-center gap-1.5 shadow-sm"
         >
-          <span>➕</span>
+          <Plus className="w-4 h-4" />
           <span>Nueva Categoría</span>
         </button>
       </div>
@@ -480,33 +482,36 @@ export const MenuAdminView: React.FC = () => {
       <div className="flex items-center gap-2 border-b border-tocineta-border pb-3">
         <button
           onClick={() => setActiveTab('products')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'products'
               ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
               : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
           }`}
         >
-          🍔 Catálogo de Productos ({adminMenu.products.length})
+          <Utensils className="w-4 h-4" />
+          <span>Catálogo de Productos ({adminMenu.products.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('coupons')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'coupons'
               ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
               : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
           }`}
         >
-          🎟️ Cupones Para Ti ({adminMenu.coupons.length})
+          <Ticket className="w-4 h-4" />
+          <span>Cupones Para Ti ({adminMenu.coupons.length})</span>
         </button>
         <button
           onClick={() => setActiveTab('bcv')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
             activeTab === 'bcv'
               ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
               : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
           }`}
         >
-          💵 Tasa Oficial BCV ({adminMenu.formattedRate} Bs/$)
+          <Banknote className="w-4 h-4" />
+          <span>Tasa Oficial BCV ({adminMenu.formattedRate} Bs/$)</span>
         </button>
       </div>
 
@@ -564,22 +569,14 @@ export const MenuAdminView: React.FC = () => {
                   }`}
                 >
                   <div>
-                    {/* Imagen del Producto o Marcador Visual de Marca */}
-                    <div className="w-full h-28 rounded-xl mb-3 overflow-hidden bg-tocineta-bg border border-tocineta-border/60 flex items-center justify-center relative">
-                      {p.imageUrl || p.image_url ? (
-                        <img
-                          src={p.imageUrl || p.image_url || ''}
-                          alt={p.name}
-                          className="w-full h-full object-cover"
-                        />
-                      ) : (
-                        <div className="flex flex-col items-center justify-center text-center p-2">
-                          <div className="w-9 h-9 rounded-full bg-tocineta-yellow/10 border border-tocineta-yellow/30 text-tocineta-yellow flex items-center justify-center text-base mb-1">
-                            {p.station === 'hamburguesas' ? '🍔' : p.station === 'caja_bebidas' ? '🥤' : '🌭'}
-                          </div>
-                          <span className="text-[10px] font-bold text-tocineta-muted uppercase tracking-wider">Tocineta Sonríe</span>
-                        </div>
-                      )}
+                    {/* Imagen del Producto con Fallback SVG Elegante */}
+                    <div className="mb-3">
+                      <ProductImagePlaceholder
+                        imageUrl={p.imageUrl || p.image_url}
+                        name={p.name}
+                        station={p.station}
+                        className="w-full h-28"
+                      />
                     </div>
 
                     <div className="flex items-start justify-between gap-2">

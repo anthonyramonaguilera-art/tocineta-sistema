@@ -426,20 +426,20 @@ export function seedCatalog(rawDb: Database.Database): void {
     const printersData = [
       {
         id: 'print_caja_usb',
-        name: 'Impresora Caja USB',
+        name: 'DP58U-03',
         connection_type: 'SPOOLER_RAW_USB',
-        address: 'OneNote for Windows 10',
+        address: 'DP58U-03',
         columns: 32,
-        codepage: 850,
+        codepage: 16,
         is_active: 1
       },
       {
         id: 'print_cocina',
-        name: 'Impresora Cocina',
-        connection_type: 'TCP_9100',
-        address: '192.168.31.200:9100',
+        name: 'MP583',
+        connection_type: 'SPOOLER_RAW_USB',
+        address: 'MP583',
         columns: 32,
-        codepage: 850,
+        codepage: 16,
         is_active: 1
       }
     ];

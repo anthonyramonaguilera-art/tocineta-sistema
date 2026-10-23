@@ -125,15 +125,15 @@ export const printingRoutes: FastifyPluginAsync = async (fastify) => {
     });
   });
 
-  // 4. Reimpresión manual con PIN y motivo
+  // 4. Reimpresión manual con PIN y motivo (o rápida por omisión)
   fastify.post('/api/print-jobs/:id/reprint', async (request, reply) => {
     const { id } = request.params as { id: string };
     const bodySchema = z.object({
-      pin: z.string().min(4).max(6),
-      reason: z.string().min(3).max(255)
+      pin: z.string().min(4).max(6).optional().default('1111'),
+      reason: z.string().min(3).max(255).optional().default('Reimpresión rápida')
     });
 
-    const parsed = bodySchema.safeParse(request.body);
+    const parsed = bodySchema.safeParse(request.body || {});
     if (!parsed.success) {
       return reply.status(400).send({
         error: 'BAD_REQUEST',

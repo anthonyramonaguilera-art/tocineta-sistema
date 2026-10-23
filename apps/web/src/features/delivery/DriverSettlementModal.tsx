@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
+import { Truck } from 'lucide-react';
 
 interface DriverSettlementModalProps {
   isOpen: boolean;
@@ -171,7 +172,7 @@ export const DriverSettlementModal: React.FC<DriverSettlementModalProps> = ({
         {/* Cabecera */}
         <div className="p-5 border-b border-tocineta-border flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-3xl">🛵</span>
+            <Truck className="w-8 h-8 text-amber-400" />
             <div>
               <h3 className="font-black text-base text-white">
                 Liquidación de Motorizados y Cuadre de Flota

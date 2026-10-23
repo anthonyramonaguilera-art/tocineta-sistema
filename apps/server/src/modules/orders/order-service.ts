@@ -670,10 +670,12 @@ export function updateOrder(
       // Re-procesar totales y líneas idéntico a createOrder
       let grossSubtotal = 0;
       for (const line of input.lines) {
-        const prod = rawDb.prepare('SELECT price_usd_cents, station, name FROM products WHERE id = ?').get(line.productId) as any;
+        const prodId = line.productId || (line as any).product_id;
+        const lineQty = line.quantity ?? (line as any).qty ?? 1;
+        const prod = rawDb.prepare('SELECT price_usd_cents, station, name FROM products WHERE id = ?').get(prodId) as any;
         const lineId = `line_${generateUuidV7()}`;
         const unitPrice = prod?.price_usd_cents || 0;
-        const subtotal = unitPrice * line.quantity;
+        const subtotal = unitPrice * lineQty;
         grossSubtotal += subtotal;
 
         rawDb.prepare(`
@@ -685,14 +687,14 @@ export function updateOrder(
         `).run(
           lineId,
           orderId,
-          line.productId,
-          line.quantity,
+          prodId,
+          lineQty,
           unitPrice,
           unitPrice,
           subtotal,
           prod?.station || 'hot_dogs',
-          line.flavorChoice || null,
-          line.customInstructions || null,
+          line.flavorChoice || (line as any).flavor_choice || null,
+          line.customInstructions || (line as any).custom_instructions || null,
           JSON.stringify({ name: prod?.name, price: unitPrice }),
           now
         );

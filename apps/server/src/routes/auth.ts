@@ -856,4 +856,110 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       }
     });
   });
+
+  // 12. Modificar rol de trabajador (PATCH /api/admin/users/:id/role)
+  fastify.patch('/api/admin/users/:id/role', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const { id } = request.params as { id: string };
+    const body = (request.body || {}) as { role: string };
+
+    const rawToken = extractSessionToken(request.headers.authorization);
+    let actingUserId: string | null = null;
+    if (rawToken) {
+      const tokenHash = hashToken(rawToken);
+      const session = dbCtx.rawDb.prepare(`
+        SELECT s.user_id, u.role FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
+      `).get(tokenHash) as { user_id: string; role: string } | undefined;
+      if (session) {
+        actingUserId = session.user_id;
+        if (session.role !== 'admin' && session.role !== 'supervisor') {
+          return reply.status(403).send({ error: 'FORBIDDEN', message: 'Solo la administración puede cambiar roles.' });
+        }
+      }
+    }
+
+    const targetUser = dbCtx.rawDb.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
+    if (!targetUser) {
+      return reply.status(404).send({ error: 'Usuario no encontrado' });
+    }
+
+    if ((targetUser.id === 'usr_admin' || targetUser.role === 'admin' || targetUser.name.toLowerCase().includes('olinelcys')) && body.role !== 'admin') {
+      return reply.status(400).send({ error: 'No se puede cambiar el rol de la Administradora / Dueña principal (Sra. Olinelcys)' });
+    }
+
+    const validRoles = ['admin', 'supervisor', 'cajera', 'mesonero', 'cocinero', 'despachador'];
+    if (!validRoles.includes(body.role)) {
+      return reply.status(400).send({ error: 'Rol no válido' });
+    }
+
+    dbCtx.rawDb.prepare('UPDATE users SET role = ?, updated_at_ms = ? WHERE id = ?').run(body.role, Date.now(), id);
+
+    appendAuditEvent(dbCtx.rawDb, {
+      actorUserId: actingUserId,
+      action: 'USER_ROLE_UPDATED',
+      entityType: 'user',
+      entityId: id,
+      payload: { previousRole: targetUser.role, newRole: body.role }
+    });
+
+    return reply.status(200).send({ success: true, role: body.role });
+  });
+
+  // 13. Eliminar / Dar de baja trabajador (DELETE /api/admin/users/:id)
+  fastify.delete('/api/admin/users/:id', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const { id } = request.params as { id: string };
+
+    const rawToken = extractSessionToken(request.headers.authorization);
+    let actingUserId: string | null = null;
+    if (rawToken) {
+      const tokenHash = hashToken(rawToken);
+      const session = dbCtx.rawDb.prepare(`
+        SELECT s.user_id, u.role FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
+      `).get(tokenHash) as { user_id: string; role: string } | undefined;
+      if (session) {
+        actingUserId = session.user_id;
+        if (session.role !== 'admin' && session.role !== 'supervisor') {
+          return reply.status(403).send({ error: 'FORBIDDEN', message: 'Solo la administración puede eliminar personal.' });
+        }
+      }
+    }
+
+    const targetUser = dbCtx.rawDb.prepare('SELECT * FROM users WHERE id = ?').get(id) as any;
+    if (!targetUser) {
+      return reply.status(404).send({ error: 'Usuario no encontrado' });
+    }
+
+    // Impedir borrar a la dueña
+    if (targetUser.id === 'usr_admin' || targetUser.role === 'admin' || targetUser.name.toLowerCase().includes('olinelcys')) {
+      return reply.status(400).send({
+        success: false,
+        error: 'No se puede eliminar a la Administradora / Dueña principal (Sra. Olinelcys)'
+      });
+    }
+
+    const now = Date.now();
+    // Revocar sesiones activas
+    dbCtx.rawDb.prepare('UPDATE sessions SET revoked_at_ms = ? WHERE user_id = ?').run(now, id);
+
+    try {
+      dbCtx.rawDb.prepare('DELETE FROM users WHERE id = ?').run(id);
+    } catch {
+      // Si falla por constraints (audit_events, orders, etc.), desactivar de forma segura
+      dbCtx.rawDb.prepare('UPDATE users SET is_active = 0, approval_status = \'REJECTED\', updated_at_ms = ? WHERE id = ?').run(now, id);
+    }
+
+    appendAuditEvent(dbCtx.rawDb, {
+      actorUserId: actingUserId,
+      action: 'USER_DELETED',
+      entityType: 'user',
+      entityId: id,
+      payload: { deletedUserId: id, name: targetUser.name, role: targetUser.role }
+    });
+
+    return reply.status(200).send({
+      success: true,
+      message: `Usuario ${targetUser.name} dado de baja exitosamente`
+    });
+  });
 };

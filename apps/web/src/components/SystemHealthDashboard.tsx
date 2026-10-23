@@ -123,8 +123,9 @@ export const SystemHealthDashboard: React.FC = () => {
                 🟢 Sistema Conectado al Food Truck
               </span>
             </div>
-            <h2 className="text-2xl font-black text-white uppercase tracking-tight">
-              🖨️ Impresoras y Respaldos
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
+              <Printer className="w-6 h-6 text-tocineta-yellow" />
+              <span>Impresoras y Respaldos</span>
             </h2>
             <p className="text-xs text-tocineta-muted max-w-xl">
               Estado de impresoras térmicas, copias de seguridad de las ventas y base de datos local blindada.

@@ -42,7 +42,8 @@ export const SupportBanner: React.FC = () => {
     try {
       const res = await fetch('/api/support/stop', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
       });
       if (res.ok) {
         queryClient.invalidateQueries({ queryKey: ['supportStatus'] });
@@ -68,7 +69,7 @@ export const SupportBanner: React.FC = () => {
         </div>
         <div>
           <div className="text-xs sm:text-sm font-black tracking-wide uppercase flex items-center gap-2">
-            <span>🛠️ MODO SOPORTE VARONS MEDIA ACTIVO — SESIÓN AUDITADA</span>
+            <span>MODO SOPORTE VARONS MEDIA ACTIVO — SESIÓN AUDITADA</span>
             {support.quickAssistLaunched && (
               <span className="hidden md:inline-flex items-center gap-1 text-[10px] bg-black/30 px-2 py-0.5 rounded-full font-mono text-emerald-200">
                 <CheckCircle2 className="w-3 h-3" /> Quick Assist

@@ -1,6 +1,7 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import type { CashierOrder, CashierTender, CashierPaymentMethod } from './types.js';
 import { usdToBsCents, generateUuidV7 } from '@tocineta/shared';
+import { Banknote, Coins, Smartphone, CreditCard, CircleDollarSign, Landmark } from 'lucide-react';
 
 interface MultiMethodCalculatorProps {
   order: CashierOrder;
@@ -358,8 +359,9 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
 
       {/* BOTONES RÁPIDOS DE BILLETES USD ($1, $5, $10, $20, $50, $100, EXACTO USD) */}
       <div>
-        <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted block mb-2">
-          💵 Billetes Rápidos en Efectivo USD:
+        <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted flex items-center gap-1 mb-2">
+          <Banknote className="w-3.5 h-3.5 text-tocineta-yellow" />
+          <span>Billetes Rápidos en Efectivo USD:</span>
         </span>
         <div className="grid grid-cols-4 sm:grid-cols-7 gap-2">
           {QUICK_USD_BILLS.map(cents => (
@@ -389,30 +391,35 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
 
       {/* SELECTOR DE MÉTODOS DE PAGO */}
       <div className="space-y-3">
-        <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted block">
-          💳 Selecciona Método de Pago a Ingresar:
+        <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted flex items-center gap-1">
+          <CreditCard className="w-3.5 h-3.5 text-tocineta-yellow" />
+          <span>Selecciona Método de Pago a Ingresar:</span>
         </span>
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
           {[
-            { id: 'cash_usd', label: '💵 Efectivo USD' },
-            { id: 'cash_bs', label: '🇻🇪 Efectivo Bs' },
-            { id: 'pago_movil', label: '📱 Pago Móvil' },
-            { id: 'ubii', label: '💳 Punto Ubii' },
-            { id: 'binance', label: '🟡 Binance Pay' }
-          ].map(m => (
-            <button
-              key={m.id}
-              type="button"
-              onClick={() => setSelectedMethod(m.id as CashierPaymentMethod)}
-              className={`min-h-[48px] px-3 py-2 rounded-2xl text-xs font-black transition-all flex items-center justify-center text-center ${
-                selectedMethod === m.id
-                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-lg scale-102'
-                  : 'bg-tocineta-bg border border-tocineta-border text-tocineta-muted hover:text-white'
-              }`}
-            >
-              {m.label}
-            </button>
-          ))}
+            { id: 'cash_usd', label: 'Efectivo USD', icon: Banknote },
+            { id: 'cash_bs', label: 'Efectivo Bs', icon: Coins },
+            { id: 'pago_movil', label: 'Pago Móvil', icon: Smartphone },
+            { id: 'ubii', label: 'Punto Ubii', icon: CreditCard },
+            { id: 'binance', label: 'Binance Pay', icon: CircleDollarSign }
+          ].map(m => {
+            const Icon = m.icon;
+            return (
+              <button
+                key={m.id}
+                type="button"
+                onClick={() => setSelectedMethod(m.id as CashierPaymentMethod)}
+                className={`min-h-[48px] px-3 py-2 rounded-2xl text-xs font-black transition-all flex items-center justify-center gap-1.5 text-center ${
+                  selectedMethod === m.id
+                    ? 'bg-tocineta-yellow text-tocineta-bg shadow-lg scale-102'
+                    : 'bg-tocineta-bg border border-tocineta-border text-tocineta-muted hover:text-white'
+                }`}
+              >
+                <Icon className="w-3.5 h-3.5 shrink-0" />
+                <span>{m.label}</span>
+              </button>
+            );
+          })}
         </div>
 
         {/* DATOS OFICIALES DE BANESCO SI ES PAGO MÓVIL */}
@@ -422,7 +429,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
               <span className="font-black block">Banesco Banco Universal (0134)</span>
               <span className="font-mono text-[11px]">Tel: 0424-9728209 • RIF: V-17040918-0</span>
             </div>
-            <span className="text-lg">🏦</span>
+            <Landmark className="w-5 h-5 text-emerald-400" />
           </div>
         )}
 
@@ -547,14 +554,19 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
       {/* SECCIÓN DE VUELTO MIXTO (SI HAY SOBREPAGO) */}
       {totalChangeUsdCents > 0 && (
         <div className="bg-amber-500/10 border-2 border-amber-500/30 rounded-3xl p-4 space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="text-xl">💰</span>
+          <div className="bg-[#0B0D11]/80 border border-[#FFE600]/40 rounded-2xl p-3.5 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-inner">
+            <div className="flex items-center gap-2.5">
+              <Coins className="w-8 h-8 text-[#FFE600]" />
               <div>
-                <h4 className="text-sm font-black text-white">Control de Vuelto Mixto</h4>
-                <p className="text-xs font-bold text-tocineta-yellow">
-                  Vuelto Total a Entregar: ${(totalChangeUsdCents / 100).toFixed(2)} USD (Equivalente total: Bs. {(totalChangeBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
-                </p>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted block">
+                  Vuelto Total Exacto a Entregar:
+                </span>
+                <div className="text-2xl font-black text-[#FFE600] font-mono leading-tight">
+                  ${(totalChangeUsdCents / 100).toFixed(2)} USD
+                  <span className="text-base text-white/90 font-bold ml-2">
+                    (Bs. {(totalChangeBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })})
+                  </span>
+                </div>
               </div>
             </div>
           </div>

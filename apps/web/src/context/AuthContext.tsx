@@ -79,7 +79,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         await fetch('/api/auth/logout', {
           method: 'POST',
-          headers: { authorization: `Bearer ${token}` }
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({})
         });
       } catch {}
     }

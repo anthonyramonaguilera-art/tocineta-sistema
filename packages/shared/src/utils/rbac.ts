@@ -54,7 +54,7 @@ export function canUserProcessPayments(
 }
 
 /**
- * Verifica si un usuario tiene un permiso específico o si posee rol omnipotente (admin / dueña).
+ * Verifica si un usuario tiene un permiso específico o si posee rol de administración total (admin / dueña).
  */
 export function hasStaffPermission(
   userOrRole: string | UserPermissionContext | null | undefined,
@@ -81,7 +81,7 @@ export function hasStaffPermission(
   }
 
   const normalized = role.toLowerCase().trim();
-  // Bypass Total: La Dueña ('admin') es omnipotente en todos los módulos (God Mode)
+  // Bypass Total: La Dueña ('admin') posee acceso total en todos los módulos
   if (normalized === 'admin') {
     return true;
   }

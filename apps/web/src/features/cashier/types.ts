@@ -70,5 +70,6 @@ export interface CashierOrder {
   created_by_name?: string;
   notes?: string;
   itemsCount?: number;
+  version?: number;
   lines: CashierOrderLine[];
 }

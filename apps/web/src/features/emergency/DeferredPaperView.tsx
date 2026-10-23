@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
+import { Receipt, Printer, ShieldCheck, FileEdit } from 'lucide-react';
 
 interface ProductItem {
   id: string;
@@ -197,7 +198,7 @@ export const DeferredPaperView: React.FC = () => {
       <div className="bg-tocineta-card border border-tocineta-border p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-lg">
         <div>
           <div className="flex items-center gap-2">
-            <span className="text-2xl">📋</span>
+            <Receipt className="w-7 h-7 text-amber-400" />
             <h1 className="text-xl font-black text-white tracking-wide">
               MODO EMERGENCIA Y CARGA DIFERIDA DE PAPEL
             </h1>
@@ -215,7 +216,7 @@ export const DeferredPaperView: React.FC = () => {
             rel="noopener noreferrer"
             className="px-4 py-2.5 bg-tocineta-bg border border-tocineta-yellow/50 text-tocineta-yellow hover:bg-tocineta-yellow hover:text-tocineta-bg rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm"
           >
-            <span>🖨️</span>
+            <Printer className="w-4 h-4" />
             <span>Descargar 200 Comandas (PDF)</span>
           </a>
 
@@ -224,7 +225,7 @@ export const DeferredPaperView: React.FC = () => {
             onClick={handleBackupNow}
             className="px-4 py-2.5 bg-tocineta-green/20 border border-tocineta-green/50 text-tocineta-green hover:bg-tocineta-green hover:text-tocineta-bg rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm"
           >
-            <span>🔒</span>
+            <ShieldCheck className="w-4 h-4" />
             <span>Respaldar Ahora (age USB)</span>
           </button>
         </div>
@@ -256,7 +257,7 @@ export const DeferredPaperView: React.FC = () => {
         {/* Formulario de Carga */}
         <div className="lg:col-span-2 bg-tocineta-card border border-tocineta-border rounded-2xl p-6 shadow-md space-y-5">
           <h2 className="text-base font-extrabold text-tocineta-yellow flex items-center gap-2 border-b border-tocineta-border pb-3">
-            <span>✍️</span>
+            <FileEdit className="w-5 h-5 text-tocineta-yellow" />
             <span>Transcribir Comanda Física de Papel</span>
           </h2>
 

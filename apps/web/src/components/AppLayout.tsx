@@ -4,7 +4,24 @@ import { canUserProcessPayments } from '@tocineta/shared';
 import { useAuth } from '../context/AuthContext.js';
 import { useEventStream } from '../hooks/useEventStream.js';
 import { SupportBanner, StartSupportModal } from './SupportBanner.js';
+import { FaithBanner } from './FaithBanner.js';
 import { queryClient, ALLOWED_TABS_BY_ROLE, DEFAULT_TAB_BY_ROLE, type TabType } from '../App.js';
+import {
+  Flame,
+  Crown,
+  LogOut,
+  ShoppingCart,
+  ChefHat,
+  ClipboardList,
+  Users,
+  TrendingUp,
+  Printer,
+  Receipt,
+  Utensils,
+  Wrench,
+  RefreshCw,
+  RotateCw
+} from 'lucide-react';
 
 interface AppLayoutProps {
   currentTab: TabType;
@@ -22,6 +39,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const { user, token, logout, currency, setCurrency, changePin } = useAuth();
   const { isConnected } = useEventStream();
   const [isSyncingBcv, setIsSyncingBcv] = useState(false);
+  const [isBcvModalOpen, setIsBcvModalOpen] = useState(false);
+  const [manualBcvInput, setManualBcvInput] = useState('');
+  const [bcvModalMsg, setBcvModalMsg] = useState<string | null>(null);
+  const [isSavingBcv, setIsSavingBcv] = useState(false);
   const [uiMode, setUiMode] = useState<'turno' | 'duena'>(() => {
     try {
       const saved = localStorage.getItem('tocineta_ui_mode');
@@ -48,7 +69,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     try {
       const res = await fetch('/api/menu/exchange-rate/sync-now', {
         method: 'POST',
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({})
       });
       const data = await res.json();
       if (data.updated) {
@@ -59,6 +84,45 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       // Ignorar fallo de conexión
     } finally {
       setIsSyncingBcv(false);
+    }
+  };
+
+  const handleOpenBcvModal = () => {
+    setManualBcvInput(formattedRate.replace(',', '.'));
+    setBcvModalMsg(null);
+    setIsBcvModalOpen(true);
+  };
+
+  const handleSaveManualBcv = async () => {
+    const parsed = parseFloat(manualBcvInput.replace(',', '.'));
+    if (isNaN(parsed) || parsed <= 0) {
+      setBcvModalMsg('Ingresa una tasa numérica válida');
+      return;
+    }
+    setIsSavingBcv(true);
+    try {
+      const rateMicroBs = Math.round(parsed * 1_000_000);
+      const res = await fetch('/api/menu/exchange-rate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
+        body: JSON.stringify({ rateMicroBs })
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setBcvModalMsg(`✓ Tasa guardada: ${data.formattedRate} Bs/$`);
+        queryClient.invalidateQueries({ queryKey: ['posMenu'] });
+        queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
+        setTimeout(() => setIsBcvModalOpen(false), 1200);
+      } else {
+        setBcvModalMsg(data.error || 'Error al guardar tasa');
+      }
+    } catch {
+      setBcvModalMsg('Error de conexión al servidor');
+    } finally {
+      setIsSavingBcv(false);
     }
   };
 
@@ -76,6 +140,10 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   }
 
   const handleTabClick = (tab: TabType) => {
+    if (tab === 'pos') {
+      onTabChange('pos');
+      return;
+    }
     if (tab === 'cashier' && !canPay) {
       onTabChange(user?.role === 'cocinero' ? 'kds' : 'pos');
       return;
@@ -107,6 +175,23 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     staleTime: 10000
   });
 
+  const { data: adminUsersData } = useQuery<{ users?: Array<{ approval_status?: string; approvalStatus?: string }> }>({
+    queryKey: ['adminUsersBadge'],
+    queryFn: async () => {
+      const res = await fetch('/api/admin/users', {
+        headers: token ? { Authorization: `Bearer ${token}` } : {}
+      });
+      if (!res.ok) return { users: [] };
+      return res.json();
+    },
+    enabled: Boolean(token && (user?.role === 'admin' || user?.role === 'supervisor')),
+    refetchInterval: 15000
+  });
+
+  const pendingApprovalsCount = (adminUsersData?.users || []).filter(
+    u => u.approval_status === 'PENDING' || u.approvalStatus === 'PENDING'
+  ).length;
+
   const handleChangePin = async () => {
     if (!currentPinInput) {
       setChangePinError('Debe ingresar su PIN actual');
@@ -133,6 +218,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   return (
     <div className="min-h-screen bg-tocineta-bg text-white flex flex-col font-sans select-none">
+      {/* Franja de Fe y Honra a Dios */}
+      <FaithBanner />
+
       {/* Banner inconfundible de Modo Soporte Varons Media */}
       <SupportBanner />
 
@@ -183,7 +271,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                       : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
                   }`}
                 >
-                  <span>🔥</span>
+                  <Flame className="w-4 h-4" />
                   <span>MODO TURNO</span>
                 </button>
                 <button
@@ -195,24 +283,35 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                       : 'text-neutral-400 hover:text-white hover:bg-neutral-800/50'
                   }`}
                 >
-                  <span>👑</span>
+                  <Crown className="w-4 h-4" />
                   <span>MODO DUEÑA</span>
                 </button>
               </div>
             )}
 
             {/* Tasa BCV Oficial */}
-            <div className="hidden sm:flex items-center gap-1.5 bg-tocineta-bg px-3 py-1.5 rounded-lg border border-tocineta-border text-xs">
+            <div
+              onClick={() => {
+                if (isAdminOrSupervisor) handleOpenBcvModal();
+              }}
+              className={`hidden sm:flex items-center gap-1.5 bg-tocineta-bg px-3 py-1.5 rounded-lg border border-tocineta-border text-xs ${
+                isAdminOrSupervisor ? 'cursor-pointer hover:border-tocineta-yellow/60 transition-all' : ''
+              }`}
+              title={isAdminOrSupervisor ? 'Clic para cambiar o sincronizar tasa BCV' : 'Tasa BCV Oficial'}
+            >
               <span className="text-tocineta-muted">BCV:</span>
               <span className="font-bold text-white font-mono">{formattedRate} Bs/$</span>
               <button
                 type="button"
-                onClick={handleSyncBcv}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleSyncBcv();
+                }}
                 disabled={isSyncingBcv}
                 title="Sincronizar BCV por Internet"
                 className="ml-1 p-0.5 hover:bg-tocineta-card rounded text-xs text-tocineta-yellow hover:text-white transition-all disabled:opacity-40"
               >
-                {isSyncingBcv ? '⏳' : '🔄'}
+                {isSyncingBcv ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <RotateCw className="w-3.5 h-3.5" />}
               </button>
             </div>
 
@@ -256,7 +355,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                     title="Modo Soporte Auditado Varons Media"
                     className="p-2 rounded-lg bg-amber-500/10 border border-amber-500/40 text-amber-400 hover:bg-amber-500/20 transition-all text-xs font-bold flex items-center gap-1"
                   >
-                    <span>🛠️</span>
+                    <Wrench className="w-4 h-4" />
                     <span className="hidden lg:inline text-[11px]">Soporte</span>
                   </button>
                 )}
@@ -265,7 +364,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                   title="Cerrar Sesión"
                   className="p-2 rounded-lg bg-tocineta-bg border border-tocineta-border hover:border-red-500/50 text-tocineta-muted hover:text-red-400 transition-colors"
                 >
-                  <span className="text-sm">🚪</span>
+                  <LogOut className="w-5 h-5" />
                 </button>
               </div>
             )}
@@ -274,47 +373,50 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
         {/* Pestañas de Navegación Operativa (Cero Jerga Técnica) */}
         <div className="max-w-7xl mx-auto flex items-center gap-2 mt-3 pt-2 border-t border-tocineta-border/60 overflow-x-auto">
-          {/* 🍔 Tomar Pedido (pos) */}
+          {/* Tomar Pedido (pos) */}
           {allowedTabs.includes('pos') && (
             <button
-              onClick={() => handleTabClick('pos')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+              type="button"
+              onClick={() => onTabChange('pos')}
+              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                 currentTab === 'pos'
                   ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
                   : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
               }`}
             >
-              <span>🍔</span>
+              <Utensils className="w-4 h-4" />
               <span>Tomar Pedido</span>
             </button>
           )}
 
-          {/* 💵 Caja y Cobros (cashier) */}
+          {/* Caja y Cobros (cashier) */}
           {(allowedTabs.includes('cashier') || canPay) && (
             <button
+              type="button"
               onClick={() => handleTabClick('cashier')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                 currentTab === 'cashier'
                   ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
                   : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
               }`}
             >
-              <span>💵</span>
+              <ShoppingCart className="w-4 h-4" />
               <span>Caja y Cobros</span>
             </button>
           )}
 
-          {/* 🍳 Cocina y Plancha (kds) */}
+          {/* Cocina y Plancha (kds) */}
           {allowedTabs.includes('kds') && (
             <button
+              type="button"
               onClick={() => handleTabClick('kds')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                 currentTab === 'kds'
                   ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
                   : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
               }`}
             >
-              <span>🍳</span>
+              <ChefHat className="w-4 h-4" />
               <span>Cocina y Plancha</span>
             </button>
           )}
@@ -322,42 +424,50 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           {/* Pestañas exclusivas de MODO DUEÑA (Ocultas en MODO TURNO) */}
           {isAdminOrSupervisor && uiMode === 'duena' && (
             <>
-              {/* 📋 Carta, Precios y Cupones */}
+              {/* Carta, Precios y Cupones */}
               <button
+                type="button"
                 onClick={() => handleTabClick('menu-admin')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                   currentTab === 'menu-admin'
                     ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
                     : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
                 }`}
               >
-                <span>📋</span>
+                <ClipboardList className="w-4 h-4" />
                 <span>Carta, Precios y Cupones</span>
               </button>
 
-              {/* 👥 Mi Equipo y Permisos */}
+              {/* Mi Equipo y Permisos */}
               <button
+                type="button"
                 onClick={() => handleTabClick('staff')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                   currentTab === 'staff'
                     ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
                     : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
                 }`}
               >
-                <span>👥</span>
+                <Users className="w-4 h-4" />
                 <span>Mi Equipo y Permisos</span>
+                {pendingApprovalsCount > 0 && (
+                  <span className="px-1.5 py-0.5 text-[10px] bg-red-600 text-white rounded-full font-black animate-pulse shadow">
+                    {pendingApprovalsCount}
+                  </span>
+                )}
               </button>
 
-              {/* 💰 Mis Ganancias e Inventario */}
+              {/* Mis Ganancias e Inventario */}
               <button
+                type="button"
                 onClick={() => handleTabClick('profitability')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                   currentTab === 'profitability'
                     ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
                     : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
                 }`}
               >
-                <span>💰</span>
+                <TrendingUp className="w-4 h-4" />
                 <span>Mis Ganancias e Inventario</span>
                 {!profitSettings?.profitabilityProEnabled && (
                   <span className="text-[9px] bg-zinc-800 text-zinc-400 px-1 py-0.2 rounded font-mono">
@@ -366,29 +476,31 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 )}
               </button>
 
-              {/* 🖨️ Impresoras y Respaldos */}
+              {/* Impresoras y Respaldos */}
               <button
+                type="button"
                 onClick={() => handleTabClick('health')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                   currentTab === 'health'
                     ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
                     : 'text-tocineta-muted hover:text-white hover:bg-tocineta-bg'
                 }`}
               >
-                <span>🖨️</span>
+                <Printer className="w-4 h-4" />
                 <span>Impresoras y Respaldos</span>
               </button>
 
-              {/* 📝 Ventas en Talonario */}
+              {/* Ventas en Talonario */}
               <button
+                type="button"
                 onClick={() => handleTabClick('emergency')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+                className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                   currentTab === 'emergency'
                     ? 'bg-amber-500 text-tocineta-bg shadow-md'
                     : 'text-amber-400/80 hover:text-amber-300 hover:bg-tocineta-bg border border-amber-500/30'
                 }`}
               >
-                <span>📝</span>
+                <Receipt className="w-4 h-4" />
                 <span>Ventas en Talonario</span>
               </button>
             </>
@@ -397,24 +509,106 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           {/* Si el usuario NO es admin/supervisor pero tiene permisos para talonario o diagnóstico */}
           {!isAdminOrSupervisor && allowedTabs.includes('emergency') && (
             <button
+              type="button"
               onClick={() => handleTabClick('emergency')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 ${
+              className={`px-3.5 sm:px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all shrink-0 cursor-pointer ${
                 currentTab === 'emergency'
                   ? 'bg-amber-500 text-tocineta-bg shadow-md'
                   : 'text-amber-400/80 hover:text-amber-300 hover:bg-tocineta-bg border border-amber-500/30'
               }`}
             >
-              <span>📝</span>
+              <Receipt className="w-4 h-4" />
               <span>Ventas en Talonario</span>
             </button>
           )}
         </div>
       </header>
 
-      {/* Contenido Principal */}
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+      {/* Contenido Principal con padding inferior en móvil para la barra de navegación */}
+      <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8 pb-24 sm:pb-8">
         {children}
       </main>
+
+      {/* Barra de Navegación Móvil Inferior (Fix Táctil Celular) */}
+      <nav className="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#0E1118]/95 backdrop-blur-lg border-t border-tocineta-border/80 px-2 py-1.5 flex items-center justify-around shadow-2xl">
+        {allowedTabs.includes('pos') && (
+          <button
+            type="button"
+            onClick={() => onTabChange('pos')}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+              currentTab === 'pos'
+                ? 'text-tocineta-yellow font-black'
+                : 'text-tocineta-muted hover:text-white'
+            }`}
+          >
+            <Utensils className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">Tomar Pedido</span>
+          </button>
+        )}
+
+        {(allowedTabs.includes('cashier') || canPay) && (
+          <button
+            type="button"
+            onClick={() => handleTabClick('cashier')}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+              currentTab === 'cashier'
+                ? 'text-tocineta-yellow font-black'
+                : 'text-tocineta-muted hover:text-white'
+            }`}
+          >
+            <ShoppingCart className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">Caja</span>
+          </button>
+        )}
+
+        {allowedTabs.includes('kds') && (
+          <button
+            type="button"
+            onClick={() => handleTabClick('kds')}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+              currentTab === 'kds'
+                ? 'text-tocineta-yellow font-black'
+                : 'text-tocineta-muted hover:text-white'
+            }`}
+          >
+            <ChefHat className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">Cocina</span>
+          </button>
+        )}
+
+        {isAdminOrSupervisor && uiMode === 'duena' && (
+          <button
+            type="button"
+            onClick={() => handleTabClick('menu-admin')}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all cursor-pointer ${
+              currentTab === 'menu-admin'
+                ? 'text-tocineta-yellow font-black'
+                : 'text-tocineta-muted hover:text-white'
+            }`}
+          >
+            <ClipboardList className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">Carta</span>
+          </button>
+        )}
+
+        {isAdminOrSupervisor && uiMode === 'duena' && (
+          <button
+            type="button"
+            onClick={() => handleTabClick('staff')}
+            className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all relative cursor-pointer ${
+              currentTab === 'staff'
+                ? 'text-tocineta-yellow font-black'
+                : 'text-tocineta-muted hover:text-white'
+            }`}
+          >
+            <Users className="w-5 h-5 mb-0.5" />
+            <span className="text-[10px] tracking-tight">Equipo</span>
+            {pendingApprovalsCount > 0 && (
+              <span className="absolute top-0 right-1 w-2 h-2 rounded-full bg-red-600 animate-pulse" />
+            )}
+          </button>
+        )}
+      </nav>
 
       {/* Modal Obligatorio de Cambio de PIN (B.4 / F4) */}
       {user?.mustChangePin && (
@@ -580,6 +774,80 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                 className="flex-1 min-h-[48px] py-2.5 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-black uppercase tracking-wider hover:bg-tocineta-yellow-hover active:scale-95 transition-all disabled:opacity-40 flex items-center justify-center"
               >
                 {isChangingPin ? 'Guardando...' : 'Establecer PIN'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL TASA BCV OFICIAL */}
+      {isBcvModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-tocineta-border">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🇻🇪</span>
+                <h3 className="text-base font-bold text-white">Tasa Oficial BCV</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsBcvModalOpen(false)}
+                className="text-tocineta-muted hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="my-4 space-y-3">
+              <div>
+                <label className="text-xs text-tocineta-muted block mb-1">
+                  Nueva tasa oficial (Bs por cada $1 USD):
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="ej. 45.50"
+                    value={manualBcvInput}
+                    onChange={e => setManualBcvInput(e.target.value)}
+                    className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-sm text-white font-mono font-bold focus:border-tocineta-yellow outline-none"
+                    autoFocus
+                  />
+                  <span className="absolute right-3 top-2 text-xs text-tocineta-muted font-mono">
+                    Bs/$
+                  </span>
+                </div>
+              </div>
+
+              {bcvModalMsg && (
+                <p className={`text-xs text-center font-semibold ${bcvModalMsg.startsWith('✓') ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {bcvModalMsg}
+                </p>
+              )}
+            </div>
+
+            <div className="space-y-2 pt-2 border-t border-tocineta-border">
+              <button
+                type="button"
+                onClick={handleSaveManualBcv}
+                disabled={isSavingBcv || !manualBcvInput}
+                className="w-full py-2.5 rounded-xl bg-tocineta-yellow text-tocineta-bg font-black text-xs uppercase hover:bg-tocineta-yellow/90 disabled:opacity-50 transition-all flex items-center justify-center gap-1.5 shadow"
+              >
+                {isSavingBcv ? 'Guardando...' : 'Guardar Tasa'}
+              </button>
+
+              <button
+                type="button"
+                onClick={async () => {
+                  await handleSyncBcv();
+                  setBcvModalMsg('✓ Solicitud de sincronización enviada a BCV');
+                  setTimeout(() => setIsBcvModalOpen(false), 1200);
+                }}
+                disabled={isSyncingBcv}
+                className="w-full py-2 rounded-xl bg-tocineta-bg border border-tocineta-border text-white text-xs font-bold hover:border-tocineta-yellow/50 transition-all flex items-center justify-center gap-2"
+              >
+                <span>🔄</span>
+                <span>{isSyncingBcv ? 'Sincronizando...' : 'Sincronizar Internet'}</span>
               </button>
             </div>
           </div>

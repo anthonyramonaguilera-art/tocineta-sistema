@@ -15,6 +15,8 @@ import {
 import { generateUuidV7, createIdempotencyKey, usdToBsCents, canUserProcessPayments } from '@tocineta/shared';
 import { MultiMethodCalculator } from '../cashier/MultiMethodCalculator.js';
 import { ApplyCouponModal } from '../coupons/ApplyCouponModal.js';
+import { ProductImagePlaceholder } from '../../components/ProductImagePlaceholder.js';
+import { ShoppingCart, Send, Loader2 } from 'lucide-react';
 
 interface ExistingOrder {
   id: string;
@@ -780,22 +782,14 @@ export const PosComandero: React.FC = () => {
                   </div>
                 )}
 
-                {/* Imagen del Producto o Marcador Visual de Marca */}
-                <div className="w-full h-28 rounded-2xl mb-2.5 overflow-hidden bg-tocineta-bg border border-tocineta-border/60 flex items-center justify-center relative">
-                  {(product.imageUrl || (product as any).image_url) ? (
-                    <img
-                      src={product.imageUrl || (product as any).image_url}
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="flex flex-col items-center justify-center text-center p-1.5">
-                      <div className="w-9 h-9 rounded-full bg-tocineta-yellow/10 border border-tocineta-yellow/30 text-tocineta-yellow flex items-center justify-center text-base mb-0.5">
-                        {product.station === 'hamburguesas' ? '🍔' : product.station === 'caja_bebidas' ? '🥤' : '🌭'}
-                      </div>
-                      <span className="text-[9px] font-bold text-tocineta-muted uppercase tracking-wider">Tocineta Sonríe</span>
-                    </div>
-                  )}
+                {/* Imagen del Producto con Fallback SVG Elegante */}
+                <div className="mb-2.5">
+                  <ProductImagePlaceholder
+                    imageUrl={product.imageUrl || (product as any).image_url}
+                    name={product.name}
+                    station={product.station}
+                    className="w-full h-28"
+                  />
                 </div>
 
                 <div>
@@ -807,6 +801,11 @@ export const PosComandero: React.FC = () => {
                       <h3 className="font-black text-base text-white leading-tight mt-0.5">
                         {product.name}
                       </h3>
+                      {product.baseIngredients && product.baseIngredients.length > 0 && (
+                        <p className="text-xs text-gray-400 line-clamp-2 mt-1">
+                          {product.baseIngredients.map(ing => ing.name).join(', ')}
+                        </p>
+                      )}
                     </div>
                   </div>
 
@@ -1216,7 +1215,8 @@ export const PosComandero: React.FC = () => {
                 disabled={cart.length === 0 || isSubmitting}
                 className="w-full min-h-[48px] rounded-2xl bg-tocineta-card border border-tocineta-border text-white font-bold text-xs hover:border-tocineta-yellow/60 active:scale-95 transition-all flex items-center justify-center gap-1.5"
               >
-                <span>📤 Solo Enviar a Caja</span>
+                <Send className="w-4 h-4" />
+                <span>Solo Enviar a Caja</span>
               </button>
             </div>
           ) : (
@@ -1227,9 +1227,12 @@ export const PosComandero: React.FC = () => {
               className="w-full min-h-[54px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base disabled:opacity-40 disabled:pointer-events-none hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl"
             >
               {isSubmitting ? (
-                <span className="animate-spin inline-block text-xl">⏳</span>
+                <Loader2 className="w-5 h-5 animate-spin" />
               ) : (
-                <span>🚀 Enviar a Caja ({tableNumber})</span>
+                <>
+                  <Send className="w-5 h-5" />
+                  <span>Enviar a Caja ({tableNumber})</span>
+                </>
               )}
             </button>
           )}
@@ -1240,7 +1243,7 @@ export const PosComandero: React.FC = () => {
 
       {/* Botón Flotante Móvil del Comandero con Total Dual Simultáneo USD + Bs (H-04 / H-05) */}
       {cart.length > 0 && (
-        <div className="lg:hidden fixed bottom-4 left-4 right-4 z-30">
+        <div className="lg:hidden fixed bottom-[68px] left-4 right-4 z-30">
           <button
             type="button"
             onClick={() => {
@@ -1250,7 +1253,7 @@ export const PosComandero: React.FC = () => {
             className="w-full min-h-[48px] bg-tocineta-yellow text-tocineta-bg font-black text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between border-2 border-yellow-300 active:scale-98 transition-all"
           >
             <span className="flex items-center gap-2">
-              <span>🛒</span>
+              <ShoppingCart className="w-4 h-4 text-tocineta-bg" />
               <span>Pedido ({cart.reduce((s, i) => s + i.quantity, 0)})</span>
             </span>
             <span className="font-mono text-right">
