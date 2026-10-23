@@ -31,6 +31,12 @@ interface ExistingOrder {
   lines: any[];
 }
 
+const TABLE_OPTIONS = [
+  'Mesa 1', 'Mesa 2', 'Mesa 3', 'Mesa 4', 'Mesa 5', 'Mesa 6',
+  'Mesa 7', 'Mesa 8', 'Mesa 9', 'Mesa 10', 'Mesa 11',
+  'Barra Food Truck', 'Para Llevar'
+];
+
 export const PosComandero: React.FC = () => {
   const { currency, token, user } = useAuth();
 
@@ -40,6 +46,7 @@ export const PosComandero: React.FC = () => {
 
   // Estado del Carrito / Nuevo Pedido
   const [cart, setCart] = useState<CartItem[]>([]);
+  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
   const [tableNumber, setTableNumber] = useState<string>('Mesa 1');
   const [fulfillmentType, setFulfillmentType] = useState<'salon' | 'para_llevar' | 'delivery'>('salon');
   const [deliveryTierCents, setDeliveryTierCents] = useState<number>(200);
@@ -254,14 +261,16 @@ export const PosComandero: React.FC = () => {
   // --------------------------------------------------------------------------
   // CÁLCULO DE TOTALES DEL PEDIDO
   // --------------------------------------------------------------------------
-  const { subtotalCents, deliveryFeeCents, totalToCollectCents } = useMemo(() => {
+  const { subtotalCents, deliveryFeeCents, totalToCollectCents, totalItems } = useMemo(() => {
     const subtotal = cart.reduce((sum, item) => sum + (item.unitPriceUsdCents * item.quantity), 0);
+    const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
     const delivery = fulfillmentType === 'delivery' ? deliveryTierCents : 0;
     const total = subtotal + delivery;
     return {
       subtotalCents: subtotal,
       deliveryFeeCents: delivery,
-      totalToCollectCents: total
+      totalToCollectCents: total,
+      totalItems: itemsCount
     };
   }, [cart, fulfillmentType, deliveryTierCents]);
 
@@ -905,18 +914,9 @@ export const PosComandero: React.FC = () => {
                 onChange={e => setTableNumber(e.target.value)}
                 className="bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-1.5 text-xs font-bold text-tocineta-yellow outline-none min-h-[42px]"
               >
-                <option value="Mesa 1">Mesa 1</option>
-                <option value="Mesa 2">Mesa 2</option>
-                <option value="Mesa 3">Mesa 3</option>
-                <option value="Mesa 4">Mesa 4</option>
-                <option value="Mesa 5">Mesa 5</option>
-                <option value="Mesa 6">Mesa 6</option>
-                <option value="Mesa 7">Mesa 7</option>
-                <option value="Mesa 8">Mesa 8</option>
-                <option value="Mesa 9">Mesa 9</option>
-                <option value="Mesa 10">Mesa 10</option>
-                <option value="Barra Food Truck">Barra Food Truck</option>
-                <option value="Para Llevar">Para Llevar</option>
+                {TABLE_OPTIONS.map(opt => (
+                  <option key={opt} value={opt}>{opt}</option>
+                ))}
               </select>
             </div>
 
@@ -1241,25 +1241,307 @@ export const PosComandero: React.FC = () => {
 
       </div>
 
-      {/* Botón Flotante Móvil del Comandero con Total Dual Simultáneo USD + Bs (H-04 / H-05) */}
+      {/* Botón Flotante Móvil del Comandero con Total Dual Simultáneo USD + Bs (Punto 1) */}
       {cart.length > 0 && (
-        <div className="lg:hidden fixed bottom-[68px] left-4 right-4 z-30">
+        <div className="lg:hidden fixed bottom-[68px] left-3 right-3 z-[60] pointer-events-auto">
           <button
             type="button"
-            onClick={() => {
-              const cartElem = document.getElementById('pos-cart-panel');
-              cartElem?.scrollIntoView({ behavior: 'smooth' });
-            }}
-            className="w-full min-h-[48px] bg-tocineta-yellow text-tocineta-bg font-black text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between border-2 border-yellow-300 active:scale-98 transition-all"
+            onClick={() => setIsMobileCartOpen(true)}
+            className="w-full min-h-[52px] bg-tocineta-yellow text-tocineta-bg font-black text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between border-2 border-yellow-300 z-[60] cursor-pointer pointer-events-auto active:scale-95 transition-all"
           >
             <span className="flex items-center gap-2">
-              <ShoppingCart className="w-4 h-4 text-tocineta-bg" />
-              <span>Pedido ({cart.reduce((s, i) => s + i.quantity, 0)})</span>
+              <ShoppingCart className="w-5 h-5 text-tocineta-bg" />
+              <span>🛒 Pedido ({totalItems})</span>
             </span>
-            <span className="font-mono text-right">
-              {formatDualPrice(totalToCollectCents)}
-            </span>
+            <div className="flex items-center gap-2">
+              <span className="font-mono text-right font-black text-xs sm:text-sm">
+                {formatDualPrice(totalToCollectCents)}
+              </span>
+              <span className="px-2.5 py-1 rounded-xl bg-black text-tocineta-yellow text-xs font-black shadow flex items-center gap-1">
+                Ver / Enviar ▲
+              </span>
+            </div>
           </button>
+        </div>
+      )}
+
+      {/* MODAL / CAJÓN MÓVIL DE PANTALLA COMPLETA (Punto 1.c) */}
+      {isMobileCartOpen && (
+        <div className="fixed inset-0 z-[90] bg-black/85 flex flex-col justify-end lg:hidden animate-in fade-in">
+          {/* Fondo oscuro para cerrar al pulsar arriba */}
+          <div
+            className="flex-1 w-full"
+            onClick={() => setIsMobileCartOpen(false)}
+          />
+
+          <div className="bg-[#12141A] border-t-2 border-tocineta-yellow rounded-t-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5">
+            {/* Cabecera del Cajón Móvil */}
+            <div className="p-4 border-b border-tocineta-border flex items-center justify-between bg-black/60">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🛒</span>
+                <div>
+                  <h3 className="font-black text-base text-white">Tu Pedido Actual</h3>
+                  <span className="text-[11px] text-tocineta-muted">
+                    {totalItems} {totalItems === 1 ? 'producto' : 'productos'}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {cart.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      handleClearCart();
+                      setIsMobileCartOpen(false);
+                    }}
+                    className="min-h-[48px] px-3 py-2 text-xs text-red-400 hover:text-red-300 font-bold rounded-xl bg-red-500/10 active:scale-95 flex items-center gap-1"
+                  >
+                    <span>🗑️</span>
+                    <span>Vaciar</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setIsMobileCartOpen(false)}
+                  className="min-h-[48px] min-w-[48px] rounded-xl bg-tocineta-card border border-tocineta-border text-white hover:text-tocineta-yellow font-black text-lg flex items-center justify-center active:scale-95"
+                  aria-label="Cerrar pedido"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            {/* Contenido Desplazable del Pedido Móvil */}
+            <div className="overflow-y-auto max-h-[45vh] p-4 space-y-3">
+              {/* Selector de Canal / Mesa */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted">
+                    Ubicación / Mesa:
+                  </span>
+                  <select
+                    value={tableNumber}
+                    onChange={e => setTableNumber(e.target.value)}
+                    className="bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs font-bold text-tocineta-yellow outline-none min-h-[44px]"
+                  >
+                    {TABLE_OPTIONS.map(opt => (
+                      <option key={opt} value={opt}>{opt}</option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Modalidad: Salón / Llevar / Delivery */}
+                <div className="grid grid-cols-3 gap-1 bg-tocineta-bg p-1 rounded-2xl border border-tocineta-border">
+                  {(['salon', 'para_llevar', 'delivery'] as const).map(type => (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setFulfillmentType(type)}
+                      className={`min-h-[44px] rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
+                        fulfillmentType === type
+                          ? 'bg-tocineta-yellow text-tocineta-bg shadow font-black'
+                          : 'text-tocineta-muted hover:text-white'
+                      }`}
+                    >
+                      {type === 'salon' ? '🍽️ Salón' : type === 'para_llevar' ? '🛍️ Llevar' : '🛵 Delivery'}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Delivery: Tarifas, Cliente y Motorizado */}
+                {fulfillmentType === 'delivery' && (
+                  <div className="p-3 bg-tocineta-bg border border-tocineta-border rounded-2xl space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-tocineta-muted block">
+                      Tarifa de Delivery:
+                    </span>
+                    <div className="grid grid-cols-4 gap-1">
+                      {[
+                        { cents: 200, label: '+$2.00' },
+                        { cents: 300, label: '+$3.00' },
+                        { cents: 400, label: '+$4.00' },
+                        { cents: 500, label: '+$5.00' }
+                      ].map(t => (
+                        <button
+                          key={t.cents}
+                          type="button"
+                          onClick={() => setDeliveryTierCents(t.cents)}
+                          className={`min-h-[44px] rounded-xl text-xs font-mono font-black transition-all ${
+                            deliveryTierCents === t.cents
+                              ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted'
+                          }`}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <input
+                        type="text"
+                        placeholder="Nombre cliente"
+                        value={customerName}
+                        onChange={e => setCustomerName(e.target.value)}
+                        className="min-h-[42px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Teléfono"
+                        value={customerPhone}
+                        onChange={e => setCustomerPhone(e.target.value)}
+                        className="min-h-[42px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none font-mono"
+                      />
+                    </div>
+
+                    <input
+                      type="text"
+                      placeholder="Dirección de entrega..."
+                      value={deliveryAddress}
+                      onChange={e => setDeliveryAddress(e.target.value)}
+                      className="w-full min-h-[42px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none"
+                    />
+
+                    <select
+                      value={motorizadoId}
+                      onChange={e => setMotorizadoId(e.target.value)}
+                      className="w-full min-h-[42px] bg-tocineta-card border border-tocineta-border rounded-xl px-3 text-xs font-bold text-tocineta-yellow outline-none"
+                    >
+                      <option value="">-- Sin motorizado asignado --</option>
+                      {(driversData?.drivers || []).map(d => (
+                        <option key={d.id} value={d.id}>🛵 {d.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
+
+                {/* Nota del Cliente */}
+                <input
+                  type="text"
+                  placeholder="Nota u observaciones del cliente..."
+                  value={notes}
+                  onChange={e => setNotes(e.target.value)}
+                  className="w-full min-h-[44px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-white placeholder-tocineta-muted focus:border-tocineta-yellow outline-none"
+                />
+              </div>
+
+              {/* Lista desplazable de productos */}
+              <div className="space-y-2 pt-2 border-t border-tocineta-border/60">
+                {cart.length === 0 ? (
+                  <p className="text-center text-xs text-tocineta-muted py-6">El pedido está vacío</p>
+                ) : (
+                  cart.map(item => (
+                    <div
+                      key={item.clientLineId}
+                      className="bg-tocineta-bg border border-tocineta-border rounded-2xl p-3 space-y-1.5 shadow-sm"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <span className="font-black text-sm text-white block leading-tight">
+                            {item.productName}
+                          </span>
+                          <span className="text-xs font-mono font-bold text-tocineta-yellow">
+                            {formatPrice(item.unitPriceUsdCents)} c/u
+                          </span>
+                        </div>
+
+                        {/* Botones [-] y [+] (WCAG min 48x48px) */}
+                        <div className="flex items-center gap-1.5 bg-tocineta-card border border-tocineta-border rounded-xl p-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleChangeQty(item.clientLineId, -1)}
+                            className="min-h-[48px] min-w-[48px] rounded-lg bg-tocineta-bg text-white hover:text-red-400 font-black text-lg flex items-center justify-center active:scale-95"
+                          >
+                            -
+                          </button>
+                          <span className="w-7 text-center font-mono font-black text-sm text-white">
+                            {item.quantity}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleChangeQty(item.clientLineId, 1)}
+                            className="min-h-[48px] min-w-[48px] rounded-lg bg-tocineta-yellow text-tocineta-bg font-black text-lg flex items-center justify-center active:scale-95"
+                          >
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Modificadores */}
+                      {(item.modifiers.length > 0 || item.customInstructions || item.comboChildren) && (
+                        <div className="pt-1 border-t border-tocineta-border/40 text-[11px] text-tocineta-muted">
+                          {item.modifiers.map((m, idx) => (
+                            <span key={idx} className="inline-block mr-1 text-[10px] text-tocineta-yellow">
+                              +{m.ingredientName}
+                            </span>
+                          ))}
+                          {item.customInstructions && (
+                            <p className="italic text-amber-300">"{item.customInstructions}"</p>
+                          )}
+                          {item.comboChildren && (
+                            <p className="text-[10px] text-purple-300">
+                              Combo: {item.comboChildren.map(c => c.productName).join(' + ')}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {/* Pie Fijo del Cajón Móvil con Totales y Botones de Acción */}
+            <div className="p-4 bg-black/80 border-t border-tocineta-border space-y-3">
+              <div className="flex items-center justify-between text-white font-mono">
+                <span className="text-xs uppercase font-bold text-tocineta-muted">Total a Pagar:</span>
+                <span className="text-base sm:text-lg font-black text-tocineta-yellow text-right">
+                  {formatDualPrice(totalToCollectCents)}
+                </span>
+              </div>
+
+              <div className="space-y-2">
+                {/* 1. [📤 Enviar a Caja] */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileCartOpen(false);
+                    handleSubmitOrder(false);
+                  }}
+                  disabled={cart.length === 0 || isSubmitting}
+                  className="w-full min-h-[54px] rounded-2xl bg-tocineta-card border-2 border-tocineta-yellow/70 text-white font-black text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-40"
+                >
+                  {isSubmitting ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5 text-tocineta-yellow" />
+                      <span>📤 Enviar a Caja ({tableNumber})</span>
+                    </>
+                  )}
+                </button>
+
+                {/* 2. [💳 Enviar y Cobrar Ahora] (si canUserProcessPayments) */}
+                {canUserProcessPayments(user?.role) && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsMobileCartOpen(false);
+                      handleSubmitOrder(true);
+                    }}
+                    disabled={cart.length === 0 || isSubmitting}
+                    className="w-full min-h-[54px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-sm hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl disabled:opacity-40"
+                  >
+                    {isSubmitting ? (
+                      <span className="animate-spin inline-block text-xl">⏳</span>
+                    ) : (
+                      <span>💳 Enviar y Cobrar Ahora ({tableNumber})</span>
+                    )}
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
@@ -1314,7 +1596,7 @@ export const PosComandero: React.FC = () => {
 
       {/* MODAL DE COBRO EXPRESS EN COMANDERO (Hito M19 C.1) */}
       {expressCheckoutOrder && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in overflow-y-auto">
+        <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in overflow-y-auto">
           <div className="bg-tocineta-card border border-tocineta-border rounded-3xl p-5 max-w-2xl w-full shadow-2xl space-y-4 my-8">
             <div className="flex items-center justify-between pb-3 border-b border-tocineta-border">
               <div className="flex items-center gap-2">
