@@ -58,6 +58,18 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
     logger: options.logger !== undefined ? options.logger : defaultLogger
   });
 
+  // Parser tolerante a cuerpos vacíos (Evita 400 Bad Request FST_ERR_CTP_EMPTY_JSON_BODY)
+  server.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, body, done) => {
+    if (!body || (typeof body === 'string' && body.trim() === '')) {
+      return done(null, {});
+    }
+    try {
+      done(null, JSON.parse(body as string));
+    } catch (err) {
+      done(err as Error, undefined);
+    }
+  });
+
   // Inicializar PrintingWorker interno
   const dbCtx = getDatabaseContext();
 

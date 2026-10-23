@@ -46,7 +46,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
   const [child1ProductId, setChild1ProductId] = useState<string>(() => {
     if (isComboParaTi) return burgerOptions[0]?.id || 'prod_texas_mex';
     if (isComboStreet) return 'prod_street_dog';
-    return dogOptions[0]?.id || 'prod_classic_dog';
+    return dogOptions[0]?.id || 'prod_street_dog';
   });
   const [child1Modifiers, setChild1Modifiers] = useState<CustomizationModifier[]>([]);
   const [child1Instructions, setChild1Instructions] = useState<string>('');

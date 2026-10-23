@@ -4,6 +4,7 @@ import * as path from 'node:path';
 import { usdToBsCents, formatMicroBsToRate } from '@tocineta/shared';
 import { publishDomainEvent, getLatestEventSeq } from '../events/event-bus.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
+import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
 
 export function getCurrentExchangeRate(rawDb: Database.Database): number {
   const row = rawDb.prepare(`
@@ -236,12 +237,8 @@ export function getPosMenu(rawDb: Database.Database) {
     slots: slotsByCombo.get(c.id) || []
   }));
 
-  // 7. Zonas rápidas de Delivery desde business_settings
-  const settingsRow = rawDb.prepare(`
-    SELECT delivery_accounting_mode, delivery_quick_tiers_json
-    FROM business_settings
-    WHERE id = 'default'
-  `).get() as { delivery_accounting_mode: string; delivery_quick_tiers_json: string } | undefined;
+  // 7. Zonas rápidas de Delivery desde business_settings (Defensivo)
+  const settingsRow = ensureBusinessSettingsDefensive(rawDb);
 
   let deliveryQuickTiers: Array<{ usdCents: number; bsCents: number; label: string }> = [];
   try {
@@ -329,13 +326,34 @@ export function getAdminMenu(rawDb: Database.Database) {
     ORDER BY name ASC
   `).all() as any[];
 
+  const prodIngRows = rawDb.prepare(`
+    SELECT pi.id, pi.product_id, pi.ingredient_id, i.name as ingredient_name, pi.is_removable, pi.display_order
+    FROM product_ingredients pi
+    JOIN ingredients i ON pi.ingredient_id = i.id
+    ORDER BY pi.display_order ASC
+  `).all() as any[];
+
+  const prodIngMap = new Map<string, Array<{ id: string; ingredientId: string; name: string; isRemovable: boolean; displayOrder: number }>>();
+  for (const row of prodIngRows) {
+    const list = prodIngMap.get(row.product_id) || [];
+    list.push({
+      id: row.id,
+      ingredientId: row.ingredient_id,
+      name: row.ingredient_name,
+      isRemovable: Boolean(row.is_removable),
+      displayOrder: row.display_order
+    });
+    prodIngMap.set(row.product_id, list);
+  }
+
   const formattedProducts = products.map(p => ({
     ...p,
     isActive: Boolean(p.is_active),
     isAvailable: Boolean(p.is_available),
     isCombo: Boolean(p.is_combo),
     allowsFlavors: Boolean(p.allows_flavors),
-    priceBsCents: usdToBsCents(p.price_usd_cents, rateMicroBs)
+    priceBsCents: usdToBsCents(p.price_usd_cents, rateMicroBs),
+    ingredients: prodIngMap.get(p.id) || []
   }));
 
   const ingredients = rawDb.prepare(`
@@ -354,9 +372,7 @@ export function getAdminMenu(rawDb: Database.Database) {
     SELECT * FROM coupons ORDER BY created_at_ms DESC
   `).all() as any[];
 
-  const businessSettings = rawDb.prepare(`
-    SELECT * FROM business_settings WHERE id = 'default'
-  `).get() as any;
+  const businessSettings = ensureBusinessSettingsDefensive(rawDb);
 
   return {
     success: true,
@@ -663,7 +679,7 @@ export function saveProductPhoto(
   const filePath = path.join(targetDir, filename);
   fs.writeFileSync(filePath, buffer);
 
-  const imageUrl = `/uploads/${filename}`;
+  const imageUrl = `/uploads/${filename}?t=${Date.now()}`;
   rawDb.prepare('UPDATE products SET image_url = ?, updated_at_ms = ? WHERE id = ?').run(imageUrl, Date.now(), productId);
 
   appendAuditEvent(rawDb, {
@@ -681,6 +697,99 @@ export function saveProductPhoto(
   });
 
   return { imageUrl };
+}
+
+/**
+ * Vincular o crear un ingrediente a un plato en el acto
+ */
+export function addProductIngredient(
+  rawDb: Database.Database,
+  productId: string,
+  data: { ingredientId?: string; name?: string; isRemovable?: boolean },
+  actorUserId: string
+) {
+  const prod = rawDb.prepare('SELECT id, name FROM products WHERE id = ?').get(productId) as any;
+  if (!prod) {
+    throw new Error(`Producto '${productId}' no encontrado`);
+  }
+
+  let ingredientId = data.ingredientId;
+  let ingredientName = data.name;
+
+  if (!ingredientId && data.name) {
+    const cleanName = data.name.trim();
+    const existing = rawDb.prepare('SELECT id, name FROM ingredients WHERE LOWER(name) = LOWER(?)').get(cleanName) as any;
+    if (existing) {
+      ingredientId = existing.id;
+      ingredientName = existing.name;
+    } else {
+      ingredientId = `ing_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      rawDb.prepare(`
+        INSERT INTO ingredients (id, name, is_barra_libre, extra_price_usd_cents, internal_cost_usd_cents, is_active)
+        VALUES (?, ?, 0, 0, 20, 1)
+      `).run(ingredientId, cleanName);
+      ingredientName = cleanName;
+    }
+  }
+
+  if (!ingredientId) {
+    throw new Error('Debe especificar un ingrediente existente o el nombre de uno nuevo');
+  }
+
+  const ing = rawDb.prepare('SELECT id, name FROM ingredients WHERE id = ?').get(ingredientId) as any;
+  if (!ing) {
+    throw new Error(`Ingrediente '${ingredientId}' no encontrado`);
+  }
+  ingredientName = ing.name;
+
+  const alreadyAssigned = rawDb.prepare('SELECT id FROM product_ingredients WHERE product_id = ? AND ingredient_id = ?').get(productId, ingredientId) as any;
+  if (alreadyAssigned) {
+    return { success: true, id: alreadyAssigned.id, ingredientId, name: ingredientName };
+  }
+
+  const maxOrderRow = rawDb.prepare('SELECT MAX(display_order) as max_ord FROM product_ingredients WHERE product_id = ?').get(productId) as any;
+  const nextOrder = (maxOrderRow?.max_ord ?? 0) + 1;
+  const linkId = `pi_${productId}_${ingredientId}`;
+
+  rawDb.prepare(`
+    INSERT OR REPLACE INTO product_ingredients (id, product_id, ingredient_id, is_removable, display_order)
+    VALUES (?, ?, ?, ?, ?)
+  `).run(linkId, productId, ingredientId, data.isRemovable !== false ? 1 : 0, nextOrder);
+
+  appendAuditEvent(rawDb, {
+    actorUserId,
+    action: 'PRODUCT_INGREDIENT_ADDED',
+    entityType: 'product',
+    entityId: productId,
+    payload: { ingredientId, ingredientName }
+  });
+
+  return { success: true, id: linkId, ingredientId, name: ingredientName };
+}
+
+/**
+ * Quitar un ingrediente de un plato
+ */
+export function removeProductIngredient(
+  rawDb: Database.Database,
+  productId: string,
+  ingredientIdOrLinkId: string,
+  actorUserId: string
+) {
+  const deleted = rawDb.prepare(`
+    DELETE FROM product_ingredients
+    WHERE product_id = ? AND (ingredient_id = ? OR id = ?)
+  `).run(productId, ingredientIdOrLinkId, ingredientIdOrLinkId);
+
+  appendAuditEvent(rawDb, {
+    actorUserId,
+    action: 'PRODUCT_INGREDIENT_REMOVED',
+    entityType: 'product',
+    entityId: productId,
+    payload: { target: ingredientIdOrLinkId }
+  });
+
+  return { success: true, deletedCount: deleted.changes };
 }
 
 /**

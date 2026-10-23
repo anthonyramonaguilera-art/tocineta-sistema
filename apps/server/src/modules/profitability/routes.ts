@@ -20,6 +20,8 @@ import {
 } from './net-profit.js';
 import { generateMenuEngineeringReport } from './menu-engineering.js';
 
+import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
+
 export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
   const getUserFromRequest = (req: any) => {
     const dbCtx = getDatabaseContext();
@@ -31,23 +33,31 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
 
   // 1. Configuración de Interruptores (profitability_pro_enabled, fiscal_module_enabled, IGTF)
   fastify.get('/api/profitability/settings', async (_request, reply) => {
-    const dbCtx = getDatabaseContext();
-    const row = dbCtx.rawDb.prepare(`
-      SELECT profitability_pro_enabled, fiscal_module_enabled, fiscal_price_mode,
-             igtf_enabled, igtf_rate_bps, igtf_applies_to
-      FROM business_settings
-      WHERE id = 'default'
-    `).get() as any;
+    try {
+      const dbCtx = getDatabaseContext();
+      const row = ensureBusinessSettingsDefensive(dbCtx.rawDb);
 
-    return reply.status(200).send({
-      success: true,
-      profitabilityProEnabled: Boolean(row?.profitability_pro_enabled),
-      fiscalModuleEnabled: Boolean(row?.fiscal_module_enabled),
-      fiscalPriceMode: row?.fiscal_price_mode || 'INCLUSIVE',
-      igtfEnabled: Boolean(row?.igtf_enabled),
-      igtfRateBps: row?.igtf_rate_bps ?? 300,
-      igtfAppliesTo: row?.igtf_applies_to || 'CASH_USD'
-    });
+      return reply.status(200).send({
+        success: true,
+        profitabilityProEnabled: Boolean(row.profitability_pro_enabled),
+        fiscalModuleEnabled: Boolean(row.fiscal_module_enabled),
+        fiscalPriceMode: row.fiscal_price_mode || 'INCLUSIVE',
+        igtfEnabled: Boolean(row.igtf_enabled),
+        igtfRateBps: row.igtf_rate_bps ?? 300,
+        igtfAppliesTo: row.igtf_applies_to || 'CASH_USD'
+      });
+    } catch (err: any) {
+      fastify.log.error(err, 'Error defensivo en GET /api/profitability/settings');
+      return reply.status(200).send({
+        success: true,
+        profitabilityProEnabled: false,
+        fiscalModuleEnabled: false,
+        fiscalPriceMode: 'INCLUSIVE',
+        igtfEnabled: false,
+        igtfRateBps: 300,
+        igtfAppliesTo: 'CASH_USD'
+      });
+    }
   });
 
   fastify.patch('/api/profitability/settings', async (request, reply) => {

@@ -6,11 +6,12 @@
   "main": "./dist/index.js",
   "scripts": {
     "dev": "tsx watch src/index.ts",
-    "build": "tsc -b && cp -r src/db/migrations dist/db/",
+    "build": "tsc -b && node --input-type=module -e \"import fs from 'node:fs'; fs.cpSync('src/db/migrations', 'dist/db/migrations', { recursive: true });\"",
     "start": "node dist/index.js",
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "db:migrate": "tsx src/db/migrate.ts",
+    "db:reset-prod": "tsx src/db/reset-for-production.ts",
     "db:seed:users": "tsx src/modules/auth/seed-users.ts",
     "print:release1": "tsx scripts/print-physical-release1.ts",
     "physical:release1": "tsx scripts/physical-release1-check.ts"

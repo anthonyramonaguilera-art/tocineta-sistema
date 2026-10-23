@@ -13,8 +13,11 @@ import {
   createProduct,
   updateProduct,
   saveProductPhoto,
+  addProductIngredient,
+  removeProductIngredient,
   setExchangeRate
 } from './menu-service.js';
+import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
 import { getEventsSince } from '../events/event-bus.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
@@ -63,8 +66,19 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. Catálogo Operativo para Comandero y Caja (GET /api/menu/pos)
   fastify.get('/api/menu/pos', async (_request, reply) => {
     const dbCtx = getDatabaseContext();
-    const data = getPosMenu(dbCtx.rawDb);
-    return reply.status(200).send(data);
+    try {
+      ensureBusinessSettingsDefensive(dbCtx.rawDb);
+      const data = getPosMenu(dbCtx.rawDb);
+      return reply.status(200).send(data);
+    } catch (err: any) {
+      fastify.log.error(err, 'Error defensivo en GET /api/menu/pos');
+      return reply.status(200).send({
+        categories: [],
+        products: [],
+        exchangeRate: { rateMicroBs: 40_000_000, formattedRate: '40.00' },
+        businessSettings: { businessName: 'Tocineta Sonríe', phone: '0412-0000000' }
+      });
+    }
   });
 
   // 2. Catálogo Completo para Admin (GET /api/menu/admin)
@@ -89,6 +103,41 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(200).send({ success: true, ...result });
     } catch (err: any) {
       return reply.status(404).send({ success: false, error: err.message });
+    }
+  });
+
+  // 3.1 Crear Nueva Categoría (POST /api/menu/categories)
+  fastify.post('/api/menu/categories', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const user = requireRoles(request, reply, dbCtx.rawDb, ['admin']);
+    if (!user) return;
+
+    const body = request.body as { name?: string; description?: string; station?: 'hot_dogs' | 'hamburguesas' | 'caja_bebidas' } | undefined;
+    if (!body?.name?.trim()) {
+      return reply.status(400).send({ success: false, error: 'Debe especificar el nombre de la categoría' });
+    }
+
+    const catId = `cat_${body.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Date.now()}`;
+    const maxOrderRow = dbCtx.rawDb.prepare('SELECT MAX(display_order) as max_ord FROM categories').get() as any;
+    const displayOrder = (maxOrderRow?.max_ord ?? 0) + 1;
+
+    try {
+      dbCtx.rawDb.prepare(`
+        INSERT INTO categories (id, name, description, display_order, is_active, is_internal, station)
+        VALUES (?, ?, ?, ?, 1, 0, ?)
+      `).run(catId, body.name.trim(), body.description?.trim() || null, displayOrder, body.station || 'hot_dogs');
+
+      appendAuditEvent(dbCtx.rawDb, {
+        actorUserId: user.userId,
+        action: 'CATEGORY_CREATED',
+        entityType: 'category',
+        entityId: catId,
+        payload: { name: body.name }
+      });
+
+      return reply.status(201).send({ success: true, category: { id: catId, name: body.name } });
+    } catch (err: any) {
+      return reply.status(400).send({ success: false, error: err.message });
     }
   });
 
@@ -242,6 +291,39 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const result = saveProductPhoto(dbCtx.rawDb, id, base64Data, user.userId);
       return reply.status(200).send({ success: true, ...result });
+    } catch (err: any) {
+      return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
+
+  // 8.1 Agregar / Asociar Ingrediente al Producto (POST /api/menu/products/:id/ingredients)
+  fastify.post('/api/menu/products/:id/ingredients', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const user = requireRoles(request, reply, dbCtx.rawDb, ['admin', 'supervisor']);
+    if (!user) return;
+
+    const { id } = request.params as { id: string };
+    const body = request.body as { ingredientId?: string; name?: string; isRemovable?: boolean } | undefined;
+
+    try {
+      const result = addProductIngredient(dbCtx.rawDb, id, body || {}, user.userId);
+      return reply.status(200).send(result);
+    } catch (err: any) {
+      return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
+
+  // 8.2 Desasociar Ingrediente del Producto (DELETE /api/menu/products/:id/ingredients/:ingredientId)
+  fastify.delete('/api/menu/products/:id/ingredients/:ingredientId', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const user = requireRoles(request, reply, dbCtx.rawDb, ['admin', 'supervisor']);
+    if (!user) return;
+
+    const { id, ingredientId } = request.params as { id: string; ingredientId: string };
+
+    try {
+      const result = removeProductIngredient(dbCtx.rawDb, id, ingredientId, user.userId);
+      return reply.status(200).send(result);
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
     }

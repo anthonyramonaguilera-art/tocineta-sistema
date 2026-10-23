@@ -18,11 +18,41 @@ import { StatusCard, MetricRow } from './StatusCard.js';
 import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
 
 export const SystemHealthDashboard: React.FC = () => {
+  const [backupStatus, setBackupStatus] = React.useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [isExporting, setIsExporting] = React.useState(false);
+
   const { data, error, isLoading, isFetching, refetch } = useQuery({
     queryKey: ['systemHealth'],
     queryFn: fetchSystemHealth,
     refetchInterval: 3000 // Refresco automático en vivo cada 3 segundos
   });
+
+  const handleExportEncrypted = async () => {
+    setIsExporting(true);
+    setBackupStatus(null);
+    try {
+      const res = await fetch('/api/backups/export-encrypted', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
+      });
+      const resData = await res.json();
+      if (!res.ok) throw new Error(resData.error || 'Error al exportar respaldo cifrado');
+      setBackupStatus({
+        type: 'success',
+        text: `✓ Respaldo cifrado exitoso: ${resData.backup?.filename || 'copia creada'} (${((resData.backup?.fileSizeBytes || 0) / 1024).toFixed(1)} KB)`
+      });
+      setTimeout(() => setBackupStatus(null), 5000);
+      refetch();
+    } catch (e: any) {
+      setBackupStatus({
+        type: 'error',
+        text: `Error al exportar respaldo: ${e.message}`
+      });
+    } finally {
+      setIsExporting(false);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -70,6 +100,19 @@ export const SystemHealthDashboard: React.FC = () => {
         storageKey="tocineta_guide_health"
       />
 
+      {backupStatus && (
+        <div
+          className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between ${
+            backupStatus.type === 'success'
+              ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
+              : 'bg-red-500/20 border-red-500/50 text-red-300'
+          }`}
+        >
+          <span>{backupStatus.text}</span>
+          <button onClick={() => setBackupStatus(null)} className="text-sm font-black ml-2 hover:text-white">✕</button>
+        </div>
+      )}
+
       {/* Banner Principal de Estado de Producción */}
       <div className="bg-gradient-to-r from-tocineta-card via-[#1A1F2B] to-tocineta-card border border-tocineta-border rounded-2xl p-6 relative overflow-hidden shadow-2xl">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -89,6 +132,14 @@ export const SystemHealthDashboard: React.FC = () => {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={handleExportEncrypted}
+              disabled={isExporting}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black px-4 py-2.5 rounded-xl text-xs uppercase transition-all shadow disabled:opacity-50 cursor-pointer"
+            >
+              <ShieldCheck className="w-4 h-4" />
+              <span>{isExporting ? 'Cifrando...' : 'Exportar Respaldo Cifrado'}</span>
+            </button>
             <button
               onClick={() => refetch()}
               disabled={isFetching}

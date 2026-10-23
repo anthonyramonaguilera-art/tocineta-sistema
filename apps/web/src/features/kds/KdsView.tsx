@@ -118,6 +118,7 @@ export const KdsView: React.FC = () => {
   const [stationFilter, setStationFilter] = useState<StationFilter>('all');
   const [soundActive, setSoundActive] = useState<boolean>(kdsSound.isEnabled());
   const [mobileTab, setMobileTab] = useState<'pendiente' | 'preparando' | 'listo'>('pendiente');
+  const [feedbackMessage, setFeedbackMessage] = useState<string | null>(null);
 
   const isGodModeUser = user?.role === 'admin' || user?.role === 'supervisor' || Boolean(user?.permissions?.includes('KDS_FORCE_COMPLETE'));
 
@@ -200,6 +201,8 @@ export const KdsView: React.FC = () => {
       return res.json();
     },
     onSuccess: () => {
+      setFeedbackMessage('✓ Comanda entregada y despachada exitosamente');
+      setTimeout(() => setFeedbackMessage(null), 3500);
       queryClient.invalidateQueries({ queryKey: ['kdsOrders'] });
     }
   });
@@ -212,7 +215,8 @@ export const KdsView: React.FC = () => {
         headers: {
           'Content-Type': 'application/json',
           ...(token ? { Authorization: `Bearer ${token}` } : {})
-        }
+        },
+        body: JSON.stringify({})
       });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
@@ -221,6 +225,8 @@ export const KdsView: React.FC = () => {
       return res.json();
     },
     onSuccess: () => {
+      setFeedbackMessage('⚡ Orden despachada por completo con éxito');
+      setTimeout(() => setFeedbackMessage(null), 3500);
       queryClient.invalidateQueries({ queryKey: ['kdsOrders'] });
     }
   });
@@ -271,6 +277,12 @@ export const KdsView: React.FC = () => {
     <div className="flex flex-col h-[calc(100vh-80px)] bg-tocineta-bg text-white select-none">
       {/* Barra Superior KDS: Filtros de Estación, Controles y Alertas */}
       <div className="bg-tocineta-card border-b border-tocineta-border px-4 py-3 shrink-0 shadow-md">
+        {feedbackMessage && (
+          <div className="mb-2 p-2.5 rounded-xl bg-emerald-500/20 border border-emerald-500/50 text-emerald-300 font-bold text-xs flex items-center justify-between animate-fade-in shadow">
+            <span>{feedbackMessage}</span>
+            <button onClick={() => setFeedbackMessage(null)} className="text-emerald-400 hover:text-white text-sm font-black ml-2">✕</button>
+          </div>
+        )}
         <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-3">
           {/* Título y Selector de Estación */}
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
@@ -500,7 +512,7 @@ export const KdsView: React.FC = () => {
                       stationFilter={stationFilter}
                       onUpdateLine={(lineId, st) => updateLineMutation.mutate({ lineId, status: st })}
                       onDeliver={(orderId) => deliverOrderMutation.mutate({ orderId })}
-                      canForceComplete={isGodModeUser}
+                      canForceComplete={false}
                       onForceComplete={(orderId) => forceCompleteMutation.mutate(orderId)}
                     />
                   ))
@@ -775,15 +787,17 @@ const OrderCard: React.FC<OrderCardProps> = ({
           </button>
         )}
 
-        {/* Botón God Mode: [⚡ Forzar Despacho Total] (Sra. Olinelcys / Supervisores) */}
+        {/* Botón God Mode: [⚡ Despachar Orden Completa] (Columnas 1 y 2) */}
         {canForceComplete && (
           <button
             type="button"
+            title="Forzar Despacho Total"
+            aria-label="Forzar Despacho Total"
             onClick={() => onForceComplete?.(order.orderId)}
             className="w-full min-h-[48px] mt-2 py-2.5 px-3 rounded-xl font-black text-xs uppercase tracking-wider bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black shadow-lg shadow-amber-950/40 active:scale-[0.98] transition-all flex items-center justify-center gap-1.5 cursor-pointer"
           >
             <span>⚡</span>
-            <span>Forzar Despacho Total</span>
+            <span>Despachar Orden Completa</span>
           </button>
         )}
       </div>

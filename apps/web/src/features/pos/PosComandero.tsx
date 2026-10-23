@@ -780,6 +780,24 @@ export const PosComandero: React.FC = () => {
                   </div>
                 )}
 
+                {/* Imagen del Producto o Marcador Visual de Marca */}
+                <div className="w-full h-28 rounded-2xl mb-2.5 overflow-hidden bg-tocineta-bg border border-tocineta-border/60 flex items-center justify-center relative">
+                  {(product.imageUrl || (product as any).image_url) ? (
+                    <img
+                      src={product.imageUrl || (product as any).image_url}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center text-center p-1.5">
+                      <div className="w-9 h-9 rounded-full bg-tocineta-yellow/10 border border-tocineta-yellow/30 text-tocineta-yellow flex items-center justify-center text-base mb-0.5">
+                        {product.station === 'hamburguesas' ? '🍔' : product.station === 'caja_bebidas' ? '🥤' : '🌭'}
+                      </div>
+                      <span className="text-[9px] font-bold text-tocineta-muted uppercase tracking-wider">Tocineta Sonríe</span>
+                    </div>
+                  )}
+                </div>
+
                 <div>
                   <div className="flex items-start justify-between gap-2">
                     <div>

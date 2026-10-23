@@ -81,6 +81,7 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'ing_base_queso_mozzarella', name: 'Queso Mozzarella', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 30 },
       { id: 'ing_base_doritos', name: 'Doritos Snacks', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 25 },
       { id: 'ing_base_jalapenos', name: 'Jalapeños Encurtidos', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 20 },
+      { id: 'ing_base_pepinillo', name: 'Pepinillo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
       { id: 'ing_base_salsa_ajo', name: 'Salsa de Ajo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 10 },
       { id: 'ing_base_papas_hilo', name: 'Papas Ralladas Hilo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
       { id: 'ing_base_lechuga', name: 'Lechuga Fresca', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 10 }
@@ -97,114 +98,175 @@ export function seedCatalog(rawDb: Database.Database): void {
     }
 
     // ------------------------------------------------------------------------
-    // 4. Catálogo de 27 Productos Oficiales + 2 Cortesías de Cupones
+    // 4. Catálogo Oficial de 27 Productos + 2 Cortesías de Cupones
     // ------------------------------------------------------------------------
     const productsData = [
-      // --- HOT DOGS (7) ---
-      { id: 'prod_street_dog', category_id: 'cat_hot_dogs', name: 'Street Dog', price: 250, cost: 70, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_tocineta_dog_parmesano', category_id: 'cat_hot_dogs', name: 'Tocineta Dog Parmesano', price: 350, cost: 110, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_doritos_dog_snacks', category_id: 'cat_hot_dogs', name: 'Doritos Dog Snacks', price: 350, cost: 105, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_jalapenos_dog', category_id: 'cat_hot_dogs', name: 'Jalapeños Dog', price: 350, cost: 100, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_brazil_dog', category_id: 'cat_hot_dogs', name: 'Brazil Dog', price: 350, cost: 95, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_classic_dog', category_id: 'cat_hot_dogs', name: 'Classic Dog', price: 250, cost: 70, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_doble_salchicha_dog', category_id: 'cat_hot_dogs', name: 'Doble Salchicha Dog', price: 380, cost: 120, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
+      // --- HOT DOGS (7 Oficiales) ---
+      { id: 'prod_street_dog', category_id: 'cat_hot_dogs', name: 'Street Dog', price: 250, cost: 70, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_tocineta_dog_parmesano', category_id: 'cat_hot_dogs', name: 'Tocineta Dog Parmesano', price: 350, cost: 110, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_doritos_dog_snacks', category_id: 'cat_hot_dogs', name: 'Doritos Dog Snacks', price: 350, cost: 105, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_jalapenos_dog', category_id: 'cat_hot_dogs', name: 'Jalapeños Dog', price: 350, cost: 100, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_brazil_dog', category_id: 'cat_hot_dogs', name: 'Brazil Dog', price: 350, cost: 95, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_chicago_dog', category_id: 'cat_hot_dogs', name: 'Chicago Dog', price: 350, cost: 100, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_seattle_dog', category_id: 'cat_hot_dogs', name: 'Seattle Dog', price: 350, cost: 105, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
-      // --- HAMBURGUESAS (10: 7 a $6.90 + Smash Clásica, Doble Smash, Kids Burger) ---
-      { id: 'prod_texas_mex', category_id: 'cat_hamburguesas', name: 'Texas Mex', price: 690, cost: 230, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_pechuga_cesar', category_id: 'cat_hamburguesas', name: 'Pechuga Cesar', price: 690, cost: 240, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_grill', category_id: 'cat_hamburguesas', name: 'Grill', price: 690, cost: 235, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_nuggets_meat', category_id: 'cat_hamburguesas', name: 'Nuggets Meat', price: 690, cost: 245, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_miami', category_id: 'cat_hamburguesas', name: 'Miami', price: 690, cost: 230, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_new_york', category_id: 'cat_hamburguesas', name: 'New York', price: 690, cost: 235, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_mozarrella', category_id: 'cat_hamburguesas', name: 'Mozarrella', price: 690, cost: 240, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_smash_clasica', category_id: 'cat_hamburguesas', name: 'Smash Clásica', price: 350, cost: 110, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_doble_smash', category_id: 'cat_hamburguesas', name: 'Doble Smash', price: 480, cost: 160, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_kids_burger', category_id: 'cat_hamburguesas', name: 'Kids Burger', price: 220, cost: 75, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
+      // --- HAMBURGUESAS (8 Oficiales) ---
+      { id: 'prod_americana_deluxe', category_id: 'cat_hamburguesas', name: 'Americana Deluxe', price: 890, cost: 290, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_texas_mex', category_id: 'cat_hamburguesas', name: 'Texas Mex', price: 690, cost: 230, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_pechuga_cesar', category_id: 'cat_hamburguesas', name: 'Pechuga Cesar', price: 690, cost: 240, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_grill', category_id: 'cat_hamburguesas', name: 'Grill', price: 690, cost: 235, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_nuggets_meat', category_id: 'cat_hamburguesas', name: 'Nuggets Meat', price: 690, cost: 245, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_miami', category_id: 'cat_hamburguesas', name: 'Miami', price: 690, cost: 230, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_new_york', category_id: 'cat_hamburguesas', name: 'New York', price: 690, cost: 235, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_mozarrella', category_id: 'cat_hamburguesas', name: 'Mozarrella', price: 690, cost: 240, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
-      // --- COMBOS (3) ---
-      { id: 'prod_combo_street', category_id: 'cat_combos', name: 'Combo Street', price: 550, cost: 190, station: 'hot_dogs', is_combo: 1, allows_flavors: 0 },
-      { id: 'prod_combo_clasico', category_id: 'cat_combos', name: 'Combo Clásico', price: 790, cost: 260, station: 'hot_dogs', is_combo: 1, allows_flavors: 0 },
-      { id: 'prod_combo_para_ti', category_id: 'cat_combos', name: 'Combo Para Ti', price: 1390, cost: 480, station: 'hamburguesas', is_combo: 1, allows_flavors: 0 },
+      // --- COMBOS (3 Oficiales) ---
+      { id: 'prod_combo_street', category_id: 'cat_combos', name: 'Combo Street', price: 550, cost: 190, station: 'hot_dogs', is_combo: 1, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_combo_clasico', category_id: 'cat_combos', name: 'Combo Clásico', price: 790, cost: 260, station: 'hot_dogs', is_combo: 1, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_combo_para_ti', category_id: 'cat_combos', name: 'Combo Para Ti', price: 1390, cost: 480, station: 'hamburguesas', is_combo: 1, allows_flavors: 0, is_active: 1 },
 
-      // --- EXTRAS Y RACIONES OFICIALES ---
-      { id: 'prod_papas_fritas_extra_150', category_id: 'cat_extras', name: 'Papas Fritas Extra 150g', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_carne_extra', category_id: 'cat_extras', name: 'Carne Extra', price: 100, cost: 50, station: 'hamburguesas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_tocineta_extra', category_id: 'cat_extras', name: 'Tocineta Extra', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_pepinillo_extra', category_id: 'cat_extras', name: 'Pepinillo Extra', price: 100, cost: 20, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_jalapenos_extra', category_id: 'cat_extras', name: 'Jalapeños Extra', price: 100, cost: 20, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_papas_fritas_racion_250', category_id: 'cat_extras', name: 'Papas Fritas Ración 250g', price: 350, cost: 90, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_papas_fritas_tradicionales', category_id: 'cat_extras', name: 'Papas Fritas Tradicionales', price: 200, cost: 50, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_papas_queso_tocineta', category_id: 'cat_extras', name: 'Papas Fritas con Queso y Tocineta', price: 320, cost: 90, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_nuggets_pollo_6', category_id: 'cat_extras', name: 'Nuggets de Pollo (6 unid)', price: 300, cost: 85, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
+      // --- EXTRAS Y RACIONES (6 Oficiales) ---
+      { id: 'prod_papas_fritas_extra_150', category_id: 'cat_extras', name: 'Papas Fritas Extra 150g', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_carne_extra', category_id: 'cat_extras', name: 'Carne Extra', price: 100, cost: 50, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_tocineta_extra', category_id: 'cat_extras', name: 'Tocineta Extra', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_pepinillo_extra', category_id: 'cat_extras', name: 'Pepinillo Extra', price: 100, cost: 20, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_jalapenos_extra', category_id: 'cat_extras', name: 'Jalapeños Extra', price: 100, cost: 20, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_papas_fritas_racion_250', category_id: 'cat_extras', name: 'Papas Fritas Ración 250g', price: 350, cost: 90, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
-      // --- BEBIDAS (3) ---
-      { id: 'prod_refresco_1lt', category_id: 'cat_bebidas', name: 'Refresco 1 Lt', price: 180, cost: 90, station: 'caja_bebidas', is_combo: 0, allows_flavors: 1 },
-      { id: 'prod_malta_lata_250', category_id: 'cat_bebidas', name: 'Malta Lata 250 ml', price: 150, cost: 65, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_agua_mineral_500', category_id: 'cat_bebidas', name: 'Agua Mineral 500 ml', price: 100, cost: 40, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0 },
+      // --- BEBIDAS (3 Oficiales) ---
+      { id: 'prod_refresco_1lt', category_id: 'cat_bebidas', name: 'Refresco 1 Lt', price: 180, cost: 90, station: 'caja_bebidas', is_combo: 0, allows_flavors: 1, is_active: 1 },
+      { id: 'prod_malta_lata_250', category_id: 'cat_bebidas', name: 'Malta Lata 250 ml', price: 150, cost: 65, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_agua_mineral_500', category_id: 'cat_bebidas', name: 'Agua Mineral 500 ml', price: 100, cost: 40, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
       // --- MALTEADAS Y HELADOS (1 - Feature Flag Categoría Inactiva) ---
-      { id: 'prod_malteada_especial', category_id: 'cat_malteadas', name: 'Malteada Especial Tocineta', price: 350, cost: 130, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0 },
+      { id: 'prod_malteada_especial', category_id: 'cat_malteadas', name: 'Malteada Especial Tocineta', price: 350, cost: 130, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 0 },
 
       // --- OBSEQUIOS CUPÓN (2 - Cortesías internas $0.00 venta) ---
-      { id: 'prod_snacks_cortesia', category_id: 'cat_obsequios', name: 'Snacks de Cortesía', price: 0, cost: 35, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 },
-      { id: 'prod_cafe_cortesia', category_id: 'cat_obsequios', name: 'Café de Cortesía', price: 0, cost: 35, station: 'hot_dogs', is_combo: 0, allows_flavors: 0 }
+      { id: 'prod_snacks_cortesia', category_id: 'cat_obsequios', name: 'Snacks de Cortesía', price: 0, cost: 35, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_cafe_cortesia', category_id: 'cat_obsequios', name: 'Café de Cortesía', price: 0, cost: 35, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+
+      // --- PLATOS DE PRUEBA DESACTIVADOS (is_active = 0) ---
+      { id: 'prod_classic_dog', category_id: 'cat_hot_dogs', name: 'Classic Dog', price: 250, cost: 70, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 0 },
+      { id: 'prod_doble_salchicha_dog', category_id: 'cat_hot_dogs', name: 'Doble Salchicha Dog', price: 380, cost: 120, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 0 },
+      { id: 'prod_smash_clasica', category_id: 'cat_hamburguesas', name: 'Smash Clásica', price: 350, cost: 110, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 0 },
+      { id: 'prod_doble_smash', category_id: 'cat_hamburguesas', name: 'Doble Smash', price: 480, cost: 160, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 0 },
+      { id: 'prod_kids_burger', category_id: 'cat_hamburguesas', name: 'Kids Burger', price: 220, cost: 75, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 0 },
+      { id: 'prod_papas_fritas_tradicionales', category_id: 'cat_extras', name: 'Papas Fritas Tradicionales', price: 200, cost: 50, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 0 },
+      { id: 'prod_papas_queso_tocineta', category_id: 'cat_extras', name: 'Papas Fritas con Queso y Tocineta', price: 320, cost: 90, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 0 },
+      { id: 'prod_nuggets_pollo_6', category_id: 'cat_extras', name: 'Nuggets de Pollo (6 unid)', price: 300, cost: 85, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 0 }
     ];
 
     const insertProd = rawDb.prepare(`
       INSERT OR REPLACE INTO products (
         id, category_id, name, description, price_usd_cents, estimated_cost_usd_cents,
         station, is_active, is_combo, allows_flavors, image_url, created_at_ms, updated_at_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, NULL, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
     `);
 
     for (const p of productsData) {
-      insertProd.run(p.id, p.category_id, p.name, null, p.price, p.cost, p.station, p.is_combo, p.allows_flavors, now, now);
+      insertProd.run(p.id, p.category_id, p.name, null, p.price, p.cost, p.station, p.is_active ?? 1, p.is_combo, p.allows_flavors, now, now);
     }
 
     // ------------------------------------------------------------------------
-    // 5. Ingredientes Asociados a Productos (para exclusión/personalización)
+    // 5. Ingredientes Asociados a Productos (Recetas Oficiales de la Carta)
+    // EXTRAS y BEBIDAS NO tienen ingredientes vinculados (cero pan ni salsas)
     // ------------------------------------------------------------------------
+    rawDb.prepare('DELETE FROM product_ingredients').run();
+
     const insertProdIng = rawDb.prepare(`
       INSERT OR REPLACE INTO product_ingredients (
         id, product_id, ingredient_id, is_removable, display_order
       ) VALUES (?, ?, ?, 1, ?)
     `);
 
-    // Vincular Pan y Salchicha a todos los perros
-    const dogProductIds = [
+    // A. Recetas Oficiales: 7 Hot Dogs
+    const dogList = [
       'prod_street_dog', 'prod_tocineta_dog_parmesano', 'prod_doritos_dog_snacks',
-      'prod_jalapenos_dog', 'prod_brazil_dog', 'prod_classic_dog', 'prod_doble_salchicha_dog'
+      'prod_jalapenos_dog', 'prod_brazil_dog', 'prod_chicago_dog', 'prod_seattle_dog'
     ];
-    for (const dId of dogProductIds) {
+    for (const dId of dogList) {
       insertProdIng.run(`pi_${dId}_pan`, dId, 'ing_base_pan_perro', 1);
       insertProdIng.run(`pi_${dId}_salchicha`, dId, 'ing_base_salchicha', 2);
       insertProdIng.run(`pi_${dId}_hilo`, dId, 'ing_base_papas_hilo', 3);
     }
 
-    // Ingredientes específicos para perros
-    insertProdIng.run('pi_doritos_snk', 'prod_doritos_dog_snacks', 'ing_base_doritos', 4);
-    insertProdIng.run('pi_doritos_cheddar', 'prod_doritos_dog_snacks', 'ing_base_queso_cheddar', 5);
-    insertProdIng.run('pi_brazil_ajo', 'prod_brazil_dog', 'ing_base_salsa_ajo', 4);
-    insertProdIng.run('pi_jalapenos_jal', 'prod_jalapenos_dog', 'ing_base_jalapenos', 4);
+    // Específicos por perro
+    insertProdIng.run('pi_street_ceb', 'prod_street_dog', 'ing_bl_cebolla', 4);
+
     insertProdIng.run('pi_tocineta_parm', 'prod_tocineta_dog_parmesano', 'ing_base_queso_parmesano', 4);
     insertProdIng.run('pi_tocineta_toc', 'prod_tocineta_dog_parmesano', 'ing_base_tocineta', 5);
 
-    // Vincular Pan Brioche y Carne/Pollo a hamburguesas
-    const burgerProductIds = [
-      'prod_texas_mex', 'prod_pechuga_cesar', 'prod_grill', 'prod_nuggets_meat',
-      'prod_miami', 'prod_new_york', 'prod_mozarrella', 'prod_smash_clasica',
-      'prod_doble_smash', 'prod_kids_burger'
+    insertProdIng.run('pi_doritos_snk', 'prod_doritos_dog_snacks', 'ing_base_doritos', 4);
+    insertProdIng.run('pi_doritos_cheddar', 'prod_doritos_dog_snacks', 'ing_base_queso_cheddar', 5);
+
+    insertProdIng.run('pi_jalapenos_jal', 'prod_jalapenos_dog', 'ing_base_jalapenos', 4);
+    insertProdIng.run('pi_jalapenos_cheddar', 'prod_jalapenos_dog', 'ing_base_queso_cheddar', 5);
+
+    insertProdIng.run('pi_brazil_maiz', 'prod_brazil_dog', 'ing_bl_maiz', 4);
+    insertProdIng.run('pi_brazil_ajo', 'prod_brazil_dog', 'ing_base_salsa_ajo', 5);
+
+    insertProdIng.run('pi_chicago_tom', 'prod_chicago_dog', 'ing_bl_tomate', 4);
+    insertProdIng.run('pi_chicago_pep', 'prod_chicago_dog', 'ing_base_pepinillo', 5);
+
+    insertProdIng.run('pi_seattle_moz', 'prod_seattle_dog', 'ing_base_queso_mozzarella', 4);
+    insertProdIng.run('pi_seattle_cebcar', 'prod_seattle_dog', 'ing_bl_cebolla_caramelizada', 5);
+
+    // B. Recetas Oficiales: 8 Hamburguesas (Pan Brioche base, SIN pan de perro ni salsas tradicionales)
+    const burgerList = [
+      'prod_americana_deluxe', 'prod_texas_mex', 'prod_pechuga_cesar', 'prod_grill',
+      'prod_nuggets_meat', 'prod_miami', 'prod_new_york', 'prod_mozarrella'
     ];
-    for (const bId of burgerProductIds) {
+    for (const bId of burgerList) {
       insertProdIng.run(`pi_${bId}_pan`, bId, 'ing_base_pan_brioche', 1);
       if (bId === 'prod_pechuga_cesar') {
         insertProdIng.run(`pi_${bId}_carne`, bId, 'ing_base_pechuga_crispy', 2);
       } else {
         insertProdIng.run(`pi_${bId}_carne`, bId, 'ing_base_carne_smash', 2);
       }
-      insertProdIng.run(`pi_${bId}_queso`, bId, 'ing_base_queso_cheddar', 3);
-      insertProdIng.run(`pi_${bId}_lechuga`, bId, 'ing_base_lechuga', 4);
     }
+
+    // Específicos por hamburguesa
+    // 1. Americana Deluxe
+    insertProdIng.run('pi_amer_cheddar', 'prod_americana_deluxe', 'ing_base_queso_cheddar', 3);
+    insertProdIng.run('pi_amer_tocineta', 'prod_americana_deluxe', 'ing_base_tocineta', 4);
+    insertProdIng.run('pi_amer_lechuga', 'prod_americana_deluxe', 'ing_base_lechuga', 5);
+    insertProdIng.run('pi_amer_tomate', 'prod_americana_deluxe', 'ing_bl_tomate', 6);
+    insertProdIng.run('pi_amer_pepinillo', 'prod_americana_deluxe', 'ing_base_pepinillo', 7);
+
+    // 2. Texas Mex
+    insertProdIng.run('pi_texas_cheddar', 'prod_texas_mex', 'ing_base_queso_cheddar', 3);
+    insertProdIng.run('pi_texas_jalapenos', 'prod_texas_mex', 'ing_base_jalapenos', 4);
+    insertProdIng.run('pi_texas_doritos', 'prod_texas_mex', 'ing_base_doritos', 5);
+    insertProdIng.run('pi_texas_tocineta', 'prod_texas_mex', 'ing_base_tocineta', 6);
+
+    // 3. Pechuga Cesar
+    insertProdIng.run('pi_cesar_parmesano', 'prod_pechuga_cesar', 'ing_base_queso_parmesano', 3);
+    insertProdIng.run('pi_cesar_lechuga', 'prod_pechuga_cesar', 'ing_base_lechuga', 4);
+    insertProdIng.run('pi_cesar_ajo', 'prod_pechuga_cesar', 'ing_base_salsa_ajo', 5);
+
+    // 4. Grill
+    insertProdIng.run('pi_grill_cheddar', 'prod_grill', 'ing_base_queso_cheddar', 3);
+    insertProdIng.run('pi_grill_tocineta', 'prod_grill', 'ing_base_tocineta', 4);
+    insertProdIng.run('pi_grill_cebcar', 'prod_grill', 'ing_bl_cebolla_caramelizada', 5);
+
+    // 5. Nuggets Meat
+    insertProdIng.run('pi_nuggets_cheddar', 'prod_nuggets_meat', 'ing_base_queso_cheddar', 3);
+    insertProdIng.run('pi_nuggets_tocineta', 'prod_nuggets_meat', 'ing_base_tocineta', 4);
+
+    // 6. Miami
+    insertProdIng.run('pi_miami_cheddar', 'prod_miami', 'ing_base_queso_cheddar', 3);
+    insertProdIng.run('pi_miami_hilo', 'prod_miami', 'ing_base_papas_hilo', 4);
+    insertProdIng.run('pi_miami_ajo', 'prod_miami', 'ing_base_salsa_ajo', 5);
+
+    // 7. New York
+    insertProdIng.run('pi_ny_cheddar', 'prod_new_york', 'ing_base_queso_cheddar', 3);
+    insertProdIng.run('pi_ny_tocineta', 'prod_new_york', 'ing_base_tocineta', 4);
+    insertProdIng.run('pi_ny_cebcar', 'prod_new_york', 'ing_bl_cebolla_caramelizada', 5);
+    insertProdIng.run('pi_ny_pepinillo', 'prod_new_york', 'ing_base_pepinillo', 6);
+
+    // 8. Mozarrella
+    insertProdIng.run('pi_moz_queso', 'prod_mozarrella', 'ing_base_queso_mozzarella', 3);
+    insertProdIng.run('pi_moz_tocineta', 'prod_mozarrella', 'ing_base_tocineta', 4);
 
     // ------------------------------------------------------------------------
     // 6. Sabores Oficiales Pepsi para Refresco 1 Lt
@@ -258,7 +320,9 @@ export function seedCatalog(rawDb: Database.Database): void {
       'prod_tocineta_dog_parmesano',
       'prod_doritos_dog_snacks',
       'prod_jalapenos_dog',
-      'prod_brazil_dog'
+      'prod_brazil_dog',
+      'prod_chicago_dog',
+      'prod_seattle_dog'
     ];
 
     insertSlot.run('slot_clasico_1', 'prod_combo_clasico', 1, 'Primer Perro Clásico', 'hot_dogs');

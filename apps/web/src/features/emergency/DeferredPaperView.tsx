@@ -33,8 +33,8 @@ export const DeferredPaperView: React.FC = () => {
 
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
-  // Cargar catálogo para seleccionar productos
-  const { data: menuData } = useQuery<{ products: ProductItem[] }>({
+  // Cargar catálogo para seleccionar productos (soporta data.products y data.categories.flatMap)
+  const { data: menuData } = useQuery<any>({
     queryKey: ['posProducts'],
     queryFn: async () => {
       const res = await fetch('/api/menu/pos');
@@ -51,7 +51,29 @@ export const DeferredPaperView: React.FC = () => {
     }
   });
 
-  const products = menuData?.products || [];
+  const products: ProductItem[] = React.useMemo(() => {
+    if (!menuData) return [];
+    if (Array.isArray(menuData.products) && menuData.products.length > 0) {
+      return menuData.products.map((p: any) => ({
+        id: p.id,
+        name: p.name,
+        priceUsdCents: p.priceUsdCents ?? p.price_usd_cents ?? 0,
+        station: p.station || 'hot_dogs'
+      }));
+    }
+    if (Array.isArray(menuData.categories)) {
+      return menuData.categories.flatMap((cat: any) =>
+        (cat.products || []).map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          priceUsdCents: p.priceUsdCents ?? p.price_usd_cents ?? 0,
+          categoryName: cat.name,
+          station: p.station || 'hot_dogs'
+        }))
+      );
+    }
+    return [];
+  }, [menuData]);
 
   const handleAddLine = () => {
     if (!selectedProductId) return;
@@ -158,7 +180,8 @@ export const DeferredPaperView: React.FC = () => {
       setBackupStatus('Cifrando y exportando respaldo...');
       const res = await fetch('/api/backups/export-encrypted', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' }
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({})
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Error al respaldar');

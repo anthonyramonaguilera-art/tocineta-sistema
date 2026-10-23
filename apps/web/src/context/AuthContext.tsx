@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 
 export interface UserSession {
   id: string;
@@ -37,56 +37,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [currency, setCurrency] = useState<'USD' | 'BS'>('USD');
-  const [isSensitiveLocked, setIsSensitiveLocked] = useState(false);
-
-  const lastActivityRef = useRef<number>(Date.now());
-  const timerRef = useRef<any>(null);
+  const isSensitiveLocked = false;
 
   const recordUserActivity = useCallback(() => {
-    lastActivityRef.current = Date.now();
+    // Inactividad deshabilitada: la pantalla jamás se bloquea automáticamente
   }, []);
-
-  // Monitor de Auto-Lock por 2 minutos de inactividad (120,000 ms)
-  // Cero Bloqueos por Inactividad en MODO TURNO
-  useEffect(() => {
-    if (!user || (user.role !== 'admin' && user.role !== 'supervisor')) {
-      return;
-    }
-
-    const checkInactivity = () => {
-      try {
-        const mode = localStorage.getItem('tocineta_ui_mode') || 'turno';
-        if (mode === 'turno') {
-          return; // En MODO TURNO la pantalla nunca se bloquea
-        }
-      } catch {}
-
-      const now = Date.now();
-      const elapsed = now - lastActivityRef.current;
-      if (elapsed >= 120_000 && !isSensitiveLocked) {
-        setIsSensitiveLocked(true);
-      }
-    };
-
-    timerRef.current = setInterval(checkInactivity, 5000);
-
-    const onActivity = () => {
-      if (!isSensitiveLocked) {
-        lastActivityRef.current = Date.now();
-      }
-    };
-
-    window.addEventListener('mousemove', onActivity);
-    window.addEventListener('keydown', onActivity);
-    window.addEventListener('touchstart', onActivity);
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-      window.removeEventListener('mousemove', onActivity);
-      window.removeEventListener('keydown', onActivity);
-      window.removeEventListener('touchstart', onActivity);
-    };
-  }, [user, isSensitiveLocked]);
 
   const login = async (credentialsOrUserId: string | { userId?: string; pin?: string; cedula?: string; password?: string }, maybePin?: string) => {
     try {
@@ -112,8 +67,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setToken(data.token);
       localStorage.setItem('tocineta_user', JSON.stringify(data.user));
       localStorage.setItem('tocineta_token', data.token);
-      setIsSensitiveLocked(false);
-      lastActivityRef.current = Date.now();
 
       return { success: true };
     } catch (err: any) {
@@ -133,36 +86,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     setUser(null);
     setToken(null);
-    setIsSensitiveLocked(false);
     localStorage.removeItem('tocineta_user');
     localStorage.removeItem('tocineta_token');
   };
 
-  const unlockSensitive = async (pin: string) => {
-    if (!user) return { success: false, error: 'No hay usuario autenticado' };
-
-    try {
-      const res = await fetch('/api/auth/verify-action-pin', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          authorizerUserId: user.id,
-          pin,
-          action: 'UNLOCK_SENSITIVE_VIEW'
-        })
-      });
-
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        return { success: false, error: data.error || 'PIN incorrecto' };
-      }
-
-      setIsSensitiveLocked(false);
-      lastActivityRef.current = Date.now();
-      return { success: true };
-    } catch (err: any) {
-      return { success: false, error: err.message || 'Error al verificar PIN' };
-    }
+  const unlockSensitive = async (_pin: string) => {
+    return { success: true };
   };
 
   const changePin = async (currentPin: string, newPin: string) => {

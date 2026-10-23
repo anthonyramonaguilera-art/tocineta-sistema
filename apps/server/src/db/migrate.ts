@@ -20,6 +20,42 @@ export interface RunMigrationsOptions {
 }
 
 /**
+ * Ejecuta sentencias SQL de forma idempotente, verificando con PRAGMA table_info
+ * antes de hacer ALTER TABLE ADD COLUMN para evitar fallos si la columna ya existe.
+ */
+export function executeSqlIdempotently(rawDb: Database.Database, sqlContent: string): void {
+  const lines = sqlContent.split('\n');
+  const processedLines = lines.map(line => {
+    const trimmed = line.trim();
+    const alterMatch = trimmed.match(/^ALTER\s+TABLE\s+([^\s]+)\s+ADD(?:\s+COLUMN)?\s+([^\s(;,]+)/i);
+    if (alterMatch) {
+      const tableName = alterMatch[1].replace(/[`"']/g, '');
+      const columnName = alterMatch[2].replace(/[`"']/g, '');
+      try {
+        const columns = rawDb.prepare(`PRAGMA table_info(${tableName})`).all() as Array<{ name: string }>;
+        if (columns && columns.some(c => c.name.toLowerCase() === columnName.toLowerCase())) {
+          return `-- [IDEMPOTENT_SKIPPED] ${line}`;
+        }
+      } catch {
+        // Si falla el pragma o la tabla no existe aún, continuar normalmente
+      }
+    }
+    return line;
+  });
+
+  const finalSql = processedLines.join('\n');
+  try {
+    rawDb.exec(finalSql);
+  } catch (err: any) {
+    const msg = err?.message?.toLowerCase() || '';
+    if (msg.includes('duplicate column name')) {
+      return;
+    }
+    throw err;
+  }
+}
+
+/**
  * Runner de migraciones solo hacia adelante (forward-only) con Hot Snapshot físico automático
  */
 export async function runMigrations(
@@ -111,7 +147,7 @@ export async function runMigrations(
     const sqlContent = fs.readFileSync(fullPath, 'utf-8');
 
     const executeMigration = rawDb.transaction(() => {
-      rawDb.exec(sqlContent);
+      executeSqlIdempotently(rawDb, sqlContent);
       rawDb.prepare('INSERT INTO _migrations (name, applied_at_ms) VALUES (?, ?)').run(
         migrationFile,
         Date.now()

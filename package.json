@@ -9,6 +9,7 @@
     "test": "pnpm -r run test",
     "lint": "pnpm -r run lint",
     "db:migrate": "pnpm --filter @tocineta/server run db:migrate",
+    "db:reset-prod": "pnpm --filter @tocineta/server run db:reset-prod",
     "dev:server": "pnpm --filter @tocineta/server run dev",
     "dev:web": "pnpm --filter @tocineta/web run dev",
     "start": "pnpm --filter @tocineta/server run start",

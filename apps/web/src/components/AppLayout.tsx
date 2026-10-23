@@ -19,7 +19,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   formattedRate = '40,00',
   children
 }) => {
-  const { user, token, logout, currency, setCurrency, isSensitiveLocked, unlockSensitive, changePin } = useAuth();
+  const { user, token, logout, currency, setCurrency, changePin } = useAuth();
   const { isConnected } = useEventStream();
   const [isSyncingBcv, setIsSyncingBcv] = useState(false);
   const [uiMode, setUiMode] = useState<'turno' | 'duena'>(() => {
@@ -87,10 +87,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     onTabChange(tab);
   };
 
-  const [unlockPin, setUnlockPin] = useState('');
-  const [unlockError, setUnlockError] = useState<string | null>(null);
-  const [isUnlocking, setIsUnlocking] = useState(false);
-
   // Estado para modal obligatorio de cambio de PIN (B.4)
   const [currentPinInput, setCurrentPinInput] = useState('');
   const [newPinInput, setNewPinInput] = useState('');
@@ -110,22 +106,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     },
     staleTime: 10000
   });
-
-  const handleUnlock = async () => {
-    if (!unlockPin) return;
-    setIsUnlocking(true);
-    setUnlockError(null);
-
-    const res = await unlockSensitive(unlockPin);
-    setIsUnlocking(false);
-
-    if (!res.success) {
-      setUnlockError(res.error || 'PIN incorrecto');
-      setUnlockPin('');
-    } else {
-      setUnlockPin('');
-    }
-  };
 
   const handleChangePin = async () => {
     if (!currentPinInput) {
@@ -435,94 +415,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
         {children}
       </main>
-
-      {/* Modal de Auto-Lock por Inactividad (2 Minutos en Vistas Sensibles) - Desactivado en MODO TURNO */}
-      {isSensitiveLocked && uiMode !== 'turno' && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-6 max-w-sm w-full text-center shadow-2xl">
-            <div className="w-12 h-12 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 flex items-center justify-center mx-auto text-2xl mb-3">
-              🔒
-            </div>
-            <h3 className="text-lg font-bold text-white">Sesión Bloqueada por Inactividad</h3>
-            <p className="text-xs text-tocineta-muted mt-1">
-              Han transcurrido 2 minutos sin actividad en el panel sensible. Ingrese su PIN de {user?.name} para continuar.
-            </p>
-
-            <div className="my-3">
-              <input
-                type="password"
-                inputMode="numeric"
-                pattern="[0-9]*"
-                maxLength={requiredPinLength}
-                value={unlockPin}
-                onChange={e => setUnlockPin(e.target.value.replace(/\D/g, ''))}
-                placeholder={`PIN (${requiredPinLength} dígitos)`}
-                className="w-full text-center text-2xl font-mono tracking-widest bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl py-2.5 text-white outline-none"
-                autoFocus
-                onKeyDown={e => e.key === 'Enter' && handleUnlock()}
-              />
-              {unlockError && <p className="text-xs text-red-400 mt-2 font-medium">{unlockError}</p>}
-            </div>
-
-            {/* Teclado Numérico Táctil Auto-Lock */}
-            <div className="grid grid-cols-3 gap-2 w-full max-w-[260px] mx-auto my-3">
-              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(num => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => {
-                    if (unlockPin.length < requiredPinLength) setUnlockPin(prev => prev + num);
-                  }}
-                  className="min-h-[48px] text-xl font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow active:bg-tocineta-yellow/20 active:scale-95 text-white transition-all shadow flex items-center justify-center"
-                >
-                  {num}
-                </button>
-              ))}
-              <button
-                type="button"
-                onClick={() => setUnlockPin('')}
-                className="min-h-[48px] text-xs font-bold uppercase rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-red-500/50 text-tocineta-muted hover:text-red-400 active:scale-95 transition-all flex items-center justify-center"
-              >
-                Limpiar
-              </button>
-              <button
-                type="button"
-                onClick={() => {
-                  if (unlockPin.length < requiredPinLength) setUnlockPin(prev => prev + '0');
-                }}
-                className="min-h-[48px] text-xl font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow active:bg-tocineta-yellow/20 active:scale-95 text-white transition-all shadow flex items-center justify-center"
-              >
-                0
-              </button>
-              <button
-                type="button"
-                onClick={() => setUnlockPin(prev => prev.slice(0, -1))}
-                className="min-h-[48px] text-base font-bold rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-amber-500/50 text-tocineta-muted hover:text-amber-400 active:scale-95 transition-all flex items-center justify-center"
-              >
-                ⌫
-              </button>
-            </div>
-
-            <div className="flex gap-2 mt-4">
-              <button
-                type="button"
-                onClick={logout}
-                className="flex-1 min-h-[48px] py-2.5 rounded-xl border border-tocineta-border text-xs font-bold text-tocineta-muted hover:text-white hover:bg-tocineta-bg transition-all flex items-center justify-center"
-              >
-                Cerrar Sesión
-              </button>
-              <button
-                type="button"
-                onClick={handleUnlock}
-                disabled={isUnlocking || !unlockPin}
-                className="flex-1 min-h-[48px] py-2.5 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-bold hover:bg-tocineta-yellow/90 transition-all disabled:opacity-50 flex items-center justify-center"
-              >
-                {isUnlocking ? 'Verificando...' : 'Desbloquear'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Modal Obligatorio de Cambio de PIN (B.4 / F4) */}
       {user?.mustChangePin && (

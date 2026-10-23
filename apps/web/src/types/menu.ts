@@ -104,6 +104,14 @@ export interface AdminCategory {
   station: Station;
 }
 
+export interface AdminProductIngredient {
+  id: string;
+  ingredientId: string;
+  name: string;
+  isRemovable: boolean;
+  displayOrder: number;
+}
+
 export interface AdminProduct {
   id: string;
   category_id: string;
@@ -117,12 +125,14 @@ export interface AdminProduct {
   is_combo: number;
   allows_flavors: number;
   image_url: string | null;
+  imageUrl?: string | null;
   updated_at_ms: number;
   priceBsCents: number;
   isActive: boolean;
   isAvailable: boolean;
   isCombo: boolean;
   allowsFlavors: boolean;
+  ingredients?: AdminProductIngredient[];
 }
 
 export interface AdminFlavor {

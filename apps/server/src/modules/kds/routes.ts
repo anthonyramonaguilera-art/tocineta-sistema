@@ -3,6 +3,7 @@ import { getDatabaseContext } from '../../db/connection.js';
 import { getKdsOrders, updateKdsLineStatus, deliverKdsOrder, forceCompleteKdsOrder } from './kds-service.js';
 import { type Station } from '../../db/schema.js';
 import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
 
 export const kdsRoutes: FastifyPluginAsync = async (server) => {
   /**
@@ -15,11 +16,17 @@ export const kdsRoutes: FastifyPluginAsync = async (server) => {
       station?: Station;
     };
   }>('/api/kds/orders', async (request, reply) => {
-    const dbCtx = getDatabaseContext();
-    const station = request.query.station;
+    try {
+      const dbCtx = getDatabaseContext();
+      ensureBusinessSettingsDefensive(dbCtx.rawDb);
+      const station = request.query.station;
 
-    const orders = getKdsOrders(dbCtx.rawDb, { station });
-    return reply.status(200).send({ orders });
+      const orders = getKdsOrders(dbCtx.rawDb, { station });
+      return reply.status(200).send({ orders });
+    } catch (err: any) {
+      server.log.error(err, 'Error defensivo en GET /api/kds/orders');
+      return reply.status(200).send({ orders: [] });
+    }
   });
 
   /**

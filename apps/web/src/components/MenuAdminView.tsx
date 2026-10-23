@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext.js';
-import type { AdminMenuResponse, AdminProduct, Station } from '../types/menu.js';
+import type { AdminMenuResponse, AdminProduct, AdminProductIngredient, Station } from '../types/menu.js';
 import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
 
 export const MenuAdminView: React.FC = () => {
@@ -21,6 +21,17 @@ export const MenuAdminView: React.FC = () => {
   const [formCostUsd, setFormCostUsd] = useState('');
   const [formStation, setFormStation] = useState<Station>('hot_dogs');
   const [formDescription, setFormDescription] = useState('');
+
+  // Ingredientes del plato editado/creado
+  const [productIngredients, setProductIngredients] = useState<AdminProductIngredient[]>([]);
+  const [selectedExistingIng, setSelectedExistingIng] = useState<string>('');
+  const [newIngName, setNewIngName] = useState<string>('');
+  const [isAddingIngredient, setIsAddingIngredient] = useState<boolean>(false);
+
+  // Modal para nueva categoría
+  const [isCategoryModalOpen, setIsCategoryModalOpen] = useState<boolean>(false);
+  const [newCatName, setNewCatName] = useState<string>('');
+  const [newCatStation, setNewCatStation] = useState<Station>('hot_dogs');
 
   // Formulario nueva tasa BCV
   const [newRateInput, setNewRateInput] = useState('');
@@ -44,21 +55,6 @@ export const MenuAdminView: React.FC = () => {
       return res.json();
     },
     enabled: Boolean(token)
-  });
-
-  // Mutación: Toggle Categoría Activa (Línea Malteadas)
-  const toggleCategoryMutation = useMutation({
-    mutationFn: async (categoryId: string) => {
-      const res = await fetch(`/api/menu/categories/${categoryId}/toggle-active`, {
-        method: 'PATCH',
-        headers: { authorization: `Bearer ${token}` }
-      });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
-      queryClient.invalidateQueries({ queryKey: ['posMenu'] });
-    }
   });
 
   // Mutación: Toggle Disponibilidad Producto (Agotado/Disponible)
@@ -257,6 +253,46 @@ export const MenuAdminView: React.FC = () => {
     }
   });
 
+  // Mutación: Crear Categoría
+  const createCategoryMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch('/api/menu/categories', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          name: newCatName.trim(),
+          station: newCatStation
+        })
+      });
+      return res.json();
+    },
+    onSuccess: (data) => {
+      if (data.success) {
+        setIsCategoryModalOpen(false);
+        setNewCatName('');
+        queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
+        queryClient.invalidateQueries({ queryKey: ['posMenu'] });
+      } else {
+        alert(data.error || 'Error al crear categoría');
+      }
+    }
+  });
+
+  const availableIngredients = useMemo(() => {
+    const map = new Map<string, string>();
+    for (const p of adminMenu?.products || []) {
+      for (const ing of p.ingredients || []) {
+        if (ing.ingredientId && ing.name) {
+          map.set(ing.ingredientId, ing.name);
+        }
+      }
+    }
+    return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
+  }, [adminMenu]);
+
   const openCreateModal = () => {
     setEditingProduct(null);
     setFormName('');
@@ -266,6 +302,9 @@ export const MenuAdminView: React.FC = () => {
     setFormStation('hot_dogs');
     setFormDescription('');
     setPhotoBase64(null);
+    setProductIngredients([]);
+    setSelectedExistingIng('');
+    setNewIngName('');
     setIsCreatingProduct(true);
   };
 
@@ -278,6 +317,9 @@ export const MenuAdminView: React.FC = () => {
     setFormStation(p.station);
     setFormDescription(p.description || '');
     setPhotoBase64(null);
+    setProductIngredients(p.ingredients || []);
+    setSelectedExistingIng('');
+    setNewIngName('');
     setIsCreatingProduct(true);
   };
 
@@ -285,6 +327,85 @@ export const MenuAdminView: React.FC = () => {
     setEditingProduct(null);
     setIsCreatingProduct(false);
     setPhotoBase64(null);
+    setProductIngredients([]);
+    setSelectedExistingIng('');
+    setNewIngName('');
+  };
+
+  const handleAddIngredient = async () => {
+    if (!selectedExistingIng && !newIngName.trim()) return;
+    setIsAddingIngredient(true);
+    try {
+      if (editingProduct?.id) {
+        const body = selectedExistingIng ? { ingredientId: selectedExistingIng } : { name: newIngName.trim() };
+        const res = await fetch(`/api/menu/products/${editingProduct.id}/ingredients`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify(body)
+        });
+        const data = await res.json();
+        if (data.success) {
+          queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
+          queryClient.invalidateQueries({ queryKey: ['posMenu'] });
+          setProductIngredients(prev => {
+            if (prev.some(i => i.ingredientId === data.ingredientId || i.id === data.id)) return prev;
+            return [...prev, {
+              id: data.id || `pi_${Date.now()}`,
+              ingredientId: data.ingredientId,
+              name: data.name,
+              isRemovable: true,
+              displayOrder: prev.length + 1
+            }];
+          });
+        } else {
+          alert(data.error || 'Error al asociar ingrediente');
+        }
+      } else {
+        const name = newIngName.trim() || availableIngredients.find(i => i.id === selectedExistingIng)?.name || '';
+        if (name) {
+          setProductIngredients(prev => [...prev, {
+            id: `temp_${Date.now()}`,
+            ingredientId: selectedExistingIng || `new_${Date.now()}`,
+            name,
+            isRemovable: true,
+            displayOrder: prev.length + 1
+          }]);
+        }
+      }
+      setSelectedExistingIng('');
+      setNewIngName('');
+    } catch {
+      alert('Error de conexión al guardar ingrediente');
+    } finally {
+      setIsAddingIngredient(false);
+    }
+  };
+
+  const handleRemoveIngredient = async (ing: AdminProductIngredient) => {
+    if (editingProduct?.id) {
+      try {
+        const targetId = ing.ingredientId || ing.id;
+        const res = await fetch(`/api/menu/products/${editingProduct.id}/ingredients/${targetId}`, {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+            authorization: `Bearer ${token}`
+          },
+          body: JSON.stringify({})
+        });
+        const data = await res.json();
+        if (data.success) {
+          queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
+          queryClient.invalidateQueries({ queryKey: ['posMenu'] });
+          setProductIngredients(prev => prev.filter(i => (i.ingredientId || i.id) !== targetId));
+        }
+      } catch {}
+    } else {
+      setProductIngredients(prev => prev.filter(i => i.id !== ing.id));
+    }
   };
 
   const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -312,8 +433,6 @@ export const MenuAdminView: React.FC = () => {
     );
   }
 
-  const malteadasCat = adminMenu.categories.find(c => c.id === 'cat_malteadas');
-  const isMalteadasActive = Boolean(malteadasCat?.is_active);
 
   const filteredProducts = adminMenu.products.filter(p => {
     if (selectedCategory === 'all') return true;
@@ -330,54 +449,28 @@ export const MenuAdminView: React.FC = () => {
       />
 
       {/* -------------------------------------------------------------------- */}
-      {/* 1. SECCIÓN MALTEADAS Y HELADOS                                       */}
+      {/* 1. SECCIÓN CATEGORÍAS DE LA CARTA                                    */}
       {/* -------------------------------------------------------------------- */}
-      <div
-        className={`border rounded-2xl p-5 shadow-lg transition-all flex flex-col sm:flex-row items-center justify-between gap-4 ${
-          isMalteadasActive
-            ? 'bg-gradient-to-r from-pink-950/40 via-purple-950/20 to-tocineta-card border-pink-500/50'
-            : 'bg-tocineta-card border-tocineta-border'
-        }`}
-      >
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-pink-500/10 border border-pink-500/30 text-pink-400 flex items-center justify-center text-2xl shadow-inner">
-            🥤
+      <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-tocineta-yellow/10 border border-tocineta-yellow/30 text-tocineta-yellow flex items-center justify-center text-xl">
+            📋
           </div>
           <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-extrabold text-white">Línea Malteadas y Helados</h3>
-              <span
-                className={`text-[10px] font-bold px-2 py-0.5 rounded-full border uppercase ${
-                  isMalteadasActive
-                    ? 'bg-emerald-500/20 border-emerald-500/40 text-emerald-400'
-                    : 'bg-amber-500/20 border-amber-500/40 text-amber-400'
-                }`}
-              >
-                {isMalteadasActive ? 'Activo en POS y Caja' : 'Guardado (No visible para mesoneros)'}
-              </span>
-            </div>
-            <p className="text-xs text-tocineta-muted mt-1 max-w-xl">
-              {isMalteadasActive
-                ? 'La categoría está visible en las pantallas de Comandero y Caja. Puedes registrar pedidos de malteadas.'
-                : 'La categoría permanece oculta para los mesoneros mientras la Sra. Olinelcys valida costos e insumos. Actívala en 1 clic cuando esté lista.'}
+            <h3 className="text-sm font-bold text-white">Categorías y Organización de la Carta</h3>
+            <p className="text-xs text-tocineta-muted">
+              {adminMenu.categories.length} categorías activas en el menú del Food Truck.
             </p>
           </div>
         </div>
 
         <button
-          onClick={() => malteadasCat && toggleCategoryMutation.mutate(malteadasCat.id)}
-          disabled={toggleCategoryMutation.isPending}
-          className={`px-5 py-2.5 rounded-xl text-xs font-extrabold uppercase tracking-wider transition-all shadow-md shrink-0 ${
-            isMalteadasActive
-              ? 'bg-red-500/20 border border-red-500 text-red-300 hover:bg-red-500/30'
-              : 'bg-tocineta-yellow text-tocineta-bg hover:bg-tocineta-yellow/90'
-          }`}
+          type="button"
+          onClick={() => setIsCategoryModalOpen(true)}
+          className="px-4 py-2 rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow text-xs font-bold text-white hover:text-tocineta-yellow transition-all flex items-center gap-1.5 shadow-sm"
         >
-          {toggleCategoryMutation.isPending
-            ? 'Cambiando...'
-            : isMalteadasActive
-            ? 'Ocultar en POS'
-            : 'Activar en POS'}
+          <span>➕</span>
+          <span>Nueva Categoría</span>
         </button>
       </div>
 
@@ -471,6 +564,24 @@ export const MenuAdminView: React.FC = () => {
                   }`}
                 >
                   <div>
+                    {/* Imagen del Producto o Marcador Visual de Marca */}
+                    <div className="w-full h-28 rounded-xl mb-3 overflow-hidden bg-tocineta-bg border border-tocineta-border/60 flex items-center justify-center relative">
+                      {p.imageUrl || p.image_url ? (
+                        <img
+                          src={p.imageUrl || p.image_url || ''}
+                          alt={p.name}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <div className="flex flex-col items-center justify-center text-center p-2">
+                          <div className="w-9 h-9 rounded-full bg-tocineta-yellow/10 border border-tocineta-yellow/30 text-tocineta-yellow flex items-center justify-center text-base mb-1">
+                            {p.station === 'hamburguesas' ? '🍔' : p.station === 'caja_bebidas' ? '🥤' : '🌭'}
+                          </div>
+                          <span className="text-[10px] font-bold text-tocineta-muted uppercase tracking-wider">Tocineta Sonríe</span>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="flex items-start justify-between gap-2">
                       <div>
                         <h4 className="font-bold text-white text-base leading-snug">{p.name}</h4>
@@ -539,9 +650,16 @@ export const MenuAdminView: React.FC = () => {
 
                   {/* Switch Rápido Disponible / Agotado */}
                   <div className="mt-4 pt-3 border-t border-tocineta-border flex items-center justify-between">
-                    <span className="text-xs font-semibold text-tocineta-muted">
-                      Estado Operativo:
-                    </span>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-semibold text-tocineta-muted">
+                        Estado Operativo:
+                      </span>
+                      {!p.isActive && (
+                        <span className="text-[10px] text-amber-400 font-bold">
+                          Guardado (No visible para mesoneros)
+                        </span>
+                      )}
+                    </div>
                     <button
                       onClick={() =>
                         toggleAvailabilityMutation.mutate({
@@ -932,6 +1050,85 @@ export const MenuAdminView: React.FC = () => {
                   </div>
                 )}
               </div>
+
+              {/* Sección: Ingredientes de este plato */}
+              <div className="pt-3 border-t border-tocineta-border/60">
+                <label className="text-xs text-tocineta-muted uppercase font-bold block mb-2">
+                  Ingredientes de este plato:
+                </label>
+
+                {/* Lista de ingredientes actuales con botón [✕] */}
+                <div className="flex flex-wrap gap-1.5 mb-3">
+                  {productIngredients.length === 0 ? (
+                    <span className="text-xs text-tocineta-muted italic">
+                      Este plato no tiene ingredientes desglosables asignados.
+                    </span>
+                  ) : (
+                    productIngredients.map((ing, idx) => (
+                      <span
+                        key={ing.id || `${ing.ingredientId}_${idx}`}
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-tocineta-bg border border-tocineta-border text-xs text-white"
+                      >
+                        <span>{ing.name}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveIngredient(ing)}
+                          className="text-tocineta-muted hover:text-red-400 font-bold ml-1"
+                          title="Quitar ingrediente"
+                        >
+                          ✕
+                        </button>
+                      </span>
+                    ))
+                  )}
+                </div>
+
+                {/* Controles para agregar ingrediente existente o crear uno nuevo */}
+                <div className="bg-tocineta-bg/60 border border-tocineta-border rounded-xl p-3 space-y-2">
+                  <span className="text-[11px] font-semibold text-tocineta-muted block">
+                    Vincular ingrediente existente o crear uno nuevo:
+                  </span>
+                  <div className="flex flex-col sm:flex-row gap-2">
+                    <select
+                      value={selectedExistingIng}
+                      onChange={e => {
+                        setSelectedExistingIng(e.target.value);
+                        if (e.target.value) setNewIngName('');
+                      }}
+                      className="flex-1 bg-tocineta-bg border border-tocineta-border rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    >
+                      <option value="">-- Seleccionar existente --</option>
+                      {availableIngredients.map(ing => (
+                        <option key={ing.id} value={ing.id}>
+                          {ing.name}
+                        </option>
+                      ))}
+                    </select>
+
+                    <span className="text-xs text-tocineta-muted self-center">o</span>
+
+                    <input
+                      type="text"
+                      placeholder="Nuevo ingrediente..."
+                      value={newIngName}
+                      onChange={e => {
+                        setNewIngName(e.target.value);
+                        if (e.target.value) setSelectedExistingIng('');
+                      }}
+                      className="flex-1 bg-tocineta-bg border border-tocineta-border rounded-lg px-2.5 py-1.5 text-xs text-white"
+                    />
+
+                    <button
+                      type="button"
+                      onClick={handleAddIngredient}
+                      disabled={isAddingIngredient || (!selectedExistingIng && !newIngName.trim())}
+                      className="px-3 py-1.5 rounded-lg bg-tocineta-yellow text-tocineta-bg font-bold text-xs hover:bg-tocineta-yellow/90 disabled:opacity-50 transition-all shrink-0"
+                    >
+                      {isAddingIngredient ? '...' : '+ Agregar'}
+                    </button>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="flex gap-2 pt-3 border-t border-tocineta-border">
@@ -947,6 +1144,73 @@ export const MenuAdminView: React.FC = () => {
                 className="flex-1 py-2.5 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-extrabold uppercase hover:bg-tocineta-yellow/90 disabled:opacity-50 shadow-md"
               >
                 {saveProductMutation.isPending ? 'Guardando...' : 'Guardar Producto'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL NUEVA CATEGORÍA */}
+      {isCategoryModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-tocineta-border">
+              <h3 className="text-base font-bold text-white">Nueva Categoría</h3>
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="text-tocineta-muted hover:text-white"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 my-4">
+              <div>
+                <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">
+                  Nombre de la categoría:
+                </label>
+                <input
+                  type="text"
+                  placeholder="ej. Postres, Ensaladas..."
+                  value={newCatName}
+                  onChange={e => setNewCatName(e.target.value)}
+                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">
+                  Estación de Preparación:
+                </label>
+                <select
+                  value={newCatStation}
+                  onChange={e => setNewCatStation(e.target.value as Station)}
+                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                >
+                  <option value="hot_dogs">Hot Dogs</option>
+                  <option value="hamburguesas">Hamburguesas</option>
+                  <option value="caja_bebidas">Caja / Bebidas</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex gap-2 pt-3 border-t border-tocineta-border">
+              <button
+                type="button"
+                onClick={() => setIsCategoryModalOpen(false)}
+                className="flex-1 py-2 rounded-xl border border-tocineta-border text-xs font-bold text-tocineta-muted hover:text-white"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => createCategoryMutation.mutate()}
+                disabled={!newCatName.trim() || createCategoryMutation.isPending}
+                className="flex-1 py-2 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-bold hover:bg-tocineta-yellow/90 disabled:opacity-50"
+              >
+                {createCategoryMutation.isPending ? 'Creando...' : 'Crear Categoría'}
               </button>
             </div>
           </div>
