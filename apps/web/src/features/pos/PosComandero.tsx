@@ -16,7 +16,7 @@ import { generateUuidV7, createIdempotencyKey, usdToBsCents, canUserProcessPayme
 import { MultiMethodCalculator } from '../cashier/MultiMethodCalculator.js';
 import { ApplyCouponModal } from '../coupons/ApplyCouponModal.js';
 import { ProductImagePlaceholder } from '../../components/ProductImagePlaceholder.js';
-import { ShoppingCart, Send, Loader2 } from 'lucide-react';
+import { Send, Loader2 } from 'lucide-react';
 
 interface ExistingOrder {
   id: string;
@@ -79,6 +79,44 @@ export const PosComandero: React.FC = () => {
   // Estado del Outbox Offline (IndexedDB)
   const [outboxCount, setOutboxCount] = useState<number>(0);
   const [isFlushingOutbox, setIsFlushingOutbox] = useState<boolean>(false);
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
+
+  // Suscripción a PWA beforeinstallprompt
+  useEffect(() => {
+    const handleBeforeInstall = (e: any) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const choice = await deferredPrompt.userChoice;
+      if (choice?.outcome === 'accepted') {
+        setStatusNotification({ type: 'success', message: '✓ App instalada en el dispositivo' });
+      }
+      setDeferredPrompt(null);
+    } else {
+      setStatusNotification({
+        type: 'info',
+        message: 'Para instalar la app: pulsa el menú del navegador (tres puntos) y selecciona "Instalar aplicación" o "Agregar a pantalla principal".'
+      });
+    }
+  };
+
+  const handleToggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(() => {});
+      setIsFullscreen(true);
+    } else {
+      document.exitFullscreen().catch(() => {});
+      setIsFullscreen(false);
+    }
+  };
 
   // Suscripción a cambios del Outbox Offline
   useEffect(() => {
@@ -674,22 +712,39 @@ export const PosComandero: React.FC = () => {
           ))}
         </div>
 
-        {/* Buscador + Acceso a Órdenes Abiertas */}
-        <div className="flex items-center gap-2">
+        {/* Buscador + Acceso a Órdenes Abiertas + PWA + Fullscreen */}
+        <div className="flex flex-wrap items-center gap-2">
           <input
             type="text"
             placeholder="🔍 Buscar plato..."
             value={searchTerm}
             onChange={e => setSearchTerm(e.target.value)}
-            className="w-full lg:w-56 min-h-[48px] bg-tocineta-card border border-tocineta-border rounded-2xl px-4 text-xs text-white placeholder-tocineta-muted focus:border-tocineta-yellow outline-none shadow-sm"
+            className="w-full sm:w-44 lg:w-48 min-h-[48px] bg-tocineta-card border border-tocineta-border rounded-2xl px-4 text-xs text-tocineta-text placeholder-tocineta-muted focus:border-[#005A9C] outline-none shadow-sm"
           />
           <button
             type="button"
             onClick={() => setShowOrdersList(prev => !prev)}
-            className="min-h-[48px] px-3.5 rounded-2xl bg-tocineta-card border border-tocineta-border hover:border-tocineta-yellow text-xs font-bold text-white flex items-center gap-1.5 shrink-0 shadow-sm"
+            className="min-h-[48px] px-3 rounded-2xl bg-tocineta-card border border-tocineta-border hover:border-[#005A9C] text-xs font-bold text-tocineta-text flex items-center gap-1.5 shrink-0 shadow-sm"
           >
             <span>📋</span>
             <span>Órdenes ({ordersData?.orders?.length || 0})</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleInstallApp}
+            className="min-h-[48px] px-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs font-bold text-[#005A9C] dark:text-blue-300 hover:bg-blue-100 flex items-center gap-1.5 shrink-0 shadow-sm transition-all"
+            title="Instalar App en este dispositivo"
+          >
+            <span>📲</span>
+            <span className="hidden sm:inline">Instalar App</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleToggleFullscreen}
+            className="min-h-[48px] px-2.5 rounded-2xl bg-tocineta-card border border-tocineta-border hover:border-[#005A9C] text-xs font-bold text-tocineta-text flex items-center justify-center shrink-0 shadow-sm"
+            title="Pantalla Completa"
+          >
+            <span>{isFullscreen ? '🗗' : '⛶'}</span>
           </button>
         </div>
       </div>
@@ -771,66 +826,60 @@ export const PosComandero: React.FC = () => {
       {/* CONTENEDOR PRINCIPAL: CATÁLOGO TÁCTIL (IZQUIERDA) + CARRITO TÁCTIL (DERECHA) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
         
-        {/* GRILLA DE PRODUCTOS (8 COLS) */}
-        <div className="lg:col-span-7 xl:col-span-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+        {/* GRILLA DE PRODUCTOS "MÁS IMAGEN, MENOS LETRAS" (8 COLS) */}
+        <div className="lg:col-span-7 xl:col-span-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
           {filteredProducts.map(product => {
             const isAvail = product.isAvailable;
+            const rate = menu?.rateMicroBs || 40000000;
+            const bsPriceCents = usdToBsCents(product.priceUsdCents, rate);
+            const bsFormatted = (bsPriceCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
             return (
               <div
                 key={product.id}
-                className={`bg-tocineta-card border rounded-3xl p-4 flex flex-col justify-between transition-all relative overflow-hidden shadow-md ${
+                className={`bg-tocineta-card border rounded-3xl p-3.5 flex flex-col justify-between transition-all relative overflow-hidden shadow-sm hover:shadow-md ${
                   isAvail
-                    ? 'border-tocineta-border hover:border-tocineta-yellow/60'
-                    : 'border-red-950/40 bg-red-950/10 opacity-60'
+                    ? 'border-tocineta-border hover:border-[#005A9C]/50'
+                    : 'border-red-500/30 bg-red-500/5 opacity-60'
                 }`}
               >
                 {/* Banner Agotado */}
                 {!isAvail && (
-                  <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow">
+                  <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow z-10">
                     Agotado
                   </div>
                 )}
 
-                {/* Imagen del Producto con Fallback SVG Elegante */}
+                {/* Fotografía Grande del Plato (o Iniciales Grandes en Azul estilo RePOS) */}
                 <div className="mb-2.5">
                   <ProductImagePlaceholder
                     imageUrl={product.imageUrl || (product as any).image_url}
                     name={product.name}
                     station={product.station}
-                    className="w-full h-28"
+                    className="w-full h-36"
                   />
                 </div>
 
-                <div>
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold text-tocineta-muted tracking-wider block">
-                        {product.categoryName}
-                      </span>
-                      <h3 className="font-black text-base text-white leading-tight mt-0.5">
-                        {product.name}
-                      </h3>
-                      {product.baseIngredients && product.baseIngredients.length > 0 && (
-                        <p className="text-xs text-gray-400 line-clamp-2 mt-1">
-                          {product.baseIngredients.map(ing => ing.name).join(', ')}
-                        </p>
-                      )}
-                    </div>
+                {/* Nombre Claro ("Más Imagen, Menos Letras" - Lista de ingredientes oculta en tarjeta principal) */}
+                <div className="flex-1 flex flex-col justify-between">
+                  <div>
+                    <span className="text-[10px] uppercase font-extrabold text-[#005A9C] dark:text-[#38BDF8] tracking-wider block">
+                      {product.categoryName}
+                    </span>
+                    <h3 className="font-black text-base text-tocineta-text leading-tight mt-0.5">
+                      {product.name}
+                    </h3>
                   </div>
-
-                  {product.description && (
-                    <p className="text-xs text-tocineta-muted mt-1.5 line-clamp-2">
-                      {product.description}
-                    </p>
-                  )}
                 </div>
 
-                {/* Precios y Botones Táctiles de Acción (Mínimo 48x48px) */}
-                <div className="mt-4 pt-3 border-t border-tocineta-border flex items-center justify-between gap-2">
+                {/* Precios Prominentes en $ y Bs + Botones de Acción Táctiles */}
+                <div className="mt-3.5 pt-3 border-t border-tocineta-border flex items-center justify-between gap-2">
                   <div>
-                    <span className="text-[10px] text-tocineta-muted uppercase font-bold block">Precio:</span>
-                    <span className="text-lg font-black text-tocineta-yellow font-mono">
-                      {formatPrice(product.priceUsdCents)}
+                    <div className="text-xl font-black text-[#005A9C] dark:text-tocineta-yellow font-mono leading-none">
+                      ${(product.priceUsdCents / 100).toFixed(2)}
+                    </div>
+                    <span className="text-[11px] font-bold text-tocineta-muted font-mono block mt-0.5">
+                      Bs. {bsFormatted}
                     </span>
                   </div>
 
@@ -841,7 +890,7 @@ export const PosComandero: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleOpenCustomization(product)}
-                          className="min-h-[48px] px-3 rounded-2xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow text-tocineta-muted hover:text-white font-bold text-xs active:scale-95 transition-all flex items-center gap-1 shadow"
+                          className="min-h-[48px] px-3 rounded-2xl bg-slate-100 dark:bg-tocineta-bg border border-tocineta-border hover:border-[#005A9C] text-tocineta-muted hover:text-tocineta-text font-bold text-xs active:scale-95 transition-all flex items-center gap-1 shadow-sm"
                           title="Personalizar ingredientes (pan, salsas, extras)"
                         >
                           <span>⚙️</span>
@@ -853,10 +902,10 @@ export const PosComandero: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleFastAddProduct(product)}
-                        className={`min-h-[48px] px-4 rounded-2xl font-black text-xs active:scale-95 transition-all flex items-center justify-center gap-1 shadow-lg ${
+                        className={`min-h-[48px] px-4 rounded-2xl font-black text-xs active:scale-95 transition-all flex items-center justify-center gap-1 shadow-md ${
                           product.isCombo
-                            ? 'bg-purple-500 text-white hover:bg-purple-600'
-                            : 'bg-tocineta-yellow text-tocineta-bg hover:bg-tocineta-yellow-hover'
+                            ? 'bg-purple-600 text-white hover:bg-purple-700'
+                            : 'bg-[#005A9C] text-white hover:bg-[#00487d] dark:bg-tocineta-yellow dark:text-black dark:hover:bg-tocineta-yellow-hover'
                         }`}
                       >
                         <span>{product.isCombo ? '✨ Armar' : '+ 1 Toque'}</span>
@@ -1241,26 +1290,24 @@ export const PosComandero: React.FC = () => {
 
       </div>
 
-      {/* Botón Flotante Móvil del Comandero con Total Dual Simultáneo USD + Bs (Punto 1) */}
+      {/* Barra Inferior Fija Azul en Móviles Estilo RePOS */}
       {cart.length > 0 && (
-        <div className="lg:hidden fixed bottom-[68px] left-3 right-3 z-[60] pointer-events-auto">
+        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-[#005A9C] text-white px-4 py-3 shadow-2xl flex items-center justify-between border-t border-blue-400">
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-extrabold tracking-wide">
+              Resumen de la orden ({totalItems})
+            </span>
+            <span className="text-xs font-mono font-bold bg-white/20 px-2 py-0.5 rounded-lg">
+              ${(totalToCollectCents / 100).toFixed(2)}
+            </span>
+          </div>
           <button
             type="button"
             onClick={() => setIsMobileCartOpen(true)}
-            className="w-full min-h-[52px] bg-tocineta-yellow text-tocineta-bg font-black text-xs sm:text-sm px-4 py-3 rounded-2xl shadow-2xl flex items-center justify-between border-2 border-yellow-300 z-[60] cursor-pointer pointer-events-auto active:scale-95 transition-all"
+            className="px-4 py-2 rounded-xl bg-white text-[#005A9C] font-black text-xs shadow-md flex items-center gap-1.5 active:scale-95 transition-all"
           >
-            <span className="flex items-center gap-2">
-              <ShoppingCart className="w-5 h-5 text-tocineta-bg" />
-              <span>🛒 Pedido ({totalItems})</span>
-            </span>
-            <div className="flex items-center gap-2">
-              <span className="font-mono text-right font-black text-xs sm:text-sm">
-                {formatDualPrice(totalToCollectCents)}
-              </span>
-              <span className="px-2.5 py-1 rounded-xl bg-black text-tocineta-yellow text-xs font-black shadow flex items-center gap-1">
-                Ver / Enviar ▲
-              </span>
-            </div>
+            <span>Ver Pedido</span>
+            <span className="text-sm">⬆️</span>
           </button>
         </div>
       )}

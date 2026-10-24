@@ -30,6 +30,33 @@ export const printingRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({ data: list });
   });
 
+  // 1.1 Actualizar configuración o conmutar USB / Red LAN
+  fastify.patch('/api/printers/:id', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const body = request.body as { connection_type?: string; address?: string; name?: string; is_active?: number };
+    
+    const existing = rawDb.prepare('SELECT * FROM printers WHERE id = ?').get(id) as PrinterRow | undefined;
+    if (!existing) {
+      return reply.status(404).send({ error: 'NOT_FOUND', message: 'Impresora no encontrada' });
+    }
+
+    const newConnType = body.connection_type || existing.connection_type;
+    const newAddress = body.address !== undefined ? body.address : existing.address;
+    const newName = body.name !== undefined ? body.name : existing.name;
+    const newActive = body.is_active !== undefined ? body.is_active : existing.is_active;
+
+    rawDb.prepare(`
+      UPDATE printers
+      SET connection_type = ?, address = ?, name = ?, is_active = ?
+      WHERE id = ?
+    `).run(newConnType, newAddress, newName, newActive, id);
+
+    return reply.send({
+      success: true,
+      printer: { id, name: newName, connection_type: newConnType, address: newAddress, is_active: newActive }
+    });
+  });
+
   // 2. Listar trabajos de impresión
   fastify.get('/api/print-jobs', async (request, reply) => {
     const querySchema = z.object({

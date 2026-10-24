@@ -5,20 +5,26 @@ export interface CriticalSupplySeed {
   id: string;
   name: string;
   unit: string;
+  unitMeasure?: string;
   costPerUnitUsdCents: number;
+  previousCostUsdCents?: number;
   initialStock: number;
   minimumStock: number;
 }
 
 export const CRITICAL_SUPPLIES: CriticalSupplySeed[] = [
-  { id: 'sup_pan_brioche', name: 'Pan Brioche Hamburguesa', unit: 'unid', costPerUnitUsdCents: 35, initialStock: 100, minimumStock: 25 },
-  { id: 'sup_pan_perro', name: 'Pan de Perro Caliente', unit: 'unid', costPerUnitUsdCents: 25, initialStock: 100, minimumStock: 25 },
-  { id: 'sup_carne_smash', name: 'Medallón Carne Prime Smash', unit: 'unid', costPerUnitUsdCents: 70, initialStock: 150, minimumStock: 40 },
-  { id: 'sup_salchicha_pollo', name: 'Salchicha Nacional de Pollo', unit: 'unid', costPerUnitUsdCents: 40, initialStock: 100, minimumStock: 30 },
-  { id: 'sup_salchicha_polaca', name: 'Salchicha Polaca', unit: 'unid', costPerUnitUsdCents: 60, initialStock: 40, minimumStock: 15 },
-  { id: 'sup_pechuga_pollo', name: 'Pechuga de Pollo Crispy/Grill', unit: 'unid', costPerUnitUsdCents: 80, initialStock: 50, minimumStock: 15 },
-  { id: 'sup_malta_lata', name: 'Malta Lata 250 ml', unit: 'unid', costPerUnitUsdCents: 65, initialStock: 48, minimumStock: 12 },
-  { id: 'sup_refresco_1lt', name: 'Refresco 1 Litro', unit: 'unid', costPerUnitUsdCents: 90, initialStock: 36, minimumStock: 10 }
+  { id: 'sup_pan_brioche', name: 'Pan Brioche Hamburguesa', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 35, previousCostUsdCents: 30, initialStock: 100, minimumStock: 25 },
+  { id: 'sup_pan_perro', name: 'Pan de Perro Caliente', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 25, previousCostUsdCents: 25, initialStock: 100, minimumStock: 25 },
+  { id: 'sup_carne_smash', name: 'Medallón Carne Prime Smash (100g)', unit: 'unid', unitMeasure: 'g', costPerUnitUsdCents: 75, previousCostUsdCents: 65, initialStock: 150, minimumStock: 40 },
+  { id: 'sup_tocineta_crispy', name: 'Tocineta Ahumada Premium', unit: 'kg', unitMeasure: 'kg', costPerUnitUsdCents: 1200, previousCostUsdCents: 1050, initialStock: 15, minimumStock: 5 },
+  { id: 'sup_queso_cheddar', name: 'Queso Cheddar Rebanadas', unit: 'kg', unitMeasure: 'kg', costPerUnitUsdCents: 850, previousCostUsdCents: 800, initialStock: 12, minimumStock: 4 },
+  { id: 'sup_salchicha_pollo', name: 'Salchicha Especial de Pollo', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 40, previousCostUsdCents: 35, initialStock: 100, minimumStock: 30 },
+  { id: 'sup_salchicha_polaca', name: 'Salchicha Polaca Ahumada', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 60, previousCostUsdCents: 60, initialStock: 40, minimumStock: 15 },
+  { id: 'sup_pechuga_pollo', name: 'Pechuga de Pollo Crispy', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 85, previousCostUsdCents: 80, initialStock: 50, minimumStock: 15 },
+  { id: 'sup_papas_francesa', name: 'Papas Francesas Congeladas', unit: 'kg', unitMeasure: 'kg', costPerUnitUsdCents: 280, previousCostUsdCents: 250, initialStock: 40, minimumStock: 10 },
+  { id: 'sup_gas_operativo', name: 'Gas Operativo Bombona 43kg', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 2500, previousCostUsdCents: 2500, initialStock: 3, minimumStock: 1 },
+  { id: 'sup_malta_lata', name: 'Malta Polar Lata 250 ml', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 65, previousCostUsdCents: 60, initialStock: 48, minimumStock: 12 },
+  { id: 'sup_refresco_1lt', name: 'Refresco Pepsi 1 Litro', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 90, previousCostUsdCents: 85, initialStock: 36, minimumStock: 10 }
 ];
 
 export interface InventoryItemReconciliation {
@@ -38,24 +44,42 @@ export interface InventoryItemReconciliation {
 }
 
 /**
- * 1. Siembra o actualiza los 8 insumos críticos de alta rotación y sus recetas técnicas oficiales
+ * 1. Siembra o actualiza los insumos críticos de alta rotación y sus recetas técnicas oficiales
  */
 export function seedCriticalSuppliesAndRecipes(rawDb: Database.Database): void {
   const now = Date.now();
 
   const tx = rawDb.transaction(() => {
-    // 1. Sembrar los 8 insumos críticos en supply_items
+    // 1. Sembrar los insumos críticos en supply_items
     const insertSupply = rawDb.prepare(`
-      INSERT OR REPLACE INTO supply_items (
-        id, name, unit, current_stock_qty, minimum_stock_qty, cost_per_unit_usd_cents, created_at_ms, updated_at_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      INSERT INTO supply_items (
+        id, name, unit, unit_measure, current_stock_qty, minimum_stock_qty, cost_per_unit_usd_cents, previous_cost_usd_cents, created_at_ms, updated_at_ms
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ON CONFLICT(id) DO UPDATE SET
+        name = excluded.name,
+        unit = excluded.unit,
+        unit_measure = excluded.unit_measure,
+        minimum_stock_qty = excluded.minimum_stock_qty,
+        cost_per_unit_usd_cents = excluded.cost_per_unit_usd_cents,
+        previous_cost_usd_cents = CASE WHEN supply_items.previous_cost_usd_cents > 0 THEN supply_items.previous_cost_usd_cents ELSE excluded.previous_cost_usd_cents END,
+        updated_at_ms = excluded.updated_at_ms
     `);
 
     for (const sup of CRITICAL_SUPPLIES) {
-      // Verificar si ya existe para no sobreescribir el stock actual en caliente si ya fue modificado
       const existing = rawDb.prepare('SELECT current_stock_qty FROM supply_items WHERE id = ?').get(sup.id) as any;
       const stock = existing ? existing.current_stock_qty : sup.initialStock;
-      insertSupply.run(sup.id, sup.name, sup.unit, stock, sup.minimumStock, sup.costPerUnitUsdCents, now, now);
+      insertSupply.run(
+        sup.id,
+        sup.name,
+        sup.unit,
+        sup.unitMeasure || 'und',
+        stock,
+        sup.minimumStock,
+        sup.costPerUnitUsdCents,
+        sup.previousCostUsdCents || sup.costPerUnitUsdCents,
+        now,
+        now
+      );
     }
 
     // 2. Asegurar que Americana Deluxe exista en products

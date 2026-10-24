@@ -5,9 +5,12 @@ export interface SupplyItemRecord {
   id: string;
   name: string;
   unit: string;
+  unitMeasure?: string;
   currentStockQty: number;
   minimumStockQty: number;
   costPerUnitUsdCents: number;
+  previousCostUsdCents?: number;
+  lastSupplierId?: string | null;
   createdAtMs: number;
   updatedAtMs: number;
   isStaleCost: boolean; // Alerta si > 30 días sin actualizar
@@ -17,8 +20,10 @@ export interface SupplyItemRecord {
 export interface SupplyBulkUpdateItem {
   id: string;
   costPerUnitUsdCents?: number;
+  previousCostUsdCents?: number;
   minimumStockQty?: number;
   currentStockQty?: number;
+  unitMeasure?: string;
 }
 
 export interface CalculatedLineCost {
@@ -42,17 +47,25 @@ export const COURTESY_ITEM_INTERNAL_COST_USD_CENTS = 35; // 35¢ partida Marketi
 export function getSupplyItems(rawDb: Database.Database): SupplyItemRecord[] {
   const now = Date.now();
   const rows = rawDb.prepare(`
-    SELECT id, name, unit, current_stock_qty, minimum_stock_qty,
-           cost_per_unit_usd_cents, created_at_ms, updated_at_ms
+    SELECT id, name, unit,
+           COALESCE(unit_measure, 'und') as unit_measure,
+           current_stock_qty, minimum_stock_qty,
+           cost_per_unit_usd_cents,
+           COALESCE(previous_cost_usd_cents, cost_per_unit_usd_cents) as previous_cost_usd_cents,
+           last_supplier_id,
+           created_at_ms, updated_at_ms
     FROM supply_items
     ORDER BY name ASC
   `).all() as Array<{
     id: string;
     name: string;
     unit: string;
+    unit_measure: string;
     current_stock_qty: number;
     minimum_stock_qty: number;
     cost_per_unit_usd_cents: number;
+    previous_cost_usd_cents: number;
+    last_supplier_id: string | null;
     created_at_ms: number;
     updated_at_ms: number;
   }>;
@@ -64,9 +77,12 @@ export function getSupplyItems(rawDb: Database.Database): SupplyItemRecord[] {
       id: r.id,
       name: r.name,
       unit: r.unit,
+      unitMeasure: r.unit_measure,
       currentStockQty: r.current_stock_qty,
       minimumStockQty: r.minimum_stock_qty,
       costPerUnitUsdCents: r.cost_per_unit_usd_cents,
+      previousCostUsdCents: r.previous_cost_usd_cents,
+      lastSupplierId: r.last_supplier_id,
       createdAtMs: r.created_at_ms,
       updatedAtMs: r.updated_at_ms,
       isStaleCost: elapsedMs > THIRTY_DAYS_MS,
@@ -92,8 +108,14 @@ export function bulkUpdateSupplyCosts(
   const updateStmt = rawDb.prepare(`
     UPDATE supply_items
     SET cost_per_unit_usd_cents = COALESCE(?, cost_per_unit_usd_cents),
+        previous_cost_usd_cents = CASE 
+          WHEN ? IS NOT NULL AND ? != cost_per_unit_usd_cents THEN cost_per_unit_usd_cents 
+          WHEN ? IS NOT NULL THEN ? 
+          ELSE previous_cost_usd_cents 
+        END,
         minimum_stock_qty = COALESCE(?, minimum_stock_qty),
         current_stock_qty = COALESCE(?, current_stock_qty),
+        unit_measure = COALESCE(?, unit_measure),
         updated_at_ms = ?
     WHERE id = ?
   `);
@@ -113,8 +135,13 @@ export function bulkUpdateSupplyCosts(
 
       updateStmt.run(
         item.costPerUnitUsdCents ?? null,
+        item.costPerUnitUsdCents ?? null,
+        item.costPerUnitUsdCents ?? null,
+        item.previousCostUsdCents ?? null,
+        item.previousCostUsdCents ?? null,
         item.minimumStockQty ?? null,
         item.currentStockQty ?? null,
+        item.unitMeasure ?? null,
         now,
         item.id
       );

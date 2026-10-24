@@ -4,7 +4,7 @@ import { calculateOrderLineRealCost } from './costing.js';
 
 export interface OperatingExpenseInput {
   jornadaId: string;
-  category: 'HIELO' | 'VERDURAS' | 'GAS' | 'TRANSPORTE' | 'MANTENIMIENTO' | 'VARIOS';
+  category: 'HIELO' | 'VERDURAS' | 'GAS' | 'TRANSPORTE' | 'MANTENIMIENTO' | 'VARIOS' | 'CENA_EMPLEADOS' | 'GAS_OPERATIVO' | 'COMPRA_MATERIA_PRIMA' | string;
   amountUsdCents: number;
   amountBsCents?: number;
   description: string;

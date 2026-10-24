@@ -2,29 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --tocineta-bg: #F4F6F9;
+  --tocineta-card: #FFFFFF;
+  --tocineta-card-hover: #F8FAFC;
+  --tocineta-border: #E2E8F0;
+  --tocineta-border-light: #CBD5E1;
+  --tocineta-text: #0F172A;
+  --tocineta-muted: #64748B;
+  --tocineta-blue: #005A9C;
+  --tocineta-yellow: #D97706;
+  --tocineta-yellow-hover: #B45309;
+  --tocineta-green: #10B981;
+}
+
+html.dark {
+  --tocineta-bg: #0B0D11;
+  --tocineta-card: #161922;
+  --tocineta-card-hover: #1C212E;
+  --tocineta-border: #262B38;
+  --tocineta-border-light: #363C4D;
+  --tocineta-text: #FFFFFF;
+  --tocineta-muted: #8E95A5;
+  --tocineta-blue: #38BDF8;
+  --tocineta-yellow: #FFE600;
+  --tocineta-yellow-hover: #E6CF00;
+  --tocineta-green: #00E676;
+}
+
 @layer base {
   body {
-    background-color: #0B0D11;
-    color: #FFFFFF;
+    background-color: var(--tocineta-bg);
+    color: var(--tocineta-text);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   }
 }
 
-/* Scrollbar personalizado oscuro */
+/* Scrollbar adaptativo */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #0B0D11;
+  background: var(--tocineta-bg);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #262B38;
+  background: var(--tocineta-border);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #363C4D;
+  background: var(--tocineta-border-light);
+}
+
+/* Animaciones suaves para Drawer y modales */
+@keyframes slideInLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-left {
+  animation: slideInLeft 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }

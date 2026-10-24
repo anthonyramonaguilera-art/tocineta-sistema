@@ -1,5 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
+  darkMode: 'class',
   content: [
     "./index.html",
     "./src/**/*.{js,ts,jsx,tsx}",
@@ -8,15 +9,17 @@ export default {
     extend: {
       colors: {
         tocineta: {
-          bg: '#0B0D11',
-          card: '#161922',
-          'card-hover': '#1C212E',
-          border: '#262B38',
-          'border-light': '#363C4D',
-          yellow: '#FFE600',
-          'yellow-hover': '#E6CF00',
-          muted: '#8E95A5',
-          green: '#00E676',
+          bg: 'var(--tocineta-bg)',
+          card: 'var(--tocineta-card)',
+          'card-hover': 'var(--tocineta-card-hover)',
+          border: 'var(--tocineta-border)',
+          'border-light': 'var(--tocineta-border-light)',
+          text: 'var(--tocineta-text)',
+          muted: 'var(--tocineta-muted)',
+          blue: 'var(--tocineta-blue)',
+          yellow: 'var(--tocineta-yellow)',
+          'yellow-hover': 'var(--tocineta-yellow-hover)',
+          green: 'var(--tocineta-green)',
           amber: '#FF9100',
           red: '#FF3D00'
         }

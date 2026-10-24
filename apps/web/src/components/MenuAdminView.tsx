@@ -4,17 +4,55 @@ import { useAuth } from '../context/AuthContext.js';
 import type { AdminMenuResponse, AdminProduct, AdminProductIngredient, Station } from '../types/menu.js';
 import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
 import { ProductImagePlaceholder } from './ProductImagePlaceholder.js';
-import { ClipboardList, Plus, Utensils, Ticket, Banknote } from 'lucide-react';
+import {
+  ClipboardList,
+  Plus,
+  Utensils,
+  Ticket,
+  Banknote,
+  Calculator,
+  Package
+} from 'lucide-react';
 
 export const MenuAdminView: React.FC = () => {
   const { token } = useAuth();
   const queryClient = useQueryClient();
 
-  const [activeTab, setActiveTab] = useState<'products' | 'coupons' | 'bcv'>('products');
+  const [activeTab, setActiveTab] = useState<'products' | 'pricing-calculator' | 'supplies-costs' | 'coupons' | 'bcv'>('products');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+  const [customMargins, setCustomMargins] = useState<Record<string, number>>({});
+
+  // Query Insumos / Materia Prima para análisis de costos
+  const { data: suppliesData } = useQuery<{ supplies: any[] }>({
+    queryKey: ['profitabilitySupplies'],
+    queryFn: async () => {
+      const res = await fetch('/api/profitability/supplies');
+      if (!res.ok) return { supplies: [] };
+      return res.json();
+    }
+  });
+
+  // Mutación: Aplicar Precio Sugerido en Menú
+  const applySuggestedPriceMutation = useMutation({
+    mutationFn: async ({ productId, priceUsdCents }: { productId: string; priceUsdCents: number }) => {
+      const res = await fetch(`/api/menu/products/${productId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({ priceUsdCents })
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
+      queryClient.invalidateQueries({ queryKey: ['posMenu'] });
+    }
+  });
 
   // Formulario nuevo/editar producto
   const [formName, setFormName] = useState('');
@@ -479,10 +517,10 @@ export const MenuAdminView: React.FC = () => {
       {/* -------------------------------------------------------------------- */}
       {/* 2. PESTAÑAS DEL PANEL ADMIN                                          */}
       {/* -------------------------------------------------------------------- */}
-      <div className="flex items-center gap-2 border-b border-tocineta-border pb-3">
+      <div className="flex items-center gap-2 border-b border-tocineta-border pb-3 overflow-x-auto">
         <button
           onClick={() => setActiveTab('products')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === 'products'
               ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
               : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
@@ -492,8 +530,30 @@ export const MenuAdminView: React.FC = () => {
           <span>Catálogo de Productos ({adminMenu.products.length})</span>
         </button>
         <button
+          onClick={() => setActiveTab('pricing-calculator')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+            activeTab === 'pricing-calculator'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+          }`}
+        >
+          <Calculator className="w-4 h-4" />
+          <span>Calculadora de Margen y Precios Sugeridos (Valery/Saint)</span>
+        </button>
+        <button
+          onClick={() => setActiveTab('supplies-costs')}
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
+            activeTab === 'supplies-costs'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+          }`}
+        >
+          <Package className="w-4 h-4" />
+          <span>Materia Prima y Variación de Costos</span>
+        </button>
+        <button
           onClick={() => setActiveTab('coupons')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === 'coupons'
               ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
               : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
@@ -504,7 +564,7 @@ export const MenuAdminView: React.FC = () => {
         </button>
         <button
           onClick={() => setActiveTab('bcv')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+          className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === 'bcv'
               ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
               : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
@@ -550,7 +610,7 @@ export const MenuAdminView: React.FC = () => {
 
             <button
               onClick={openCreateModal}
-              className="px-4 py-2 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-extrabold uppercase tracking-wider hover:bg-tocineta-yellow/90 transition-all shrink-0 shadow-md"
+              className="px-4 py-2 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-extrabold uppercase tracking-wider hover:bg-tocineta-yellow/90 transition-all shrink-0 shadow-md cursor-pointer"
             >
               + Nuevo Producto
             </button>
@@ -560,6 +620,11 @@ export const MenuAdminView: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProducts.map(p => {
               const productFlavors = adminMenu.flavors.filter(f => f.product_id === p.id);
+              const costUsd = (p.estimated_cost_usd_cents || 150) / 100;
+              const margin = customMargins[p.id] ?? 70;
+              const suggestedPrice = margin >= 100 ? costUsd * 2 : costUsd / (1 - (margin / 100));
+              const currentPrice = p.price_usd_cents / 100;
+              const hasPriceDiff = Math.abs(suggestedPrice - currentPrice) > 0.15;
 
               return (
                 <div
@@ -588,7 +653,7 @@ export const MenuAdminView: React.FC = () => {
                       </div>
                       <button
                         onClick={() => openEditModal(p)}
-                        className="text-xs bg-tocineta-border hover:bg-tocineta-border-light text-white px-2 py-1 rounded-md"
+                        className="text-xs bg-tocineta-border hover:bg-tocineta-border-light text-white px-2 py-1 rounded-md cursor-pointer"
                       >
                         Editar
                       </button>
@@ -605,10 +670,58 @@ export const MenuAdminView: React.FC = () => {
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-tocineta-muted block text-[10px]">Costo Est.:</span>
+                        <span className="text-tocineta-muted block text-[10px]">Costo Receta:</span>
                         <span className="font-bold text-white font-mono">
-                          ${(p.estimated_cost_usd_cents / 100).toFixed(2)}
+                          ${costUsd.toFixed(2)}
                         </span>
+                      </div>
+                    </div>
+
+                    {/* Calculadora de Margen Valery/Saint en vivo */}
+                    <div className="mt-3 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="font-bold text-slate-300 flex items-center gap-1">
+                          <Calculator className="w-3.5 h-3.5 text-blue-400" /> Margen Valery:
+                        </span>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min="10"
+                            max="90"
+                            value={margin}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              setCustomMargins(prev => ({ ...prev, [p.id]: val }));
+                            }}
+                            className="w-12 px-1 py-0.5 text-center text-xs font-mono font-bold bg-slate-800 border border-slate-700 rounded text-white"
+                          />
+                          <span className="text-[10px] font-bold text-slate-400">%</span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800 text-[11px]">
+                        <div>
+                          <span className="text-[9px] text-slate-400 block uppercase">Precio Sugerido:</span>
+                          <span className="font-black text-blue-400 font-mono text-xs">
+                            ${suggestedPrice.toFixed(2)}
+                          </span>
+                        </div>
+                        {hasPriceDiff && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applySuggestedPriceMutation.mutate({
+                                productId: p.id,
+                                priceUsdCents: Math.round(suggestedPrice * 100)
+                              });
+                            }}
+                            disabled={applySuggestedPriceMutation.isPending}
+                            className="px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black transition-all shadow-xs cursor-pointer"
+                            title="Aplicar Precio Sugerido al Menú"
+                          >
+                            Aplicar al Menú
+                          </button>
+                        )}
                       </div>
                     </div>
 
@@ -664,7 +777,7 @@ export const MenuAdminView: React.FC = () => {
                           isAvailable: !p.isAvailable
                         })
                       }
-                      className={`px-3 py-1 rounded-full text-xs font-bold transition-all ${
+                      className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                         p.isAvailable
                           ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
                           : 'bg-red-500/20 text-red-400 border border-red-500/40'
@@ -676,6 +789,171 @@ export const MenuAdminView: React.FC = () => {
                 </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* VISTA VALERY/SAINT: CALCULADORA DE MARGEN Y PRECIOS SUGERIDOS       */}
+      {/* -------------------------------------------------------------------- */}
+      {activeTab === 'pricing-calculator' && (
+        <div className="space-y-4">
+          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-sm">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div>
+                <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+                  <Calculator className="w-5 h-5 text-blue-400" />
+                  <span>Calculadora Financiera Valery / Saint de Precios de Venta</span>
+                </h3>
+                <p className="text-xs text-tocineta-muted mt-1 leading-relaxed">
+                  Fórmula financiera estándar: <code className="bg-slate-800 px-1.5 py-0.5 rounded text-blue-300 font-mono">Precio Sugerido = Costo / (1 - (Margen % / 100))</code>.
+                  Garantiza que el margen deseado sobre el precio final se cumpla con exactitud contable.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl overflow-hidden shadow-md">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-900/80 text-slate-300 border-b border-tocineta-border">
+                  <tr>
+                    <th className="p-3">Plato / Producto</th>
+                    <th className="p-3">Estación</th>
+                    <th className="p-3">Costo Receta ($)</th>
+                    <th className="p-3">% Margen Deseado</th>
+                    <th className="p-3">Precio Sugerido ($)</th>
+                    <th className="p-3">Precio Actual ($)</th>
+                    <th className="p-3">Ganancia Neta Est.</th>
+                    <th className="p-3 text-right">Acción</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-tocineta-border/60">
+                  {adminMenu.products.map(p => {
+                    const costUsd = (p.estimated_cost_usd_cents || 150) / 100;
+                    const margin = customMargins[p.id] ?? 70;
+                    const suggestedPrice = margin >= 100 ? costUsd * 2 : costUsd / (1 - (margin / 100));
+                    const currentPrice = p.price_usd_cents / 100;
+                    const profitEst = suggestedPrice - costUsd;
+
+                    return (
+                      <tr key={p.id} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="p-3 font-bold text-white">{p.name}</td>
+                        <td className="p-3 text-slate-400 uppercase text-[10px] font-mono">{p.station}</td>
+                        <td className="p-3 font-mono font-bold text-amber-400">${costUsd.toFixed(2)}</td>
+                        <td className="p-3">
+                          <div className="flex items-center gap-1.5">
+                            <input
+                              type="number"
+                              min="10"
+                              max="90"
+                              value={margin}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                setCustomMargins(prev => ({ ...prev, [p.id]: val }));
+                              }}
+                              className="w-16 px-2 py-1 text-center font-mono font-bold bg-slate-800 border border-slate-700 rounded-lg text-white"
+                            />
+                            <span className="text-slate-400 font-bold">%</span>
+                          </div>
+                        </td>
+                        <td className="p-3 font-mono font-black text-blue-400 text-sm">
+                          ${suggestedPrice.toFixed(2)}
+                        </td>
+                        <td className="p-3 font-mono text-slate-300">
+                          ${currentPrice.toFixed(2)}
+                        </td>
+                        <td className="p-3 font-mono text-emerald-400 font-bold">
+                          +${profitEst.toFixed(2)} ({margin}%)
+                        </td>
+                        <td className="p-3 text-right">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              applySuggestedPriceMutation.mutate({
+                                productId: p.id,
+                                priceUsdCents: Math.round(suggestedPrice * 100)
+                              });
+                            }}
+                            disabled={applySuggestedPriceMutation.isPending}
+                            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-xs cursor-pointer"
+                          >
+                            Aplicar al Menú
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* VISTA VALERY/SAINT: MATERIA PRIMA Y VARIACIÓN DE COSTOS              */}
+      {/* -------------------------------------------------------------------- */}
+      {activeTab === 'supplies-costs' && (
+        <div className="space-y-4">
+          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-sm">
+            <h3 className="text-base font-extrabold text-white flex items-center gap-2">
+              <Package className="w-5 h-5 text-blue-400" />
+              <span>Historial de Costos de Proveedores y Materia Prima (Valery / Saint)</span>
+            </h3>
+            <p className="text-xs text-tocineta-muted mt-1 leading-relaxed">
+              Monitoreo continuo de variaciones de costos en compras. Los incrementos de precio aplicados por proveedores se destacan automáticamente con alerta roja.
+            </p>
+          </div>
+
+          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl overflow-hidden shadow-md">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-900/80 text-slate-300 border-b border-tocineta-border">
+                  <tr>
+                    <th className="p-3">Insumo / Materia Prima</th>
+                    <th className="p-3">Categoría</th>
+                    <th className="p-3">Unidad</th>
+                    <th className="p-3">Costo Anterior ($)</th>
+                    <th className="p-3">Costo Actual ($)</th>
+                    <th className="p-3">Variación Proveedor</th>
+                    <th className="p-3">Stock Actual</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-tocineta-border/60">
+                  {(suppliesData?.supplies || []).map((s: any) => {
+                    const prevCost = (s.previousCostUsdCents ?? s.costUsdCents ?? 0) / 100;
+                    const currCost = (s.costUsdCents ?? 0) / 100;
+                    const diffPct = prevCost > 0 ? ((currCost - prevCost) / prevCost) * 100 : 0;
+                    const didIncrease = diffPct > 0.01;
+
+                    return (
+                      <tr key={s.id} className="hover:bg-slate-800/40 transition-colors">
+                        <td className="p-3 font-bold text-white">{s.name}</td>
+                        <td className="p-3 text-slate-400 uppercase text-[10px] font-mono">{s.category}</td>
+                        <td className="p-3 text-slate-300 font-mono">{s.unitMeasure || s.unit_measure || 'und'}</td>
+                        <td className="p-3 font-mono text-slate-400">${prevCost.toFixed(2)}</td>
+                        <td className="p-3 font-mono font-bold text-white">${currCost.toFixed(2)}</td>
+                        <td className="p-3 font-mono">
+                          {didIncrease ? (
+                            <span className="px-2 py-0.5 rounded-md bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black inline-flex items-center gap-1">
+                              ⬆️ Subió +{diffPct.toFixed(1)}%
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                              ✓ Estable
+                            </span>
+                          )}
+                        </td>
+                        <td className="p-3 font-mono font-bold text-slate-300">
+                          {s.currentStockUnits ?? s.current_stock_units ?? 0} {s.unitMeasure || 'und'}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}

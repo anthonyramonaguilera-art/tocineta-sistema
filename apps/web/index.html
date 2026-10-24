@@ -1,15 +1,35 @@
 <!doctype html>
-<html lang="es" class="dark">
+<html lang="es">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0B0D11" />
+    <meta name="theme-color" content="#005A9C" />
     <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <title>Tocineta Sonríe | Sistema Operativo Local</title>
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <title>Tocineta Sonríe | Sistema POS Empresarial</title>
+    <script>
+      (function() {
+        try {
+          var savedTheme = localStorage.getItem('tocineta_theme');
+          if (savedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+          } else {
+            document.documentElement.classList.remove('dark');
+          }
+        } catch (e) {}
+      })();
+    </script>
   </head>
-  <body class="bg-tocineta-bg text-white antialiased min-h-screen selection:bg-tocineta-yellow selection:text-black">
+  <body class="bg-tocineta-bg text-tocineta-text antialiased min-h-screen selection:bg-[#005A9C] selection:text-white">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+          navigator.serviceWorker.register('/sw.js').catch(function() {});
+        });
+      }
+    </script>
   </body>
 </html>

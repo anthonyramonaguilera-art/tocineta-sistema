@@ -16,16 +16,17 @@ const SystemHealthDashboard = React.lazy(() => import('./components/SystemHealth
 const DeferredPaperView = React.lazy(() => import('./features/emergency/DeferredPaperView.js').then(m => ({ default: m.DeferredPaperView })));
 const ProfitabilityDashboard = React.lazy(() => import('./features/profitability/ProfitabilityDashboard.js').then(m => ({ default: m.ProfitabilityDashboard })));
 const StaffManagementView = React.lazy(() => import('./features/staff/StaffManagementView.js').then(m => ({ default: m.StaffManagementView })));
+const QrMenuWebAdminView = React.lazy(() => import('./components/QrMenuWebAdminView.js').then(m => ({ default: m.QrMenuWebAdminView })));
 
-export type TabType = 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability' | 'staff';
+export type TabType = 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability' | 'staff' | 'qr-menu';
 
 // Mapa canónico de pestañas permitidas y por defecto por rol (Hito M18/M20 RBAC)
 export const ALLOWED_TABS_BY_ROLE: Record<string, TabType[]> = {
   mesonero: ['pos', 'kds', 'health'],
   cocinero: ['kds', 'health'],
   cajera: ['cashier', 'pos', 'kds', 'emergency', 'health'],
-  supervisor: ['pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability'],
-  admin: ['pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability']
+  supervisor: ['pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu'],
+  admin: ['pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu']
 };
 
 export const DEFAULT_TAB_BY_ROLE: Record<string, TabType> = {
@@ -208,6 +209,7 @@ const MainNavigator: React.FC = () => {
             {currentTab === 'health' && <SystemHealthDashboard />}
             {currentTab === 'emergency' && <DeferredPaperView />}
             {currentTab === 'profitability' && <ProfitabilityDashboard />}
+            {currentTab === 'qr-menu' && <QrMenuWebAdminView />}
           </Suspense>
         </ViewErrorBoundary>
       )}

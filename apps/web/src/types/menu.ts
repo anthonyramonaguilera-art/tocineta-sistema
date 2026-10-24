@@ -85,6 +85,7 @@ export interface PosMenuResponse {
   success: boolean;
   rateMicroBs: number;
   formattedRate: string;
+  rateLabel?: string;
   latestSeq: number;
   categories: PosCategory[];
   barraLibreIngredients: PosBarraLibreIngredient[];
@@ -172,6 +173,7 @@ export interface AdminMenuResponse {
   success: boolean;
   rateMicroBs: number;
   formattedRate: string;
+  rateLabel?: string;
   latestSeq: number;
   categories: AdminCategory[];
   products: AdminProduct[];

@@ -1,36 +1,93 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  TrendingUp,
-  DollarSign,
   Package,
   Layers,
-  PieChart,
   AlertTriangle,
   CheckCircle,
-  Save,
-  FileText,
-  Star,
   Activity,
-  Award,
   Sliders,
-  Percent,
-  Calculator
+  Plus,
+  Printer,
+  ShoppingBag,
+  ArrowDownRight,
+  Users,
+  Briefcase,
+  Download,
+  Share2
 } from 'lucide-react';
 import { PedagogicalGuideBanner } from '../../components/PedagogicalGuideBanner.js';
 
 export const ProfitabilityDashboard: React.FC = () => {
   const queryClient = useQueryClient();
-  const [activeSubTab, setActiveSubTab] = useState<'net-profit' | 'menu-engineering' | 'costing' | 'inventory' | 'settings'>('net-profit');
 
-  // Estado local para bulk update de insumos
-  const [editedCosts, setEditedCosts] = useState<Record<string, number>>({});
-  // Estado local para conteo físico de inventario
-  const [physicalCounts, setPhysicalCounts] = useState<Record<string, number>>({});
-  // Estado para nuevo gasto operativo
-  const [expenseCategory, setExpenseCategory] = useState<'HIELO' | 'VERDURAS' | 'GAS' | 'TRANSPORTE' | 'MANTENIMIENTO' | 'VARIOS'>('HIELO');
-  const [expenseAmountUsd, setExpenseAmountUsd] = useState('');
-  const [expenseDescription, setExpenseDescription] = useState('');
+  // Subpestañas del Dashboard Ejecutivo estilo Treinta + Valery
+  const [activeSubTab, setActiveSubTab] = useState<
+    'net-profit' | 'purchases' | 'recipes' | 'mermas' | 'receivables' | 'payroll' | 'settings'
+  >(() => {
+    try {
+      const saved = localStorage.getItem('tocineta_profit_subtab');
+      if (saved) return saved as any;
+    } catch {}
+    return 'net-profit';
+  });
+
+  // Escuchar eventos de navegación desde el Drawer RePOS / Treinta
+  useEffect(() => {
+    const handler = (e: any) => {
+      if (e.detail) {
+        if (e.detail === 'inventory') setActiveSubTab('purchases');
+        else if (e.detail === 'expenses') setActiveSubTab('mermas');
+        else if (e.detail === 'receivables') setActiveSubTab('receivables');
+        else if (e.detail === 'purchases') setActiveSubTab('purchases');
+        else if (e.detail === 'mermas') setActiveSubTab('mermas');
+        else if (e.detail === 'payroll') setActiveSubTab('payroll');
+        else setActiveSubTab(e.detail);
+      }
+    };
+    window.addEventListener('switch-profitability-subtab', handler);
+    return () => window.removeEventListener('switch-profitability-subtab', handler);
+  }, []);
+
+  // Modales
+  const [isOutputModalOpen, setIsOutputModalOpen] = useState(false);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
+  const [isPayrollModalOpen, setIsPayrollModalOpen] = useState(false);
+  const [isPayReceivableModalOpen, setIsPayReceivableModalOpen] = useState(false);
+  const [ticketModalText, setTicketModalText] = useState<string | null>(null);
+
+  // Formulario Salida / Merma / Consumo Interno
+  const [outputReason, setOutputReason] = useState<'MERMA_SOCIOS' | 'CENA_EMPLEADOS' | 'GASTO_GAS_INSUMO'>('MERMA_SOCIOS');
+  const [outputSupplyId, setOutputSupplyId] = useState('');
+  const [outputPartnerId, setOutputPartnerId] = useState('');
+  const [outputQuantity, setOutputQuantity] = useState('1');
+  const [outputNotes, setOutputNotes] = useState('');
+
+  // Formulario Compra
+  const [purchaseSupplierId, setPurchaseSupplierId] = useState('');
+  const [purchaseInvoiceNumber, setPurchaseInvoiceNumber] = useState('');
+  const [purchasePaymentCondition, setPurchasePaymentCondition] = useState<'CONTADO' | 'CREDITO'>('CONTADO');
+  const [purchaseItems, setPurchaseItems] = useState<Array<{ supplyId: string; quantity: number; unitCostUsdCents: number }>>([
+    { supplyId: 'sup_pan_artesanal', quantity: 30, unitCostUsdCents: 45 }
+  ]);
+  const [purchaseNotes, setPurchaseNotes] = useState('');
+
+  // Formulario Nómina
+  const [payrollStaffName, setPayrollStaffName] = useState('Personal de Turno');
+  const [payrollPaymentType, setPayrollPaymentType] = useState<'SUELDO_TURNO' | 'QUINCENA' | 'BONO' | 'ADELANTO_VALE'>('SUELDO_TURNO');
+  const [payrollAmountUsd, setPayrollAmountUsd] = useState('15.00');
+  const [payrollPaymentMethod, setPayrollPaymentMethod] = useState('EFECTIVO_USD');
+  const [payrollNotes, setPayrollNotes] = useState('');
+
+  // Formulario Cobro / Abono Cliente
+  const [selectedCustomerId, setSelectedCustomerId] = useState('');
+  const [payAmountUsd, setPayAmountUsd] = useState('');
+  const [payNotes, setPayNotes] = useState('');
+
+  // Generador Cotización
+  const [quoteClientName, setQuoteClientName] = useState('Cliente Corporativo / Evento');
+  const [quoteBurgerCount, setQuoteBurgerCount] = useState(15);
+  const [quoteDogCount, setQuoteDogCount] = useState(15);
 
   // 1. Query Configuración de Interruptores
   const { data: settingsData } = useQuery<{
@@ -48,64 +105,178 @@ export const ProfitabilityDashboard: React.FC = () => {
     }
   });
 
-  // 2. Query Utilidad Neta Real
-  const { data: netProfitData, isLoading: isLoadingNetProfit } = useQuery<{
-    report: any;
+  // 2. Query Balance Ejecutivo Treinta + Valery
+  const { data: executiveData, refetch: refetchExecutive } = useQuery<{
+    totalSalesUsdCents: number;
+    totalSalesBsCents: number;
+    costOfGoodsSoldUsdCents: number;
+    grossProfitUsdCents: number;
+    operatingExpensesUsdCents: number;
+    netProfitUsdCents: number;
+    netProfitBsCents: number;
+    netMarginPercent: number;
+    foodCostPercent: number;
+    bcvRateFormatted: string;
+    bcvRateLabel: string;
+    summary: {
+      totalPurchasesUsdCents: number;
+      totalPayrollUsdCents: number;
+      totalGasUsdCents: number;
+      totalCenaEmpleadosUsdCents: number;
+      totalReceivablesUsdCents: number;
+      totalOwedToSuppliersUsdCents: number;
+    };
   }>({
-    queryKey: ['jornadaNetProfit'],
+    queryKey: ['executiveBalance'],
     queryFn: async () => {
-      const res = await fetch('/api/profitability/net-profit');
+      const res = await fetch('/api/profitability/executive-balance');
       return res.json();
     },
-    enabled: settingsData?.profitabilityProEnabled ?? true
+    refetchInterval: 10000
   });
 
-  // 3. Query Ingeniería de Menú
-  const { data: menuEngData, isLoading: isLoadingMenuEng } = useQuery<{
-    report: any;
-  }>({
-    queryKey: ['menuEngineeringReport'],
-    queryFn: async () => {
-      const res = await fetch('/api/profitability/menu-engineering');
-      return res.json();
-    },
-    enabled: settingsData?.profitabilityProEnabled ?? true
-  });
-
-  // 4. Query Insumos y Alertas
-  const { data: suppliesData } = useQuery<{
-    supplies: any[];
-  }>({
+  // 3. Query Insumos / Materia Prima
+  const { data: suppliesData, refetch: refetchSupplies } = useQuery<{ supplies: any[] }>({
     queryKey: ['profitabilitySupplies'],
     queryFn: async () => {
       const res = await fetch('/api/profitability/supplies');
       return res.json();
-    },
-    enabled: settingsData?.profitabilityProEnabled ?? true
+    }
   });
 
-  // 5. Query Inventario Crítico
-  const { data: criticalInvData } = useQuery<{
-    criticalSupplies: any[];
-  }>({
-    queryKey: ['criticalInventory'],
+  // 4. Query Proveedores
+  const { data: suppliersData, refetch: refetchSuppliers } = useQuery<{ suppliers: any[] }>({
+    queryKey: ['profitabilitySuppliers'],
     queryFn: async () => {
-      const res = await fetch('/api/profitability/inventory/critical');
+      const res = await fetch('/api/profitability/suppliers');
+      return res.json();
+    }
+  });
+
+  // 5. Query Clientes & Socios
+  const { data: customersData, refetch: refetchCustomers } = useQuery<{ customers: any[] }>({
+    queryKey: ['profitabilityCustomers'],
+    queryFn: async () => {
+      const res = await fetch('/api/profitability/customers');
+      return res.json();
+    }
+  });
+
+  // 6. Query Compras
+  const { data: purchasesData, refetch: refetchPurchases } = useQuery<{ purchases: any[] }>({
+    queryKey: ['profitabilityPurchases'],
+    queryFn: async () => {
+      const res = await fetch('/api/profitability/purchases');
+      return res.json();
+    }
+  });
+
+  // 7. Query Nómina
+  const { data: payrollData, refetch: refetchPayroll } = useQuery<{ payments: any[] }>({
+    queryKey: ['profitabilityPayroll'],
+    queryFn: async () => {
+      const res = await fetch('/api/profitability/payroll');
+      return res.json();
+    }
+  });
+
+  // 8. Query Movimientos (Kardex)
+  const { data: movementsData, refetch: refetchMovements } = useQuery<{ movements: any[] }>({
+    queryKey: ['profitabilityMovements'],
+    queryFn: async () => {
+      const res = await fetch('/api/profitability/movements');
+      return res.json();
+    }
+  });
+
+  // 9. Query Recetas Estandarizadas
+  const { data: recipesData } = useQuery<{ recipes: any[] }>({
+    queryKey: ['profitabilityRecipes'],
+    queryFn: async () => {
+      const res = await fetch('/api/profitability/recipes');
+      return res.json();
+    }
+  });
+
+  // Mutación: Registrar Salida / Merma / Consumo Interno
+  const outputMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await fetch('/api/profitability/inventory-output', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
       return res.json();
     },
-    enabled: settingsData?.profitabilityProEnabled ?? true
+    onSuccess: (data) => {
+      setIsOutputModalOpen(false);
+      refetchExecutive();
+      refetchSupplies();
+      refetchCustomers();
+      refetchMovements();
+      if (data.ticketText) {
+        setTicketModalText(data.ticketText);
+      }
+    }
   });
 
-  // Mutación para actualizar interruptores
+  // Mutación: Registrar Compra
+  const purchaseMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await fetch('/api/profitability/purchases', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      setIsPurchaseModalOpen(false);
+      refetchExecutive();
+      refetchPurchases();
+      refetchSupplies();
+      refetchSuppliers();
+      refetchMovements();
+    }
+  });
+
+  // Mutación: Registrar Pago Nómina
+  const payrollMutation = useMutation({
+    mutationFn: async (payload: any) => {
+      const res = await fetch('/api/profitability/payroll', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      setIsPayrollModalOpen(false);
+      refetchExecutive();
+      refetchPayroll();
+    }
+  });
+
+  // Mutación: Abonar Cuenta por Cobrar
+  const payReceivableMutation = useMutation({
+    mutationFn: async ({ customerId, amountUsdCents, notes }: any) => {
+      const res = await fetch(`/api/profitability/customers/${customerId}/pay-receivable`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ amountUsdCents, notes })
+      });
+      return res.json();
+    },
+    onSuccess: () => {
+      setIsPayReceivableModalOpen(false);
+      refetchExecutive();
+      refetchCustomers();
+    }
+  });
+
+  // Mutación: Actualizar Configuración Fiscal
   const updateSettingsMutation = useMutation({
-    mutationFn: async (payload: {
-      profitabilityProEnabled?: boolean;
-      fiscalModuleEnabled?: boolean;
-      fiscalPriceMode?: 'INCLUSIVE' | 'EXCLUSIVE';
-      igtfEnabled?: boolean;
-      igtfRateBps?: number;
-      igtfAppliesTo?: 'CASH_USD' | 'ALL_USD' | 'NONE';
-    }) => {
+    mutationFn: async (payload: any) => {
       const res = await fetch('/api/profitability/settings', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -118,707 +289,809 @@ export const ProfitabilityDashboard: React.FC = () => {
     }
   });
 
-  // Mutación para bulk update de costos
-  const bulkUpdateCostsMutation = useMutation({
-    mutationFn: async (items: Array<{ id: string; costPerUnitUsdCents: number }>) => {
-      const res = await fetch('/api/profitability/supplies/bulk-update', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ items })
-      });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['profitabilitySupplies'] });
-      setEditedCosts({});
-      alert('Costos de insumos actualizados e historial registrado exitosamente');
-    }
-  });
+  const handleDownloadReport = () => {
+    if (!executiveData) return;
+    const lines = [
+      '====================================================',
+      '        TOCINETA SONRIE - REPORTE DE GESTION        ',
+      '              Food Truck Puerto Ordaz               ',
+      '====================================================',
+      `Fecha: ${new Date().toLocaleString()}`,
+      `Tasa Oficial: ${executiveData.bcvRateLabel} (${executiveData.bcvRateFormatted} Bs/$)`,
+      '----------------------------------------------------',
+      `Ventas Totales: $${(executiveData.totalSalesUsdCents / 100).toFixed(2)} (${(executiveData.totalSalesBsCents / 100).toFixed(2)} Bs)`,
+      `Costo de Mercancia Vendida (COGS): $${(executiveData.costOfGoodsSoldUsdCents / 100).toFixed(2)} (${executiveData.foodCostPercent}%)`,
+      `Ganancia Bruta: $${(executiveData.grossProfitUsdCents / 100).toFixed(2)}`,
+      `Gastos Operativos (Caja Chica, Gas, Compras, Nomina): $${(executiveData.operatingExpensesUsdCents / 100).toFixed(2)}`,
+      '----------------------------------------------------',
+      `UTILIDAD NETA LIBRE: $${(executiveData.netProfitUsdCents / 100).toFixed(2)} (${(executiveData.netProfitBsCents / 100).toFixed(2)} Bs)`,
+      `Margen Neto: ${executiveData.netMarginPercent}%`,
+      '----------------------------------------------------',
+      `Total Compras Realizadas: $${(executiveData.summary.totalPurchasesUsdCents / 100).toFixed(2)}`,
+      `Total Nomina y Personal: $${(executiveData.summary.totalPayrollUsdCents / 100).toFixed(2)}`,
+      `Total Gas e Insumos Operativos: $${(executiveData.summary.totalGasUsdCents / 100).toFixed(2)}`,
+      `Total Cena para Empleados: $${(executiveData.summary.totalCenaEmpleadosUsdCents / 100).toFixed(2)}`,
+      `Total Por Cobrar (Clientes y Socios): $${(executiveData.summary.totalReceivablesUsdCents / 100).toFixed(2)}`,
+      `Total Por Pagar a Proveedores: $${(executiveData.summary.totalOwedToSuppliersUsdCents / 100).toFixed(2)}`,
+      '===================================================='
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Reporte_TocinetaSonrie_${new Date().toISOString().slice(0, 10)}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
-  // Mutación para registrar gasto operativo
-  const addExpenseMutation = useMutation({
-    mutationFn: async (payload: any) => {
-      const res = await fetch('/api/profitability/expenses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      return res.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['jornadaNetProfit'] });
-      setExpenseAmountUsd('');
-      setExpenseDescription('');
-      alert('Gasto operativo registrado exitosamente en caja chica');
-    }
-  });
-
-  // Mutación para conciliar inventario físico
-  const reconcileInvMutation = useMutation({
-    mutationFn: async (counts: Array<{ supplyItemId: string; physicalQty: number }>) => {
-      const res = await fetch('/api/profitability/inventory/reconcile', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ physicalCounts: counts })
-      });
-      return res.json();
-    },
-    onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ['criticalInventory'] });
-      setPhysicalCounts({});
-      alert(`Conciliación guardada. Varianza total: $${(data.totalVarianceUsdCents / 100).toFixed(2)}`);
-    }
-  });
-
-  const isProEnabled = settingsData?.profitabilityProEnabled ?? false;
   const isFiscalEnabled = settingsData?.fiscalModuleEnabled ?? false;
 
   return (
     <div className="space-y-6">
-      {/* Guía Pedagógica sin jerga */}
+      {/* Guía Pedagógica */}
       <PedagogicalGuideBanner
-        title="Guía de Ganancias e Inventario"
-        description="Aquí puedes ver la utilidad real de cada turno deduciendo costos de ingredientes, registrar gastos de caja chica (hielo, gas, transporte) y controlar las existencias de insumos críticos."
-        storageKey="tocineta_guide_profitability"
+        title="Balance Ejecutivo & Rentabilidad Real (Treinta + Valery)"
+        description="Control integral de costos de recetas, compras de materia prima, mermas con reposición de socios, nómina y cuentas por cobrar."
+        storageKey="banner_profitability"
       />
 
-      {/* Cabecera del Módulo */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-tocineta-card border border-tocineta-border p-5 rounded-2xl shadow-xl">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-            <TrendingUp className="w-6 h-6" />
-          </div>
-          <div>
-            <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-2">
-              <span>MÓDULO DE RENTABILIDAD PROFESIONAL</span>
-              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
-                isProEnabled ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40' : 'bg-zinc-800 text-zinc-400'
-              }`}>
-                {isProEnabled ? 'Niveles 1-4 Activos' : 'Modo Minimalista'}
+      {/* TARJETA SUPERIOR DE BALANCE EJECUTIVO (ESTILO TREINTA + VALERY) */}
+      <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-3xl p-5 sm:p-6 shadow-sm">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          {/* Métricas Principales */}
+          <div className="space-y-2">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                BALANCE EJECUTIVO TREINTA & VALERY
               </span>
-            </h1>
-            <p className="text-xs text-tocineta-muted mt-0.5">
-              Costeo dinámico, Inventario crítico con ahorro sin pan, Utilidad neta real y Matriz de Kasavana & Smith.
-            </p>
-          </div>
-        </div>
-
-        {/* Sub-pestañas de Navegación Ejecutiva */}
-        {isProEnabled && (
-          <div className="flex flex-wrap items-center gap-1.5 bg-tocineta-bg p-1.5 rounded-xl border border-tocineta-border/80">
-            <button
-              onClick={() => setActiveSubTab('net-profit')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                activeSubTab === 'net-profit' ? 'bg-tocineta-yellow text-black shadow' : 'text-tocineta-muted hover:text-white'
-              }`}
-            >
-              <DollarSign className="w-3.5 h-3.5" />
-              <span>Utilidad Neta</span>
-            </button>
-            <button
-              onClick={() => setActiveSubTab('menu-engineering')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                activeSubTab === 'menu-engineering' ? 'bg-tocineta-yellow text-black shadow' : 'text-tocineta-muted hover:text-white'
-              }`}
-            >
-              <PieChart className="w-3.5 h-3.5" />
-              <span>Ingeniería de Menú</span>
-            </button>
-            <button
-              onClick={() => setActiveSubTab('costing')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                activeSubTab === 'costing' ? 'bg-tocineta-yellow text-black shadow' : 'text-tocineta-muted hover:text-white'
-              }`}
-            >
-              <Layers className="w-3.5 h-3.5" />
-              <span>Costeo & Insumos</span>
-            </button>
-            <button
-              onClick={() => setActiveSubTab('inventory')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                activeSubTab === 'inventory' ? 'bg-tocineta-yellow text-black shadow' : 'text-tocineta-muted hover:text-white'
-              }`}
-            >
-              <Package className="w-3.5 h-3.5" />
-              <span>Inventario Crítico</span>
-            </button>
-            <button
-              onClick={() => setActiveSubTab('settings')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-bold transition flex items-center gap-1.5 ${
-                activeSubTab === 'settings' ? 'bg-tocineta-yellow text-black shadow' : 'text-tocineta-muted hover:text-white'
-              }`}
-            >
-              <Sliders className="w-3.5 h-3.5" />
-              <span>Configuración</span>
-            </button>
-          </div>
-        )}
-      </div>
-
-      {/* Si el Interruptor Maestro está apagado: Mostrar mensaje informativo y opción de activación */}
-      {!isProEnabled && (
-        <div className="bg-tocineta-card border border-tocineta-border p-8 rounded-2xl text-center max-w-xl mx-auto space-y-4 shadow-xl">
-          <div className="w-14 h-14 mx-auto rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-            <Sliders className="w-7 h-7" />
-          </div>
-          <h2 className="text-lg font-black text-white uppercase tracking-tight">
-            Módulo de Rentabilidad Pro en Espera
-          </h2>
-          <p className="text-xs text-tocineta-muted leading-relaxed">
-            El sistema está operando en <strong>Modo Minimalista</strong>. Los costos de recetas, Barra Libre (15¢) y cupones de cortesía (35¢) se siguen registrando silenciosamente en segundo plano en cada venta.
-          </p>
-          <div className="pt-2">
-            <button
-              onClick={() => updateSettingsMutation.mutate({ profitabilityProEnabled: true })}
-              disabled={updateSettingsMutation.isPending}
-              className="px-5 py-2.5 bg-tocineta-yellow hover:bg-tocineta-yellow-hover text-black font-black text-xs uppercase rounded-xl transition shadow-lg"
-            >
-              {updateSettingsMutation.isPending ? 'Activando...' : 'Activar Pestañas de Rentabilidad Pro'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* PESTAÑA 1: UTILIDAD NETA REAL (NIVEL 3) */}
-      {isProEnabled && activeSubTab === 'net-profit' && (
-        <div className="space-y-6">
-          {isLoadingNetProfit ? (
-            <div className="text-center py-12 text-tocineta-muted text-xs">Calculando Utilidad Neta Real de la Jornada...</div>
-          ) : netProfitData?.report ? (
-            <>
-              {/* Tarjetas Principales de Métricas */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-tocineta-card border border-tocineta-border p-4 rounded-xl">
-                  <span className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider">Ventas Netas Comida</span>
-                  <div className="text-2xl font-black text-white mt-1">
-                    ${(netProfitData.report.netFoodSalesUsdCents / 100).toFixed(2)}
-                  </div>
-                  <span className="text-[10px] text-zinc-400">Excluye Delivery Modo A</span>
-                </div>
-
-                <div className="bg-tocineta-card border border-tocineta-border p-4 rounded-xl">
-                  <span className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider">Food Cost Real</span>
-                  <div className="text-2xl font-black text-amber-400 mt-1">
-                    ${(netProfitData.report.totalFoodCostUsdCents / 100).toFixed(2)}
-                  </div>
-                  <span className="text-[10px] text-amber-400/80">{netProfitData.report.foodCostPercentage}% de las ventas</span>
-                </div>
-
-                <div className="bg-tocineta-card border border-tocineta-border p-4 rounded-xl">
-                  <span className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider">Gastos Caja Chica</span>
-                  <div className="text-2xl font-black text-red-400 mt-1">
-                    ${(netProfitData.report.operatingExpensesUsdCents / 100).toFixed(2)}
-                  </div>
-                  <span className="text-[10px] text-zinc-400">Hielo, gas, transporte, mermas</span>
-                </div>
-
-                <div className="bg-tocineta-card border border-emerald-500/40 bg-emerald-500/5 p-4 rounded-xl">
-                  <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Utilidad Neta Real</span>
-                  <div className="text-2xl font-black text-emerald-400 mt-1">
-                    ${(netProfitData.report.netProfitUsdCents / 100).toFixed(2)}
-                  </div>
-                  <span className="text-[10px] text-emerald-400/90 font-bold">Margen: {netProfitData.report.netMarginPercentage}%</span>
-                </div>
-              </div>
-
-              {/* Desglose Detallado de la Fórmula */}
-              <div className="bg-tocineta-card border border-tocineta-border p-5 rounded-2xl">
-                <h3 className="text-sm font-black text-white uppercase tracking-tight mb-3 flex items-center gap-2">
-                  <Calculator className="w-4 h-4 text-tocineta-yellow" />
-                  <span>Desglose Estricto de la Fórmula de Utilidad Neta</span>
-                </h3>
-                <div className="space-y-2 text-xs">
-                  <div className="flex justify-between py-1 border-b border-zinc-800">
-                    <span className="text-zinc-300">(+) Ventas Netas de Comida:</span>
-                    <span className="font-bold text-white">${(netProfitData.report.netFoodSalesUsdCents / 100).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-zinc-800 text-amber-400">
-                    <span>(-) Costo Insumos Recetas Base:</span>
-                    <span>-${(netProfitData.report.baseFoodCostUsdCents / 100).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-zinc-800 text-amber-400">
-                    <span>(-) Costo Extras Pagados:</span>
-                    <span>-${(netProfitData.report.extraIngredientsCostUsdCents / 100).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-zinc-800 text-amber-400">
-                    <span>(-) Costo Barra Libre (15¢ c/u):</span>
-                    <span>-${(netProfitData.report.barraLibreCostUsdCents / 100).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-zinc-800 text-purple-400">
-                    <span>(-) Obsequios Cupones / Marketing (35¢ c/u):</span>
-                    <span>-${(netProfitData.report.couponCourtesiesUsdCents / 100).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-zinc-800 text-red-400">
-                    <span>(-) Mermas de Alimentos Registradas:</span>
-                    <span>-${(netProfitData.report.registeredFoodLossesUsdCents / 100).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-zinc-800 text-blue-400">
-                    <span>(-) Comisión Bancaria Ubii (0.75%):</span>
-                    <span>-${(netProfitData.report.ubiiFeeUsdCents / 100).toFixed(2)} (Bs. ${(netProfitData.report.ubiiFeeBsCents / 100).toFixed(2)})</span>
-                  </div>
-                  <div className="flex justify-between py-1 border-b border-zinc-800 text-orange-400">
-                    <span>(-) Gastos de Turno (Caja Chica):</span>
-                    <span>-${(netProfitData.report.operatingExpensesUsdCents / 100).toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between pt-2 text-sm font-black text-emerald-400">
-                    <span>(=) UTILIDAD NETA REAL:</span>
-                    <span>${(netProfitData.report.netProfitUsdCents / 100).toFixed(2)}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Registro de Gasto Rápido de Caja Chica */}
-              <div className="bg-tocineta-card border border-tocineta-border p-5 rounded-2xl">
-                <h3 className="text-sm font-black text-white uppercase tracking-tight mb-3 flex items-center gap-2">
-                  <FileText className="w-4 h-4 text-tocineta-yellow" />
-                  <span>Registrar Gasto del Turno (Caja Chica)</span>
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                  <select
-                    value={expenseCategory}
-                    onChange={(e: any) => setExpenseCategory(e.target.value)}
-                    className="bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
-                  >
-                    <option value="HIELO">Hielo</option>
-                    <option value="VERDURAS">Verduras</option>
-                    <option value="GAS">Gas</option>
-                    <option value="TRANSPORTE">Transporte</option>
-                    <option value="MANTENIMIENTO">Mantenimiento</option>
-                    <option value="VARIOS">Varios</option>
-                  </select>
-                  <input
-                    type="number"
-                    step="0.01"
-                    placeholder="Monto USD (ej. 5.00)"
-                    value={expenseAmountUsd}
-                    onChange={(e) => setExpenseAmountUsd(e.target.value)}
-                    className="bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Descripción (ej. 2 bolsas de hielo)"
-                    value={expenseDescription}
-                    onChange={(e) => setExpenseDescription(e.target.value)}
-                    className="bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white sm:col-span-2"
-                  />
-                </div>
-                <div className="mt-3 flex justify-end">
-                  <button
-                    onClick={() => {
-                      const amountCents = Math.round(parseFloat(expenseAmountUsd || '0') * 100);
-                      if (amountCents <= 0 || !expenseDescription.trim()) {
-                        alert('Ingrese un monto válido y una descripción');
-                        return;
-                      }
-                      addExpenseMutation.mutate({
-                        category: expenseCategory,
-                        amountUsdCents: amountCents,
-                        description: expenseDescription
-                      });
-                    }}
-                    disabled={addExpenseMutation.isPending}
-                    className="px-4 py-2 bg-tocineta-yellow hover:bg-tocineta-yellow-hover text-black font-black text-xs uppercase rounded-xl transition"
-                  >
-                    {addExpenseMutation.isPending ? 'Guardando...' : 'Guardar Gasto en Caja Chica'}
-                  </button>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-8 text-tocineta-muted text-xs">No hay datos de jornada disponible.</div>
-          )}
-        </div>
-      )}
-
-      {/* PESTAÑA 2: INGENIERÍA DE MENÚ KASAVANA & SMITH (NIVEL 4) */}
-      {isProEnabled && activeSubTab === 'menu-engineering' && (
-        <div className="space-y-6">
-          {isLoadingMenuEng ? (
-            <div className="text-center py-12 text-tocineta-muted text-xs">Cargando matriz de Kasavana & Smith...</div>
-          ) : menuEngData?.report ? (
-            <>
-              {/* Aviso Estadístico */}
-              {menuEngData.report.hasStatisticalWarning && (
-                <div className="bg-amber-500/10 border border-amber-500/30 p-4 rounded-xl flex items-start gap-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="text-xs font-bold text-amber-400 block uppercase">Aviso Estadístico</span>
-                    <span className="text-xs text-zinc-300">{menuEngData.report.statisticalWarningMessage}</span>
-                  </div>
-                </div>
-              )}
-
-              {/* Resumen Superior: Costo Primo y Punto de Equilibrio */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="bg-tocineta-card border border-tocineta-border p-4 rounded-xl">
-                  <span className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider">Costo Primo (Prime Cost)</span>
-                  <div className="text-xl font-black text-white mt-1">
-                    ${(menuEngData.report.primeCost.primeCostUsdCents / 100).toFixed(2)}
-                  </div>
-                  <span className="text-[10px] text-tocineta-yellow font-bold">
-                    {menuEngData.report.primeCost.primeCostPercentage}% sobre ventas (Meta: 55-65%)
-                  </span>
-                </div>
-
-                <div className="bg-tocineta-card border border-tocineta-border p-4 rounded-xl">
-                  <span className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider">Punto de Equilibrio</span>
-                  <div className="text-xl font-black text-white mt-1">
-                    ${(menuEngData.report.breakEven.breakEvenSalesUsdCents / 100).toFixed(2)}
-                  </div>
-                  <span className="text-[10px] text-zinc-400">Ventas mínimas para no perder</span>
-                </div>
-
-                <div className="bg-tocineta-card border border-tocineta-border p-4 rounded-xl">
-                  <span className="text-[11px] font-bold text-tocineta-muted uppercase tracking-wider">Margen Contribución Promedio</span>
-                  <div className="text-xl font-black text-emerald-400 mt-1">
-                    ${(menuEngData.report.categories.reduce((acc: number, c: any) => acc + c.totalMarginUsdCents, 0) / 100).toFixed(2)}
-                  </div>
-                  <span className="text-[10px] text-zinc-400">Ganancia bruta total generada</span>
-                </div>
-              </div>
-
-              {/* Matriz Visual de los 4 Cuadrantes por Categoría */}
-              {menuEngData.report.categories.map((cat: any) => (
-                <div key={cat.categoryId} className="bg-tocineta-card border border-tocineta-border p-5 rounded-2xl space-y-4">
-                  <div className="flex justify-between items-center border-b border-zinc-800 pb-3">
-                    <div>
-                      <h3 className="text-sm font-black text-white uppercase tracking-tight">{cat.categoryName}</h3>
-                      <span className="text-[11px] text-tocineta-muted">
-                        {cat.totalUnitsSold} platos vendidos • Umbral Pop: {(cat.popularityThreshold * 100).toFixed(1)}% • Margen Prom: ${(cat.weightedAverageMarginUsdCents / 100).toFixed(2)}
-                      </span>
-                    </div>
-                  </div>
-
-                  {cat.sampleStatus === 'DATOS_INSUFICIENTES' ? (
-                    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/40 text-amber-300 text-xs font-bold flex items-center gap-2">
-                      <AlertTriangle className="w-5 h-5 shrink-0 text-amber-400" />
-                      <span>
-                        📊 Matriz preliminar. Faltan {cat.missingDays ?? 14} días de operación o {cat.missingUnits ?? 30} unidades para resultado definitivo.
-                      </span>
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                      {/* ESTRELLAS ⭐ */}
-                      <div className="bg-emerald-500/5 border border-emerald-500/30 p-3.5 rounded-xl space-y-2">
-                        <div className="flex items-center gap-1.5 text-xs font-black text-emerald-400 uppercase tracking-tight">
-                          <Star className="w-4 h-4 fill-emerald-400" />
-                          <span>Estrellas (Alta Pop / Alto Margen)</span>
-                        </div>
-                        <div className="space-y-1.5">
-                          {cat.dishes.filter((d: any) => d.quadrant === 'ESTRELLA').map((d: any) => (
-                            <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
-                              <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
-                              <span className="text-emerald-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* CABALLOS DE BATALLA 🐴 */}
-                      <div className="bg-blue-500/5 border border-blue-500/30 p-3.5 rounded-xl space-y-2">
-                        <div className="flex items-center gap-1.5 text-xs font-black text-blue-400 uppercase tracking-tight">
-                          <Award className="w-4 h-4" />
-                          <span>Caballos de Batalla (Alta Pop / Bajo Margen)</span>
-                        </div>
-                        <div className="space-y-1.5">
-                          {cat.dishes.filter((d: any) => d.quadrant === 'CABALLO_DE_BATALLA').map((d: any) => (
-                            <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
-                              <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
-                              <span className="text-blue-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* PUZZLES 🧩 */}
-                      <div className="bg-amber-500/5 border border-amber-500/30 p-3.5 rounded-xl space-y-2">
-                        <div className="flex items-center gap-1.5 text-xs font-black text-amber-400 uppercase tracking-tight">
-                          <Activity className="w-4 h-4" />
-                          <span>Puzzles (Baja Pop / Alto Margen)</span>
-                        </div>
-                        <div className="space-y-1.5">
-                          {cat.dishes.filter((d: any) => d.quadrant === 'PUZZLE').map((d: any) => (
-                            <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
-                              <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
-                              <span className="text-amber-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* PERROS 🐕 */}
-                      <div className="bg-red-500/5 border border-red-500/30 p-3.5 rounded-xl space-y-2">
-                        <div className="flex items-center gap-1.5 text-xs font-black text-red-400 uppercase tracking-tight">
-                          <AlertTriangle className="w-4 h-4" />
-                          <span>Perros (Baja Pop / Bajo Margen)</span>
-                        </div>
-                        <div className="space-y-1.5">
-                          {cat.dishes.filter((d: any) => d.quadrant === 'PERRO').map((d: any) => (
-                            <div key={d.productId} className="flex justify-between text-xs bg-tocineta-bg p-2 rounded-lg">
-                              <span className="font-bold text-white">{d.productName} ({d.unitsSold}u)</span>
-                              <span className="text-red-400 font-bold">+${(d.unitContributionMarginUsdCents / 100).toFixed(2)}/u</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-
-              {/* Análisis ABC de Insumos */}
-              <div className="bg-tocineta-card border border-tocineta-border p-5 rounded-2xl space-y-3">
-                <h3 className="text-sm font-black text-white uppercase tracking-tight flex items-center gap-2">
-                  <Percent className="w-4 h-4 text-tocineta-yellow" />
-                  <span>Análisis ABC de Insumos y Materia Prima</span>
-                </h3>
-                <div className="overflow-x-auto">
-                  <table className="w-full text-xs text-left">
-                    <thead className="bg-tocineta-bg text-tocineta-muted uppercase text-[10px]">
-                      <tr>
-                        <th className="p-2.5">Clase</th>
-                        <th className="p-2.5">Insumo</th>
-                        <th className="p-2.5 text-right">Consumo</th>
-                        <th className="p-2.5 text-right">Costo Unit.</th>
-                        <th className="p-2.5 text-right">Valor Total</th>
-                        <th className="p-2.5 text-right">% Acumulado</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-zinc-800">
-                      {menuEngData.report.abcSupplies.slice(0, 10).map((s: any) => (
-                        <tr key={s.supplyId} className="hover:bg-zinc-800/40">
-                          <td className="p-2.5">
-                            <span className={`px-2 py-0.5 rounded font-black text-[10px] ${
-                              s.classification === 'A' ? 'bg-red-500/20 text-red-400 border border-red-500/40' :
-                              s.classification === 'B' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' :
-                              'bg-zinc-700 text-zinc-300'
-                            }`}>
-                              Clase {s.classification}
-                            </span>
-                          </td>
-                          <td className="p-2.5 font-bold text-white">{s.supplyName}</td>
-                          <td className="p-2.5 text-right">{s.unitsConsumed} {s.unit}</td>
-                          <td className="p-2.5 text-right">${(s.unitCostUsdCents / 100).toFixed(2)}</td>
-                          <td className="p-2.5 text-right font-bold text-white">${(s.totalValueUsdCents / 100).toFixed(2)}</td>
-                          <td className="p-2.5 text-right text-zinc-400">{s.cumulativePercentage}%</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-8 text-tocineta-muted text-xs">No hay datos suficientes para el análisis de menú.</div>
-          )}
-        </div>
-      )}
-
-      {/* PESTAÑA 3: COSTEO & INSUMOS (NIVEL 1) */}
-      {isProEnabled && activeSubTab === 'costing' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center bg-tocineta-card border border-tocineta-border p-4 rounded-xl">
-            <div>
-              <h3 className="text-sm font-black text-white uppercase">Gestor y Asistente Rápido de Costos</h3>
-              <p className="text-xs text-tocineta-muted">
-                Los insumos con más de 30 días sin actualizar muestran alerta automática.
-              </p>
+              <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-300 font-mono">
+                {executiveData?.bcvRateLabel || 'BCV Día Siguiente'}: {executiveData?.bcvRateFormatted || '40,00'} Bs/$
+              </span>
             </div>
-            {Object.keys(editedCosts).length > 0 && (
-              <button
-                onClick={() => {
-                  const updates = Object.entries(editedCosts).map(([id, costPerUnitUsdCents]) => ({
-                    id,
-                    costPerUnitUsdCents
-                  }));
-                  bulkUpdateCostsMutation.mutate(updates);
-                }}
-                disabled={bulkUpdateCostsMutation.isPending}
-                className="px-4 py-2 bg-tocineta-yellow hover:bg-tocineta-yellow-hover text-black font-black text-xs uppercase rounded-xl transition flex items-center gap-1.5 shadow-lg"
-              >
-                <Save className="w-3.5 h-3.5" />
-                <span>Guardar {Object.keys(editedCosts).length} Costo(s)</span>
-              </button>
-            )}
-          </div>
 
-          <div className="bg-tocineta-card border border-tocineta-border rounded-xl overflow-hidden">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-tocineta-bg text-tocineta-muted uppercase text-[10px]">
-                <tr>
-                  <th className="p-3">Insumo</th>
-                  <th className="p-3">Unidad</th>
-                  <th className="p-3">Stock Actual</th>
-                  <th className="p-3">Costo Actual</th>
-                  <th className="p-3">Nuevo Costo ($)</th>
-                  <th className="p-3">Estado Antigüedad</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800">
-                {suppliesData?.supplies?.map((sup: any) => (
-                  <tr key={sup.id} className="hover:bg-zinc-800/40">
-                    <td className="p-3 font-bold text-white">{sup.name}</td>
-                    <td className="p-3 text-zinc-400">{sup.unit}</td>
-                    <td className="p-3">{sup.currentStockQty}</td>
-                    <td className="p-3 text-amber-400 font-bold">${(sup.costPerUnitUsdCents / 100).toFixed(2)}</td>
-                    <td className="p-3">
-                      <input
-                        type="number"
-                        step="0.01"
-                        placeholder={(sup.costPerUnitUsdCents / 100).toFixed(2)}
-                        value={editedCosts[sup.id] !== undefined ? (editedCosts[sup.id] / 100).toFixed(2) : ''}
-                        onChange={(e) => {
-                          const val = parseFloat(e.target.value);
-                          if (!isNaN(val)) {
-                            setEditedCosts({ ...editedCosts, [sup.id]: Math.round(val * 100) });
-                          } else {
-                            const copy = { ...editedCosts };
-                            delete copy[sup.id];
-                            setEditedCosts(copy);
-                          }
-                        }}
-                        className="w-24 bg-tocineta-bg border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white"
-                      />
-                    </td>
-                    <td className="p-3">
-                      {sup.isStaleCost ? (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-500/20 text-amber-400 border border-amber-500/40 flex items-center gap-1 w-fit">
-                          <AlertTriangle className="w-3 h-3" />
-                          <span>Desactualizado ({sup.daysSinceLastUpdate}d)</span>
-                        </span>
-                      ) : (
-                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center gap-1 w-fit">
-                          <CheckCircle className="w-3 h-3" />
-                          <span>Al día ({sup.daysSinceLastUpdate}d)</span>
-                        </span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* PESTAÑA 4: INVENTARIO CRÍTICO (NIVEL 2) */}
-      {isProEnabled && activeSubTab === 'inventory' && (
-        <div className="space-y-4">
-          <div className="flex justify-between items-center bg-tocineta-card border border-tocineta-border p-4 rounded-xl">
-            <div>
-              <h3 className="text-sm font-black text-white uppercase">Control de los 8 Insumos Críticos de Alta Rotación</h3>
-              <p className="text-xs text-tocineta-muted">
-                Deducción de consumo teórico automatizada. Si se pidió <em>Sin Pan / Envuelta en Lechuga</em>, no descuenta pan brioche.
-              </p>
+            <div className="flex flex-wrap items-baseline gap-3">
+              <div className="text-3xl sm:text-4xl font-black text-slate-900 dark:text-white font-mono">
+                ${((executiveData?.netProfitUsdCents ?? 0) / 100).toFixed(2)}
+              </div>
+              <div className="text-base sm:text-lg font-bold text-slate-500 dark:text-slate-400 font-mono">
+                ≈ {((executiveData?.netProfitBsCents ?? 0) / 100).toFixed(2)} Bs
+              </div>
+              <span className="px-2.5 py-1 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 text-xs font-black">
+                Ganancia Neta Real: {executiveData?.netMarginPercent ?? 0}%
+              </span>
             </div>
-            {Object.keys(physicalCounts).length > 0 && (
-              <button
-                onClick={() => {
-                  const counts = Object.entries(physicalCounts).map(([supplyItemId, physicalQty]) => ({
-                    supplyItemId,
-                    physicalQty
-                  }));
-                  reconcileInvMutation.mutate(counts);
-                }}
-                disabled={reconcileInvMutation.isPending}
-                className="px-4 py-2 bg-tocineta-yellow hover:bg-tocineta-yellow-hover text-black font-black text-xs uppercase rounded-xl transition flex items-center gap-1.5 shadow-lg"
-              >
-                <Save className="w-3.5 h-3.5" />
-                <span>Conciliar Cierre ({Object.keys(physicalCounts).length} Insumos)</span>
-              </button>
-            )}
-          </div>
 
-          <div className="bg-tocineta-card border border-tocineta-border rounded-xl overflow-hidden">
-            <table className="w-full text-xs text-left">
-              <thead className="bg-tocineta-bg text-tocineta-muted uppercase text-[10px]">
-                <tr>
-                  <th className="p-3">Insumo Crítico</th>
-                  <th className="p-3">Unidad</th>
-                  <th className="p-3 text-right">Consumo Teórico</th>
-                  <th className="p-3 text-right">Stock Inicial</th>
-                  <th className="p-3 text-right">Stock Teórico Esperado</th>
-                  <th className="p-3">Conteo Físico Real</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800">
-                {criticalInvData?.criticalSupplies?.map((sup: any) => {
-                  const theoreticalConsumption = sup.theoreticalConsumptionQty || 0;
-                  const theoreticalExpected = sup.currentStockQty - theoreticalConsumption;
-
-                  return (
-                    <tr key={sup.id} className="hover:bg-zinc-800/40">
-                      <td className="p-3 font-bold text-white">{sup.name}</td>
-                      <td className="p-3 text-zinc-400">{sup.unit}</td>
-                      <td className="p-3 text-right text-amber-400 font-bold">-{theoreticalConsumption}</td>
-                      <td className="p-3 text-right">{sup.currentStockQty}</td>
-                      <td className="p-3 text-right font-bold text-white">{theoreticalExpected}</td>
-                      <td className="p-3">
-                        <input
-                          type="number"
-                          placeholder={String(theoreticalExpected)}
-                          value={physicalCounts[sup.id] ?? ''}
-                          onChange={(e) => {
-                            const val = parseFloat(e.target.value);
-                            if (!isNaN(val)) {
-                              setPhysicalCounts({ ...physicalCounts, [sup.id]: val });
-                            } else {
-                              const copy = { ...physicalCounts };
-                              delete copy[sup.id];
-                              setPhysicalCounts(copy);
-                            }
-                          }}
-                          className="w-24 bg-tocineta-bg border border-zinc-700 rounded-lg px-2 py-1 text-xs text-white"
-                        />
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* PESTAÑA 5: CONFIGURACIÓN & MÓDULO FISCAL */}
-      {isProEnabled && activeSubTab === 'settings' && (
-        <div className="bg-tocineta-card border border-tocineta-border p-6 rounded-2xl space-y-6 max-w-2xl">
-          <h3 className="text-sm font-black text-white uppercase tracking-tight flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-tocineta-yellow" />
-            <span>Configuración de Módulos Avanzados</span>
-          </h3>
-
-          <div className="space-y-4">
-            {/* Toggle Rentabilidad Pro */}
-            <div className="flex items-center justify-between p-4 bg-tocineta-bg border border-tocineta-border rounded-xl">
-              <div>
-                <span className="font-bold text-white text-xs block">Interruptor Maestro de Rentabilidad Pro</span>
-                <span className="text-[11px] text-tocineta-muted">
-                  Habilita el costeo dinámico, mermas, varianza de inventario e Ingeniería de Menú.
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2 text-xs">
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800">
+                <span className="text-[10px] text-slate-500 block uppercase font-bold">↗ Ventas Totales</span>
+                <span className="text-sm font-black text-slate-900 dark:text-white font-mono">
+                  ${((executiveData?.totalSalesUsdCents ?? 0) / 100).toFixed(2)}
                 </span>
               </div>
-              <button
-                onClick={() => updateSettingsMutation.mutate({ profitabilityProEnabled: !isProEnabled })}
-                className={`px-3 py-1.5 rounded-xl font-black text-xs uppercase transition ${
-                  isProEnabled ? 'bg-emerald-500 text-black' : 'bg-zinc-700 text-zinc-300'
-                }`}
-              >
-                {isProEnabled ? 'Activo' : 'Inactivo'}
-              </button>
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800">
+                <span className="text-[10px] text-slate-500 block uppercase font-bold">↙ Egresos & Compras</span>
+                <span className="text-sm font-black text-red-500 font-mono">
+                  ${((executiveData?.operatingExpensesUsdCents ?? 0) / 100).toFixed(2)}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800">
+                <span className="text-[10px] text-slate-500 block uppercase font-bold">Ganancia Bruta</span>
+                <span className="text-sm font-black text-blue-600 dark:text-blue-400 font-mono">
+                  ${((executiveData?.grossProfitUsdCents ?? 0) / 100).toFixed(2)}
+                </span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800">
+                <span className="text-[10px] text-slate-500 block uppercase font-bold">Food Cost Recetas</span>
+                <span className="text-sm font-black text-amber-500 font-mono">
+                  {executiveData?.foodCostPercent ?? 0}%
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Botones de Acción Inmediata estilo Treinta */}
+          <div className="flex flex-wrap lg:flex-col gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => {
+                window.location.hash = '#pos';
+                window.dispatchEvent(new CustomEvent('switch-tab', { detail: 'pos' }));
+              }}
+              className="flex-1 lg:flex-none px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+            >
+              <CheckCircle className="w-4 h-4" />
+              <span>✓ Nueva Venta</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsOutputModalOpen(true)}
+              className="flex-1 lg:flex-none px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white text-xs font-black flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+            >
+              <ArrowDownRight className="w-4 h-4" />
+              <span>⊖ Nuevo Gasto / Merma</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setIsPurchaseModalOpen(true)}
+              className="flex-1 lg:flex-none px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-black flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+            >
+              <ShoppingBag className="w-4 h-4" />
+              <span>🛒 Compra a Proveedor</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDownloadReport}
+              className="flex-1 lg:flex-none px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-neutral-800 hover:bg-slate-200 dark:hover:bg-neutral-700 text-slate-800 dark:text-white text-xs font-bold flex items-center justify-center gap-2 shadow-xs cursor-pointer"
+            >
+              <Download className="w-4 h-4" />
+              <span>📥 Descargar Reportes</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 6 PESTAÑAS CLARAS Y VISIBLES ARRIBA (SIN ESCONDER NADA) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 border-b border-slate-200 dark:border-neutral-800">
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('net-profit')}
+          className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            activeSubTab === 'net-profit'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <span>📊</span>
+          <span>Balance y Flujo del Día</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('purchases')}
+          className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            activeSubTab === 'purchases'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <span>🥩</span>
+          <span>Materia Prima y Compras (50+ Ítems)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('recipes')}
+          className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            activeSubTab === 'recipes'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <span>🍔</span>
+          <span>Recetas y Rendimiento</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('mermas')}
+          className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            activeSubTab === 'mermas'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <span>📉</span>
+          <span>Mermas & Facturas Socios</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('receivables')}
+          className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            activeSubTab === 'receivables'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <span>🤝</span>
+          <span>Clientes & Proveedores (CxC / CxP)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('payroll')}
+          className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            activeSubTab === 'payroll'
+              ? 'bg-blue-600 text-white shadow-sm'
+              : 'bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <span>💼</span>
+          <span>Nómina y Pagos a Personal</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('settings')}
+          className={`px-3.5 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shrink-0 cursor-pointer ${
+            activeSubTab === 'settings'
+              ? 'bg-slate-700 text-white shadow-sm'
+              : 'bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-neutral-800'
+          }`}
+        >
+          <span>⚙️</span>
+          <span>Fiscal & Parámetros</span>
+        </button>
+      </div>
+
+      {/* -------------------------------------------------------------------- */}
+      {/* PESTAÑA 1: BALANCE Y FLUJO DEL DÍA                                  */}
+      {/* -------------------------------------------------------------------- */}
+      {activeSubTab === 'net-profit' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 p-5 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase">Total Por Cobrar</span>
+                <span className="text-lg">👤</span>
+              </div>
+              <div className="text-2xl font-black text-blue-600 dark:text-blue-400 font-mono mt-2">
+                ${((executiveData?.summary.totalReceivablesUsdCents ?? 0) / 100).toFixed(2)}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">Cuentas pendientes de clientes y socios.</p>
             </div>
 
-            {/* Toggle Módulo Fiscal Informativo */}
-            <div className="flex items-center justify-between p-4 bg-tocineta-bg border border-tocineta-border rounded-xl">
+            <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 p-5 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase">Total Por Pagar a Proveedores</span>
+                <span className="text-lg">🛒</span>
+              </div>
+              <div className="text-2xl font-black text-amber-500 font-mono mt-2">
+                ${((executiveData?.summary.totalOwedToSuppliersUsdCents ?? 0) / 100).toFixed(2)}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">Facturas de compras a crédito pendientes.</p>
+            </div>
+
+            <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 p-5 rounded-2xl">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-slate-500 uppercase">Cena Empleados & Gas</span>
+                <span className="text-lg">🔥</span>
+              </div>
+              <div className="text-2xl font-black text-slate-900 dark:text-white font-mono mt-2">
+                ${(((executiveData?.summary.totalGasUsdCents ?? 0) + (executiveData?.summary.totalCenaEmpleadosUsdCents ?? 0)) / 100).toFixed(2)}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-1">Costos operativos directos del Food Truck.</p>
+            </div>
+          </div>
+
+          {/* Historial de Movimientos de Dinero e Inventario */}
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between">
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <Activity className="w-4 h-4 text-blue-500" />
+                <span>Flujo de Kardex y Movimientos Recientes</span>
+              </h4>
+              <button
+                type="button"
+                onClick={() => refetchMovements()}
+                className="text-xs text-blue-600 dark:text-blue-400 font-bold hover:underline"
+              >
+                Actualizar
+              </button>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-neutral-900 text-slate-500 border-b border-slate-200 dark:border-neutral-800">
+                  <tr>
+                    <th className="p-3">Fecha</th>
+                    <th className="p-3">Tipo Movimiento</th>
+                    <th className="p-3">Insumo</th>
+                    <th className="p-3">Cantidad</th>
+                    <th className="p-3">Costo Total ($)</th>
+                    <th className="p-3">Notas</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
+                  {(movementsData?.movements || []).slice(0, 15).map((m: any) => (
+                    <tr key={m.id} className="hover:bg-slate-50 dark:hover:bg-neutral-800/40">
+                      <td className="p-3 text-slate-400 font-mono text-[10px]">
+                        {new Date(m.created_at_ms).toLocaleTimeString()}
+                      </td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          m.movement_type === 'COMPRA_ENTRADA' ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400' :
+                          m.movement_type === 'MERMA_SOCIOS' ? 'bg-red-500/20 text-red-600 dark:text-red-400' :
+                          'bg-blue-500/20 text-blue-600 dark:text-blue-400'
+                        }`}>
+                          {m.movement_type}
+                        </span>
+                      </td>
+                      <td className="p-3 font-bold text-slate-800 dark:text-slate-200">{m.supply_id}</td>
+                      <td className="p-3 font-mono">{m.quantity_delta}</td>
+                      <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
+                        ${(m.total_cost_usd_cents / 100).toFixed(2)}
+                      </td>
+                      <td className="p-3 text-slate-500 text-[11px]">{m.notes || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* PESTAÑA 2: MATERIA PRIMA Y COMPRAS (50+ ÍTEMS)                      */}
+      {/* -------------------------------------------------------------------- */}
+      {activeSubTab === 'purchases' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <Package className="w-5 h-5 text-blue-500" />
+                <span>Inventario y Materia Prima (50+ Ítems Estandarizados)</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Control estricto de carnes, tocineta, quesos, pan artesanal, salsas e insumos en gramos y unidades.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPurchaseModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Registrar Compra a Proveedor</span>
+            </button>
+          </div>
+
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-neutral-900 text-slate-500 border-b border-slate-200 dark:border-neutral-800">
+                  <tr>
+                    <th className="p-3">Insumo</th>
+                    <th className="p-3">Categoría</th>
+                    <th className="p-3">Medida</th>
+                    <th className="p-3">Costo Actual ($)</th>
+                    <th className="p-3">Costo Anterior ($)</th>
+                    <th className="p-3">Stock Físico</th>
+                    <th className="p-3">Estado</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
+                  {(suppliesData?.supplies || []).map((s: any) => {
+                    const isLow = (s.currentStockUnits ?? s.current_stock_units ?? 0) < 15;
+                    const prev = (s.previousCostUsdCents ?? s.costUsdCents ?? 0) / 100;
+                    const curr = (s.costUsdCents ?? 0) / 100;
+                    const diffPct = prev > 0 ? ((curr - prev) / prev) * 100 : 0;
+
+                    return (
+                      <tr key={s.id} className="hover:bg-slate-50 dark:hover:bg-neutral-800/40">
+                        <td className="p-3 font-bold text-slate-900 dark:text-white">{s.name}</td>
+                        <td className="p-3 text-slate-500 uppercase text-[10px] font-mono">{s.category}</td>
+                        <td className="p-3 font-mono text-slate-600 dark:text-slate-300">{s.unitMeasure || s.unit_measure || 'und'}</td>
+                        <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">${curr.toFixed(2)}</td>
+                        <td className="p-3 font-mono text-slate-400">
+                          ${prev.toFixed(2)}
+                          {diffPct > 0.01 && (
+                            <span className="ml-1 text-[9px] font-bold text-red-500">⬆️ +{diffPct.toFixed(0)}%</span>
+                          )}
+                        </td>
+                        <td className="p-3 font-mono font-bold text-slate-800 dark:text-slate-200">
+                          {s.currentStockUnits ?? s.current_stock_units ?? 0} {s.unitMeasure || 'und'}
+                        </td>
+                        <td className="p-3">
+                          {isLow ? (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                              ⚠️ Pedir Reposición
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                              ✓ Stock Óptimo
+                            </span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Historial de Compras Registradas */}
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
+            <div className="p-4 border-b border-slate-200 dark:border-neutral-800 flex items-center justify-between">
+              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <ShoppingBag className="w-4 h-4 text-blue-500" />
+                <span>Historial de Compras de Materia Prima a Proveedores</span>
+              </h4>
+              <span className="text-[10px] text-slate-400 font-mono">
+                {(purchasesData?.purchases || []).length} compras registradas
+              </span>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-neutral-900 text-slate-500 border-b border-slate-200 dark:border-neutral-800">
+                  <tr>
+                    <th className="p-3">Fecha</th>
+                    <th className="p-3">Factura</th>
+                    <th className="p-3">Condición</th>
+                    <th className="p-3">Monto USD ($)</th>
+                    <th className="p-3">Monto Bs</th>
+                    <th className="p-3">Estado</th>
+                    <th className="p-3">Notas</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
+                  {(purchasesData?.purchases || []).map((p: any) => (
+                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-neutral-800/40">
+                      <td className="p-3 font-mono text-[10px] text-slate-400">
+                        {new Date(p.created_at_ms).toLocaleDateString()} {new Date(p.created_at_ms).toLocaleTimeString()}
+                      </td>
+                      <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">{p.invoice_number || p.id}</td>
+                      <td className="p-3">
+                        <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                          p.payment_condition === 'CREDITO' ? 'bg-amber-500/20 text-amber-500' : 'bg-emerald-500/20 text-emerald-500'
+                        }`}>
+                          {p.payment_condition}
+                        </span>
+                      </td>
+                      <td className="p-3 font-mono font-bold text-slate-900 dark:text-white">
+                        ${(p.total_usd_cents / 100).toFixed(2)}
+                      </td>
+                      <td className="p-3 font-mono text-slate-500">
+                        {(p.total_bs_cents / 100).toFixed(2)} Bs
+                      </td>
+                      <td className="p-3 font-mono text-emerald-500 font-bold text-[10px]">{p.status}</td>
+                      <td className="p-3 text-slate-400 text-[11px]">{p.notes || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* PESTAÑA 3: RECETAS ESTANDARIZADAS Y RENDIMIENTO                      */}
+      {/* -------------------------------------------------------------------- */}
+      {activeSubTab === 'recipes' && (
+        <div className="space-y-6">
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-2xl p-5 shadow-sm">
+            <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+              <Layers className="w-5 h-5 text-blue-500" />
+              <span>Escandallos y Gramaje Exacto de Recetas</span>
+            </h3>
+            <p className="text-xs text-slate-500 mt-1">
+              Cálculo de costo financiero exacto por plato con rendimiento proyectado según el stock de carnes y panes.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {(recipesData?.recipes || []).map((r: any) => (
+              <div key={r.productId} className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-bold text-slate-900 dark:text-white text-sm">{r.productName}</h4>
+                  <span className="text-[10px] font-mono font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded">
+                    Rinde {r.possibleDishesWithCurrentStock} platos
+                  </span>
+                </div>
+                <div className="text-xs space-y-1 text-slate-500">
+                  <div className="flex justify-between">
+                    <span>Costo de Receta:</span>
+                    <strong className="text-slate-900 dark:text-white font-mono">${(r.recipeCostUsdCents / 100).toFixed(2)}</strong>
+                  </div>
+                  <div className="flex justify-between">
+                    <span>Insumos utilizados:</span>
+                    <span>{r.ingredientsCount} materias primas</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* PESTAÑA 4: MERMAS, CENA DE EMPLEADOS Y FACTURAS DE REPOSICIÓN A SOCIOS */}
+      {/* -------------------------------------------------------------------- */}
+      {activeSubTab === 'mermas' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-red-500" />
+                <span>Control de Mermas, Reposición a Socios y Consumos del Personal</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Cada comida quemada o error en cocina genera una Factura de Reposición asignada a los socios.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsOutputModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Registrar Merma / Cena Empleados</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="p-4 rounded-2xl bg-red-500/5 border border-red-500/20 space-y-1">
+              <span className="text-[11px] font-bold text-red-600 dark:text-red-400 uppercase">Mermas Facturadas a Socios</span>
+              <div className="text-2xl font-black text-red-600 dark:text-red-400 font-mono">
+                ${((executiveData?.summary.totalReceivablesUsdCents ?? 0) / 100).toFixed(2)}
+              </div>
+              <p className="text-[10px] text-slate-500">Monto total a reponer por los socios del food truck.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 space-y-1">
+              <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 uppercase">Cena para Empleados</span>
+              <div className="text-2xl font-black text-amber-600 dark:text-amber-400 font-mono">
+                ${((executiveData?.summary.totalCenaEmpleadosUsdCents ?? 0) / 100).toFixed(2)}
+              </div>
+              <p className="text-[10px] text-slate-500">Descontado del stock y registrado en el rubro contable de personal.</p>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-blue-500/5 border border-blue-500/20 space-y-1">
+              <span className="text-[11px] font-bold text-blue-600 dark:text-blue-400 uppercase">Gas Operativo</span>
+              <div className="text-2xl font-black text-blue-600 dark:text-blue-400 font-mono">
+                ${((executiveData?.summary.totalGasUsdCents ?? 0) / 100).toFixed(2)}
+              </div>
+              <p className="text-[10px] text-slate-500">Salidas de bombonas y combustible de cocina.</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* PESTAÑA 5: CLIENTES, PROVEEDORES Y CUENTAS POR COBRAR / PAGAR       */}
+      {/* -------------------------------------------------------------------- */}
+      {activeSubTab === 'receivables' && (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Clientes y Socios (Cuentas por Cobrar) */}
+            <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-2xl p-5 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <Users className="w-4 h-4 text-blue-500" />
+                  <span>Control de "Lo que me deben" (Clientes y Socios)</span>
+                </h4>
+              </div>
+
+              <div className="divide-y divide-slate-100 dark:divide-neutral-800 max-h-80 overflow-y-auto">
+                {(customersData?.customers || []).map((c: any) => (
+                  <div key={c.id} className="py-2.5 flex items-center justify-between text-xs">
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
+                        <span>{c.name}</span>
+                        {c.is_partner === 1 && (
+                          <span className="px-1.5 py-0.2 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded text-[9px] font-black">
+                            SOCIO
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] text-slate-400 font-mono">{c.phone || c.identification || 'Sin teléfono'}</div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-mono font-black text-red-500">
+                        ${(c.balance_receivable_usd_cents / 100).toFixed(2)}
+                      </div>
+                      {c.balance_receivable_usd_cents > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setSelectedCustomerId(c.id);
+                            setPayAmountUsd((c.balance_receivable_usd_cents / 100).toFixed(2));
+                            setIsPayReceivableModalOpen(true);
+                          }}
+                          className="mt-1 px-2 py-0.5 rounded bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-bold cursor-pointer"
+                        >
+                          Abonar Pago
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Proveedores (Cuentas por Pagar) */}
+            <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-2xl p-5 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                  <ShoppingBag className="w-4 h-4 text-amber-500" />
+                  <span>Control de "Lo que debo a Proveedores"</span>
+                </h4>
+              </div>
+
+              <div className="divide-y divide-slate-100 dark:divide-neutral-800 max-h-80 overflow-y-auto">
+                {(suppliersData?.suppliers || []).map((s: any) => (
+                  <div key={s.id} className="py-2.5 flex items-center justify-between text-xs">
+                    <div>
+                      <div className="font-bold text-slate-900 dark:text-white">{s.name}</div>
+                      <div className="text-[10px] text-slate-400 uppercase font-mono">{s.category || 'Materia Prima'}</div>
+                    </div>
+                    <div className="text-right font-mono">
+                      <span className="text-[10px] text-slate-400 block uppercase">Saldo Adeudado:</span>
+                      <span className="font-black text-amber-500">
+                        ${(s.balance_owed_usd_cents / 100).toFixed(2)}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Generador Rápido de Cotizaciones PDF / WhatsApp */}
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-2xl p-5 space-y-4 shadow-sm">
+            <h4 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <Share2 className="w-4 h-4 text-emerald-500" />
+              <span>Generador Rápido de Cotizaciones para Eventos y Empresas (WhatsApp / PDF)</span>
+            </h4>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <span className="font-bold text-white text-xs block">Módulo Fiscal Informativo Opcional</span>
-                <span className="text-[11px] text-tocineta-muted">
+                <label className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Nombre del Cliente / Empresa:</label>
+                <input
+                  type="text"
+                  value={quoteClientName}
+                  onChange={e => setQuoteClientName(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-bold"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Cantidad Hamburguesas Especiales:</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={quoteBurgerCount}
+                  onChange={e => setQuoteBurgerCount(Number(e.target.value))}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Cantidad Hot Dogs Especiales:</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={quoteDogCount}
+                  onChange={e => setQuoteDogCount(Number(e.target.value))}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            {(() => {
+              const totalQuoteUsd = (quoteBurgerCount * 5.0) + (quoteDogCount * 2.5);
+              const bcvRate = parseFloat(executiveData?.bcvRateFormatted?.replace(',', '.') || '40.0');
+              const totalQuoteBs = totalQuoteUsd * bcvRate;
+
+              const whatsappMessage = `*COTIZACIÓN OFICIAL - TOCINETA SONRÍE*%0ACliente: ${quoteClientName}%0A🍔 ${quoteBurgerCount}x Hamburguesas Especiales: $${(quoteBurgerCount * 5).toFixed(2)}%0A🌭 ${quoteDogCount}x Hot Dogs Especiales: $${(quoteDogCount * 2.5).toFixed(2)}%0A------------------------%0A*TOTAL: $${totalQuoteUsd.toFixed(2)} (${totalQuoteBs.toFixed(2)} Bs)*%0ATasa BCV Oficial: ${bcvRate.toFixed(2)} Bs/$%0AIncluye barra de salsas y empaque hermético.`;
+
+              return (
+                <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200 dark:border-neutral-800">
+                  <div className="text-xs">
+                    <span className="text-slate-500">Monto Total de la Cotización: </span>
+                    <strong className="text-emerald-600 dark:text-emerald-400 font-mono text-sm">
+                      ${totalQuoteUsd.toFixed(2)} ({totalQuoteBs.toFixed(2)} Bs)
+                    </strong>
+                  </div>
+                  <a
+                    href={`https://wa.me/?text=${whatsappMessage}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm"
+                  >
+                    <span>💬 Enviar Cotización por WhatsApp</span>
+                  </a>
+                </div>
+              );
+            })()}
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* PESTAÑA 6: NÓMINA Y PAGOS A EMPLEADOS                                 */}
+      {/* -------------------------------------------------------------------- */}
+      {activeSubTab === 'payroll' && (
+        <div className="space-y-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+            <div>
+              <h3 className="text-base font-extrabold text-slate-900 dark:text-white flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-blue-500" />
+                <span>Gestión de Nómina y Pagos al Personal del Food Truck</span>
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Registro de pagos de turno, quincenas, bonos de puntualidad y adelantos/vales de caja.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setIsPayrollModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Registrar Pago a Personal</span>
+            </button>
+          </div>
+
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-2xl overflow-hidden shadow-sm">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-slate-50 dark:bg-neutral-900 text-slate-500 border-b border-slate-200 dark:border-neutral-800">
+                  <tr>
+                    <th className="p-3">Fecha</th>
+                    <th className="p-3">Empleado</th>
+                    <th className="p-3">Tipo Pago</th>
+                    <th className="p-3">Monto USD</th>
+                    <th className="p-3">Monto Bs</th>
+                    <th className="p-3">Método</th>
+                    <th className="p-3">Notas</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-neutral-800">
+                  {(payrollData?.payments || []).map((p: any) => (
+                    <tr key={p.id} className="hover:bg-slate-50 dark:hover:bg-neutral-800/40">
+                      <td className="p-3 font-mono text-[10px] text-slate-400">
+                        {new Date(p.created_at_ms).toLocaleDateString()} {new Date(p.created_at_ms).toLocaleTimeString()}
+                      </td>
+                      <td className="p-3 font-bold text-slate-900 dark:text-white">{p.staff_name}</td>
+                      <td className="p-3">
+                        <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-500/10 text-blue-600 dark:text-blue-400">
+                          {p.payment_type}
+                        </span>
+                      </td>
+                      <td className="p-3 font-mono font-black text-slate-900 dark:text-white">
+                        ${(p.amount_usd_cents / 100).toFixed(2)}
+                      </td>
+                      <td className="p-3 font-mono text-slate-500">
+                        {(p.amount_bs_cents / 100).toFixed(2)} Bs
+                      </td>
+                      <td className="p-3 font-mono text-[10px] text-slate-500">{p.payment_method}</td>
+                      <td className="p-3 text-slate-400 text-[11px]">{p.notes || '-'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* PESTAÑA 7: CONFIGURACIÓN Y PARÁMETROS FISCALES                      */}
+      {/* -------------------------------------------------------------------- */}
+      {activeSubTab === 'settings' && (
+        <div className="space-y-4 max-w-3xl">
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-2xl p-6 shadow-sm space-y-4">
+            <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-blue-500" />
+              <span>Configuración Fiscal y Parámetros Contables</span>
+            </h3>
+
+            {/* Toggle Módulo Fiscal Informativo */}
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl">
+              <div>
+                <span className="font-bold text-slate-900 dark:text-white text-xs block">Módulo Fiscal Informativo</span>
+                <span className="text-[11px] text-slate-500">
                   Imprime el desglose informativo de IVA (16%) en la Nota de Entrega y Cierre Z.
                 </span>
               </div>
               <button
+                type="button"
                 onClick={() => updateSettingsMutation.mutate({ fiscalModuleEnabled: !isFiscalEnabled })}
-                className={`px-3 py-1.5 rounded-xl font-black text-xs uppercase transition ${
-                  isFiscalEnabled ? 'bg-emerald-500 text-black' : 'bg-zinc-700 text-zinc-300'
+                className={`px-3 py-1.5 rounded-xl font-black text-xs uppercase transition cursor-pointer ${
+                  isFiscalEnabled ? 'bg-emerald-600 text-white' : 'bg-slate-300 dark:bg-neutral-700 text-slate-700 dark:text-slate-300'
                 }`}
               >
                 {isFiscalEnabled ? 'Activo' : 'Inactivo'}
@@ -827,10 +1100,10 @@ export const ProfitabilityDashboard: React.FC = () => {
 
             {/* Modalidad de Precio Fiscal */}
             {isFiscalEnabled && (
-              <div className="flex items-center justify-between p-4 bg-tocineta-bg border border-tocineta-border rounded-xl">
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl">
                 <div>
-                  <span className="font-bold text-white text-xs block">Modalidad de Precios de Carta</span>
-                  <span className="text-[11px] text-tocineta-muted">
+                  <span className="font-bold text-slate-900 dark:text-white text-xs block">Modalidad de Precios de Carta</span>
+                  <span className="text-[11px] text-slate-500">
                     {settingsData?.fiscalPriceMode === 'EXCLUSIVE'
                       ? 'EXCLUSIVE: El IVA se adiciona sobre el precio de comida.'
                       : 'INCLUSIVE: Los precios de la carta ya contienen el 16% de IVA.'}
@@ -839,7 +1112,7 @@ export const ProfitabilityDashboard: React.FC = () => {
                 <select
                   value={settingsData?.fiscalPriceMode || 'INCLUSIVE'}
                   onChange={e => updateSettingsMutation.mutate({ fiscalPriceMode: e.target.value as any })}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-xs text-white font-bold outline-none"
+                  className="bg-white dark:bg-neutral-800 border border-slate-300 dark:border-neutral-700 rounded-lg px-2.5 py-1 text-xs text-slate-900 dark:text-white font-bold outline-none"
                 >
                   <option value="INCLUSIVE">Precios con IVA incluido (INCLUSIVE)</option>
                   <option value="EXCLUSIVE">Precios sin IVA (EXCLUSIVE)</option>
@@ -848,43 +1121,437 @@ export const ProfitabilityDashboard: React.FC = () => {
             )}
 
             {/* Toggle IGTF (3% Divisas) */}
-            <div className="flex items-center justify-between p-4 bg-tocineta-bg border border-tocineta-border rounded-xl">
+            <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-neutral-900 border border-slate-200 dark:border-neutral-800 rounded-xl">
               <div>
-                <span className="font-bold text-white text-xs block">Módulo IGTF (3.00% Divisas / Criptoactivos)</span>
-                <span className="text-[11px] text-tocineta-muted">
+                <span className="font-bold text-slate-900 dark:text-white text-xs block">Módulo IGTF (3.00% Divisas)</span>
+                <span className="text-[11px] text-slate-500">
                   Aplica alícuota legal del 3% (300 bps) sobre pagos en divisas según confirmación contable.
                 </span>
               </div>
               <button
+                type="button"
                 onClick={() => updateSettingsMutation.mutate({ igtfEnabled: !settingsData?.igtfEnabled })}
-                className={`px-3 py-1.5 rounded-xl font-black text-xs uppercase transition ${
-                  settingsData?.igtfEnabled ? 'bg-emerald-500 text-black' : 'bg-zinc-700 text-zinc-300'
+                className={`px-3 py-1.5 rounded-xl font-black text-xs uppercase transition cursor-pointer ${
+                  settingsData?.igtfEnabled ? 'bg-emerald-600 text-white' : 'bg-slate-300 dark:bg-neutral-700 text-slate-700 dark:text-slate-300'
                 }`}
               >
                 {settingsData?.igtfEnabled ? 'Activo' : 'Inactivo'}
               </button>
             </div>
+          </div>
+        </div>
+      )}
 
-            {/* Ámbito de Aplicación IGTF */}
-            {settingsData?.igtfEnabled && (
-              <div className="flex items-center justify-between p-4 bg-tocineta-bg border border-tocineta-border rounded-xl">
-                <div>
-                  <span className="font-bold text-white text-xs block">Aplicación del IGTF</span>
-                  <span className="text-[11px] text-tocineta-muted">
-                    Selecciona sobre qué medios de pago en divisas se calcula la alícuota del 3%.
-                  </span>
-                </div>
+      {/* -------------------------------------------------------------------- */}
+      {/* MODAL 1: REGISTRAR SALIDA / MERMA / CONSUMO INTERNO                  */}
+      {/* -------------------------------------------------------------------- */}
+      {isOutputModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-3xl p-6 max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-neutral-800">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <span>📉</span>
+                <span>Registrar Salida / Merma / Consumo Interno</span>
+              </h3>
+              <button onClick={() => setIsOutputModalOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3.5 my-4">
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Motivo de Salida:</label>
                 <select
-                  value={settingsData?.igtfAppliesTo || 'CASH_USD'}
-                  onChange={e => updateSettingsMutation.mutate({ igtfAppliesTo: e.target.value as any })}
-                  className="bg-zinc-800 border border-zinc-700 rounded-lg px-2.5 py-1 text-xs text-white font-bold outline-none"
+                  value={outputReason}
+                  onChange={e => setOutputReason(e.target.value as any)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-bold"
                 >
-                  <option value="CASH_USD">Solo Efectivo USD (CASH_USD)</option>
-                  <option value="ALL_USD">Efectivo USD + Binance USDT (ALL_USD)</option>
-                  <option value="NONE">Ninguno (NONE)</option>
+                  <option value="MERMA_SOCIOS">📉 Merma con Factura de Reposición a Socios</option>
+                  <option value="CENA_EMPLEADOS">🍔 Cena para Empleados</option>
+                  <option value="GASTO_GAS_INSUMO">🔥 Gas / Insumo Operativo</option>
                 </select>
               </div>
-            )}
+
+              {outputReason === 'MERMA_SOCIOS' && (
+                <div>
+                  <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Socio Responsable:</label>
+                  <select
+                    value={outputPartnerId}
+                    onChange={e => setOutputPartnerId(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  >
+                    <option value="">Seleccione socio...</option>
+                    {(customersData?.customers || [])
+                      .filter((c: any) => c.is_partner === 1)
+                      .map((c: any) => (
+                        <option key={c.id} value={c.id}>
+                          {c.name} ({c.phone || 'Socio'})
+                        </option>
+                      ))}
+                  </select>
+                </div>
+              )}
+
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Insumo o Plato:</label>
+                <select
+                  value={outputSupplyId}
+                  onChange={e => setOutputSupplyId(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                >
+                  <option value="">Seleccione insumo...</option>
+                  {(suppliesData?.supplies || []).map((s: any) => (
+                    <option key={s.id} value={s.id}>
+                      {s.name} ({s.unitMeasure || 'und'}) - ${(s.costUsdCents / 100).toFixed(2)}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Cantidad:</label>
+                <input
+                  type="number"
+                  step="0.1"
+                  min="0.1"
+                  value={outputQuantity}
+                  onChange={e => setOutputQuantity(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Observaciones / Motivo:</label>
+                <input
+                  type="text"
+                  placeholder="ej. Pan quemado en plancha / cena turno nocturno"
+                  value={outputNotes}
+                  onChange={e => setOutputNotes(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                outputMutation.mutate({
+                  movementType: outputReason,
+                  supplyId: outputSupplyId || 'sup_pan_artesanal',
+                  quantity: parseFloat(outputQuantity || '1'),
+                  partnerCustomerId: outputPartnerId || undefined,
+                  notes: outputNotes
+                });
+              }}
+              disabled={outputMutation.isPending}
+              className="w-full py-2.5 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+            >
+              {outputMutation.isPending ? 'Registrando...' : 'Confirmar Salida / Factura'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* MODAL 2: REGISTRAR COMPRA A PROVEEDOR                                */}
+      {/* -------------------------------------------------------------------- */}
+      {isPurchaseModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-3xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-neutral-800">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <span>🛒</span>
+                <span>Registrar Compra de Materia Prima a Proveedor</span>
+              </h3>
+              <button onClick={() => setIsPurchaseModalOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3.5 my-4">
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Proveedor:</label>
+                <select
+                  value={purchaseSupplierId}
+                  onChange={e => setPurchaseSupplierId(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                >
+                  <option value="">Seleccione proveedor...</option>
+                  {(suppliersData?.suppliers || []).map((s: any) => (
+                    <option key={s.id} value={s.id}>{s.name} ({s.category})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Nº Factura / Nota:</label>
+                  <input
+                    type="text"
+                    placeholder="FAC-00123"
+                    value={purchaseInvoiceNumber}
+                    onChange={e => setPurchaseInvoiceNumber(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Condición de Pago:</label>
+                  <select
+                    value={purchasePaymentCondition}
+                    onChange={e => setPurchasePaymentCondition(e.target.value as any)}
+                    className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-bold"
+                  >
+                    <option value="CONTADO">Contado (Pagada)</option>
+                    <option value="CREDITO">Crédito (Cuenta por Pagar)</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Ítems de la compra */}
+              <div className="border border-slate-200 dark:border-neutral-800 rounded-xl p-3 space-y-2">
+                <span className="text-[11px] font-bold text-slate-500 block uppercase">Ítem comprado:</span>
+                <div className="grid grid-cols-3 gap-2">
+                  <select
+                    value={purchaseItems[0]?.supplyId || ''}
+                    onChange={e => setPurchaseItems([{ ...purchaseItems[0], supplyId: e.target.value }])}
+                    className="col-span-1 bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-lg px-2 py-1 text-xs text-slate-900 dark:text-white"
+                  >
+                    {(suppliesData?.supplies || []).map((s: any) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                  <input
+                    type="number"
+                    placeholder="Cant"
+                    value={purchaseItems[0]?.quantity || ''}
+                    onChange={e => setPurchaseItems([{ ...purchaseItems[0], quantity: parseFloat(e.target.value || '0') }])}
+                    className="bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-lg px-2 py-1 text-xs font-mono"
+                  />
+                  <input
+                    type="number"
+                    step="0.01"
+                    placeholder="Costo Cents USD"
+                    value={(purchaseItems[0]?.unitCostUsdCents || 0) / 100}
+                    onChange={e => setPurchaseItems([{ ...purchaseItems[0], unitCostUsdCents: Math.round(parseFloat(e.target.value || '0') * 100) }])}
+                    className="bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-lg px-2 py-1 text-xs font-mono"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Notas:</label>
+                <input
+                  type="text"
+                  placeholder="Detalles de entrega / recibo"
+                  value={purchaseNotes}
+                  onChange={e => setPurchaseNotes(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                purchaseMutation.mutate({
+                  supplierId: purchaseSupplierId || undefined,
+                  invoiceNumber: purchaseInvoiceNumber || 'COMPRA-' + Date.now().toString().slice(-4),
+                  paymentCondition: purchasePaymentCondition,
+                  items: purchaseItems,
+                  notes: purchaseNotes
+                });
+              }}
+              disabled={purchaseMutation.isPending}
+              className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+            >
+              {purchaseMutation.isPending ? 'Registrando Compra...' : 'Confirmar Compra'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* MODAL 3: REGISTRAR PAGO A PERSONAL (NÓMINA)                          */}
+      {/* -------------------------------------------------------------------- */}
+      {isPayrollModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-3xl p-6 max-w-md w-full shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-neutral-800">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <span>💼</span>
+                <span>Registrar Pago a Personal (Nómina)</span>
+              </h3>
+              <button onClick={() => setIsPayrollModalOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3.5 my-4">
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Nombre del Trabajador:</label>
+                <input
+                  type="text"
+                  value={payrollStaffName}
+                  onChange={e => setPayrollStaffName(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-bold"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Tipo de Pago:</label>
+                <select
+                  value={payrollPaymentType}
+                  onChange={e => setPayrollPaymentType(e.target.value as any)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white font-bold"
+                >
+                  <option value="SUELDO_TURNO">Sueldo por Turno / Noche</option>
+                  <option value="QUINCENA">Pago de Quincena</option>
+                  <option value="BONO">Bono de Puntualidad / Ventas</option>
+                  <option value="ADELANTO_VALE">Adelanto / Vale de Caja</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Monto en USD ($):</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={payrollAmountUsd}
+                  onChange={e => setPayrollAmountUsd(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Método de Pago:</label>
+                <select
+                  value={payrollPaymentMethod}
+                  onChange={e => setPayrollPaymentMethod(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                >
+                  <option value="EFECTIVO_USD">Efectivo USD</option>
+                  <option value="PAGO_MOVIL">Pago Móvil (Bs)</option>
+                  <option value="TRANSFERENCIA">Transferencia Bancaria</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Notas / Motivo:</label>
+                <input
+                  type="text"
+                  placeholder="ej. Turno completo viernes noche"
+                  value={payrollNotes}
+                  onChange={e => setPayrollNotes(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                payrollMutation.mutate({
+                  userId: 'user_staff',
+                  staffName: payrollStaffName,
+                  paymentType: payrollPaymentType,
+                  amountUsdCents: Math.round(parseFloat(payrollAmountUsd || '0') * 100),
+                  paymentMethod: payrollPaymentMethod,
+                  notes: payrollNotes
+                });
+              }}
+              disabled={payrollMutation.isPending}
+              className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+            >
+              {payrollMutation.isPending ? 'Guardando Pago...' : 'Confirmar Pago de Nómina'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* MODAL 4: ABONAR CUENTA POR COBRAR                                   */}
+      {/* -------------------------------------------------------------------- */}
+      {isPayReceivableModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-200 dark:border-neutral-800">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white">Abonar a Cuenta por Cobrar</h3>
+              <button onClick={() => setIsPayReceivableModalOpen(false)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-3 my-4">
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Monto a Abonar ($ USD):</label>
+                <input
+                  type="number"
+                  step="0.01"
+                  value={payAmountUsd}
+                  onChange={e => setPayAmountUsd(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs font-mono font-bold text-slate-900 dark:text-white"
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 uppercase font-bold block mb-1">Notas / Referencia:</label>
+                <input
+                  type="text"
+                  placeholder="ej. Pago en efectivo / Zelle"
+                  value={payNotes}
+                  onChange={e => setPayNotes(e.target.value)}
+                  className="w-full bg-slate-50 dark:bg-neutral-900 border border-slate-300 dark:border-neutral-700 rounded-xl px-3 py-2 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                payReceivableMutation.mutate({
+                  customerId: selectedCustomerId,
+                  amountUsdCents: Math.round(parseFloat(payAmountUsd || '0') * 100),
+                  notes: payNotes
+                });
+              }}
+              disabled={payReceivableMutation.isPending}
+              className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs uppercase tracking-wider transition-all disabled:opacity-50 cursor-pointer shadow-sm"
+            >
+              {payReceivableMutation.isPending ? 'Guardando Abono...' : 'Registrar Abono'}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* -------------------------------------------------------------------- */}
+      {/* MODAL 5: TICKET DE REPOSICIÓN IMPRIMIBLE EN 58MM                     */}
+      {/* -------------------------------------------------------------------- */}
+      {ticketModalText && (
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-3xl p-6 max-w-sm w-full shadow-2xl space-y-4">
+            <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-neutral-800">
+              <h3 className="font-extrabold text-sm text-slate-900 dark:text-white flex items-center gap-2">
+                <Printer className="w-4 h-4 text-blue-500" />
+                <span>Comprobante de Reposición (58mm)</span>
+              </h3>
+              <button onClick={() => setTicketModalText(null)} className="text-slate-400 hover:text-slate-600 cursor-pointer">
+                ✕
+              </button>
+            </div>
+
+            <pre className="p-3 bg-slate-100 dark:bg-neutral-900 rounded-xl text-[11px] font-mono leading-tight whitespace-pre-wrap text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-neutral-800">
+              {ticketModalText}
+            </pre>
+
+            <button
+              type="button"
+              onClick={() => {
+                window.print();
+              }}
+              className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2 cursor-pointer shadow-sm"
+            >
+              <Printer className="w-4 h-4" />
+              <span>🖨️ Imprimir Factura de Reposición (58mm)</span>
+            </button>
           </div>
         </div>
       )}

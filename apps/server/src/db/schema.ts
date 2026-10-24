@@ -1,4 +1,4 @@
-import { sqliteTable, text, integer } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
 
 export const systemMeta = sqliteTable('_system_meta', {
   key: text('key').primaryKey(),
@@ -494,9 +494,12 @@ export const supplyItems = sqliteTable('supply_items', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
   unit: text('unit').notNull(),
+  unitMeasure: text('unit_measure').notNull().default('und'),
   currentStockQty: integer('current_stock_qty').notNull().default(0),
   minimumStockQty: integer('minimum_stock_qty').notNull().default(0),
   costPerUnitUsdCents: integer('cost_per_unit_usd_cents').notNull().default(0),
+  previousCostUsdCents: integer('previous_cost_usd_cents').notNull().default(0),
+  lastSupplierId: text('last_supplier_id'),
   createdAtMs: integer('created_at_ms').notNull(),
   updatedAtMs: integer('updated_at_ms').notNull()
 });
@@ -634,3 +637,85 @@ export const systemUpdates = sqliteTable('system_updates', {
 
 export type SupportSession = typeof supportSessions.$inferSelect;
 export type SystemUpdate = typeof systemUpdates.$inferSelect;
+
+export const suppliers = sqliteTable('suppliers', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  rifPhone: text('rif_phone'),
+  category: text('category'),
+  balanceOwedUsdCents: integer('balance_owed_usd_cents').notNull().default(0),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const customers = sqliteTable('customers', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  phone: text('phone'),
+  identification: text('identification'),
+  address: text('address'),
+  isPartner: integer('is_partner').notNull().default(0),
+  balanceReceivableUsdCents: integer('balance_receivable_usd_cents').notNull().default(0),
+  totalOrders: integer('total_orders').notNull().default(0),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const purchases = sqliteTable('purchases', {
+  id: text('id').primaryKey(),
+  supplierId: text('supplier_id').references(() => suppliers.id),
+  invoiceNumber: text('invoice_number'),
+  paymentCondition: text('payment_condition', { enum: ['CONTADO', 'CREDITO'] }).notNull(),
+  status: text('status').notNull().default('PAGADA'),
+  totalUsdCents: integer('total_usd_cents').notNull(),
+  totalBsCents: integer('total_bs_cents').notNull(),
+  notes: text('notes'),
+  createdBy: text('created_by').notNull(),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const purchaseItems = sqliteTable('purchase_items', {
+  id: text('id').primaryKey(),
+  purchaseId: text('purchase_id').notNull().references(() => purchases.id, { onDelete: 'cascade' }),
+  supplyId: text('supply_id').notNull().references(() => supplyItems.id),
+  quantity: real('quantity').notNull(),
+  unitCostUsdCents: integer('unit_cost_usd_cents').notNull(),
+  prevUnitCostUsdCents: integer('prev_unit_cost_usd_cents').notNull().default(0),
+  subtotalUsdCents: integer('subtotal_usd_cents').notNull()
+});
+
+export const inventoryMovements = sqliteTable('inventory_movements', {
+  id: text('id').primaryKey(),
+  supplyId: text('supply_id').notNull().references(() => supplyItems.id),
+  movementType: text('movement_type', {
+    enum: ['COMPRA_ENTRADA', 'VENTA_RECETA', 'MERMA_SOCIOS', 'CENA_EMPLEADOS', 'GASTO_GAS_INSUMO', 'AJUSTE_PRODUCCION']
+  }).notNull(),
+  quantityDelta: real('quantity_delta').notNull(),
+  unitCostUsdCents: integer('unit_cost_usd_cents').notNull(),
+  totalCostUsdCents: integer('total_cost_usd_cents').notNull(),
+  partnerCustomerId: text('partner_customer_id').references(() => customers.id),
+  referenceDoc: text('reference_doc'),
+  notes: text('notes'),
+  createdBy: text('created_by').notNull(),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const staffPayrollPayments = sqliteTable('staff_payroll_payments', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id),
+  staffName: text('staff_name').notNull(),
+  paymentType: text('payment_type', {
+    enum: ['SUELDO_TURNO', 'QUINCENA', 'BONO', 'ADELANTO_VALE']
+  }).notNull(),
+  amountUsdCents: integer('amount_usd_cents').notNull(),
+  amountBsCents: integer('amount_bs_cents').notNull(),
+  paymentMethod: text('payment_method').notNull(),
+  notes: text('notes'),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export type Supplier = typeof suppliers.$inferSelect;
+export type Customer = typeof customers.$inferSelect;
+export type Purchase = typeof purchases.$inferSelect;
+export type PurchaseItem = typeof purchaseItems.$inferSelect;
+export type InventoryMovement = typeof inventoryMovements.$inferSelect;
+export type StaffPayrollPayment = typeof staffPayrollPayments.$inferSelect;
+

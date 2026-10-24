@@ -11,6 +11,7 @@ export interface BcvSyncResult {
   message?: string;
   error?: string;
   reason?: string;
+  rateLabel?: string;
 }
 
 export async function syncBcvRateFromInternet(
@@ -89,7 +90,8 @@ export async function syncBcvRateFromInternet(
         rateMicroBs,
         formattedRate,
         source: usedSource,
-        message: 'La tasa BCV ya se encuentra actualizada'
+        rateLabel: 'Tasa BCV Vigente / Día Siguiente',
+        message: 'La tasa BCV ya se encuentra actualizada con la fecha valor vigente / día siguiente'
       };
     }
 
@@ -112,7 +114,8 @@ export async function syncBcvRateFromInternet(
           rateMicroBs,
           formattedRate,
           source: 'AUTO_INTERNET',
-          provider: usedSource
+          provider: usedSource,
+          rateLabel: 'Tasa BCV Vigente / Día Siguiente'
         }
       });
 
@@ -122,7 +125,8 @@ export async function syncBcvRateFromInternet(
         payload: {
           rateMicroBs,
           formattedRate,
-          source: 'AUTO_INTERNET'
+          source: 'AUTO_INTERNET',
+          rateLabel: 'Tasa BCV Vigente / Día Siguiente'
         }
       });
     });
@@ -133,7 +137,8 @@ export async function syncBcvRateFromInternet(
       updated: true,
       rateMicroBs,
       formattedRate,
-      source: usedSource
+      source: usedSource,
+      rateLabel: 'Tasa BCV Vigente / Día Siguiente'
     };
   } catch (err: any) {
     return {
