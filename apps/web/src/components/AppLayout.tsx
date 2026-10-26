@@ -614,7 +614,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
                     }`}
                   />
                   <span className={`text-[11px] font-bold ${isConnected ? 'text-tocineta-green' : 'text-red-400'}`}>
-                    {isConnected ? '🟢 En Línea' : 'Reconectando...'}
+                    {isConnected ? '🟢 Sistema Conectado' : 'Reconectando...'}
                   </span>
                 </div>
               </div>

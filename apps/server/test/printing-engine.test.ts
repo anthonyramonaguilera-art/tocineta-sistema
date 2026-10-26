@@ -412,8 +412,26 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
   // PRUEBA 6: Reimpresión Manual (Exige PIN de Cajera/Supervisor, Bloquea Cocinero)
   // --------------------------------------------------------------------------
   it('Reimpresión manual exige motivo y PIN autorizado, agregando banner de copia #1 y bloqueando al cocinero', async () => {
-    // 1. Obtener un trabajo impreso existente
-    const existingJob = rawDb.prepare("SELECT id FROM print_jobs WHERE status = 'impreso' AND ticket_ir_json IS NOT NULL LIMIT 1").get() as any;
+    // 1. Obtener un trabajo impreso existente (o crearlo si corre en aislamiento)
+    let existingJob = rawDb.prepare("SELECT id FROM print_jobs WHERE status = 'impreso' AND ticket_ir_json IS NOT NULL LIMIT 1").get() as any;
+    if (!existingJob) {
+      const now = Date.now();
+      const testIR: TicketIR = {
+        title: 'Ticket Test Preexistente',
+        widthColumns: 32,
+        blocks: [
+          { type: 'title_double', text: 'TEST HARDWARE', align: 'center' },
+          { type: 'cut', feedLines: 4 }
+        ]
+      };
+      const testJobId = `pjob_seed_${now}`;
+      rawDb.prepare(`
+        INSERT INTO print_jobs (
+          id, printer_id, order_id, job_type, payload_bytes, ticket_ir_json, status, attempts, created_at_ms, completed_at_ms
+        ) VALUES (?, 'print_caja_usb', NULL, 'NOTA_ENTREGA', ?, ?, 'impreso', 1, ?, ?)
+      `).run(testJobId, Buffer.from([0x1b, 0x40]), JSON.stringify(testIR), now, now);
+      existingJob = { id: testJobId };
+    }
     expect(existingJob).toBeDefined();
 
     // 2. Cocinero intentando reimprimir -> 403 Forbidden
@@ -457,7 +475,29 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
   // PRUEBA 7: Reposición Urgente Sin Cobro (Re-fire)
   // --------------------------------------------------------------------------
   it('Reposición urgente (Re-fire) genera ticket para cocina con banner *** REPOSICIÓN URGENTE SIN COBRO ***', async () => {
-    const existingOrder = rawDb.prepare("SELECT id FROM orders WHERE payment_status = 'pagado' LIMIT 1").get() as any;
+    let existingOrder = rawDb.prepare("SELECT id FROM orders WHERE payment_status = 'pagado' LIMIT 1").get() as any;
+    if (!existingOrder) {
+      const resOrder = await app.inject({
+        method: 'POST',
+        url: '/api/orders',
+        headers: { authorization: `Bearer ${cajeraToken}` },
+        payload: {
+          tableNumber: 'Mesa Test',
+          fulfillmentType: 'salon',
+          lines: [{ productId: 'prod_street_dog', quantity: 1 }]
+        }
+      });
+      const order = JSON.parse(resOrder.payload).order;
+      await app.inject({
+        method: 'POST',
+        url: `/api/orders/${order.id}/pay`,
+        headers: { authorization: `Bearer ${cajeraToken}` },
+        payload: {
+          tenders: [{ method: 'cash_usd', amountCents: order.total_to_collect_usd_cents }]
+        }
+      });
+      existingOrder = { id: order.id };
+    }
     expect(existingOrder).toBeDefined();
 
     const resRefire = await app.inject({

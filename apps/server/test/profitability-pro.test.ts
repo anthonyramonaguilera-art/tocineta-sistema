@@ -149,7 +149,7 @@ describe('Hito M14 - Módulo de Rentabilidad Profesional (Niveles 1 al 4) y Mód
     it('1.2 Asistente rápido (bulk-update) actualiza costos y genera historial en supply_cost_history', () => {
       const result = bulkUpdateSupplyCosts(rawDb, [
         { id: 'sup_pan_brioche', costPerUnitUsdCents: 45 }, // sube de 35 a 45
-        { id: 'sup_carne_smash', costPerUnitUsdCents: 75 }  // sube de 70 a 75
+        { id: 'sup_carne_smash', costPerUnitUsdCents: 85 }  // sube de 75 a 85
       ], 'usr_admin_olinelcys');
 
       expect(result.updatedCount).toBe(2);
