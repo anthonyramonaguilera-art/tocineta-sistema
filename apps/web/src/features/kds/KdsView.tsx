@@ -208,7 +208,7 @@ export const KdsView: React.FC = () => {
     }
   });
 
-  // Mutación: Despacho Completo (Supervisión / Dueña)
+  // Mutación: Despacho Completo (Supervisión / Admin)
   const forceCompleteMutation = useMutation({
     mutationFn: async (orderId: string) => {
       const res = await fetch(`/api/kds/orders/${orderId}/force-complete`, {
@@ -791,7 +791,7 @@ const OrderCard: React.FC<OrderCardProps> = ({
           </button>
         )}
 
-        {/* Botón Supervisión / Dueña: [⚡ Despachar Orden Completa] (Columnas 1 y 2) */}
+        {/* Botón Supervisión / Admin: [⚡ Despachar Orden Completa] (Columnas 1 y 2) */}
         {canForceComplete && (
           <button
             type="button"

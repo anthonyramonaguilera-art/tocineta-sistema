@@ -1,5 +1,5 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * SISTEMA OPERATIVO LOCAL TOCINETA
  * Cola y Worker Interno de Impresión Asíncrona (M6)
  * 
  * - Concurrencia: 1 por impresora física (mutex por printerId).
@@ -178,7 +178,7 @@ export async function sendTcpEscPos(
 export async function sendWindowsRawEscPos(
   printerName: string,
   payload: Buffer,
-  docName = 'TocinetaSonrie_Ticket',
+  docName = 'Tocineta_Ticket',
   timeoutMs = 4000
 ): Promise<{ bytesWritten: number }> {
   if (process.platform !== 'win32' || process.env.PRINTER_DEV_SIMULATION === 'true') {

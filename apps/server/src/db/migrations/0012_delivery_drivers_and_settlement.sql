@@ -14,12 +14,12 @@ CREATE TABLE IF NOT EXISTS delivery_drivers (
 
 CREATE INDEX IF NOT EXISTS idx_delivery_drivers_active ON delivery_drivers(is_active);
 
--- Sembrar los 3 repartidores habituales confirmados del Food Truck
+-- Sembrar los 3 repartidores corporativos oficiales
 INSERT OR IGNORE INTO delivery_drivers (id, name, phone, is_active, created_at_ms, updated_at_ms)
 VALUES 
-  ('drv_carlos_mora', 'Carlos Mora', '04148523311', 1, 1700000000000, 1700000000000),
-  ('drv_jose_ramirez', 'José Ramírez', '04249112233', 1, 1700000000000, 1700000000000),
-  ('drv_miguel_perez', 'Miguel Pérez', '04128994455', 1, 1700000000000, 1700000000000);
+  ('drv_carlos_mora', 'REPARTIDOR 1', '04148523311', 1, 1700000000000, 1700000000000),
+  ('drv_jose_ramirez', 'REPARTIDOR 2', '04249112233', 1, 1700000000000, 1700000000000),
+  ('drv_miguel_perez', 'REPARTIDOR 3', '04128994455', 1, 1700000000000, 1700000000000);
 
 -- 2. Ampliar tabla orders con campos de delivery
 ALTER TABLE orders ADD COLUMN delivery_reference TEXT;

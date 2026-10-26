@@ -11,10 +11,11 @@ import { verifyPin } from '../auth/pin.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
 
-// Clave pública oficial de Varons Media para verificación Ed25519
-export const VARONS_MEDIA_OFFICIAL_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
+// Clave pública oficial autorizada para verificación Ed25519
+export const OFFICIAL_UPDATE_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEACLinq5i8QkWFX+SDHSroZSGO8aCh+H4V6A5QZZWzA6M=
 -----END PUBLIC KEY-----`;
+export const VARONS_MEDIA_OFFICIAL_PUBLIC_KEY = OFFICIAL_UPDATE_PUBLIC_KEY;
 
 export interface ApplyUpdateOptions {
   publicKeyPem?: string;
@@ -151,7 +152,7 @@ export async function applySignedUpdatePackage(
       }
     });
 
-    const err: any = new Error('INVALID_SIGNATURE: La firma digital Ed25519 no coincide con la clave pública oficial de Varons Media o el paquete fue alterado.');
+    const err: any = new Error('INVALID_SIGNATURE: La firma digital Ed25519 no coincide con la clave pública oficial autorizada o el paquete fue alterado.');
     err.statusCode = 400;
     err.code = 'INVALID_SIGNATURE';
     throw err;

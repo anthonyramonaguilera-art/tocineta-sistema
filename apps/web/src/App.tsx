@@ -32,8 +32,8 @@ export const ALLOWED_TABS_BY_ROLE: Record<string, TabType[]> = {
 export const DEFAULT_TAB_BY_ROLE: Record<string, TabType> = {
   mesonero: 'pos',
   cocinero: 'kds',
-  cajera: 'cashier',
-  supervisor: 'cashier',
+  cajera: 'pos',
+  supervisor: 'pos',
   admin: 'pos'
 };
 

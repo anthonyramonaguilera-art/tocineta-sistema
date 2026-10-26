@@ -52,7 +52,7 @@ export const ProductImagePlaceholder: React.FC<ProductImagePlaceholderProps> = (
       <div className="flex items-center gap-1.5 mt-0.5">
         <span className="w-1.5 h-1.5 rounded-full bg-[#005A9C] dark:bg-[#38BDF8] animate-pulse" />
         <span className="text-[10px] font-extrabold tracking-wider uppercase text-slate-500 dark:text-neutral-400">
-          Tocineta Sonríe
+          TOCINETA
         </span>
       </div>
     </div>

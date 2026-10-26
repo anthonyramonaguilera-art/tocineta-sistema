@@ -285,7 +285,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-xl">🍔</span>
-              <h2 className="text-lg font-black text-white">{product.name}</h2>
+              <h2 className="text-lg font-black text-tocineta-text">{product.name}</h2>
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-tocineta-border text-tocineta-yellow font-mono font-bold">
                 ${(product.priceUsdCents / 100).toFixed(2)}
               </span>

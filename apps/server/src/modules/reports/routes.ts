@@ -27,7 +27,7 @@ export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
     const queryUserId = (req.query as any)?.userId;
     if (queryUserId) return queryUserId;
 
-    return 'usr_mesonero_carlos';
+    return 'usr_mesero';
   };
 
   // 1. Vista "Mi Rendimiento" (GET /api/reports/my-performance)

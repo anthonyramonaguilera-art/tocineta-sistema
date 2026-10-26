@@ -56,7 +56,7 @@ let currentFallbackOptions: readonly string[] | undefined = undefined;
 let autoExpireTimer: NodeJS.Timeout | null = null;
 
 const SUPPORT_DURATION_MS = 2 * 60 * 60 * 1000; // 2 Horas exactas
-const BANNER_TEXT = '🛠️ MODO SOPORTE VARONS MEDIA ACTIVO — SESIÓN AUDITADA';
+const BANNER_TEXT = '🛠️ MODO SOPORTE TÉCNICO ACTIVO — SESIÓN AUDITADA';
 
 /**
  * Detección Real de Versión de Windows para compatibilidad dual Windows 10 / Windows 11.
@@ -165,7 +165,7 @@ export function recordSupportFallbackSelection(
   }
 ) {
   appendAuditEvent(rawDb, {
-    actorUserId: input.actorUserId || 'usr_admin_olinelcys',
+    actorUserId: input.actorUserId || 'usr_admin',
     action: 'SUPPORT_FALLBACK_SELECTED',
     entityType: 'system_support',
     entityId: input.sessionId || currentSessionId || 'sup_general',
@@ -212,7 +212,7 @@ export function getSupportStatus(rawDb: Database.Database): SupportStatus {
 }
 
 /**
- * Inicia el Modo Soporte Auditado exigiendo el PIN de Administrador (Sra. Olinelcys)
+ * Inicia el Modo Soporte Auditado exigiendo el PIN de Administrador
  */
 export function startSupportMode(
   rawDb: Database.Database,
@@ -252,7 +252,7 @@ export function startSupportMode(
       }
     });
 
-    const err: any = new Error('PIN de Administrador inválido. Se requiere autorización de la Sra. Olinelcys.');
+    const err: any = new Error('PIN de Administrador inválido. Se requiere autorización del Administrador.');
     err.statusCode = 403;
     throw err;
   }
@@ -403,7 +403,7 @@ export function stopSupportMode(
     // Registrar en auditoría inmutable
     try {
       appendAuditEvent(rawDb, {
-        actorUserId: options?.actorUserId || 'usr_admin_olinelcys',
+        actorUserId: options?.actorUserId || 'usr_admin',
         action: 'SUPPORT_MODE_STOPPED',
         entityType: 'system_support',
         entityId: sessionId || 'sup_general',

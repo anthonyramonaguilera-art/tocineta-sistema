@@ -154,7 +154,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-xl">✨</span>
-                <h2 className="text-lg font-black text-white">{combo.name}</h2>
+                <h2 className="text-lg font-black text-tocineta-text">{combo.name}</h2>
                 <span className="text-sm px-2.5 py-0.5 rounded-full bg-tocineta-yellow text-tocineta-bg font-mono font-black">
                   ${(combo.priceUsdCents / 100).toFixed(2)}
                 </span>

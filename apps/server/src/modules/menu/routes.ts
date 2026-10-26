@@ -76,7 +76,7 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
         categories: [],
         products: [],
         exchangeRate: { rateMicroBs: 40_000_000, formattedRate: '40.00' },
-        businessSettings: { businessName: 'Tocineta Sonríe', phone: '0412-0000000' }
+        businessSettings: { businessName: 'TOCINETA', phone: '0412-0000000' }
       });
     }
   });

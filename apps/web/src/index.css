@@ -2,32 +2,32 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --tocineta-bg: #F4F6F9;
+:root, html:not(.dark), .theme-light {
+  --tocineta-bg: #F8FAFC;
   --tocineta-card: #FFFFFF;
-  --tocineta-card-hover: #F8FAFC;
+  --tocineta-card-hover: #F1F5F9;
   --tocineta-border: #E2E8F0;
   --tocineta-border-light: #CBD5E1;
   --tocineta-text: #0F172A;
   --tocineta-muted: #64748B;
-  --tocineta-blue: #005A9C;
-  --tocineta-yellow: #D97706;
-  --tocineta-yellow-hover: #B45309;
+  --tocineta-blue: #0284C7;
+  --tocineta-yellow: #F59E0B;
+  --tocineta-yellow-hover: #D97706;
   --tocineta-green: #10B981;
 }
 
-html.dark {
+html.dark, .theme-dark {
   --tocineta-bg: #0B0D11;
   --tocineta-card: #161922;
   --tocineta-card-hover: #1C212E;
   --tocineta-border: #262B38;
   --tocineta-border-light: #363C4D;
   --tocineta-text: #FFFFFF;
-  --tocineta-muted: #8E95A5;
+  --tocineta-muted: #94A3B8;
   --tocineta-blue: #38BDF8;
-  --tocineta-yellow: #FFE600;
-  --tocineta-yellow-hover: #E6CF00;
-  --tocineta-green: #00E676;
+  --tocineta-yellow: #F59E0B;
+  --tocineta-yellow-hover: #D97706;
+  --tocineta-green: #10B981;
 }
 
 @layer base {
@@ -36,6 +36,46 @@ html.dark {
     color: var(--tocineta-text);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
   }
+}
+
+/* Blindaje Semántico de Contraste para Modo Claro: inputs y selects siempre legibles */
+html:not(.dark) input:not([type="checkbox"]):not([type="radio"]),
+html:not(.dark) textarea,
+html:not(.dark) select {
+  color: #0F172A !important;
+  background-color: #FFFFFF;
+  border-color: #CBD5E1;
+}
+
+html:not(.dark) input::placeholder,
+html:not(.dark) textarea::placeholder {
+  color: #94A3B8;
+}
+
+/* Adaptación de Textos en Modo Claro para evitar títulos o párrafos en blanco sobre fondo claro */
+html:not(.dark) h1:not([class*="text-"]):not([class*="bg-"]),
+html:not(.dark) h2:not([class*="text-"]):not([class*="bg-"]),
+html:not(.dark) h3:not([class*="text-"]):not([class*="bg-"]),
+html:not(.dark) h4:not([class*="text-"]):not([class*="bg-"]),
+html:not(.dark) h1.text-white,
+html:not(.dark) h2.text-white,
+html:not(.dark) h3.text-white,
+html:not(.dark) h4.text-white,
+html:not(.dark) div.text-white:not([class*="bg-blue"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-red"]),
+html:not(.dark) span.text-white:not([class*="bg-blue"]):not([class*="bg-purple"]):not([class*="bg-emerald"]):not([class*="bg-amber"]):not([class*="bg-red"]):not([class*="bg-black"]) {
+  color: #0F172A;
+}
+
+/* Adaptación de Superficies Oscuras Fijas en Modo Claro */
+html:not(.dark) .bg-\[\#0B0D11\],
+html:not(.dark) .bg-\[\#12151C\],
+html:not(.dark) .bg-\[\#121620\],
+html:not(.dark) .bg-\[\#161922\],
+html:not(.dark) .bg-\[\#1A1F2B\],
+html:not(.dark) .bg-\[\#0E1118\],
+html:not(.dark) .bg-\[\#0E1118\]\/95 {
+  background-color: #FFFFFF !important;
+  color: #0F172A;
 }
 
 /* Scrollbar adaptativo */

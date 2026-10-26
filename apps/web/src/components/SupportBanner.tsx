@@ -69,7 +69,7 @@ export const SupportBanner: React.FC = () => {
         </div>
         <div>
           <div className="text-xs sm:text-sm font-black tracking-wide uppercase flex items-center gap-2">
-            <span>MODO SOPORTE VARONS MEDIA ACTIVO — SESIÓN AUDITADA</span>
+            <span>MODO SOPORTE TÉCNICO ACTIVO — SESIÓN AUDITADA</span>
             {support.quickAssistLaunched && (
               <span className="hidden md:inline-flex items-center gap-1 text-[10px] bg-black/30 px-2 py-0.5 rounded-full font-mono text-emerald-200">
                 <CheckCircle2 className="w-3 h-3" /> Quick Assist
@@ -178,7 +178,7 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
             <span className="text-2xl">🛠️</span>
             <div>
               <h3 className="font-black text-sm text-white uppercase tracking-tight">
-                Iniciar Asistencia Remota Varons Media
+                Iniciar Asistencia Técnica Remota
               </h3>
               <p className="text-[11px] text-tocineta-muted">
                 Sesión temporal de 2 horas con Asistencia Rápida nativa de Windows 11
@@ -205,7 +205,7 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
           <div className="space-y-3 py-2 animate-in fade-in">
             <div className="p-3 bg-amber-500/15 border border-amber-500/40 rounded-2xl text-amber-200 text-xs font-semibold">
               <p className="font-bold">⚠️ Quick Assist no se inició automáticamente.</p>
-              <p className="text-[11px] mt-1 text-amber-300/80">Seleccione una de las alternativas autorizadas por Varons Media:</p>
+              <p className="text-[11px] mt-1 text-amber-300/80">Seleccione una de las alternativas autorizadas por Soporte Técnico:</p>
             </div>
             <div className="space-y-2">
               {fallbackOptions.map(opt => (
@@ -232,7 +232,7 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
           <form onSubmit={handleStart} className="space-y-4">
             <div className="space-y-1.5">
               <label className="text-xs font-bold text-tocineta-muted block">
-                PIN de Administrador (6 dígitos — Sra. Olinelcys):
+                PIN de Administrador (6 dígitos):
               </label>
               <input
                 type="password"

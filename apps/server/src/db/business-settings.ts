@@ -23,7 +23,7 @@ export interface BusinessSettingsRecord {
 
 export const DEFAULT_BUSINESS_SETTINGS: BusinessSettingsRecord = {
   id: 'default',
-  business_name: 'Tocineta Sonríe',
+  business_name: 'TOCINETA',
   rif: 'V-17040918-0',
   phone: '04249728209',
   address: 'Detrás de Torre Movistar, Puerto Ordaz',
@@ -60,7 +60,7 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
           profitability_pro_enabled, fiscal_module_enabled, fiscal_price_mode,
           igtf_enabled, igtf_rate_bps, igtf_applies_to, updated_at_ms
         ) VALUES (
-          'default', 'Tocineta Sonríe', 'V-17040918-0', '04249728209',
+          'default', 'TOCINETA', 'V-17040918-0', '04249728209',
           'Detrás de Torre Movistar, Puerto Ordaz',
           'THIRD_PARTY_PASS_THROUGH', '[200, 300, 400, 500]', 'ticket_independiente',
           '04249728209', '17040918', 75,

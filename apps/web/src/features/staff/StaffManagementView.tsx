@@ -176,18 +176,18 @@ export const StaffManagementView: React.FC = () => {
       {/* Banner Pedagógico Sin Jerga */}
       <PedagogicalGuideBanner
         title="Guía de Mi Equipo y Permisos"
-        description="Aquí la Sra. Olinelcys puede aprobar a los nuevos empleados con 1 solo toque y decidir quién tiene permiso para cobrar en caja, anular pedidos o ver ganancias."
+        description="Aquí la administración puede aprobar a los nuevos empleados con 1 solo toque y decidir quién tiene permiso para cobrar en caja, anular pedidos o ver ganancias."
         storageKey="tocineta_guide_staff"
       />
 
       {/* Encabezado Principal */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-tocineta-border pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
+          <div className="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-500">
             <Users className="w-6 h-6" />
           </div>
           <div>
-            <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-black text-tocineta-text tracking-tight">
               👥 Mi Equipo y Permisos
             </h1>
             <p className="text-xs sm:text-sm text-tocineta-muted">
@@ -197,8 +197,8 @@ export const StaffManagementView: React.FC = () => {
         </div>
 
         {activeUser?.role === 'admin' && (
-          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-bold self-start sm:self-auto">
-            <span>👑</span> Modo Dueña Activo
+          <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-300 text-xs font-bold self-start sm:self-auto">
+            <span>🟣</span> Modo Pro Activo
           </div>
         )}
       </div>
@@ -338,13 +338,13 @@ export const StaffManagementView: React.FC = () => {
                     </div>
                     <div>
                       <div className="flex items-center gap-2">
-                        <h3 className="font-bold text-white text-sm sm:text-base">
+                        <h3 className="font-bold text-tocineta-text text-sm sm:text-base">
                           {member.name}
                         </h3>
                         {isOwner && (
-                          <span className="inline-flex items-center gap-1 text-[10px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded font-bold tracking-wide uppercase">
+                          <span className="inline-flex items-center gap-1 text-[10px] bg-purple-500/20 text-purple-600 dark:text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded font-bold tracking-wide uppercase">
                             <Crown className="w-3 h-3" />
-                            DUEÑA
+                            ADMIN
                           </span>
                         )}
                       </div>

@@ -19,7 +19,7 @@ export const FaithBanner: React.FC = () => {
   }, []);
 
   return (
-    <div className="bg-[#0B0D11] border-b border-[#FFE600]/30 text-[#FFE600] text-xs font-bold py-1 text-center transition-all duration-500 tracking-wide select-none">
+    <div className="bg-amber-500/10 dark:bg-[#0B0D11] border-b border-amber-500/20 dark:border-amber-500/30 text-amber-900 dark:text-amber-300 text-xs font-bold py-1.5 text-center transition-all duration-500 tracking-wide select-none">
       {FAITH_MESSAGES[index]}
     </div>
   );

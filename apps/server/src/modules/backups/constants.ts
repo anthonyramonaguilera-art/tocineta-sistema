@@ -2,18 +2,18 @@ import * as path from 'node:path';
 
 /**
  * Claves públicas age oficiales de los dos únicos destinatarios autorizados:
- * 1. Sra. Olinelcys (Dueña del Food Truck) -> Clave privada en sobre sellado físico
- * 2. Varons Media (Agencia tecnológica y soporte) -> Clave privada en gestor de contraseñas
+ * 1. Administración TOCINETA -> Clave privada en sobre sellado físico
+ * 2. Custodio Técnico Seguro -> Clave privada en gestor de contraseñas seguro
  *
  * REGLA CRÍTICA DE SEGURIDAD:
  * La laptop del Food Truck ÚNICAMENTE almacena las claves públicas (age1...).
  * JAMÁS almacena claves privadas de age.
  */
 export const DEFAULT_AGE_RECIPIENTS = [
-  // Sra. Olinelcys
-  process.env.AGE_RECIPIENT_OLINELCYS || 'age1q5q9c7am7xx9e4flj0j8ugyfqejpyp5dc8qsvqpnv7uamg4wkcuqye3f0r',
-  // Varons Media
-  process.env.AGE_RECIPIENT_VARONS || 'age15asuchr5fv6fvqhpxm7zedh0n54p7sukdzn5zjp4auqaju8h5cfslg5ne7'
+  // Destinatario 1: Administración
+  process.env.AGE_RECIPIENT_ADMIN || process.env.AGE_RECIPIENT_OLINELCYS || 'age1q5q9c7am7xx9e4flj0j8ugyfqejpyp5dc8qsvqpnv7uamg4wkcuqye3f0r',
+  // Destinatario 2: Custodio Seguro
+  process.env.AGE_RECIPIENT_SECURE || process.env.AGE_RECIPIENT_VARONS || 'age15asuchr5fv6fvqhpxm7zedh0n54p7sukdzn5zjp4auqaju8h5cfslg5ne7'
 ];
 
 /**

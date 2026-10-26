@@ -758,7 +758,7 @@ export const CashierView: React.FC = () => {
                           </span>
                         </div>
                         <p className="text-[11px] text-tocineta-muted mt-0.5">
-                          {platesCount} plato(s) • Mesonero: {o.created_by_name || 'Carlos'}
+                          {platesCount} plato(s) • Mesonero: {o.created_by_name || 'MESERO'}
                         </p>
                       </div>
 

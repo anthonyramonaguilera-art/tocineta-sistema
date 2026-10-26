@@ -25,7 +25,7 @@ export const websocketPlugin: FastifyPluginAsync = async (fastify) => {
       event: 'CONNECTED',
       timestampUtcMs: Date.now(),
       latestSeq,
-      message: 'Conectado al Sistema Operativo Local Tocineta Sonrie'
+      message: 'Conectado al Sistema Operativo TOCINETA'
     }));
 
     socket.on('message', (message: Buffer | string | unknown) => {

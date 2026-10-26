@@ -165,40 +165,49 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     return reply.status(201).send({
       success: true,
-      message: 'Solicitud de registro enviada. Esperando aprobación de la Sra. Olinelcys.',
+      message: 'Solicitud de registro enviada. Esperando aprobación de la administración.',
       userId: newUserId
     });
   });
 
-  // 2. Inicio de sesión mediante PIN o Cédula/Contraseña
+  // 2. Inicio de sesión mediante Usuario/Contraseña en texto o PIN
   fastify.post('/api/auth/login', async (request, reply) => {
-    const body = request.body as { userId?: string; pin?: string; cedula?: string; password?: string } | undefined;
+    const body = request.body as { userId?: string; username?: string; pin?: string; cedula?: string; password?: string } | undefined;
     const userId = body?.userId?.trim();
+    const username = body?.username?.trim();
     const pin = body?.pin?.trim();
     const cedula = body?.cedula?.trim();
     const password = body?.password?.trim();
 
-    if (!userId && !cedula) {
+    const identifier = username || userId || cedula;
+    const credential = password || pin;
+
+    if (!identifier) {
       return reply.status(400).send({
         success: false,
-        error: 'Debe especificar userId o cedula'
+        error: 'Debe especificar usuario o identificación'
       });
     }
 
-    if (!pin && !password) {
+    if (!credential) {
       return reply.status(400).send({
         success: false,
-        error: 'Debe especificar pin o password'
+        error: 'Debe ingresar contraseña o PIN'
       });
     }
 
     const dbCtx = getDatabaseContext();
-    let rawUser: any = null;
-    if (userId) {
-      rawUser = dbCtx.rawDb.prepare('SELECT * FROM users WHERE id = ?').get(userId);
-    } else if (cedula) {
-      rawUser = dbCtx.rawDb.prepare('SELECT * FROM users WHERE cedula = ?').get(cedula);
-    }
+    // Búsqueda flexible e insensible a mayúsculas: por id, por username, por name o por rol
+    let rawUser: any = dbCtx.rawDb.prepare(`
+      SELECT * FROM users 
+      WHERE id = ? 
+         OR (username IS NOT NULL AND LOWER(username) = LOWER(?))
+         OR LOWER(name) = LOWER(?)
+         OR (cedula IS NOT NULL AND cedula = ?)
+         OR (LOWER(role) = LOWER(?) AND is_active = 1)
+      ORDER BY is_active DESC
+      LIMIT 1
+    `).get(identifier, identifier, identifier, identifier, identifier);
 
     if (!rawUser) {
       return reply.status(404).send({
@@ -209,11 +218,11 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     const user = mapUserRow(rawUser);
 
-    // Hito M20 C.2: Verificación de estado de aprobación
+    // Verificación de estado de aprobación
     if (user.approvalStatus === 'PENDING') {
       return reply.status(403).send({
         error: 'ACCOUNT_PENDING_APPROVAL',
-        message: 'Tu cuenta está esperando la aprobación de la Sra. Olinelcys.'
+        message: 'Tu cuenta está esperando la aprobación de la administración.'
       });
     }
 
@@ -245,18 +254,18 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     let isCredentialValid = false;
-    if (password && user.passwordHash && user.passwordSalt) {
-      const derived = crypto.scryptSync(password, user.passwordSalt, 64).toString('hex');
+    // 1. Probar contra password_hash si existe
+    if (credential && user.passwordHash && user.passwordSalt) {
+      const derived = crypto.scryptSync(credential, user.passwordSalt, 64).toString('hex');
       try {
         isCredentialValid = crypto.timingSafeEqual(Buffer.from(derived, 'hex'), Buffer.from(user.passwordHash, 'hex'));
       } catch {
         isCredentialValid = false;
       }
-    } else if (pin) {
-      isCredentialValid = verifyPin(pin, user.pinSalt, user.pinHash);
-    } else if (password) {
-      // Si ingresó contraseña pero solo tiene pin_hash configurado, probar verifyPin si es numérico
-      isCredentialValid = verifyPin(password, user.pinSalt, user.pinHash);
+    }
+    // 2. Si no es válido o no tiene passwordHash, probar contra pinHash con verifyPin
+    if (!isCredentialValid && credential && user.pinSalt && user.pinHash) {
+      isCredentialValid = verifyPin(credential, user.pinSalt, user.pinHash);
     }
 
     if (!isCredentialValid) {
@@ -883,8 +892,8 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(404).send({ error: 'Usuario no encontrado' });
     }
 
-    if ((targetUser.id === 'usr_admin' || targetUser.role === 'admin' || targetUser.name.toLowerCase().includes('olinelcys')) && body.role !== 'admin') {
-      return reply.status(400).send({ error: 'No se puede cambiar el rol de la Administradora / Dueña principal (Sra. Olinelcys)' });
+    if ((targetUser.id === 'usr_admin' || targetUser.role === 'admin') && body.role !== 'admin') {
+      return reply.status(400).send({ error: 'No se puede cambiar el rol del Administrador principal' });
     }
 
     const validRoles = ['admin', 'supervisor', 'cajera', 'mesonero', 'cocinero', 'despachador'];
@@ -930,11 +939,11 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(404).send({ error: 'Usuario no encontrado' });
     }
 
-    // Impedir borrar a la dueña
-    if (targetUser.id === 'usr_admin' || targetUser.role === 'admin' || targetUser.name.toLowerCase().includes('olinelcys')) {
+    // Impedir borrar al administrador principal
+    if (targetUser.id === 'usr_admin' || targetUser.role === 'admin') {
       return reply.status(400).send({
         success: false,
-        error: 'No se puede eliminar a la Administradora / Dueña principal (Sra. Olinelcys)'
+        error: 'No se puede eliminar al Administrador principal'
       });
     }
 

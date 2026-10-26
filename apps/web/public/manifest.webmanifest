@@ -1,7 +1,7 @@
 {
-  "name": "Tocineta Sonríe - Sistema POS",
-  "short_name": "Tocineta Sonríe",
-  "description": "Sistema Operativo Local y POS Empresarial para Food Truck Tocineta Sonríe",
+  "name": "TOCINETA - Sistema Operativo Gastronómico",
+  "short_name": "TOCINETA",
+  "description": "Sistema Operativo Gastronómico TOCINETA",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#FFFFFF",

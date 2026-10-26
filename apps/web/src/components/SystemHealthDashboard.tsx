@@ -450,7 +450,7 @@ export const SystemHealthDashboard: React.FC = () => {
           />
           <MetricRow
             label="Destinatarios Autorizados"
-            value={`${data.ageKeys?.recipientsCount || 2} (Sra. Olinelcys + Varons Media)`}
+            value={`${data.ageKeys?.recipientsCount || 2} (Administración + Clave Segura)`}
           />
           <MetricRow
             label="Clave Privada en Laptop"
@@ -466,7 +466,7 @@ export const SystemHealthDashboard: React.FC = () => {
 
       {/* Footer del Dashboard */}
       <div className="text-center py-4 text-xs text-tocineta-muted border-t border-tocineta-border/60">
-        Varons Media • Sistema Operativo Local Tocineta Sonríe • Hito M0 Producción
+        TOCINETA • Sistema Operativo Gastronómico • Producción
       </div>
     </div>
   );

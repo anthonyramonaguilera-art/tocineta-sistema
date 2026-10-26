@@ -6,7 +6,7 @@ import DatabaseConstructor from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
 import { DEFAULT_AGE_RECIPIENTS, DEFAULT_USB_BACKUP_DIR } from './constants.js';
 import { encryptWithAge } from './age-service.js';
-import { appendAuditEvent, verifyAuditChain } from '../audit/audit-service.js';
+import { appendAuditEvent, verifyAuditChain, GENESIS_HASH } from '../audit/audit-service.js';
 
 export interface UsbVaultDetection {
   detected: boolean;
@@ -274,7 +274,7 @@ export interface EncryptedBackupResult {
 
 /**
  * Genera un paquete de respaldo cifrado con age dirigido exclusivamente a las claves públicas
- * de la Sra. Olinelcys y Varons Media.
+ * de la Administración y Custodio Seguro.
  * 
  * Invariante de seguridad:
  * La laptop jamás posee las claves privadas. El archivo generado (.db.age) NO puede
@@ -325,7 +325,7 @@ export async function createEncryptedBackup(
     LIMIT 1
   `).get() as { entry_hash: string } | undefined;
 
-  const auditHeadHash = lastAudit?.entry_hash || 'GENESIS_HASH_TOCINETA_SONRIE_V1_2026';
+  const auditHeadHash = lastAudit?.entry_hash || GENESIS_HASH;
 
   // 2. Crear un snapshot físico temporal en caliente de la base de datos
   const tempDir = path.resolve(process.cwd(), './data/temp');

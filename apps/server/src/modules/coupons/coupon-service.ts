@@ -1,6 +1,6 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
- * Módulo de Cupones Duales "Cupones para ti" (Hito M11)
+ * SISTEMA OPERATIVO LOCAL TOCINETA
+ * Módulo de Cupones Duales (Hito M11)
  * 
  * Reglas de Negocio Oficiales:
  * 1. Validación 100% en local: existencia, vigencia, max_uses y no duplicidad en la misma orden.

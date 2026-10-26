@@ -1,5 +1,5 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * SISTEMA OPERATIVO LOCAL TOCINETA
  * Módulo de Incidentes, Mermas y Devoluciones (M8)
  * 
  * Reglas de Negocio Oficiales:

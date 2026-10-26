@@ -1,5 +1,5 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * SISTEMA OPERATIVO LOCAL TOCINETA
  * Módulo de Reportes, Métricas de Personal y Exportación Local (M8)
  * 
  * - Métricas de Personal:
@@ -313,7 +313,7 @@ export async function generateJornadaExcelReport(
 ): Promise<Buffer> {
   const data = getJornadaReportData(rawDb, jornadaId);
   const workbook = new ExcelJS.Workbook();
-  workbook.creator = 'Tocineta Sonríe POS';
+  workbook.creator = 'TOCINETA';
   workbook.created = new Date();
 
   // Hoja 1: Resumen de Jornada
@@ -501,7 +501,7 @@ export function generateJornadaPdfReport(
       doc.on('error', (err) => reject(err));
 
       // Encabezado
-      doc.font('Helvetica-Bold').fontSize(18).text('TOCINETA SONRÍE', { align: 'center' });
+      doc.font('Helvetica-Bold').fontSize(18).text('TOCINETA', { align: 'center' });
       doc.font('Helvetica').fontSize(10).text('SISTEMA OPERATIVO LOCAL — INFORME DE JORNADA', { align: 'center' });
       doc.moveDown(0.5);
 

@@ -1,5 +1,5 @@
 -- ============================================================================
--- HITO M20: MOTOR EMPRESARIAL VALERY / SAINT / TREINTA (ERP COMPLETO)
+-- HITO M20: MOTOR EMPRESARIAL GERENCIAL (ERP COMPLETO)
 -- Módulo de Proveedores, Clientes/Socios, Compras, Kardex de Inventario y Nómina
 -- ============================================================================
 
@@ -128,6 +128,6 @@ VALUES
 
 INSERT OR IGNORE INTO customers (id, name, phone, identification, address, is_partner, balance_receivable_usd_cents, total_orders, created_at_ms)
 VALUES
-  ('cust_partner_olinelcys', 'Sra. Olinelcys (Socia Directora)', '04249728209', 'V-17040918', 'Food Truck Tocineta Sonríe', 1, 0, 24, 1729800000000),
+  ('cust_partner_admin', 'Socio Director', '04249728209', 'V-17040918', 'TOCINETA', 1, 0, 24, 1729800000000),
   ('cust_partner_aliado', 'Socio Inversionista / Aliado Operativo', '04148901234', 'V-15890123', 'Puerto Ordaz, Alta Vista', 1, 0, 12, 1729800000000),
-  ('cust_vip_carlos', 'Carlos Mendoza (Cliente Frecuente)', '04121234567', 'V-20123456', 'Torre Movistar piso 4', 0, 0, 18, 1729800000000);
+  ('cust_vip_cliente1', 'Cliente Frecuente 1', '04121234567', 'V-20123456', 'Torre Movistar piso 4', 0, 0, 18, 1729800000000);

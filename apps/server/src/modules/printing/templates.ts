@@ -1,5 +1,5 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * SISTEMA OPERATIVO LOCAL TOCINETA
  * Plantillas y Ruteo de Tickets Térmicos 58mm (Ticket IR)
  */
 
@@ -219,7 +219,7 @@ export function buildReceiptTicketIR(
     payments = paymentsOrSettings;
   }
 
-  // 1. Logo Tocineta Sonríe Oficial
+  // 1. Logo TOCINETA Oficial
   blocks.push({ type: 'header_logo' });
 
   // 2. Eslogan oficial
@@ -367,7 +367,7 @@ export function buildReceiptTicketIR(
     lines: [
       '¡GRACIAS POR SU PREFERENCIA!',
       'Dios le bendiga grandemente',
-      'Síguenos en @tocinetasonrie',
+      'Síguenos en @tocineta',
       '*** COMPROBANTE DE ENTREGA ***'
     ],
     align: 'center'
@@ -817,7 +817,7 @@ export function buildZReportTicketIR(data: ZReportData, settings?: FiscalSetting
   blocks.push({ type: 'header_logo' });
   blocks.push({
     type: 'key_value',
-    key: 'TOCINETA SONRÍE',
+    key: 'TOCINETA',
     value: 'RIF: V-17040918-0',
     bold: true
   });
@@ -994,7 +994,7 @@ export function buildZReportTicketIR(data: ZReportData, settings?: FiscalSetting
   });
   blocks.push({
     type: 'footer',
-    lines: [data.auditHeadHash, 'Cierre Contable Oficial - Tocineta Sonríe'],
+    lines: [data.auditHeadHash, 'Cierre Contable Oficial - TOCINETA'],
     align: 'center'
   });
   blocks.push({ type: 'cut' });

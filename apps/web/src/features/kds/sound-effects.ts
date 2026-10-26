@@ -1,5 +1,5 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE
+ * SISTEMA OPERATIVO GASTRONÓMICO TOCINETA
  * Sintetizador Web Audio API para alertas sonoras de cocina (KDS).
  * 100% offline, cero dependencias externas ni archivos de audio remotos.
  */

@@ -325,10 +325,10 @@ export const DeferredPaperView: React.FC = () => {
               </label>
               <input
                 type="text"
-                placeholder="Mesa 3 / Carlos"
+                placeholder="Mesa 3 / Mesero"
                 value={tableNumber}
                 onChange={(e) => setTableNumber(e.target.value)}
-                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white"
+                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-tocineta-text"
               />
             </div>
 

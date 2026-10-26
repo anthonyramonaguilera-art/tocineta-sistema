@@ -123,7 +123,7 @@ export interface WhatsAppOrderInput {
 
 export const OFFICIAL_WHATSAPP_NUMBER = '584121928527';
 export const OFFICIAL_WHATSAPP_DISPLAY = '0412-1928527';
-export const OFFICIAL_STORE_NAME = 'Tocineta Sonríe';
+export const OFFICIAL_STORE_NAME = 'TOCINETA';
 export const OFFICIAL_SLOGAN = 'Cocinamos con amor, te servimos como mereces y damos gloria a Dios';
 export const OFFICIAL_SCHEDULE = 'Martes a Domingo de 6:00 p. m. a 12:00 a. m.';
 export const OFFICIAL_LOCATION = 'Alta Vista detrás de Torre Movistar, Puerto Ordaz';
@@ -455,7 +455,7 @@ export function formatWhatsAppOrderMessage(
 
   const lines: string[] = [];
 
-  lines.push(`*¡HOLA, TOCINETA SONRÍE!* 🥓`);
+  lines.push(`*¡HOLA, TOCINETA!* 🥓`);
   lines.push(`Quisiera realizar el siguiente pedido desde el Menú Digital QR:\n`);
 
   lines.push(`📋 *DETALLE DEL PEDIDO:*`);
@@ -521,7 +521,7 @@ export function formatWhatsAppOrderMessage(
   // Ajuste C1: Límite estricto MAX_WHATSAPP_MSG_LENGTH = 3500 caracteres
   if (text.length > MAX_WHATSAPP_MSG_LENGTH) {
     const summaryLines: string[] = [];
-    summaryLines.push(`*¡HOLA, TOCINETA SONRÍE!* 🥓`);
+    summaryLines.push(`*¡HOLA, TOCINETA!* 🥓`);
     summaryLines.push(`Quisiera realizar el siguiente pedido resumido desde el Menú Digital QR:\n`);
     summaryLines.push(`📋 *DETALLE DEL PEDIDO (RESUMIDO):*`);
     for (const item of input.items) {
@@ -758,8 +758,8 @@ export function generateSelfContainedHtml(menuData: PublicQrMenuPayload): string
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Tocineta Sonríe • Menú Digital Oficial</title>
-  <meta name="description" content="Menú digital oficial de Tocineta Sonríe. Los mejores perros calientes y hamburguesas con Barra Libre en Puerto Ordaz.">
+  <title>TOCINETA • Menú Digital Oficial</title>
+  <meta name="description" content="Menú digital oficial de TOCINETA. Los mejores perros calientes y hamburguesas con Barra Libre en Puerto Ordaz.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;700;900&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -921,7 +921,7 @@ export function generateSelfContainedHtml(menuData: PublicQrMenuPayload): string
 <body>
   <header>
     <div style="font-size: 42px;">🥓</div>
-    <h1 style="font-size: 26px; font-weight: 900; letter-spacing: 0.5px; margin-top: 4px;">TOCINETA SONRÍE</h1>
+    <h1 style="font-size: 26px; font-weight: 900; letter-spacing: 0.5px; margin-top: 4px;">TOCINETA</h1>
     <p style="font-size: 13px; color: var(--muted); margin-top: 4px; font-style: italic;">
       "${menuData.slogan}"
     </p>
@@ -1204,7 +1204,7 @@ export function generateSelfContainedHtml(menuData: PublicQrMenuPayload): string
       const custAddress = document.getElementById('custAddress')?.value.trim();
       const custReference = document.getElementById('custReference')?.value.trim();
 
-      let text = '*¡HOLA, TOCINETA SONRÍE!* 🥓\\nQuisiera realizar el siguiente pedido:\\n\\n📋 *DETALLE DEL PEDIDO:*\\n';
+      let text = '*¡HOLA, TOCINETA!* 🥓\\nQuisiera realizar el siguiente pedido:\\n\\n📋 *DETALLE DEL PEDIDO:*\\n';
       let subtotalUsd = 0;
 
       cart.forEach(i => {

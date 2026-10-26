@@ -105,7 +105,7 @@ export function seedCriticalSuppliesAndRecipes(rawDb: Database.Database): void {
       VALUES (?, ?, ?, ?)
     `);
 
-    // Definición de las reglas exactas de recetas de Tocineta Sonríe
+    // Definición de las reglas exactas de recetas de TOCINETA
     interface RecipeDef {
       productId: string;
       productName: string;
@@ -113,7 +113,7 @@ export function seedCriticalSuppliesAndRecipes(rawDb: Database.Database): void {
     }
 
     const recipesData: RecipeDef[] = [
-      // HAMBURGUESAS (Medallones según especificación exacta de Tocineta Sonríe)
+      // HAMBURGUESAS (Medallones según especificación exacta de TOCINETA)
       // Americana Deluxe: 4 medallones
       { productId: 'prod_americana_deluxe', productName: 'Americana Deluxe', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 4 }] },
       // Miami: 3 medallones
@@ -354,7 +354,7 @@ export function reconcileCriticalInventory(
       insertStockCountStmt.run(
         `sc_${generateUuidV7()}`,
         jornadaId,
-        countedByUserId || 'usr_admin_olinelcys',
+        countedByUserId || 'usr_admin',
         sup.id,
         expectedTheoretical,
         physical,

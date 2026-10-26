@@ -21,7 +21,7 @@ import { PedagogicalGuideBanner } from '../../components/PedagogicalGuideBanner.
 export const ProfitabilityDashboard: React.FC = () => {
   const queryClient = useQueryClient();
 
-  // Subpestañas del Dashboard Ejecutivo estilo Treinta + Valery
+  // Subpestañas del Dashboard Ejecutivo Gerencial
   const [activeSubTab, setActiveSubTab] = useState<
     'net-profit' | 'purchases' | 'recipes' | 'mermas' | 'receivables' | 'payroll' | 'settings'
   >(() => {
@@ -32,7 +32,7 @@ export const ProfitabilityDashboard: React.FC = () => {
     return 'net-profit';
   });
 
-  // Escuchar eventos de navegación desde el Drawer RePOS / Treinta
+  // Escuchar eventos de navegación desde el Drawer
   useEffect(() => {
     const handler = (e: any) => {
       if (e.detail) {
@@ -105,7 +105,7 @@ export const ProfitabilityDashboard: React.FC = () => {
     }
   });
 
-  // 2. Query Balance Ejecutivo Treinta + Valery
+  // 2. Query Balance Financiero Gerencial
   const { data: executiveData, refetch: refetchExecutive } = useQuery<{
     totalSalesUsdCents: number;
     totalSalesBsCents: number;
@@ -293,7 +293,7 @@ export const ProfitabilityDashboard: React.FC = () => {
     if (!executiveData) return;
     const lines = [
       '====================================================',
-      '        TOCINETA SONRIE - REPORTE DE GESTION        ',
+      '           TOCINETA - REPORTE DE GESTION            ',
       '              Food Truck Puerto Ordaz               ',
       '====================================================',
       `Fecha: ${new Date().toLocaleString()}`,
@@ -319,7 +319,7 @@ export const ProfitabilityDashboard: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Reporte_TocinetaSonrie_${new Date().toISOString().slice(0, 10)}.txt`;
+    a.download = `Reporte_Tocineta_${new Date().toISOString().slice(0, 10)}.txt`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -330,19 +330,19 @@ export const ProfitabilityDashboard: React.FC = () => {
     <div className="space-y-6">
       {/* Guía Pedagógica */}
       <PedagogicalGuideBanner
-        title="Balance Ejecutivo & Rentabilidad Real (Treinta + Valery)"
+        title="Balance Gerencial & Rentabilidad Real"
         description="Control integral de costos de recetas, compras de materia prima, mermas con reposición de socios, nómina y cuentas por cobrar."
         storageKey="banner_profitability"
       />
 
-      {/* TARJETA SUPERIOR DE BALANCE EJECUTIVO (ESTILO TREINTA + VALERY) */}
+      {/* TARJETA SUPERIOR DE BALANCE GERENCIAL */}
       <div className="bg-white dark:bg-[#121620] border border-slate-200 dark:border-neutral-800 rounded-3xl p-5 sm:p-6 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           {/* Métricas Principales */}
           <div className="space-y-2">
             <div className="flex items-center gap-2">
               <span className="text-xs font-black uppercase tracking-wider text-blue-600 dark:text-blue-400">
-                BALANCE EJECUTIVO TREINTA & VALERY
+                BALANCE FINANCIERO GERENCIAL
               </span>
               <span className="text-[10px] px-2 py-0.5 rounded-md bg-slate-100 dark:bg-neutral-800 text-slate-600 dark:text-slate-300 font-mono">
                 {executiveData?.bcvRateLabel || 'BCV Día Siguiente'}: {executiveData?.bcvRateFormatted || '40,00'} Bs/$
@@ -389,7 +389,7 @@ export const ProfitabilityDashboard: React.FC = () => {
             </div>
           </div>
 
-          {/* Botones de Acción Inmediata estilo Treinta */}
+          {/* Botones de Acción Rápida */}
           <div className="flex flex-wrap lg:flex-col gap-2 shrink-0">
             <button
               type="button"
@@ -975,7 +975,7 @@ export const ProfitabilityDashboard: React.FC = () => {
               const bcvRate = parseFloat(executiveData?.bcvRateFormatted?.replace(',', '.') || '40.0');
               const totalQuoteBs = totalQuoteUsd * bcvRate;
 
-              const whatsappMessage = `*COTIZACIÓN OFICIAL - TOCINETA SONRÍE*%0ACliente: ${quoteClientName}%0A🍔 ${quoteBurgerCount}x Hamburguesas Especiales: $${(quoteBurgerCount * 5).toFixed(2)}%0A🌭 ${quoteDogCount}x Hot Dogs Especiales: $${(quoteDogCount * 2.5).toFixed(2)}%0A------------------------%0A*TOTAL: $${totalQuoteUsd.toFixed(2)} (${totalQuoteBs.toFixed(2)} Bs)*%0ATasa BCV Oficial: ${bcvRate.toFixed(2)} Bs/$%0AIncluye barra de salsas y empaque hermético.`;
+              const whatsappMessage = `*COTIZACIÓN OFICIAL - TOCINETA*%0ACliente: ${quoteClientName}%0A🍔 ${quoteBurgerCount}x Hamburguesas Especiales: $${(quoteBurgerCount * 5).toFixed(2)}%0A🌭 ${quoteDogCount}x Hot Dogs Especiales: $${(quoteDogCount * 2.5).toFixed(2)}%0A------------------------%0A*TOTAL: $${totalQuoteUsd.toFixed(2)} (${totalQuoteBs.toFixed(2)} Bs)*%0ATasa BCV Oficial: ${bcvRate.toFixed(2)} Bs/$%0AIncluye barra de salsas y empaque hermético.`;
 
               return (
                 <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-slate-200 dark:border-neutral-800">

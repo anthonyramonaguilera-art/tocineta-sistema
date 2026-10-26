@@ -29,7 +29,7 @@ export function buildEmergencySlipTicketIR(slipNum: number | string): TicketIR {
     widthColumns: 32,
     blocks: [
       { type: 'header_logo' },
-      { type: 'title_double', text: 'TOCINETA SONRIE', align: 'center' },
+      { type: 'title_double', text: 'TOCINETA', align: 'center' },
       { type: 'banner_inverted', text: `*** ${slipLabel} ***` },
       { type: 'text', text: 'COMANDA DE CONTINGENCIA', align: 'center', bold: true },
       { type: 'separator', style: 'double' },
@@ -123,7 +123,7 @@ export function generateEmergencySlipsPdf(totalCount = 200): Promise<Buffer> {
 
           // Encabezado
           doc.rect(leftX, topY, width, 40).fill('#111827');
-          doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(14).text('TOCINETA SONRÍE', leftX + 15, topY + 8);
+          doc.fillColor('#FFFFFF').font('Helvetica-Bold').fontSize(14).text('TOCINETA', leftX + 15, topY + 8);
           doc.fontSize(9).font('Helvetica').text('TALONARIO DE CONTINGENCIA Y CORTE ELÉCTRICO', leftX + 15, topY + 24);
 
           // Número de Comanda destacado

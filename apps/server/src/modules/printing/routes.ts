@@ -1,5 +1,5 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * SISTEMA OPERATIVO LOCAL TOCINETA
  * Rutas de Impresión Asíncrona, Vista Previa HTML y Reimpresión (Fastify)
  */
 

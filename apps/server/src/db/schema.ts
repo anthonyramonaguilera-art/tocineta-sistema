@@ -18,6 +18,7 @@ export type UserRole = (typeof UserRoleValues)[number];
 export const users = sqliteTable('users', {
   id: text('id').primaryKey(),
   name: text('name').notNull(),
+  username: text('username'),
   role: text('role', { enum: UserRoleValues }).notNull(),
   pinHash: text('pin_hash').notNull(),
   pinSalt: text('pin_salt').notNull(),
@@ -90,6 +91,7 @@ export function mapUserRow(row: any): User {
   return {
     id: row.id,
     name: row.name,
+    username: row.username ?? null,
     role: row.role,
     pinHash: row.pin_hash ?? row.pinHash,
     pinSalt: row.pin_salt ?? row.pinSalt,
@@ -163,7 +165,7 @@ export type AccountBucket = (typeof AccountBucketValues)[number];
 
 export const businessSettings = sqliteTable('business_settings', {
   id: text('id').primaryKey().default('default'),
-  businessName: text('business_name').notNull().default('Tocineta Sonríe'),
+  businessName: text('business_name').notNull().default('TOCINETA'),
   rif: text('rif').notNull().default('V-17040918-0'),
   phone: text('phone').notNull().default('04249728209'),
   address: text('address').notNull().default('Detrás de Torre Movistar, Puerto Ordaz'),

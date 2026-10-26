@@ -4,8 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { initSqlite } from './connection.js';
 import { runMigrations } from './migrate.js';
 import { seedCatalog } from './seed-catalog.js';
-import { INITIAL_USERS } from '../modules/auth/seed-users.js';
-import { hashPin } from '../modules/auth/pin.js';
+import { seedInitialUsers } from '../modules/auth/seed-users.js';
 import { ensureBusinessSettingsDefensive } from './business-settings.js';
 
 export async function resetForProduction(dbPathInput?: string): Promise<{
@@ -125,41 +124,10 @@ export async function resetForProduction(dbPathInput?: string): Promise<{
     console.log(`✅ ${ordersDeleted} orden(es) de prueba eliminada(s). Secuencia reiniciada para #CMD-0001 / T-001.`);
     console.log(`✅ Cupones reiniciados (4 cupones oficiales listos con used_count = 0).`);
 
-    // 7. Reiniciar usuarios iniciales limpios con sus PINs oficiales
-    console.log(`👥 Reiniciando usuarios iniciales oficiales...`);
-    const now = Date.now();
-    for (const u of INITIAL_USERS) {
-      const { hash, salt } = hashPin(u.pin);
-      dbCtx.rawDb.prepare(`
-        INSERT INTO users (
-          id, name, role, pin_hash, pin_salt, pin_length,
-          must_change_pin, is_active, failed_attempts, lockout_stage,
-          locked_until_ms, created_at_ms, updated_at_ms
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0, 0, NULL, ?, ?)
-        ON CONFLICT(id) DO UPDATE SET
-          name = excluded.name,
-          role = excluded.role,
-          pin_hash = excluded.pin_hash,
-          pin_salt = excluded.pin_salt,
-          pin_length = excluded.pin_length,
-          must_change_pin = excluded.must_change_pin,
-          is_active = 1,
-          failed_attempts = 0,
-          lockout_stage = 0,
-          locked_until_ms = NULL,
-          updated_at_ms = excluded.updated_at_ms
-      `).run(
-        u.id, u.name, u.role, hash, salt, u.pin.length,
-        (u.role === 'admin' || u.role === 'supervisor') ? 1 : 0,
-        now, now
-      );
-    }
-    dbCtx.rawDb.prepare(`
-      UPDATE users 
-      SET is_active = 0 
-      WHERE id NOT IN ('usr_admin_olinelcys', 'usr_supervisor_turno', 'usr_cajera_principal', 'usr_mesonero_carlos', 'usr_mesonero_andrea', 'usr_cocina_plancha', 'usr_cocina_perros')
-    `).run();
-    console.log(`✅ ${INITIAL_USERS.length} usuarios iniciales configurados (Sra. Olinelcys 123456, Cajera 1111, Carlos 2222, Andrea 3333, Cocina 4444/5555).`);
+    // 7. Reiniciar usuarios iniciales limpios con sus credenciales oficiales
+    console.log(`👥 Reiniciando usuarios iniciales corporativos...`);
+    seedInitialUsers(dbCtx.rawDb);
+    console.log(`✅ Usuarios corporativos oficiales configurados (ADMIN, CAJERA, MESERO, PLANCHA, DESPACHO).`);
 
     // 8. Sembrar catálogo oficial de 27 productos con recetas exactas
     console.log(`🍔 Sembrando catálogo oficial con 27 productos y recetas exactas...`);

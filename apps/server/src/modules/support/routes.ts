@@ -39,7 +39,7 @@ export const supportRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(200).send({
         success: true,
         support: status,
-        message: 'Modo Soporte Varons Media activado exitosamente por 2 horas'
+        message: 'Modo Soporte Técnico activado exitosamente por 2 horas'
       });
     } catch (err: any) {
       return reply.status(err.statusCode || 403).send({

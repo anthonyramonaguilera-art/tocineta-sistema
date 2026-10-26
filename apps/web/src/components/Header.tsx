@@ -18,7 +18,7 @@ export const Header: React.FC<HeaderProps> = ({ localTimeCaracas, isOnline }) =>
           <div>
             <div className="flex items-center gap-2">
               <h1 className="font-black text-lg sm:text-xl tracking-tight text-white uppercase">
-                Tocineta Sonríe
+                TOCINETA
               </h1>
               <span className="bg-tocineta-yellow text-black text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                 M0 PROCESO ÚNICO

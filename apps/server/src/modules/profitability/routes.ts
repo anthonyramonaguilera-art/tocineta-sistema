@@ -281,7 +281,7 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
     const expense = createOperatingExpense(dbCtx.rawDb, {
       ...body,
       jornadaId: targetJornadaId,
-      authorizedByUserId: user?.user_id || 'usr_admin_olinelcys'
+      authorizedByUserId: user?.user_id || 'usr_admin'
     });
 
     return reply.status(201).send({
@@ -367,7 +367,7 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
     const totalCostUsdCents = Math.round(body.quantity * unitCost);
     const now = Date.now();
     const movementId = `mov_${generateUuidV7()}`;
-    const actorId = user?.user_id || 'usr_admin_olinelcys';
+    const actorId = user?.user_id || 'usr_admin';
 
     let partnerInfo: any = null;
     let printableTicket: any = null;
@@ -386,7 +386,7 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
         let partnerId = body.partnerCustomerId;
         if (!partnerId) {
           const firstPartner = dbCtx.rawDb.prepare("SELECT id FROM customers WHERE is_partner = 1 LIMIT 1").get() as any;
-          partnerId = firstPartner?.id || 'cust_partner_olinelcys';
+          partnerId = firstPartner?.id || 'cust_partner_admin';
         }
 
         dbCtx.rawDb.prepare(`
@@ -596,7 +596,7 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
     const rateMicroBs = getCurrentExchangeRate(dbCtx.rawDb);
     const now = Date.now();
     const purchaseId = `pur_${generateUuidV7()}`;
-    const actorId = user?.user_id || 'usr_admin_olinelcys';
+    const actorId = user?.user_id || 'usr_admin';
 
     let totalUsdCents = 0;
     for (const it of body.items) {
@@ -781,7 +781,7 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({ success: true, movements });
   });
 
-  // 13. Balance Ejecutivo Treinta + Valery
+  // 13. Balance Financiero Gerencial
   fastify.get('/api/profitability/executive-balance', async (_request, reply) => {
     const dbCtx = getDatabaseContext();
     const rateMicroBs = getCurrentExchangeRate(dbCtx.rawDb);

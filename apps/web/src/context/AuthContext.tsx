@@ -17,7 +17,7 @@ interface AuthContextType {
   currency: 'USD' | 'BS';
   setCurrency: (c: 'USD' | 'BS') => void;
   isSensitiveLocked: boolean;
-  login: (credentialsOrUserId: string | { userId?: string; pin?: string; cedula?: string; password?: string }, maybePin?: string) => Promise<{ success: boolean; error?: string }>;
+  login: (credentialsOrUserId: string | { userId?: string; username?: string; pin?: string; cedula?: string; password?: string }, maybePin?: string) => Promise<{ success: boolean; error?: string }>;
   logout: () => Promise<void>;
   unlockSensitive: (pin: string) => Promise<{ success: boolean; error?: string }>;
   changePin: (currentPin: string, newPin: string) => Promise<{ success: boolean; error?: string }>;

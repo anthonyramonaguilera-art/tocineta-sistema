@@ -154,7 +154,7 @@ export const systemHealthRoutes: FastifyPluginAsync = async (fastify) => {
 
     // SUG-05: Estado de custodia de claves age
     const isAgeProvisioned = process.env.AGE_KEYS_PROVISIONED === 'true' ||
-      (process.env.AGE_RECIPIENT_OLINELCYS && process.env.AGE_RECIPIENT_OLINELCYS !== 'age1q5q9c7am7xx9e4flj0j8ugyfqejpyp5dc8qsvqpnv7uamg4wkcuqye3f0r');
+      ((process.env.AGE_RECIPIENT_ADMIN || process.env.AGE_RECIPIENT_OLINELCYS) && (process.env.AGE_RECIPIENT_ADMIN || process.env.AGE_RECIPIENT_OLINELCYS) !== 'age1q5q9c7am7xx9e4flj0j8ugyfqejpyp5dc8qsvqpnv7uamg4wkcuqye3f0r');
 
     const ageKeysData = {
       mode: isAgeProvisioned ? ('PRODUCTION' as const) : ('DEVELOPMENT' as const),

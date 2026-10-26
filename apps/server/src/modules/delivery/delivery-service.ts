@@ -1,9 +1,9 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * SISTEMA OPERATIVO GASTRONÓMICO TOCINETA
  * Módulo de Delivery y Liquidación Nocturna de Motorizados (Hito M11)
  * 
  * Reglas de Negocio Oficiales:
- * 1. Gestión de Motorizados habituales del Food Truck (Carlos Mora, José Ramírez, Miguel Pérez).
+ * 1. Gestión de Motorizados oficiales (REPARTIDOR 1, REPARTIDOR 2, REPARTIDOR 3).
  * 2. Registro y despacho de órdenes delivery con tarifas rápidas ($2, $3, $4, $5 o manual).
  * 3. Enmascaramiento estricto de privacidad para roles no administrativos (teléfono y dirección).
  * 4. Control de efectivo en mano del motorizado (pago en efectivo al recibir vs pagado digital por adelantado).

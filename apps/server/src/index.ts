@@ -2,12 +2,12 @@ import { env } from './config/env.js';
 import { initSqlite } from './db/connection.js';
 import { runMigrations } from './db/migrate.js';
 import { buildServer } from './server.js';
-import { seedInitialUsers } from './modules/auth/seed-users.js';
+import { seedInitialUsers, syncAndSanitizeCorporateUsers } from './modules/auth/seed-users.js';
 import { seedCatalog } from './db/seed-catalog.js';
 
 async function bootstrap() {
   console.log(`\n=============================================================`);
-  console.log(`🍔 SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE - HITO M2`);
+  console.log(`🍔 SISTEMA OPERATIVO GASTRONÓMICO "TOCINETA" (PRD v2.0)`);
   console.log(`=============================================================`);
   console.log(`⚙️ Entorno: ${env.NODE_ENV} | Host: ${env.HOST} | Port: ${env.PORT}`);
   console.log(`📁 Base de Datos SQLite: ${env.DB_PATH}`);
@@ -33,16 +33,19 @@ async function bootstrap() {
     console.log(`✨ Base de datos al día. Cero migraciones pendientes.`);
   }
 
-  // 3. Semilla de usuarios iniciales (Bootstrap automático)
+  // 3. Saneamiento y sincronización de perfiles corporativos limpios (PRD v2.0)
+  syncAndSanitizeCorporateUsers(dbContext.rawDb);
   const userCountRow = dbContext.rawDb.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number };
   if (userCountRow.cnt === 0) {
     const seededCount = seedInitialUsers(dbContext.rawDb);
     console.log(`BOOTSTRAP: ${seededCount} usuarios iniciales creados`);
+  } else {
+    console.log(`👥 Perfiles corporativos sincronizados (ADMIN, CAJERA, MESERO, PLANCHA, DESPACHO)`);
   }
 
   // 4. Semilla de catálogo oficial (27 productos, combos, barra libre, sabores Pepsi, cupones)
   seedCatalog(dbContext.rawDb);
-  console.log(`🍔 Catálogo oficial sembrado con éxito (27 productos, combos, barra libre, sabores Pepsi).`);
+  console.log(`🍔 Catálogo oficial sembrado con éxito.`);
 
   // 3. Inicialización del servidor Fastify (Proceso Único)
   const server = await buildServer();

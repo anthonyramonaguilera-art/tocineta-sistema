@@ -5,9 +5,9 @@ import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
 export const QrMenuWebAdminView: React.FC = () => {
   const [customDomain, setCustomDomain] = useState(() => {
     try {
-      return localStorage.getItem('tocineta_custom_domain') || 'www.tocinetasonrie.com';
+      return localStorage.getItem('tocineta_custom_domain') || 'menu.tocineta.com';
     } catch {
-      return 'www.tocinetasonrie.com';
+      return 'menu.tocineta.com';
     }
   });
   const [whatsappPhone, setWhatsappPhone] = useState('584249728209');
@@ -77,7 +77,7 @@ export const QrMenuWebAdminView: React.FC = () => {
                 🥓
               </div>
               <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-wide">
-                TOCINETA SONRÍE
+                TOCINETA
               </h2>
               <p className="text-xs font-bold text-[#005A9C] dark:text-[#38BDF8] uppercase tracking-wider">
                 Food Truck • Puerto Ordaz
@@ -148,7 +148,7 @@ export const QrMenuWebAdminView: React.FC = () => {
               </h3>
             </div>
             <p className="text-xs text-slate-600 dark:text-tocineta-muted leading-relaxed">
-              Vincula aquí el dominio adquirido por la empresa (ej. <code className="bg-slate-100 dark:bg-black/40 px-1 py-0.5 rounded font-mono text-[#005A9C]">www.tocinetasonrie.com</code>) para que los códigos QR apunten directamente a tu marca oficial.
+              Vincula aquí el dominio adquirido por la empresa (ej. <code className="bg-slate-100 dark:bg-black/40 px-1 py-0.5 rounded font-mono text-[#005A9C]">menu.tocineta.com</code>) para que los códigos QR apunten directamente a tu marca oficial.
             </p>
 
             <div className="space-y-3">
@@ -160,7 +160,7 @@ export const QrMenuWebAdminView: React.FC = () => {
                   type="text"
                   value={customDomain}
                   onChange={e => setCustomDomain(e.target.value)}
-                  placeholder="www.tocinetasonrie.com"
+                  placeholder="menu.tocineta.com"
                   className="w-full min-h-[44px] rounded-xl border border-slate-200 dark:border-tocineta-border bg-slate-50 dark:bg-tocineta-bg px-3 text-xs text-slate-900 dark:text-white outline-none focus:border-[#005A9C] font-mono"
                 />
               </div>

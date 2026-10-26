@@ -1,8 +1,8 @@
 import type Database from 'better-sqlite3';
 
 /**
- * Semilla Oficial del Catálogo de Tocineta Sonríe (Hito M2)
- * Incorpora las 6 Reglas de Negocio Oficiales confirmadas por la Sra. Olinelcys:
+ * Semilla Oficial del Catálogo de TOCINETA (Hito M2)
+ * Incorpora las 6 Reglas de Negocio Oficiales confirmadas por la Dirección General:
  * 1. Feature Flag Malteadas: Categoría MALTEADAS_Y_HELADOS con is_active = 0.
  * 2. Descomposición transparente de combos (Street, Clásico, Para Ti).
  * 3. 6 Modificadores oficiales de Barra Libre ($0.00 venta, 15c costo interno).
@@ -24,7 +24,7 @@ export function seedCatalog(rawDb: Database.Database): void {
         banesco_pago_movil_phone, banesco_pago_movil_id, pos_fee_bps,
         updated_at_ms
       ) VALUES (
-        'default', 'Tocineta Sonríe', 'V-17040918-0', '04249728209',
+        'default', 'TOCINETA', 'V-17040918-0', '04249728209',
         'Detrás de Torre Movistar, Puerto Ordaz',
         'THIRD_PARTY_PASS_THROUGH', '[200, 300, 400, 500]',
         '04249728209', '17040918', 75,

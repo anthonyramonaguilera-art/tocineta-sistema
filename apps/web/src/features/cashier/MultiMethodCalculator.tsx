@@ -676,7 +676,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
                   placeholder="N° Referencia del Pago Móvil de Vuelto..."
                   value={changeBsReference}
                   onChange={e => setChangeBsReference(e.target.value)}
-                  className="w-full min-h-[44px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 font-mono text-xs text-white outline-none focus:border-tocineta-yellow mt-1"
+                  className="w-full min-h-[44px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 font-mono text-xs text-tocineta-text outline-none focus:border-tocineta-yellow mt-1"
                 />
               )}
             </div>
@@ -718,7 +718,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
                   placeholder="Motivo del ajuste..."
                   value={overpaymentReason}
                   onChange={e => setOverpaymentReason(e.target.value)}
-                  className="w-full min-h-[42px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-white outline-none mt-1"
+                  className="w-full min-h-[42px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-tocineta-text outline-none mt-1"
                 />
               )}
             </div>
