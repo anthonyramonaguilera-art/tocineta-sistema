@@ -68,6 +68,7 @@ export function getKitchenBuildableLines(
     JOIN products p ON ol.product_id = p.id
     WHERE ol.order_id = ? 
       AND ol.line_role IN ('STANDARD', 'COMBO_CHILD', 'COURTESY_ITEM')
+      AND COALESCE(ol.status, 'pendiente') != 'cancelado'
       ${stationCondition}
     ORDER BY 
       CASE ol.station

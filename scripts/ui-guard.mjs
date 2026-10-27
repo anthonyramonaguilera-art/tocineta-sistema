@@ -68,7 +68,24 @@ const PHASE1_AND_2_SCREENS = [
   'apps/web/src/features/kds/KdsView.tsx',
   'apps/web/src/features/kds/KdsCard.tsx',
   'apps/web/src/components/ViewErrorBoundary.tsx',
-  'apps/web/src/features/admin/ClientErrorsView.tsx'
+  'apps/web/src/features/admin/ClientErrorsView.tsx',
+  'apps/web/src/features/profitability/InventoryView.tsx',
+  'apps/web/src/features/profitability/PurchasesView.tsx',
+  'apps/web/src/features/profitability/RecipesView.tsx',
+  'apps/web/src/features/profitability/WasteView.tsx',
+  'apps/web/src/features/profitability/InitialSetupWizard.tsx',
+  'apps/web/src/features/profitability/ProfitabilityDashboard.tsx',
+  'apps/web/src/features/profitability/components/TransferModal.tsx',
+  'apps/web/src/features/profitability/components/NewSupplyModal.tsx',
+  'apps/web/src/features/profitability/components/CostVariationModal.tsx',
+  'apps/web/src/features/profitability/components/NewPurchaseModal.tsx',
+  'apps/web/src/features/profitability/components/PriceHistoryModal.tsx',
+  'apps/web/src/features/profitability/components/RecipeEditorModal.tsx',
+  'apps/web/src/features/profitability/components/SubRecipeEditorModal.tsx',
+  'apps/web/src/features/profitability/components/WasteRegisterModal.tsx',
+  'apps/web/src/features/profitability/components/StockCountModal.tsx',
+  'apps/web/src/features/profitability/components/CsvDataImportCard.tsx',
+  'apps/web/src/features/profitability/components/ResetProductionModals.tsx'
 ];
 
 for (const relPath of PHASE1_AND_2_SCREENS) {

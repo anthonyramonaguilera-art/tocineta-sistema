@@ -4,6 +4,7 @@ import { runMigrations } from './db/migrate.js';
 import { buildServer } from './server.js';
 import { seedInitialUsers, syncAndSanitizeCorporateUsers } from './modules/auth/seed-users.js';
 import { seedCatalog } from './db/seed-catalog.js';
+import { ensureOfficialLocations } from './modules/profitability/locations-service.js';
 
 async function bootstrap() {
   console.log(`\n=============================================================`);
@@ -32,6 +33,9 @@ async function bootstrap() {
   } else {
     console.log(`✨ Base de datos al día. Cero migraciones pendientes.`);
   }
+
+  // 2.1 Asegurar sedes oficiales y alias válidos (Sede A, Sede B / sede_alta_vista)
+  ensureOfficialLocations(dbContext.rawDb);
 
   // 3. Saneamiento y sincronización de perfiles corporativos limpios (PRD v2.0)
   syncAndSanitizeCorporateUsers(dbContext.rawDb);

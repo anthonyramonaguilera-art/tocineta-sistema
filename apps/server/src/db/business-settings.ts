@@ -19,6 +19,7 @@ export interface BusinessSettingsRecord {
   igtf_rate_bps: number;
   igtf_applies_to: string;
   blind_closure_enabled: number;
+  is_demo_mode?: number;
   updated_at_ms: number;
 }
 
@@ -41,6 +42,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettingsRecord = {
   igtf_rate_bps: 300,
   igtf_applies_to: 'CASH_USD',
   blind_closure_enabled: 0,
+  is_demo_mode: 0,
   updated_at_ms: Date.now()
 };
 
@@ -93,6 +95,7 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
       igtf_rate_bps: existing.igtf_rate_bps ?? DEFAULT_BUSINESS_SETTINGS.igtf_rate_bps,
       igtf_applies_to: existing.igtf_applies_to || DEFAULT_BUSINESS_SETTINGS.igtf_applies_to,
       blind_closure_enabled: existing.blind_closure_enabled ?? DEFAULT_BUSINESS_SETTINGS.blind_closure_enabled,
+      is_demo_mode: existing.is_demo_mode ?? 0,
       updated_at_ms: existing.updated_at_ms || Date.now()
     };
   } catch (err) {

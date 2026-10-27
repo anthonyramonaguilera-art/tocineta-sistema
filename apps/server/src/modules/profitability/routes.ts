@@ -46,7 +46,8 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
         fiscalPriceMode: row.fiscal_price_mode || 'INCLUSIVE',
         igtfEnabled: Boolean(row.igtf_enabled),
         igtfRateBps: row.igtf_rate_bps ?? 300,
-        igtfAppliesTo: row.igtf_applies_to || 'CASH_USD'
+        igtfAppliesTo: row.igtf_applies_to || 'CASH_USD',
+        isDemoMode: Boolean(row.is_demo_mode)
       });
     } catch (err: any) {
       fastify.log.error(err, 'Error defensivo en GET /api/profitability/settings');
@@ -57,7 +58,8 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
         fiscalPriceMode: 'INCLUSIVE',
         igtfEnabled: false,
         igtfRateBps: 300,
-        igtfAppliesTo: 'CASH_USD'
+        igtfAppliesTo: 'CASH_USD',
+        isDemoMode: false
       });
     }
   });

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { canUserProcessPayments } from '@tocineta/shared';
 import { useAuth } from '../context/AuthContext.js';
 import { queryClient, ALLOWED_TABS_BY_ROLE, type TabType } from '../App.js';
@@ -202,6 +203,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   const isAdmin = user?.role === 'admin' || user?.role === 'supervisor';
 
+  const { data: settingsData } = useQuery<{ isDemoMode?: boolean }>({
+    queryKey: ['businessSettings'],
+    queryFn: async () => {
+      const res = await fetch('/api/profitability/settings');
+      return res.json();
+    },
+    staleTime: 10000
+  });
+
   return (
     <div className="min-h-screen bg-surface-alt flex flex-col font-sans select-none transition-colors">
       {/* Cabecera Oficial 56px */}
@@ -209,6 +219,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         businessName="TOCINETA"
         title={TAB_TITLES[currentTab] || 'Comandero'}
         isAdmin={isAdmin}
+        isDemoMode={Boolean(settingsData?.isDemoMode)}
         uiMode={uiMode}
         onToggleUiMode={handleToggleUiMode}
         formattedRate={formattedRate}

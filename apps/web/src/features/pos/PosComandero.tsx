@@ -144,6 +144,21 @@ export const PosComandero: React.FC = () => {
         }
         nextLabel={posCart.step === 1 ? 'Ir al Menú' : 'Revisar Pedido'}
         nextDisabled={posCart.step === 2 && posCart.cart.length === 0}
+        footerExtra={
+          posCart.step === 2 && totalItemsCount > 0 ? (
+            <div className="flex items-center gap-2.5">
+              <span className="w-8 h-8 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-ink font-black text-xs font-mono">
+                {totalItemsCount}
+              </span>
+              <div className="leading-tight">
+                <span className="text-[10px] font-bold text-ink-muted block uppercase">Total</span>
+                <span className="text-sm font-black text-ink font-mono">
+                  ${(posCart.totalUsdCents / 100).toFixed(2)}
+                </span>
+              </div>
+            </div>
+          ) : undefined
+        }
       >
         {/* Paso 1: Cliente y Canal */}
         {posCart.step === 1 && (
@@ -183,10 +198,7 @@ export const PosComandero: React.FC = () => {
               onDecrementProduct={posCart.decrementProduct}
               onOpenCustomize={(p) => setCustomizingProduct(p)}
               onOpenCombo={(p) => setComboWizardProduct(p)}
-              totalUsdCents={posCart.totalUsdCents}
-              totalItemsCount={totalItemsCount}
               formattedRate={formattedRate}
-              onNext={handleStep2Next}
             />
           </div>
         )}

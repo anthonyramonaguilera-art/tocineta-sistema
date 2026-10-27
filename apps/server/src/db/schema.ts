@@ -12,6 +12,20 @@ export const migrationsTable = sqliteTable('_migrations', {
   appliedAtMs: integer('applied_at_ms').notNull()
 });
 
+export const LocationTypeValues = ['production', 'sale', 'mixed'] as const;
+export type LocationType = (typeof LocationTypeValues)[number];
+
+export const locations = sqliteTable('locations', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  type: text('type', { enum: LocationTypeValues }).notNull(),
+  isActive: integer('is_active').notNull().default(1),
+  address: text('address'),
+  phone: text('phone'),
+  createdAtMs: integer('created_at_ms').notNull(),
+  updatedAtMs: integer('updated_at_ms').notNull()
+});
+
 export const UserRoleValues = ['admin', 'supervisor', 'cajera', 'mesonero', 'cocinero', 'despachador'] as const;
 export type UserRole = (typeof UserRoleValues)[number];
 
@@ -34,6 +48,8 @@ export const users = sqliteTable('users', {
   passwordSalt: text('password_salt'),
   approvalStatus: text('approval_status', { enum: ['PENDING', 'APPROVED', 'REJECTED'] }).notNull().default('APPROVED'),
   permissionsJson: text('permissions_json').notNull().default('[]'),
+  defaultLocationId: text('default_location_id').notNull().default('loc_alta_vista').references(() => locations.id),
+  allowedLocationsJson: text('allowed_locations_json').notNull().default('["loc_los_olivos", "loc_alta_vista"]'),
   createdAtMs: integer('created_at_ms').notNull(),
   updatedAtMs: integer('updated_at_ms').notNull()
 });
@@ -78,6 +94,8 @@ export const idempotencyKeys = sqliteTable('idempotency_keys', {
 export type SystemMeta = typeof systemMeta.$inferSelect;
 export type InsertSystemMeta = typeof systemMeta.$inferInsert;
 export type MigrationRecord = typeof migrationsTable.$inferSelect;
+export type Location = typeof locations.$inferSelect;
+export type InsertLocation = typeof locations.$inferInsert;
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 export type Session = typeof sessions.$inferSelect;
@@ -107,6 +125,8 @@ export function mapUserRow(row: any): User {
     passwordSalt: row.password_salt ?? row.passwordSalt ?? null,
     approvalStatus: row.approval_status ?? row.approvalStatus ?? 'APPROVED',
     permissionsJson: row.permissions_json ?? row.permissionsJson ?? '[]',
+    defaultLocationId: row.default_location_id ?? row.defaultLocationId ?? 'loc_alta_vista',
+    allowedLocationsJson: row.allowed_locations_json ?? row.allowedLocationsJson ?? '["loc_los_olivos", "loc_alta_vista"]',
     createdAtMs: row.created_at_ms ?? row.createdAtMs,
     updatedAtMs: row.updated_at_ms ?? row.updatedAtMs
   };
@@ -181,6 +201,7 @@ export const businessSettings = sqliteTable('business_settings', {
   igtfEnabled: integer('igtf_enabled').notNull().default(0),
   igtfRateBps: integer('igtf_rate_bps').notNull().default(300),
   igtfAppliesTo: text('igtf_applies_to').notNull().default('CASH_USD'),
+  isDemoMode: integer('is_demo_mode').notNull().default(0),
   updatedAtMs: integer('updated_at_ms').notNull()
 });
 
@@ -195,6 +216,7 @@ export const exchangeRates = sqliteTable('exchange_rates', {
 
 export const jornadas = sqliteTable('jornadas', {
   id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().default('loc_alta_vista').references(() => locations.id),
   openedByUserId: text('opened_by_user_id').notNull().references(() => users.id),
   closedByUserId: text('closed_by_user_id').references(() => users.id),
   openedAtMs: integer('opened_at_ms').notNull(),
@@ -209,6 +231,7 @@ export const jornadas = sqliteTable('jornadas', {
 
 export const cashSessions = sqliteTable('cash_sessions', {
   id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().default('loc_alta_vista').references(() => locations.id),
   jornadaId: text('jornada_id').notNull().references(() => jornadas.id, { onDelete: 'cascade' }),
   userId: text('user_id').notNull().references(() => users.id),
   openedAtMs: integer('opened_at_ms').notNull(),
@@ -239,6 +262,9 @@ export const categories = sqliteTable('categories', {
   station: text('station', { enum: StationValues }).notNull()
 });
 
+export const RecipeModeValues = ['UNITS', 'GRAMMAGE', 'FINISHED_PRODUCT'] as const;
+export type RecipeMode = (typeof RecipeModeValues)[number];
+
 export const products = sqliteTable('products', {
   id: text('id').primaryKey(),
   categoryId: text('category_id').notNull().references(() => categories.id),
@@ -246,6 +272,8 @@ export const products = sqliteTable('products', {
   description: text('description'),
   priceUsdCents: integer('price_usd_cents').notNull(),
   estimatedCostUsdCents: integer('estimated_cost_usd_cents').notNull().default(0),
+  recipeMode: text('recipe_mode', { enum: RecipeModeValues }).notNull().default('UNITS'),
+  targetMarginBps: integer('target_margin_bps').notNull().default(6500),
   station: text('station', { enum: StationValues }).notNull(),
   isActive: integer('is_active').notNull().default(1),
   isAvailable: integer('is_available').notNull().default(1),
@@ -322,6 +350,7 @@ export const coupons = sqliteTable('coupons', {
 export const orders = sqliteTable('orders', {
   id: text('id').primaryKey(),
   orderNumber: integer('order_number').notNull(),
+  locationId: text('location_id').notNull().default('loc_alta_vista').references(() => locations.id),
   jornadaId: text('jornada_id').notNull().references(() => jornadas.id),
   cashSessionId: text('cash_session_id').references(() => cashSessions.id),
   createdByUserId: text('created_by_user_id').notNull().references(() => users.id),
@@ -472,6 +501,7 @@ export const workerIncidents = sqliteTable('worker_incidents', {
 
 export const deliveries = sqliteTable('deliveries', {
   id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().default('loc_alta_vista').references(() => locations.id),
   orderId: text('order_id').notNull().references(() => orders.id, { onDelete: 'cascade' }),
   motorizadoName: text('motorizado_name'),
   deliveryFeeUsdCents: integer('delivery_fee_usd_cents').notNull(),
@@ -497,13 +527,48 @@ export const supplyItems = sqliteTable('supply_items', {
   name: text('name').notNull(),
   unit: text('unit').notNull(),
   unitMeasure: text('unit_measure').notNull().default('und'),
-  currentStockQty: integer('current_stock_qty').notNull().default(0),
-  minimumStockQty: integer('minimum_stock_qty').notNull().default(0),
+  purchaseUnit: text('purchase_unit').notNull().default('paquete'),
+  usageUnit: text('usage_unit').notNull().default('und'),
+  conversionFactor: real('conversion_factor').notNull().default(1.0),
+  category: text('category').notNull().default('general'),
+  minStock: real('min_stock').notNull().default(0),
+  currentStockQty: real('current_stock_qty').notNull().default(0),
+  minimumStockQty: real('minimum_stock_qty').notNull().default(0),
   costPerUnitUsdCents: integer('cost_per_unit_usd_cents').notNull().default(0),
+  weightedAvgCostUsdCents: integer('weighted_avg_cost_usd_cents').notNull().default(0),
+  lastCostUsdCents: integer('last_cost_usd_cents').notNull().default(0),
   previousCostUsdCents: integer('previous_cost_usd_cents').notNull().default(0),
   lastSupplierId: text('last_supplier_id'),
+  isActive: integer('is_active').notNull().default(1),
   createdAtMs: integer('created_at_ms').notNull(),
   updatedAtMs: integer('updated_at_ms').notNull()
+});
+
+export const locationInventory = sqliteTable('location_inventory', {
+  id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().references(() => locations.id, { onDelete: 'cascade' }),
+  supplyId: text('supply_id').notNull().references(() => supplyItems.id, { onDelete: 'cascade' }),
+  currentStockQty: real('current_stock_qty').notNull().default(0),
+  minimumStockQty: real('minimum_stock_qty').notNull().default(0),
+  updatedAtMs: integer('updated_at_ms').notNull()
+});
+
+export const subRecipes = sqliteTable('sub_recipes', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  yieldQuantity: real('yield_quantity').notNull(),
+  yieldUnit: text('yield_unit').notNull(),
+  costPerUnitUsdCents: integer('cost_per_unit_usd_cents').notNull().default(0),
+  notes: text('notes'),
+  createdAtMs: integer('created_at_ms').notNull(),
+  updatedAtMs: integer('updated_at_ms').notNull()
+});
+
+export const subRecipeItems = sqliteTable('sub_recipe_items', {
+  id: text('id').primaryKey(),
+  subRecipeId: text('sub_recipe_id').notNull().references(() => subRecipes.id, { onDelete: 'cascade' }),
+  supplyId: text('supply_id').notNull().references(() => supplyItems.id, { onDelete: 'cascade' }),
+  quantityRequired: real('quantity_required').notNull()
 });
 
 export const recipes = sqliteTable('recipes', {
@@ -516,12 +581,16 @@ export const recipes = sqliteTable('recipes', {
 export const recipeItems = sqliteTable('recipe_items', {
   id: text('id').primaryKey(),
   recipeId: text('recipe_id').notNull().references(() => recipes.id, { onDelete: 'cascade' }),
-  supplyItemId: text('supply_item_id').notNull().references(() => supplyItems.id),
-  quantityRequired: integer('quantity_required').notNull()
+  supplyItemId: text('supply_item_id').references(() => supplyItems.id),
+  quantityRequired: real('quantity_required').notNull(),
+  grossWeightGrams: real('gross_weight_grams'),
+  shrinkagePercentage: real('shrinkage_percentage').default(0),
+  subRecipeId: text('sub_recipe_id').references(() => subRecipes.id)
 });
 
 export const stockCounts = sqliteTable('stock_counts', {
   id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().default('loc_alta_vista').references(() => locations.id),
   jornadaId: text('jornada_id').notNull().references(() => jornadas.id),
   countedByUserId: text('counted_by_user_id').notNull().references(() => users.id),
   supplyItemId: text('supply_item_id').notNull().references(() => supplyItems.id),
@@ -534,6 +603,7 @@ export const stockCounts = sqliteTable('stock_counts', {
 
 export const operatingExpenses = sqliteTable('operating_expenses', {
   id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().default('loc_alta_vista').references(() => locations.id),
   jornadaId: text('jornada_id').notNull().references(() => jornadas.id),
   category: text('category').notNull(),
   amountUsdCents: integer('amount_usd_cents').notNull(),
@@ -663,12 +733,14 @@ export const customers = sqliteTable('customers', {
 
 export const purchases = sqliteTable('purchases', {
   id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().default('loc_alta_vista').references(() => locations.id),
   supplierId: text('supplier_id').references(() => suppliers.id),
   invoiceNumber: text('invoice_number'),
   paymentCondition: text('payment_condition', { enum: ['CONTADO', 'CREDITO'] }).notNull(),
   status: text('status').notNull().default('PAGADA'),
   totalUsdCents: integer('total_usd_cents').notNull(),
   totalBsCents: integer('total_bs_cents').notNull(),
+  dueDateMs: integer('due_date_ms'),
   notes: text('notes'),
   createdBy: text('created_by').notNull(),
   createdAtMs: integer('created_at_ms').notNull()
@@ -686,9 +758,21 @@ export const purchaseItems = sqliteTable('purchase_items', {
 
 export const inventoryMovements = sqliteTable('inventory_movements', {
   id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().default('loc_alta_vista').references(() => locations.id),
   supplyId: text('supply_id').notNull().references(() => supplyItems.id),
   movementType: text('movement_type', {
-    enum: ['COMPRA_ENTRADA', 'VENTA_RECETA', 'MERMA_SOCIOS', 'CENA_EMPLEADOS', 'GASTO_GAS_INSUMO', 'AJUSTE_PRODUCCION']
+    enum: [
+      'COMPRA_ENTRADA',
+      'VENTA_RECETA',
+      'MERMA_SOCIOS',
+      'CENA_EMPLEADOS',
+      'GASTO_GAS_INSUMO',
+      'AJUSTE_PRODUCCION',
+      'TRANSFERENCIA_SALIDA',
+      'TRANSFERENCIA_ENTRADA',
+      'MERMA_DESECHO',
+      'AJUSTE_CONTEO'
+    ]
   }).notNull(),
   quantityDelta: real('quantity_delta').notNull(),
   unitCostUsdCents: integer('unit_cost_usd_cents').notNull(),
@@ -697,6 +781,30 @@ export const inventoryMovements = sqliteTable('inventory_movements', {
   referenceDoc: text('reference_doc'),
   notes: text('notes'),
   createdBy: text('created_by').notNull(),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const priceHistory = sqliteTable('price_history', {
+  id: text('id').primaryKey(),
+  productId: text('product_id').notNull().references(() => products.id, { onDelete: 'cascade' }),
+  oldPriceUsdCents: integer('old_price_usd_cents').notNull(),
+  newPriceUsdCents: integer('new_price_usd_cents').notNull(),
+  reason: text('reason').notNull(),
+  confirmedByUserId: text('confirmed_by_user_id').references(() => users.id),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const wasteLogs = sqliteTable('waste_logs', {
+  id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().references(() => locations.id),
+  itemType: text('item_type', { enum: ['supply', 'product'] }).notNull(),
+  supplyId: text('supply_id').references(() => supplyItems.id),
+  productId: text('product_id').references(() => products.id),
+  quantity: real('quantity').notNull(),
+  unit: text('unit').notNull(),
+  costUsdCents: integer('cost_usd_cents').notNull(),
+  reason: text('reason').notNull(),
+  reportedByUserId: text('reported_by_user_id').notNull().references(() => users.id),
   createdAtMs: integer('created_at_ms').notNull()
 });
 
@@ -714,6 +822,16 @@ export const staffPayrollPayments = sqliteTable('staff_payroll_payments', {
   createdAtMs: integer('created_at_ms').notNull()
 });
 
+export type LocationInventory = typeof locationInventory.$inferSelect;
+export type InsertLocationInventory = typeof locationInventory.$inferInsert;
+export type SubRecipe = typeof subRecipes.$inferSelect;
+export type InsertSubRecipe = typeof subRecipes.$inferInsert;
+export type SubRecipeItem = typeof subRecipeItems.$inferSelect;
+export type InsertSubRecipeItem = typeof subRecipeItems.$inferInsert;
+export type PriceHistory = typeof priceHistory.$inferSelect;
+export type InsertPriceHistory = typeof priceHistory.$inferInsert;
+export type WasteLog = typeof wasteLogs.$inferSelect;
+export type InsertWasteLog = typeof wasteLogs.$inferInsert;
 export type Supplier = typeof suppliers.$inferSelect;
 export type Customer = typeof customers.$inferSelect;
 export type Purchase = typeof purchases.$inferSelect;

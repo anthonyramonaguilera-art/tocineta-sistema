@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import type { PosProduct, PosCategory } from '../../types/menu.js';
 import type { CartItem } from './types.js';
-import { Card, Input, Button, Money, Icon, Chips } from '../../ui/index.js';
+import { Card, Input, Money, Icon, Chips } from '../../ui/index.js';
 import { ProductImagePlaceholder } from '../../components/ProductImagePlaceholder.js';
 
 interface Step2CatalogProps {
@@ -12,10 +12,7 @@ interface Step2CatalogProps {
   onDecrementProduct: (productId: string) => void;
   onOpenCustomize: (product: PosProduct) => void;
   onOpenCombo: (product: PosProduct) => void;
-  totalUsdCents: number;
-  totalItemsCount: number;
   formattedRate: string;
-  onNext: () => void;
 }
 
 export const Step2Catalog: React.FC<Step2CatalogProps> = ({
@@ -26,10 +23,7 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
   onDecrementProduct,
   onOpenCustomize,
   onOpenCombo,
-  totalUsdCents,
-  totalItemsCount,
-  formattedRate,
-  onNext
+  formattedRate
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
@@ -84,7 +78,7 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
   };
 
   return (
-    <div className="space-y-4 pb-24 max-w-4xl mx-auto">
+    <div className="space-y-4 pb-6 max-w-4xl mx-auto">
       {/* 1. Barra de Búsqueda y Filtros */}
       <div className="space-y-2 sticky top-14 bg-surface-alt/95 backdrop-blur-xs py-2 z-10">
         <Input
@@ -223,34 +217,6 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
         </div>
       )}
 
-      {/* 3. Barra Inferior Fija: "N platos · $X · Siguiente" */}
-      {totalItemsCount > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 p-3 bg-surface/95 backdrop-blur-md border-t border-border z-30 shadow-2xl">
-          <div className="max-w-4xl mx-auto flex items-center justify-between gap-3">
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 rounded-xl bg-primary/20 border border-primary/30 flex items-center justify-center text-ink font-black font-mono">
-                {totalItemsCount}
-              </div>
-              <div>
-                <span className="text-xs font-bold text-ink-muted block uppercase">Total Pedido</span>
-                <span className="text-base font-black text-ink font-mono">
-                  ${(totalUsdCents / 100).toFixed(2)}
-                </span>
-              </div>
-            </div>
-
-            <Button
-              variant="primary"
-              size="md"
-              onClick={onNext}
-              rightIcon={<Icon name="ArrowRight" size={18} />}
-              className="px-6 font-black"
-            >
-              Revisar Pedido
-            </Button>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

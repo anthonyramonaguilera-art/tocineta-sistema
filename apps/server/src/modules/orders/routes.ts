@@ -11,6 +11,7 @@ import {
   type UpdateOrderInput
 } from './order-service.js';
 import { getKitchenBuildableLines } from './kitchen-queries.js';
+import { annulOrderInCashier } from '../cashier/cashier-service.js';
 
 export const orderRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. Crear nuevo pedido (POST /api/orders)
@@ -255,43 +256,29 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
     }
   });
 
-  // 6. Cancelar pedido no cobrado (POST /api/orders/:id/cancel)
+  // 6. Cancelar comanda (POST /api/orders/:id/cancel)
   fastify.post('/api/orders/:id/cancel', async (request, reply) => {
     const dbCtx = getDatabaseContext();
     const { id } = request.params as { id: string };
     const body = request.body as { reason?: string } | undefined;
     const reason = body?.reason || 'Cliente se arrepintió';
-    const now = Date.now();
 
-    const order = dbCtx.rawDb.prepare('SELECT * FROM orders WHERE id = ?').get(id) as any;
-    if (!order) {
-      return reply.status(404).send({ success: false, error: 'Orden no encontrada' });
-    }
-    if (order.payment_status === 'pagado') {
-      return reply.status(400).send({
+    try {
+      const result = annulOrderInCashier(dbCtx.rawDb, {
+        orderId: id,
+        reason,
+        actorUserId: (request as any).user?.id || 'usr_cajera'
+      });
+
+      return reply.status(200).send({
+        success: true,
+        message: result.message
+      });
+    } catch (err: any) {
+      return reply.status(err.statusCode || 400).send({
         success: false,
-        error: 'No se puede cancelar directamente una orden ya pagada. Debe procesar un Reembolso / Anulación con PIN.'
+        error: err.message
       });
     }
-
-    dbCtx.rawDb.prepare(`
-      UPDATE orders
-      SET payment_status = 'anulado',
-          fulfillment_status = 'anulado',
-          notes = CASE WHEN notes IS NULL OR notes = '' THEN ? ELSE notes || ' [CANCELADO: ' || ? || ']' END,
-          updated_at_ms = ?
-      WHERE id = ?
-    `).run(`[CANCELADO: ${reason}]`, reason, now, id);
-
-    dbCtx.rawDb.prepare(`
-      UPDATE order_lines
-      SET status = 'entregado'
-      WHERE order_id = ?
-    `).run(id);
-
-    return reply.status(200).send({
-      success: true,
-      message: 'Orden cancelada con éxito'
-    });
   });
 };

@@ -20,6 +20,7 @@ import {
 } from '../printing/templates.js';
 import { getPrinterConfig } from '../printing/worker.js';
 import { reverseCouponRedemptionForOrder } from '../coupons/coupon-service.js';
+import { revertInventoryForOrder } from '../profitability/recipes-service.js';
 
 export const SUPERVISOR_REFUND_LIMIT_USD_CENTS = 2000; // $20.00 USD límite para supervisor
 
@@ -295,15 +296,27 @@ export function reportOrderIncident(
       );
     }
 
-    // Actualizar estados de la orden
+    // Asignación de sede con fallback seguro oficial
+    const locationId = order.location_id || 'sede_alta_vista';
+
+    // Reversión limpia e inmutable de inventario si existían movimientos
+    revertInventoryForOrder(rawDb, orderId, locationId, input.reasonCode, verifiedAuthorizer.id);
+
+    // Actualizar estados de la orden y sus líneas a cancelado para limpiar KDS
     const newPaymentStatus = isPaid ? 'reembolsado' : 'anulado';
     rawDb.prepare(`
       UPDATE orders
       SET payment_status = ?,
-          fulfillment_status = 'anulado',
+          fulfillment_status = 'cancelado',
           updated_at_ms = ?
       WHERE id = ?
     `).run(newPaymentStatus, now, orderId);
+
+    rawDb.prepare(`
+      UPDATE order_lines
+      SET status = 'cancelado'
+      WHERE order_id = ?
+    `).run(orderId);
 
     // Reversión de cupón si aplica (Ajuste A1)
     reverseCouponRedemptionForOrder(rawDb, orderId, now);
@@ -351,6 +364,18 @@ export function reportOrderIncident(
         incidentId,
         refundedUsdCents: totalOrderCents,
         paymentStatus: newPaymentStatus
+      }
+    });
+
+    publishDomainEvent(rawDb, {
+      eventType: 'ORDER_CANCELLED',
+      entityId: orderId,
+      payload: {
+        orderId,
+        orderNumber: order.order_number,
+        fulfillmentStatus: 'cancelado',
+        paymentStatus: newPaymentStatus,
+        reason: input.reasonCode
       }
     });
 

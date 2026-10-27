@@ -75,8 +75,12 @@ export function getKdsOrders(rawDb: Database.Database, options?: GetKdsOrdersOpt
       o.updated_at_ms,
       COALESCE(o.kitchen_passed_at_ms, o.updated_at_ms, o.created_at_ms) as kitchen_passed_at_ms
     FROM orders o
+    LEFT JOIN jornadas j ON o.jornada_id = j.id
     WHERE o.fulfillment_status IN ('en_preparacion', 'listo')
+      AND o.fulfillment_status NOT IN ('entregado', 'cancelado', 'anulado', 'cerrado')
       AND o.payment_status IN ('pagado', 'autorizado_sin_pago')
+      AND o.payment_status != 'anulado'
+      AND (j.status IS NULL OR j.status = 'abierta')
     ORDER BY kitchen_passed_at_ms ASC, o.order_number ASC
   `;
 

@@ -11,8 +11,11 @@
     "lint": "tsc --noEmit",
     "test": "vitest run",
     "db:migrate": "tsx src/db/migrate.ts",
+    "db:init-prod": "tsx src/db/init-prod.ts",
     "db:reset-prod": "tsx src/db/reset-for-production.ts",
+    "db:seed-demo": "tsx src/db/seed-demo.ts",
     "db:seed:users": "tsx src/modules/auth/seed-users.ts",
+    "seed:real-recipes": "tsx ../../scripts/seed-real-test-recipes.ts",
     "print:release1": "tsx scripts/print-physical-release1.ts",
     "physical:release1": "tsx scripts/physical-release1-check.ts"
   },

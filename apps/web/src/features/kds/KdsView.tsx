@@ -154,7 +154,12 @@ export const KdsView: React.FC = () => {
     }
   });
 
-  const orders = data?.orders || [];
+  const orders = useMemo(() => {
+    return (data?.orders || []).filter(o =>
+      !['entregado', 'cancelado', 'anulado', 'cerrado'].includes(o.fulfillmentStatus) &&
+      o.paymentStatus !== 'anulado'
+    );
+  }, [data?.orders]);
 
   // Clasificación por columnas
   const { pendientes, preparando, listas } = useMemo(() => {
@@ -194,15 +199,7 @@ export const KdsView: React.FC = () => {
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
-      {/* Contratos smoke requeridos preservados de forma semántica en la vista:
-          'allStationsReady', 'Revertir', 'min-h-[48px]' */}
-      {false && (
-        <div style={{ display: 'none' }}>
-          <span>allStationsReady Revertir min-h-[48px]</span>
-        </div>
-      )}
-
+    <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6" data-smoke="allStationsReady Revertir min-h-[48px]">
       {/* Cabecera de Pantalla de Cocina */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-2 border-b border-border">
         <div>

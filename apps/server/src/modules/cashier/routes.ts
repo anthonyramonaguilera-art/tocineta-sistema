@@ -9,6 +9,7 @@ import {
   openCashSession,
   getCurrentCashSession,
   processOrderPayment,
+  annulOrderInCashier,
   canUserProcessPayments,
   type OpenJornadaInput,
   type OpenCashSessionInput,
@@ -268,6 +269,33 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         requiresConfirmation: err.requiresConfirmation || false,
         settlement: err.settlement,
         netOverpaymentUsdCents: err.netOverpaymentUsdCents
+      });
+    }
+  });
+
+  // 6. Anular Venta o Comanda desde Caja (POST /api/orders/:id/void)
+  fastify.post('/api/orders/:id/void', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const { id } = request.params as { id: string };
+    const body = (request.body || {}) as { supervisorPin?: string; reason?: string };
+    const user = resolveActingUser(request, body);
+
+    try {
+      const result = annulOrderInCashier(dbCtx.rawDb, {
+        orderId: id,
+        reason: body.reason,
+        supervisorPin: body.supervisorPin,
+        actorUserId: user.id
+      });
+
+      return reply.status(200).send({
+        success: true,
+        message: result.message
+      });
+    } catch (err: any) {
+      return reply.status(err.statusCode || 400).send({
+        success: false,
+        error: err.message
       });
     }
   });

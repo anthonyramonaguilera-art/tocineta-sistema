@@ -118,16 +118,5 @@ CREATE TABLE IF NOT EXISTS staff_payroll_payments (
 CREATE INDEX IF NOT EXISTS idx_staff_payroll_user ON staff_payroll_payments(user_id);
 CREATE INDEX IF NOT EXISTS idx_staff_payroll_date ON staff_payroll_payments(created_at_ms);
 
--- 9. Datos Iniciales de Ejemplo Realista (Proveedores, Socios y Clientes)
-INSERT OR IGNORE INTO suppliers (id, name, rif_phone, category, balance_owed_usd_cents, created_at_ms)
-VALUES 
-  ('sup_polar', 'Distribuidora Polar Oriente', 'J-00041372-9 / 0414-8501234', 'Bebidas y Maltas', 0, 1729800000000),
-  ('sup_pan_guayana', 'Panificadora Industrial Guayana', 'J-31456789-0 / 0424-9123456', 'Panadería Brioche y Hot Dog', 0, 1729800000000),
-  ('sup_carnes_sf', 'Frigorífico & Carnes San Félix', 'J-40123890-1 / 0412-8765432', 'Carnes Prime Smash y Pollo', 15000, 1729800000000),
-  ('sup_empaques_bolivar', 'Distribuidora Envases y Gas Bolívar', 'J-29876543-2 / 0424-9876543', 'Empaques, Papel y Gas Operativo', 0, 1729800000000);
+-- 9. (Datos Iniciales Demo eliminados para producción limpia)
 
-INSERT OR IGNORE INTO customers (id, name, phone, identification, address, is_partner, balance_receivable_usd_cents, total_orders, created_at_ms)
-VALUES
-  ('cust_partner_admin', 'Socio Director', '04249728209', 'V-17040918', 'TOCINETA', 1, 0, 24, 1729800000000),
-  ('cust_partner_aliado', 'Socio Inversionista / Aliado Operativo', '04148901234', 'V-15890123', 'Puerto Ordaz, Alta Vista', 1, 0, 12, 1729800000000),
-  ('cust_vip_cliente1', 'Cliente Frecuente 1', '04121234567', 'V-20123456', 'Torre Movistar piso 4', 0, 0, 18, 1729800000000);

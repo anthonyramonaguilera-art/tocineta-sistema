@@ -152,10 +152,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             <button
               type="button"
               onClick={onToggleSede}
-              className="min-h-[40px] px-2 rounded-xl bg-surface border border-border flex items-center justify-center gap-1.5 text-xs font-bold text-ink hover:bg-surface-alt transition-colors"
+              className="min-h-[40px] px-2 rounded-xl bg-surface border border-border flex items-center justify-center gap-1.5 text-[11px] font-bold text-ink hover:bg-surface-alt transition-colors"
+              title="Cambiar sede operativa activa"
             >
-              <Icon name="MapPin" size={15} />
-              <span>{activeSede === 'sede_a' ? 'Sede A' : 'Sede B'}</span>
+              <Icon name="MapPin" size={14} className="text-primary" />
+              <span className="truncate">{activeSede === 'sede_a' ? 'Los Olivos' : 'Alta Vista'}</span>
             </button>
           </div>
 

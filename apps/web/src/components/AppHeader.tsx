@@ -1,10 +1,11 @@
 import React from 'react';
-import { Icon } from '../ui/index.js';
+import { Icon, Badge } from '../ui/index.js';
 
 interface AppHeaderProps {
   businessName?: string;
   title: string;
   isAdmin: boolean;
+  isDemoMode?: boolean;
   uiMode: 'basico' | 'pro';
   onToggleUiMode: (mode: 'basico' | 'pro') => void;
   formattedRate: string;
@@ -16,7 +17,7 @@ interface AppHeaderProps {
  * Cabecera oficial de TOCINETA (56px)
  * Máximo 5 elementos visibles, cabe completa a 360px sin truncar.
  * 1. Botón Menú
- * 2. Logo + Nombre del Negocio
+ * 2. Logo + Nombre del Negocio + Badge DEMO
  * 3. Título de la pantalla
  * 4. Conmutador Modo Básico / Modo Pro (Solo Admin/Supervisor)
  * 5. Chip de Tasa BCV (editable por Admin)
@@ -25,6 +26,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
   businessName = 'TOCINETA',
   title,
   isAdmin,
+  isDemoMode = false,
   uiMode,
   onToggleUiMode,
   formattedRate,
@@ -43,7 +45,7 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <Icon name="Menu" size={20} />
       </button>
 
-      {/* 2. Logo de Marca + Nombre */}
+      {/* 2. Logo de Marca + Nombre + DEMO badge */}
       <div className="flex items-center gap-1.5 shrink-0">
         <img
           src="/brand/carita.png"
@@ -53,6 +55,11 @@ export const AppHeader: React.FC<AppHeaderProps> = ({
         <span className="hidden xs:inline-block font-black text-xs sm:text-sm tracking-tight text-ink uppercase">
           {businessName}
         </span>
+        {isDemoMode && (
+          <Badge variant="warning">
+            DEMO
+          </Badge>
+        )}
       </div>
 
       {/* 3. Título de la Pantalla */}

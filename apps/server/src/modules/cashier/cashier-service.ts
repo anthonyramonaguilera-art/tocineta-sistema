@@ -12,6 +12,7 @@ import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
 import { getCurrentExchangeRate } from '../menu/menu-service.js';
 import { enqueueOrderPrintJobs } from '../printing/worker.js';
+import { deductInventoryForOrder, revertInventoryForOrder } from '../profitability/recipes-service.js';
 
 export interface OpenJornadaInput {
   openedByUserId: string;
@@ -683,7 +684,11 @@ export function processOrderPayment(
       orderId
     );
 
-    // 5. Encolar Trabajos de Impresión Asíncrona (Caja USB y Cocina TCP con Ticket IR)
+    // 5. Descuento atómico de inventario por receta en la sede de la venta
+    const orderLocationId = order.location_id || 'loc_alta_vista';
+    deductInventoryForOrder(rawDb, orderId, orderLocationId, now, input.cashierUserId);
+
+    // 6. Encolar Trabajos de Impresión Asíncrona (Caja USB y Cocina TCP con Ticket IR)
     enqueueOrderPrintJobs(rawDb, orderId);
 
     // 6. Auditoría y Bus de Eventos
@@ -730,3 +735,155 @@ export function processOrderPayment(
     settlement
   };
 }
+
+export interface AnnulOrderInCashierInput {
+  orderId: string;
+  reason?: string;
+  actorUserId?: string;
+  supervisorPin?: string;
+}
+
+/**
+ * Anulación limpia de comanda en Caja:
+ * - Fallback seguro de Sede: const locationId = order.location_id || 'sede_alta_vista'
+ * - Actualiza atómicamente orders.fulfillment_status = 'cancelado' y order_lines.status = 'cancelado'
+ * - Revierte inventario de recetas/insumos si existían movimientos previos (sin lanzar 500 si no hay receta)
+ * - Emite el evento WebSocket correspondientes para limpiar el KDS inmediatamente.
+ */
+export function annulOrderInCashier(
+  rawDb: Database.Database,
+  input: AnnulOrderInCashierInput
+): { success: boolean; orderId: string; message: string } {
+  const { orderId } = input;
+  const reason = input.reason?.trim() || 'Anulado desde Caja';
+  const now = Date.now();
+
+  const order = rawDb.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as any;
+  if (!order) {
+    const err: any = new Error(`Orden '${orderId}' no encontrada`);
+    err.statusCode = 404;
+    throw err;
+  }
+
+  // 1. Fallback seguro de Sede
+  const locationId = order.location_id || 'sede_alta_vista';
+  const isPaid = order.payment_status === 'pagado';
+  const newPaymentStatus = isPaid ? 'reembolsado' : 'anulado';
+
+  // Si la orden ya estaba pagada y viene PIN de supervisor, validar
+  if (isPaid && input.supervisorPin) {
+    const authorizers = rawDb.prepare(`
+      SELECT id, name, role, pin_salt, pin_hash
+      FROM users
+      WHERE role IN ('admin', 'supervisor') AND is_active = 1
+    `).all() as any[];
+
+    let verified = false;
+    for (const a of authorizers) {
+      if (verifyPin(input.supervisorPin, a.pin_salt, a.pin_hash)) {
+        verified = true;
+        break;
+      }
+    }
+    if (!verified) {
+      const err: any = new Error('PIN de autorización inválido para anular comanda pagada');
+      err.statusCode = 403;
+      throw err;
+    }
+  }
+
+  const annulTx = rawDb.transaction(() => {
+    // 2. Revertir inventario si hubo movimientos previos (sin lanzar 500 si no hay receta)
+    revertInventoryForOrder(rawDb, orderId, locationId, reason, input.actorUserId || 'usr_cajera');
+
+    // 3. Revertir ledger si estaba pagada
+    if (isPaid) {
+      const totalOrderCents = order.total_to_collect_usd_cents || order.net_food_sales_usd_cents || 0;
+      const rateMicroBs = order.rate_micro_bs || 40_000_000;
+      const insertLedger = rawDb.prepare(`
+        INSERT INTO ledger_entries (
+          entry_id, jornada_id, order_id, account_bucket,
+          debit_usd_cents, credit_usd_cents, rate_micro_bs, description, created_at_ms
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `);
+
+      if (order.net_food_sales_usd_cents > 0) {
+        insertLedger.run(
+          `led_${generateUuidV7()}`,
+          order.jornada_id,
+          orderId,
+          'FOOD_SALES',
+          order.net_food_sales_usd_cents,
+          0,
+          rateMicroBs,
+          `Reversión Venta Alimentos #${order.order_number} (${reason})`,
+          now
+        );
+      }
+
+      insertLedger.run(
+        `led_${generateUuidV7()}`,
+        order.jornada_id,
+        orderId,
+        'CASH_USD',
+        0,
+        totalOrderCents,
+        rateMicroBs,
+        `Salida Reembolso Orden #${order.order_number} (${reason})`,
+        now
+      );
+    }
+
+    // 4. Actualizar estado de orden a 'cancelado' en la misma transacción
+    rawDb.prepare(`
+      UPDATE orders
+      SET payment_status = ?,
+          fulfillment_status = 'cancelado',
+          notes = CASE WHEN notes IS NULL OR notes = '' THEN ? ELSE notes || ' [CANCELADO: ' || ? || ']' END,
+          updated_at_ms = ?
+      WHERE id = ?
+    `).run(newPaymentStatus, `[CANCELADO: ${reason}]`, reason, now, orderId);
+
+    // 5. Actualizar TODAS sus líneas a 'cancelado'
+    rawDb.prepare(`
+      UPDATE order_lines
+      SET status = 'cancelado'
+      WHERE order_id = ?
+    `).run(orderId);
+
+    // 6. Auditoría y eventos
+    appendAuditEvent(rawDb, {
+      actorUserId: input.actorUserId || 'usr_cajera',
+      action: 'ORDER_ANNULLED_IN_CASHIER',
+      entityType: 'order',
+      entityId: orderId,
+      payload: {
+        orderNumber: order.order_number,
+        reason,
+        locationId,
+        isPaid
+      }
+    });
+
+    publishDomainEvent(rawDb, {
+      eventType: 'ORDER_CANCELLED',
+      entityId: orderId,
+      payload: {
+        orderId,
+        orderNumber: order.order_number,
+        fulfillmentStatus: 'cancelado',
+        paymentStatus: newPaymentStatus,
+        reason
+      }
+    });
+  });
+
+  annulTx();
+
+  return {
+    success: true,
+    orderId,
+    message: 'Orden anulada con éxito'
+  };
+}
+
