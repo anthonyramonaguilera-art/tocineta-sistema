@@ -23,6 +23,9 @@ import { fase3Routes } from './modules/profitability/fase3-routes.js';
 import { fase4Routes } from './modules/transfers/routes.js';
 import { financesRoutes } from './modules/finances/routes.js';
 import { staffRoutes } from './modules/staff/routes.js';
+import { eventQuotesRoutes } from './modules/quotes/routes.js';
+import { businessPartnersRoutes } from './modules/partners/routes.js';
+import { businessSettingsRoutes } from './modules/business-settings/settings-routes.js';
 import { clientErrorsRoutes } from './routes/client-errors.js';
 import { startSnapshotWorker } from './modules/backups/snapshot-service.js';
 import { PrintingWorker } from './modules/printing/worker.js';
@@ -103,6 +106,7 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
     mockTransports: process.env.NODE_ENV === 'test'
   });
   server.decorate('printingWorker', worker);
+  server.decorate('rawDb', dbCtx.rawDb);
 
   let snapshotWorker: { stop: () => void } | null = null;
   let bcvInterval: NodeJS.Timeout | null = null;
@@ -154,6 +158,9 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   await server.register(fase4Routes);
   await server.register(financesRoutes);
   await server.register(staffRoutes);
+  await server.register(eventQuotesRoutes);
+  await server.register(businessPartnersRoutes);
+  await server.register(businessSettingsRoutes);
   await server.register(clientErrorsRoutes);
 
   if (!options.disableStatic) {

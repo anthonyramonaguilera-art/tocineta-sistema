@@ -189,6 +189,12 @@ export const businessSettings = sqliteTable('business_settings', {
   rif: text('rif').notNull().default('V-17040918-0'),
   phone: text('phone').notNull().default('04249728209'),
   address: text('address').notNull().default('Detrás de Torre Movistar, Puerto Ordaz'),
+  slogan: text('slogan').notNull().default('Cocinamos con amor y servimos como mereces'),
+  logoUrl: text('logo_url'),
+  primaryColor: text('primary_color').notNull().default('#EAB308'),
+  rateChangeHour: text('rate_change_hour').notNull().default('13:00'),
+  ticketHeaderMessage: text('ticket_header_message').notNull().default('¡BIENVENIDOS!'),
+  ticketFooterMessage: text('ticket_footer_message').notNull().default('¡GRACIAS POR SU PREFERENCIA! Dios le bendiga'),
   deliveryAccountingMode: text('delivery_accounting_mode').notNull().default('THIRD_PARTY_PASS_THROUGH'),
   deliveryQuickTiersJson: text('delivery_quick_tiers_json').notNull().default('[200, 300, 400, 500]'),
   tableServiceMode: text('table_service_mode').notNull().default('ticket_independiente'),
@@ -198,11 +204,16 @@ export const businessSettings = sqliteTable('business_settings', {
   profitabilityProEnabled: integer('profitability_pro_enabled').notNull().default(0),
   fiscalModuleEnabled: integer('fiscal_module_enabled').notNull().default(0),
   fiscalPriceMode: text('fiscal_price_mode').notNull().default('INCLUSIVE'),
+  ivaEnabled: integer('iva_enabled').notNull().default(0),
+  ivaRateBps: integer('iva_rate_bps').notNull().default(1600),
   igtfEnabled: integer('igtf_enabled').notNull().default(0),
   igtfRateBps: integer('igtf_rate_bps').notNull().default(300),
   igtfAppliesTo: text('igtf_applies_to').notNull().default('CASH_USD'),
   isDemoMode: integer('is_demo_mode').notNull().default(0),
   owner5NumbersConfig: text('owner_5_numbers_config').notNull().default('["sales_today","profit_today","cash_today","receivable_total","payable_total"]'),
+  partnersModuleEnabled: integer('partners_module_enabled').notNull().default(0),
+  eventsQuoteEnabled: integer('events_quote_enabled').notNull().default(1),
+  onboardingCompleted: integer('onboarding_completed').notNull().default(1),
   updatedAtMs: integer('updated_at_ms').notNull()
 });
 
@@ -1090,6 +1101,92 @@ export type TipPool = typeof tipPools.$inferSelect;
 export type InsertTipPool = typeof tipPools.$inferInsert;
 export type TipPoolDistribution = typeof tipPoolDistributions.$inferSelect;
 export type InsertTipPoolDistribution = typeof tipPoolDistributions.$inferInsert;
+
+export const eventQuotations = sqliteTable('event_quotations', {
+  id: text('id').primaryKey(),
+  quotationNumber: text('quotation_number').notNull().unique(),
+  customerName: text('customer_name').notNull(),
+  customerPhone: text('customer_phone'),
+  customerEmail: text('customer_email'),
+  eventDateMs: integer('event_date_ms'),
+  eventLocation: text('event_location'),
+  guestCount: integer('guest_count').notNull().default(1),
+  subtotalFoodUsdCents: integer('subtotal_food_usd_cents').notNull().default(0),
+  discountPercent: real('discount_percent').default(0),
+  discountUsdCents: integer('discount_usd_cents').default(0),
+  extraCostsUsdCents: integer('extra_costs_usd_cents').notNull().default(0),
+  totalPriceUsdCents: integer('total_price_usd_cents').notNull().default(0),
+  estimatedCostUsdCents: integer('estimated_cost_usd_cents').notNull().default(0),
+  estimatedProfitUsdCents: integer('estimated_profit_usd_cents').notNull().default(0),
+  rateMicroBs: integer('rate_micro_bs').notNull(),
+  status: text('status', { enum: ['BORRADOR', 'ENVIADA', 'RESERVADA', 'RECHAZADA'] }).notNull().default('BORRADOR'),
+  notes: text('notes'),
+  createdByUserId: text('created_by_user_id').notNull().references(() => users.id),
+  createdAtMs: integer('created_at_ms').notNull(),
+  updatedAtMs: integer('updated_at_ms').notNull()
+});
+
+export const eventQuotationItems = sqliteTable('event_quotation_items', {
+  id: text('id').primaryKey(),
+  quotationId: text('quotation_id').notNull().references(() => eventQuotations.id, { onDelete: 'cascade' }),
+  productId: text('product_id').notNull().references(() => products.id),
+  productName: text('product_name').notNull(),
+  quantity: integer('quantity').notNull(),
+  unitPriceUsdCents: integer('unit_price_usd_cents').notNull(),
+  subtotalUsdCents: integer('subtotal_usd_cents').notNull(),
+  unitCostUsdCents: integer('unit_cost_usd_cents').notNull().default(0),
+  totalCostUsdCents: integer('total_cost_usd_cents').notNull().default(0),
+  notes: text('notes')
+});
+
+export const eventQuotationExtras = sqliteTable('event_quotation_extras', {
+  id: text('id').primaryKey(),
+  quotationId: text('quotation_id').notNull().references(() => eventQuotations.id, { onDelete: 'cascade' }),
+  concept: text('concept').notNull(),
+  category: text('category', { enum: ['LOGISTICA', 'PERSONAL', 'DESCARTABLES', 'OTROS'] }).notNull().default('LOGISTICA'),
+  priceUsdCents: integer('price_usd_cents').notNull(),
+  costUsdCents: integer('cost_usd_cents').notNull().default(0)
+});
+
+export const businessPartners = sqliteTable('business_partners', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  docId: text('doc_id'),
+  phone: text('phone'),
+  email: text('email'),
+  sharePercentage: real('share_percentage').notNull().default(0),
+  totalCapitalContributedUsdCents: integer('total_capital_contributed_usd_cents').notNull().default(0),
+  totalWithdrawnUsdCents: integer('total_withdrawn_usd_cents').notNull().default(0),
+  currentBalanceUsdCents: integer('current_balance_usd_cents').notNull().default(0),
+  isActive: integer('is_active').notNull().default(1),
+  notes: text('notes'),
+  createdAtMs: integer('created_at_ms').notNull(),
+  updatedAtMs: integer('updated_at_ms').notNull()
+});
+
+export const partnerTransactions = sqliteTable('partner_transactions', {
+  id: text('id').primaryKey(),
+  partnerId: text('partner_id').notNull().references(() => businessPartners.id, { onDelete: 'cascade' }),
+  type: text('type', { enum: ['APORTE', 'RETIRO_UTILIDADES', 'REPARTO_DIVIDENDOS'] }).notNull(),
+  amountUsdCents: integer('amount_usd_cents').notNull(),
+  amountBsCents: integer('amount_bs_cents').notNull().default(0),
+  rateMicroBs: integer('rate_micro_bs').notNull(),
+  paymentMethod: text('payment_method').notNull().default('EFECTIVO_USD'),
+  notes: text('notes'),
+  registeredByUserId: text('registered_by_user_id').notNull().references(() => users.id),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export type EventQuotation = typeof eventQuotations.$inferSelect;
+export type InsertEventQuotation = typeof eventQuotations.$inferInsert;
+export type EventQuotationItem = typeof eventQuotationItems.$inferSelect;
+export type InsertEventQuotationItem = typeof eventQuotationItems.$inferInsert;
+export type EventQuotationExtra = typeof eventQuotationExtras.$inferSelect;
+export type InsertEventQuotationExtra = typeof eventQuotationExtras.$inferInsert;
+export type BusinessPartner = typeof businessPartners.$inferSelect;
+export type InsertBusinessPartner = typeof businessPartners.$inferInsert;
+export type PartnerTransaction = typeof partnerTransactions.$inferSelect;
+export type InsertPartnerTransaction = typeof partnerTransactions.$inferInsert;
 
 
 

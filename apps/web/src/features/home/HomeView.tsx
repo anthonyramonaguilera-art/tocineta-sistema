@@ -233,10 +233,34 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <Button
           variant="secondary"
           size="sm"
+          onClick={() => onNavigate('quotes')}
+          leftIcon={<Icon name="Calculator" size={15} />}
+        >
+          Cotizador Eventos
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => onNavigate('partners')}
+          leftIcon={<Icon name="Handshake" size={15} />}
+        >
+          Socios
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => onNavigate('settings')}
+          leftIcon={<Icon name="Settings" size={15} />}
+        >
+          Configuración Negocio
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => onNavigate('health')}
           leftIcon={<Icon name="Cpu" size={15} />}
         >
-          Salud de Impresoras y Respaldos
+          Salud y Hardware
         </Button>
         <Button
           variant="secondary"

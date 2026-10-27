@@ -59,11 +59,11 @@ async function main() {
       { type: 'header_logo' },
       { type: 'banner_inverted', text: 'CONFIDENCIAL - SOBRE SELLADO' },
       { type: 'separator', style: 'double' },
-      { type: 'text', text: 'TOCINETA SONRÍE', align: 'center', bold: true },
+      { type: 'text', text: 'TOCINETA', align: 'center', bold: true },
       { type: 'text', text: 'CLAVE MAESTRA DE RESPALDOS', align: 'center', bold: true },
       { type: 'text', text: `FECHA: ${new Date().toLocaleString('es-VE')}`, align: 'center' },
       { type: 'separator', style: 'single' },
-      { type: 'text', text: 'DESTINATARIO: Sra. Olinelcys Aguilera', bold: true },
+      { type: 'text', text: 'DESTINATARIO: ADMINISTRACIÓN GENERAL', bold: true },
       { type: 'separator', style: 'single' },
       { type: 'text', text: 'CLAVE PÚBLICA (RECIPIENT):', bold: true },
       { type: 'text', text: publicKey },
@@ -127,10 +127,10 @@ async function main() {
     // 7. Actualizar clave pública en .env
     const envPath = path.resolve(process.cwd(), '.env');
     let envContent = fs.existsSync(envPath) ? fs.readFileSync(envPath, 'utf-8') : '';
-    if (envContent.includes('AGE_RECIPIENT_OLINELCYS=')) {
-      envContent = envContent.replace(/AGE_RECIPIENT_OLINELCYS=.*/g, `AGE_RECIPIENT_OLINELCYS=${publicKey}`);
+    if (envContent.includes('AGE_RECIPIENT_ADMIN=')) {
+      envContent = envContent.replace(/AGE_RECIPIENT_ADMIN=.*/g, `AGE_RECIPIENT_ADMIN=${publicKey}`);
     } else {
-      envContent += `\nAGE_RECIPIENT_OLINELCYS=${publicKey}\n`;
+      envContent += `\nAGE_RECIPIENT_ADMIN=${publicKey}\n`;
     }
     fs.writeFileSync(envPath, envContent.trim() + '\n', 'utf-8');
     console.log(`   ✓ Clave pública actualizada en .env`);
@@ -141,7 +141,7 @@ async function main() {
       try {
         const db = new DatabaseConstructor(dbPath);
         db.prepare(
-          `INSERT INTO _system_meta (key, value, updated_at_ms) VALUES ('age_public_key_olinelcys', ?, ?)
+          `INSERT INTO _system_meta (key, value, updated_at_ms) VALUES ('age_public_key_admin', ?, ?)
            ON CONFLICT(key) DO UPDATE SET value = excluded.value, updated_at_ms = excluded.updated_at_ms`
         ).run(publicKey, Date.now());
         db.close();

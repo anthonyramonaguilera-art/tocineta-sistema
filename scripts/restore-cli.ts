@@ -42,7 +42,7 @@ async function main() {
     }
 
     console.log('\n======================================================');
-    console.log('   RESTAURACIÓN Y VERIFICACIÓN EXITOSA - TOCINETA SONRÍE');
+    console.log('   RESTAURACIÓN Y VERIFICACIÓN EXITOSA - TOCINETA');
     console.log('======================================================');
     console.log(`- Archivo origen:        ${backupPath}`);
     console.log(`- Integridad SQLite:     ${result.integrityCheck} (PRAGMA integrity_check)`);

@@ -44,6 +44,10 @@ export interface FiscalSettings {
   igtfRateBps?: number;
   igtf_applies_to?: 'CASH_USD' | 'ALL_USD' | 'NONE';
   igtfAppliesTo?: 'CASH_USD' | 'ALL_USD' | 'NONE';
+  slogan?: string;
+  ticket_header_message?: string;
+  ticket_footer_message?: string;
+  business_name?: string;
 }
 
 export interface FiscalBreakdown {
@@ -219,13 +223,14 @@ export function buildReceiptTicketIR(
     payments = paymentsOrSettings;
   }
 
-  // 1. Logo TOCINETA Oficial
+  // 1. Logo Oficial
   blocks.push({ type: 'header_logo' });
 
-  // 2. Eslogan oficial
+  // 2. Eslogan oficial dinámico
+  const receiptSlogan = settings?.slogan || 'Cocinamos con amor y servimos como mereces';
   blocks.push({
     type: 'text',
-    text: '"Cocinamos con amor, te servimos como mereces y damos gloria a Dios"',
+    text: `"${receiptSlogan}"`,
     align: 'center'
   });
   blocks.push({ type: 'separator', style: 'single' });
@@ -362,12 +367,11 @@ export function buildReceiptTicketIR(
 
   // 7. Footer de Agradecimiento y Corte
   blocks.push({ type: 'separator', style: 'dashed' });
+  const footerMessage = settings?.ticket_footer_message || '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga';
   blocks.push({
     type: 'footer',
     lines: [
-      '¡GRACIAS POR SU PREFERENCIA!',
-      'Dios le bendiga grandemente',
-      'Síguenos en @tocineta',
+      footerMessage,
       '*** COMPROBANTE DE ENTREGA ***'
     ],
     align: 'center'

@@ -11,7 +11,7 @@ import {
 
 export const qrMenuRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. Payload público sanitizado del Menú Activo
-  fastify.get('/api/qr-menu/data', async (_request, reply) => {
+  const menuDataHandler = async (_request: any, reply: any) => {
     const dbCtx = getDatabaseContext();
     const data = getPublicQrMenuData(dbCtx.rawDb);
 
@@ -20,7 +20,10 @@ export const qrMenuRoutes: FastifyPluginAsync = async (fastify) => {
       ...data,
       data
     });
-  });
+  };
+
+  fastify.get('/api/qr-menu/data', menuDataHandler);
+  fastify.get('/api/qr-menu/menu', menuDataHandler);
 
   // 2. Generador y exportador del paquete estático para Vercel / Cloudflare Pages / Local
   fastify.post('/api/qr-menu/export-static', async (request, reply) => {

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { QrCode, Globe, Smartphone, Printer, ExternalLink, ShieldCheck, Wifi, Check, Save } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Card, Button, Badge, Icon } from '../ui/index.js';
 import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
 
 export const QrMenuWebAdminView: React.FC = () => {
@@ -10,12 +11,31 @@ export const QrMenuWebAdminView: React.FC = () => {
       return 'menu.tocineta.com';
     }
   });
-  const [whatsappPhone, setWhatsappPhone] = useState('584249728209');
+
   const [paperFormat, setPaperFormat] = useState<'A5' | 'A6' | '58mm'>('A5');
   const [isSaved, setIsSaved] = useState(false);
+  const [showMenuPreview, setShowMenuPreview] = useState(false);
 
-  const qrTargetUrl = `https://${customDomain.replace(/^https?:\/\//, '')}/menu?ws=${whatsappPhone}`;
-  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qrTargetUrl)}&color=005A9C&bgcolor=FFFFFF`;
+  // Consultar datos reales del menú QR sanitizado
+  const { data: qrMenuRes, isLoading } = useQuery({
+    queryKey: ['publicQrMenu'],
+    queryFn: async () => {
+      const res = await fetch('/api/qr-menu');
+      if (!res.ok) throw new Error('Error al cargar menú digital');
+      return res.json();
+    },
+    staleTime: 10000
+  });
+
+  const menu = qrMenuRes?.menu;
+  const storeName = menu?.storeName || 'TOCINETA';
+  const slogan = menu?.slogan || 'Cocinamos con amor y servimos como mereces';
+  const whatsappNumber = menu?.whatsappNumber || '584249728209';
+  const rateFormatted = menu?.currency?.rateFormatted || '40,00';
+  const categories = menu?.categories || [];
+
+  const qrTargetUrl = `https://${customDomain.replace(/^https?:\/\//, '')}/menu?ws=${whatsappNumber}`;
+  const qrImageUrl = `https://api.qrserver.com/v1/create-qr-code/?size=350x350&data=${encodeURIComponent(qrTargetUrl)}&color=000000&bgcolor=FFFFFF`;
 
   const handleSaveDomain = () => {
     try {
@@ -25,42 +45,40 @@ export const QrMenuWebAdminView: React.FC = () => {
     } catch {}
   };
 
-  const handlePrintA5 = () => {
+  const handlePrint = () => {
     window.print();
   };
 
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12 select-none">
-      {/* Guía Pedagógica */}
       <PedagogicalGuideBanner
-        title="Menú Digital QR (Formato A5) y Acceso Online Remoto"
-        description="Herramienta empresarial estilo RePOS para generar carteles de mesa A5 de alta calidad con código QR para WhatsApp y vinculación de dominio web para monitoreo remoto."
-        storageKey="banner_qr_menu"
+        title="Menú Digital QR y Carta Web en Vivo"
+        description="Generación de carteles de mesa (A5/A6) para comensales, sincronización automática con la carta real y ocultamiento instantáneo de platos agotados."
+        storageKey="banner_qr_menu_f7"
       />
 
-      {/* Grid de 2 Columnas: Panel QR Imprimible (Izq) + Configuración Dominio y Acceso Remoto (Der) */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        
-        {/* COLUMNA IZQUIERDA: TARJETA QR FORMATO A5 / IMPRIMIBLE (7 COLS) */}
-        <div className="lg:col-span-7 bg-white dark:bg-tocineta-card border border-slate-200 dark:border-tocineta-border rounded-3xl p-6 shadow-md flex flex-col items-center text-center">
-          <div className="w-full flex items-center justify-between border-b border-slate-100 dark:border-tocineta-border pb-3 mb-4">
+        {/* COLUMNA IZQUIERDA: CARTEL IMPRIMIBLE A5 / QR DE MESA (7 COLS) */}
+        <div className="lg:col-span-7 bg-surface border border-border rounded-3xl p-6 shadow-sm flex flex-col items-center text-center space-y-4">
+          <div className="w-full flex items-center justify-between border-b border-border pb-3">
             <div className="flex items-center gap-2">
-              <QrCode className="w-5 h-5 text-[#005A9C]" />
-              <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                Diseño para Mesas (Formato {paperFormat})
+              <Icon name="QrCode" size={20} className="text-primary" />
+              <h3 className="font-extrabold text-base text-ink">
+                Cartel para Mesas (Formato {paperFormat})
               </h3>
             </div>
+
             {/* Selector de Tamaño de Papel */}
-            <div className="flex items-center gap-1 bg-slate-100 dark:bg-tocineta-bg p-1 rounded-xl border border-slate-200 dark:border-tocineta-border text-xs font-bold">
-              {(['A5', 'A6', '58mm'] as const).map(fmt => (
+            <div className="flex items-center gap-1 bg-surface-alt p-1 rounded-xl border border-border text-xs font-bold">
+              {(['A5', 'A6', '58mm'] as const).map((fmt) => (
                 <button
                   key={fmt}
                   type="button"
                   onClick={() => setPaperFormat(fmt)}
                   className={`px-2.5 py-1 rounded-lg transition-all ${
                     paperFormat === fmt
-                      ? 'bg-[#005A9C] text-white shadow-sm'
-                      : 'text-slate-600 dark:text-tocineta-muted hover:text-slate-900 dark:hover:text-white'
+                      ? 'bg-primary text-ink shadow-xs font-black'
+                      : 'text-ink-muted hover:text-ink'
                   }`}
                 >
                   {fmt}
@@ -69,165 +87,218 @@ export const QrMenuWebAdminView: React.FC = () => {
             </div>
           </div>
 
-          {/* Plantilla A5 Imprimible Lista para Portamenús de Acrílico */}
-          <div className="w-full max-w-sm border-2 border-dashed border-[#005A9C]/40 bg-gradient-to-b from-blue-50/50 to-white dark:from-[#0B1528] dark:to-tocineta-card rounded-3xl p-6 shadow-lg space-y-4">
-            {/* Encabezado del Cartel */}
+          {/* Plantilla A5 Imprimible Lista para Portamenús */}
+          <div className="w-full max-w-sm border-2 border-dashed border-primary/40 bg-surface rounded-3xl p-6 shadow-md space-y-4">
             <div className="space-y-1">
-              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-amber-400 text-black text-2xl shadow-md font-bold mb-1">
-                🥓
+              <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/20 text-primary shadow-xs mb-1">
+                <Icon name="Utensils" size={24} />
               </div>
-              <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-wide">
-                TOCINETA
+              <h2 className="text-xl font-black text-ink tracking-wide uppercase">
+                {storeName}
               </h2>
-              <p className="text-xs font-bold text-[#005A9C] dark:text-[#38BDF8] uppercase tracking-wider">
-                Food Truck • Puerto Ordaz
+              <p className="text-xs font-bold text-ink-muted">
+                {slogan}
               </p>
             </div>
 
             {/* Código QR Central con Alto Contraste */}
-            <div className="bg-white p-4 rounded-2xl border-2 border-slate-200 shadow-inner inline-block mx-auto">
+            <div className="bg-surface p-3.5 rounded-2xl border-2 border-border shadow-xs inline-block mx-auto">
               <img
                 src={qrImageUrl}
                 alt="Código QR del Menú Digital"
-                className="w-56 h-56 object-contain rounded-lg"
+                className="w-52 h-52 object-contain rounded-lg"
               />
             </div>
 
-            {/* Instrucción Clara al Comensal */}
             <div className="space-y-1">
-              <p className="text-xs font-extrabold text-slate-900 dark:text-white flex items-center justify-center gap-1.5">
-                <Smartphone className="w-4 h-4 text-[#005A9C]" />
+              <p className="text-xs font-extrabold text-ink flex items-center justify-center gap-1.5">
+                <Icon name="Smartphone" size={16} className="text-primary" />
                 Escanea con tu cámara y pide por WhatsApp
               </p>
-              <p className="text-[11px] font-mono font-bold text-slate-500 dark:text-neutral-400">
+              <p className="text-[11px] font-mono font-bold text-ink-muted">
                 {customDomain}
               </p>
             </div>
 
             {/* Badges de Calidad */}
-            <div className="pt-2 border-t border-slate-200 dark:border-tocineta-border flex items-center justify-center gap-4 text-[10px] text-slate-500 font-bold uppercase tracking-wider">
-              <span>⚡ Pedido Directo</span>
+            <div className="pt-2 border-t border-border flex items-center justify-center gap-3 text-[10px] text-ink-muted font-bold uppercase tracking-wider">
+              <span className="flex items-center gap-1">
+                <Icon name="Zap" size={12} className="text-primary" /> Pedido Directo
+              </span>
               <span>•</span>
-              <span>🍔 Menú Actualizado</span>
+              <span className="flex items-center gap-1">
+                <Icon name="ShieldCheck" size={12} className="text-success" /> Carta Real
+              </span>
               <span>•</span>
-              <span>💵 Tasa BCV Al Día</span>
+              <span className="flex items-center gap-1">
+                <Icon name="DollarSign" size={12} className="text-primary" /> Tasa {rateFormatted}
+              </span>
             </div>
           </div>
 
-          {/* Botones de Acción para Imprimir */}
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
-            <button
+          {/* Botonera de Impresión y Previsualización */}
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-3">
+            <Button
               type="button"
-              onClick={handlePrintA5}
-              className="px-5 py-3 rounded-2xl bg-[#005A9C] hover:bg-[#00487d] text-white font-extrabold text-xs shadow-md active:scale-95 transition-all flex items-center gap-2"
+              variant="primary"
+              size="md"
+              onClick={handlePrint}
+              className="min-h-[48px] px-5 font-black shadow-md"
+              leftIcon={<Icon name="Printer" size={18} />}
             >
-              <Printer className="w-4 h-4" />
-              <span>Imprimir Cartel en {paperFormat}</span>
-            </button>
-            <a
-              href={qrTargetUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="px-4 py-3 rounded-2xl bg-slate-100 dark:bg-tocineta-bg border border-slate-200 dark:border-tocineta-border hover:border-[#005A9C] text-xs font-bold text-slate-800 dark:text-white flex items-center gap-1.5 active:scale-95 transition-all"
+              Imprimir Cartel ({paperFormat})
+            </Button>
+            <Button
+              type="button"
+              variant="secondary"
+              size="md"
+              onClick={() => setShowMenuPreview(!showMenuPreview)}
+              className="min-h-[48px] px-4 font-bold"
+              leftIcon={<Icon name="Eye" size={18} />}
             >
-              <ExternalLink className="w-4 h-4" />
-              <span>Probar Menú Digital</span>
-            </a>
+              {showMenuPreview ? 'Ocultar Previa de Carta' : 'Ver Carta en Vivo'}
+            </Button>
           </div>
         </div>
 
-        {/* COLUMNA DERECHA: CONFIGURACIÓN DE DOMINIO Y ACCESO REMOTO (5 COLS) */}
-        <div className="lg:col-span-5 space-y-6">
-          
-          {/* Tarjeta: Vincular Dominio Web Propio */}
-          <div className="bg-white dark:bg-tocineta-card border border-slate-200 dark:border-tocineta-border rounded-3xl p-5 shadow-md space-y-4">
-            <div className="flex items-center gap-2 border-b border-slate-100 dark:border-tocineta-border pb-3">
-              <Globe className="w-5 h-5 text-[#005A9C]" />
-              <h3 className="font-extrabold text-base text-slate-900 dark:text-white">
-                Dominio Web de la Marca
+        {/* COLUMNA DERECHA: CONFIGURACIÓN DE DOMINIO Y ACCESO (5 COLS) */}
+        <div className="lg:col-span-5 space-y-5">
+          {/* Tarjeta: Dominio y WhatsApp */}
+          <Card variant="surface" className="p-5 border border-border space-y-4">
+            <div className="flex items-center gap-2 border-b border-border pb-3">
+              <Icon name="Globe" size={18} className="text-primary" />
+              <h3 className="font-extrabold text-base text-ink">
+                Enlace de Marca y Pedidos
               </h3>
             </div>
-            <p className="text-xs text-slate-600 dark:text-tocineta-muted leading-relaxed">
-              Vincula aquí el dominio adquirido por la empresa (ej. <code className="bg-slate-100 dark:bg-black/40 px-1 py-0.5 rounded font-mono text-[#005A9C]">menu.tocineta.com</code>) para que los códigos QR apunten directamente a tu marca oficial.
+
+            <p className="text-xs text-ink-muted leading-relaxed">
+              Configura el subdominio de tu restaurante y el número de WhatsApp oficial donde los comensales enviarán sus órdenes estructuradas.
             </p>
 
-            <div className="space-y-3">
+            <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  Nombre de Dominio Web
+                <label className="block text-[11px] font-bold text-ink-muted mb-1">
+                  Dominio Web Oficial
                 </label>
                 <input
                   type="text"
                   value={customDomain}
-                  onChange={e => setCustomDomain(e.target.value)}
-                  placeholder="menu.tocineta.com"
-                  className="w-full min-h-[44px] rounded-xl border border-slate-200 dark:border-tocineta-border bg-slate-50 dark:bg-tocineta-bg px-3 text-xs text-slate-900 dark:text-white outline-none focus:border-[#005A9C] font-mono"
+                  onChange={(e) => setCustomDomain(e.target.value)}
+                  placeholder="menu.mirestaurante.com"
+                  className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-mono font-bold"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider mb-1">
-                  WhatsApp Oficial para Pedidos (con código de país)
+                <label className="block text-[11px] font-bold text-ink-muted mb-1">
+                  WhatsApp Oficial para Pedidos
                 </label>
-                <input
-                  type="text"
-                  value={whatsappPhone}
-                  onChange={e => setWhatsappPhone(e.target.value)}
-                  placeholder="584249728209"
-                  className="w-full min-h-[44px] rounded-xl border border-slate-200 dark:border-tocineta-border bg-slate-50 dark:bg-tocineta-bg px-3 text-xs text-slate-900 dark:text-white outline-none focus:border-[#005A9C] font-mono"
-                />
+                <div className="w-full min-h-[44px] rounded-xl border border-border bg-surface-alt px-3 flex items-center justify-between text-xs font-mono font-bold text-ink">
+                  <span>+{whatsappNumber}</span>
+                  <Badge variant="success">Configurado en Ajustes</Badge>
+                </div>
               </div>
 
-              <button
+              <Button
                 type="button"
+                variant="primary"
+                size="md"
                 onClick={handleSaveDomain}
-                className="w-full min-h-[44px] rounded-xl bg-[#005A9C] hover:bg-[#00487d] text-white text-xs font-bold flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow"
+                className="w-full min-h-[48px] font-black"
+                leftIcon={<Icon name={isSaved ? 'Check' : 'Save'} size={18} />}
               >
-                {isSaved ? <Check className="w-4 h-4 text-emerald-300" /> : <Save className="w-4 h-4" />}
-                <span>{isSaved ? '✓ Configuración Guardada' : 'Guardar y Actualizar QR'}</span>
-              </button>
+                {isSaved ? 'Dominio Guardado' : 'Guardar y Actualizar QR'}
+              </Button>
             </div>
-          </div>
+          </Card>
 
-          {/* Tarjeta: Panel Informativo de Acceso Remoto Online */}
-          <div className="bg-gradient-to-br from-blue-50/80 to-slate-50 dark:from-[#0B1528] dark:to-tocineta-card border border-blue-200/80 dark:border-blue-900/50 rounded-3xl p-5 shadow-md space-y-3">
+          {/* Tarjeta: Estado de Carta Real y Platos Ocultos */}
+          <Card variant="surface" className="p-5 border border-border space-y-3">
             <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-xl bg-[#005A9C]/15 border border-[#005A9C]/30 flex items-center justify-center text-[#005A9C] dark:text-[#38BDF8]">
-                <Wifi className="w-4 h-4" />
+              <div className="w-8 h-8 rounded-xl bg-success/10 flex items-center justify-center text-success">
+                <Icon name="CheckCircle2" size={18} />
               </div>
-              <h4 className="font-extrabold text-sm text-slate-900 dark:text-white">
-                Acceso Remoto Online Multi-Dispositivo
+              <h4 className="font-extrabold text-sm text-ink">
+                Sincronización de Carta Blindada
               </h4>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-tocineta-muted leading-relaxed">
-              El sistema cuenta con arquitectura híbrida preparada. Cuando instales el servicio de Internet en el Food Truck:
-            </p>
-
-            <ul className="space-y-2 text-xs text-slate-700 dark:text-slate-300">
+            <ul className="space-y-2 text-xs text-ink-muted">
               <li className="flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
-                <span><strong>Monitoreo en Vivo:</strong> Podrás ver las ventas del turno, cortes de caja y movimientos de inventario en tiempo real desde tu casa o celular.</span>
+                <Icon name="Check" size={14} className="text-success shrink-0 mt-0.5" />
+                <span><strong>Lectura en Tiempo Real:</strong> Lee directamente categorías, platos y fotos de la carta oficial.</span>
               </li>
               <li className="flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
-                <span><strong>KDS en Cocina Sincronizado:</strong> Los pedidos tomados por los mesoneros en mesa se reflejarán instantáneamente en la pantalla táctil de cocina.</span>
+                <Icon name="Check" size={14} className="text-success shrink-0 mt-0.5" />
+                <span><strong>Ocultamiento de Agotados:</strong> Si un plato se marca sin disponibilidad en cocina, desaparece de inmediato del menú público.</span>
               </li>
               <li className="flex items-start gap-2">
-                <ShieldCheck className="w-4 h-4 text-[#10B981] shrink-0 mt-0.5" />
-                <span><strong>Seguridad Bancaria:</strong> Todo el tráfico remoto viaja encriptado sin exponer puertos abiertos ni contraseñas.</span>
+                <Icon name="Check" size={14} className="text-success shrink-0 mt-0.5" />
+                <span><strong>Tasa BCV Oficial:</strong> Precios calculados dinámicamente con la tasa oficial vigente ({rateFormatted}).</span>
               </li>
             </ul>
+          </Card>
+        </div>
+      </div>
 
-            <div className="pt-2 border-t border-blue-200/60 dark:border-blue-900/40 flex items-center justify-between text-[11px] font-bold text-[#005A9C] dark:text-[#38BDF8]">
-              <span>Estado: PREPARADO PARA ENLACE ONLINE</span>
-              <span className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse" />
+      {/* Previsualización en Vivo de la Carta con Fotos */}
+      {showMenuPreview && (
+        <Card variant="surface" className="p-5 sm:p-6 border-2 border-primary/30 rounded-3xl space-y-5 animate-in fade-in duration-200">
+          <div className="flex items-center justify-between border-b border-border pb-3">
+            <div>
+              <h3 className="text-base font-black text-ink">Previa en Vivo de la Carta Pública</h3>
+              <p className="text-xs text-ink-muted">Tal como la visualiza el cliente al escanear el QR (solo productos disponibles con foto).</p>
             </div>
+            <button
+              type="button"
+              onClick={() => setShowMenuPreview(false)}
+              className="w-8 h-8 rounded-lg bg-surface-alt flex items-center justify-center text-ink-muted hover:text-ink"
+            >
+              <Icon name="X" size={16} />
+            </button>
           </div>
 
-        </div>
+          {isLoading ? (
+            <div className="text-center py-8 text-xs text-ink-muted">Cargando carta...</div>
+          ) : (
+            <div className="space-y-6">
+              {categories.map((cat: any) => (
+                <div key={cat.id} className="space-y-3">
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-extrabold text-sm text-ink uppercase tracking-wider">{cat.name}</h4>
+                    <span className="text-[11px] text-ink-muted">({cat.products.length} disponibles)</span>
+                  </div>
 
-      </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {cat.products.map((p: any) => (
+                      <div key={p.id} className="p-3 rounded-2xl bg-surface-alt/40 border border-border flex gap-3 items-center">
+                        {p.imageUrl ? (
+                          <img src={p.imageUrl} alt={p.name} className="w-16 h-16 rounded-xl object-cover shrink-0 border border-border" />
+                        ) : (
+                          <div className="w-16 h-16 rounded-xl bg-surface flex items-center justify-center text-ink-muted shrink-0 border border-border">
+                            <Icon name="Utensils" size={20} />
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <h5 className="font-extrabold text-xs text-ink truncate">{p.name}</h5>
+                          <p className="text-[10px] text-ink-muted line-clamp-1">{p.description || 'Delicioso plato preparado al momento'}</p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="font-black text-xs text-primary">{p.priceUsdFormatted}</span>
+                            <span className="text-[10px] text-ink-muted">{p.priceBsFormatted}</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </Card>
+      )}
     </div>
   );
 };
+
+export default QrMenuWebAdminView;

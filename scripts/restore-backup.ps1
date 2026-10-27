@@ -1,10 +1,10 @@
 <#
 .SYNOPSIS
-    Script interactivo de recuperación ante desastres y restauración verificada para Tocineta Sonríe.
+    Script interactivo de recuperación ante desastres y restauración verificada para TOCINETA.
 .DESCRIPTION
     Restaura una base de datos a partir de un respaldo cifrado con age (.db.age) o un snapshot local (.db).
     Verifica automáticamente:
-      1. Descifrado criptográfico con clave privada age de la Sra. Olinelcys o Varons Media.
+      1. Descifrado criptográfico con clave privada age de la Administración.
       2. PRAGMA integrity_check de SQLite.
       3. Verificación matemática completa de la cadena de auditoría SHA-256 (audit_events).
       4. Respaldo preventivo de la base de datos actual antes de sobrescribir.
@@ -37,8 +37,8 @@ $ErrorActionPreference = "Stop"
 
 Write-Host ""
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host "  TOCINETA SONRIE - RECUPERACION ANTE DESASTRES Y RESTAURACION  " -ForegroundColor Yellow
-Write-Host "  Modulo M9: Restauracion Criptografica Verificada              " -ForegroundColor Cyan
+Write-Host "     SISTEMA TOCINETA - RECUPERACION ANTE DESASTRES             " -ForegroundColor Yellow
+Write-Host "     Restauracion Criptografica Verificada                      " -ForegroundColor Cyan
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host ""
 
@@ -83,7 +83,7 @@ $isAge = $BackupPath.EndsWith(".age", [System.StringComparison]::OrdinalIgnoreCa
 if ($isAge -and (-not $PrivateKey -or $PrivateKey.Trim() -eq "")) {
     Write-Host ""
     Write-Host "[ATENCION] El archivo esta cifrado con age (.age)." -ForegroundColor Yellow
-    Write-Host "Ingrese la clave privada de recuperacion (Sra. Olinelcys en sobre sellado o Varons Media en gestor de contraseñas)." -ForegroundColor Gray
+    Write-Host "Ingrese la clave privada de recuperacion de la Administracion." -ForegroundColor Gray
     Write-Host "Formato: clave privada age..." -ForegroundColor Gray
     $secureInput = Read-Host "Clave Privada" -AsSecureString
     $BSTR = [System.Runtime.InteropServices.Marshal]::SecureStringToBSTR($secureInput)

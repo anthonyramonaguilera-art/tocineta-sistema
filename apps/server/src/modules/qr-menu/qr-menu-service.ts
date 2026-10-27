@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import type Database from 'better-sqlite3';
 import { usdToBsCents, formatMicroBsToRate } from '@tocineta/shared';
+import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
 
 export interface QrProductFlavor {
   id: string;
@@ -77,6 +78,7 @@ export interface QrComboItem {
 
 export interface PublicQrMenuPayload {
   storeName: string;
+  businessName?: string;
   slogan: string;
   schedule: string;
   location: string;
@@ -89,6 +91,8 @@ export interface PublicQrMenuPayload {
     rateUpdatedAtCaracas: string;
   };
   categories: QrCategory[];
+  dishes?: QrProductItem[];
+  products?: QrProductItem[];
   barraLibre: QrBarraLibreItem[];
   combos: QrComboItem[];
   generatedAtMs: number;
@@ -178,6 +182,7 @@ export function formatBs(cents: number): string {
  */
 export function getPublicQrMenuData(rawDb: Database.Database): PublicQrMenuPayload {
   const now = Date.now();
+  const settings = ensureBusinessSettingsDefensive(rawDb);
 
   // 1. Tasa BCV vigente
   const rateRow = rawDb.prepare(`
@@ -207,7 +212,7 @@ export function getPublicQrMenuData(rawDb: Database.Database): PublicQrMenuPaylo
     display_order: number;
   }>;
 
-  // 3. Productos activos vinculados a categorías activas
+  // 3. Productos activos y disponibles vinculados a categorías activas (Ocultar agotados)
   // IMPORTANTE: NO SE SELECCIONA estimated_cost_usd_cents NI COSTOS INTERNOS
   const productRows = rawDb.prepare(`
     SELECT 
@@ -215,7 +220,7 @@ export function getPublicQrMenuData(rawDb: Database.Database): PublicQrMenuPaylo
       p.station, p.is_available, p.is_combo, p.allows_flavors, p.image_url
     FROM products p
     JOIN categories c ON p.category_id = c.id
-    WHERE p.is_active = 1 AND c.is_active = 1 AND c.is_internal = 0
+    WHERE p.is_active = 1 AND p.is_available = 1 AND c.is_active = 1 AND c.is_internal = 0
     ORDER BY p.name ASC
   `).all() as Array<{
     id: string;
@@ -329,12 +334,12 @@ export function getPublicQrMenuData(rawDb: Database.Database): PublicQrMenuPaylo
     priceFormatted: '$0.00 (Gratis)'
   }));
 
-  // 7. Combos y slots
+  // 7. Combos y slots disponibles
   const comboRows = rawDb.prepare(`
     SELECT c.id, c.name, c.combo_price_usd_cents, c.description
     FROM combos c
     JOIN products p ON c.id = p.id
-    WHERE p.is_active = 1
+    WHERE p.is_active = 1 AND p.is_available = 1
     ORDER BY c.name ASC
   `).all() as Array<{
     id: string;
@@ -407,13 +412,19 @@ export function getPublicQrMenuData(rawDb: Database.Database): PublicQrMenuPaylo
     };
   });
 
+  const cleanedPhone = settings.phone ? settings.phone.replace(/\D/g, '') : OFFICIAL_WHATSAPP_NUMBER;
+  const whatsappNumber = cleanedPhone.startsWith('0') ? '58' + cleanedPhone.slice(1) : (cleanedPhone.startsWith('58') ? cleanedPhone : '58' + cleanedPhone);
+
+  const allProducts = categories.flatMap(c => c.products);
+
   return {
-    storeName: OFFICIAL_STORE_NAME,
-    slogan: OFFICIAL_SLOGAN,
+    storeName: settings.business_name || OFFICIAL_STORE_NAME,
+    businessName: settings.business_name || OFFICIAL_STORE_NAME,
+    slogan: settings.slogan || OFFICIAL_SLOGAN,
     schedule: OFFICIAL_SCHEDULE,
-    location: OFFICIAL_LOCATION,
-    whatsappNumber: OFFICIAL_WHATSAPP_NUMBER,
-    whatsappDisplay: OFFICIAL_WHATSAPP_DISPLAY,
+    location: settings.address || OFFICIAL_LOCATION,
+    whatsappNumber,
+    whatsappDisplay: settings.phone || OFFICIAL_WHATSAPP_DISPLAY,
     currency: {
       rateMicroBs,
       rateFormatted,
@@ -421,6 +432,8 @@ export function getPublicQrMenuData(rawDb: Database.Database): PublicQrMenuPaylo
       rateUpdatedAtCaracas
     },
     categories,
+    dishes: allProducts,
+    products: allProducts,
     barraLibre,
     combos,
     generatedAtMs: now

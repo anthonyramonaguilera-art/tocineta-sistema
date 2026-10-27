@@ -17,7 +17,7 @@ describe('Ticket IR - Representación Intermedia, HTML y ESC/POS (@tocineta/shar
       { type: 'title_double', text: 'TURNO T-023', align: 'center' },
       { type: 'key_value', key: 'ORDEN:', value: '#CMD-0145', bold: true },
       { type: 'key_value', key: 'CANAL:', value: 'Mesa 4' },
-      { type: 'key_value', key: 'CLIENTE:', value: 'Olinelcys Aguilera' },
+      { type: 'key_value', key: 'CLIENTE:', value: 'CLIENTE GENERAL' },
       { type: 'separator', style: 'double' },
       { type: 'line_item', qty: 1, name: 'Clásica Burger', price: '$6.50' },
       { type: 'modifier_item', text: '[ SIN CEBOLLA ]', highlighted: true },
@@ -39,10 +39,10 @@ describe('Ticket IR - Representación Intermedia, HTML y ESC/POS (@tocineta/shar
   it('renderTicketToHtml genera la vista previa idéntica en HTML para navegador sin CDNs', () => {
     const html = renderTicketToHtml(sampleIR);
     expect(html).toContain('ticket-preview-container');
-    expect(html).toContain('TOCINETA SONR&Iacute;E');
+    expect(html).toContain('TOCINETA');
     expect(html).toContain('TURNO T-023');
     expect(html).toContain('#CMD-0145');
-    expect(html).toContain('Olinelcys Aguilera');
+    expect(html).toContain('CLIENTE GENERAL');
     expect(html).toContain('Clásica Burger');
     expect(html).toContain('[ SIN CEBOLLA ]');
     expect(html).toContain('TOTAL USD:');

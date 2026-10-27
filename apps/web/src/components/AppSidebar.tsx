@@ -25,7 +25,10 @@ const MENU_ITEMS: MenuItem[] = [
   { tab: 'staff', label: 'Personal y Permisos', icon: 'Users', mode: 'pro', isImplemented: true },
   { tab: 'health', label: 'Salud y Hardware', icon: 'Cpu', mode: 'pro', isImplemented: true },
   { tab: 'emergency', label: 'Talonario Contingencia', icon: 'FileText', mode: 'pro', isImplemented: true },
-  { tab: 'qr-menu', label: 'Menú Digital QR', icon: 'QrCode', mode: 'pro', isImplemented: true }
+  { tab: 'qr-menu', label: 'Menú Digital QR', icon: 'QrCode', mode: 'pro', isImplemented: true },
+  { tab: 'quotes', label: 'Cotizador Eventos', icon: 'Calculator', mode: 'pro', isImplemented: true },
+  { tab: 'partners', label: 'Socios', icon: 'Handshake', mode: 'pro', isImplemented: true },
+  { tab: 'settings', label: 'Configuración Negocio', icon: 'Settings', mode: 'pro', isImplemented: true }
 ];
 
 interface AppSidebarProps {

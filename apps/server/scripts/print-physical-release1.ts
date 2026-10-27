@@ -80,7 +80,7 @@ async function main() {
     orderNumber: 23,
     fulfillmentType: 'salon',
     tableNumber: '4',
-    customerName: 'Sra. Olinelcys Ramírez',
+    customerName: 'CLIENTE GENERAL',
     customerPhone: '0414-1234567',
     deliveryAddress: null,
     grossFoodSubtotalUsdCents: 790,
@@ -137,7 +137,7 @@ async function main() {
       { type: 'title_double', text: '#CMD-0023 · TURNO T-023', align: 'center' },
       { type: 'banner_inverted', text: '[ORDEN COMPUESTA: ESPERAR HOT DOGS]' },
       { type: 'key_value', key: 'CANAL:', value: 'Mesa 4', bold: true },
-      { type: 'key_value', key: 'CLIENTE:', value: 'Sra. Olinelcys Ramírez' },
+      { type: 'key_value', key: 'CLIENTE:', value: 'CLIENTE GENERAL' },
       { type: 'key_value', key: 'HORA:', value: new Date(now).toLocaleTimeString('es-VE') },
       { type: 'separator', style: 'double' },
       { type: 'line_item', qty: 1, name: 'Hamburguesa Clásica' },
@@ -158,7 +158,7 @@ async function main() {
       { type: 'title_double', text: '#CMD-0023 · TURNO T-023', align: 'center' },
       { type: 'banner_inverted', text: '[ORDEN COMPUESTA: ESPERAR HAMBURGUESAS]' },
       { type: 'key_value', key: 'CANAL:', value: 'Mesa 4', bold: true },
-      { type: 'key_value', key: 'CLIENTE:', value: 'Sra. Olinelcys Ramírez' },
+      { type: 'key_value', key: 'CLIENTE:', value: 'CLIENTE GENERAL' },
       { type: 'key_value', key: 'HORA:', value: new Date(now).toLocaleTimeString('es-VE') },
       { type: 'separator', style: 'double' },
       { type: 'line_item', qty: 1, name: 'Hot Dog Especial' },
@@ -197,7 +197,7 @@ async function main() {
     jornadaId: 'jor_release1_cert',
     openedAtMs: now - (8 * 3600 * 1000), // 8 horas antes
     closedAtMs: now,
-    closedByName: 'Sra. Olinelcys Ramírez (Admin)',
+    closedByName: 'ADMIN',
     rateMicroBs: 40_000_000,
     grossSalesUsdCents: 45000, // $450.00
     discountUsdCents: 1500,    // -$15.00
