@@ -32,4 +32,9 @@ logs/
 .DS_Store
 Thumbs.db
 
+# Playwright Test Artifacts (Videos, Traces, Screenshots)
+docs/r2/evidencia/artifacts/
+docs/r2/evidencia/playwright-report/
+
+
 
