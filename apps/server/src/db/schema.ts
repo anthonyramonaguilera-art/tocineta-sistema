@@ -996,4 +996,100 @@ export type InsertPayablePayment = typeof payablePayments.$inferInsert;
 export type MonthlyClosure = typeof monthlyClosures.$inferSelect;
 export type InsertMonthlyClosure = typeof monthlyClosures.$inferInsert;
 
+export const staffPayrollProfiles = sqliteTable('staff_payroll_profiles', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }).unique(),
+  frequency: text('frequency', { enum: ['DIARIO', 'SEMANAL', 'QUINCENAL'] }).notNull().default('SEMANAL'),
+  baseSalaryUsdCents: integer('base_salary_usd_cents').notNull().default(0),
+  notes: text('notes'),
+  createdAtMs: integer('created_at_ms').notNull(),
+  updatedAtMs: integer('updated_at_ms').notNull()
+});
+
+export const staffPayrollSettlements = sqliteTable('staff_payroll_settlements', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  periodStartMs: integer('period_start_ms').notNull(),
+  periodEndMs: integer('period_end_ms').notNull(),
+  frequency: text('frequency', { enum: ['DIARIO', 'SEMANAL', 'QUINCENAL'] }).notNull(),
+  baseSalaryUsdCents: integer('base_salary_usd_cents').notNull(),
+  bonusesUsdCents: integer('bonuses_usd_cents').notNull().default(0),
+  advancesUsdCents: integer('advances_usd_cents').notNull().default(0),
+  consumptionsChargedUsdCents: integer('consumptions_charged_usd_cents').notNull().default(0),
+  consumptionsForgivenUsdCents: integer('consumptions_forgiven_usd_cents').notNull().default(0),
+  fixedDinnerCount: integer('fixed_dinner_count').notNull().default(0),
+  fixedDinnerCostUsdCents: integer('fixed_dinner_cost_usd_cents').notNull().default(0),
+  netUsdCents: integer('net_usd_cents').notNull(),
+  netBsCents: integer('net_bs_cents').notNull(),
+  rateMicroBs: integer('rate_micro_bs').notNull(),
+  paymentMethod: text('payment_method').notNull(),
+  notes: text('notes'),
+  settledByUserId: text('settled_by_user_id').notNull().references(() => users.id),
+  receiptPdfPath: text('receipt_pdf_path'),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const staffPayrollAdjustments = sqliteTable('staff_payroll_adjustments', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  type: text('type', { enum: ['BONO', 'ADELANTO'] }).notNull(),
+  amountUsdCents: integer('amount_usd_cents').notNull(),
+  amountBsCents: integer('amount_bs_cents').notNull().default(0),
+  concept: text('concept').notNull(),
+  createdByUserId: text('created_by_user_id').notNull().references(() => users.id),
+  settlementId: text('settlement_id').references(() => staffPayrollSettlements.id),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const staffConsumptions = sqliteTable('staff_consumptions', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull().references(() => users.id, { onDelete: 'cascade' }),
+  orderId: text('order_id').references(() => orders.id),
+  concept: text('concept').notNull(),
+  amountUsdCents: integer('amount_usd_cents').notNull(),
+  isFixedDinner: integer('is_fixed_dinner').notNull().default(0),
+  status: text('status', { enum: ['PENDIENTE', 'COBRADO', 'PERDONADO'] }).notNull().default('PENDIENTE'),
+  settlementId: text('settlement_id').references(() => staffPayrollSettlements.id),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const tipPools = sqliteTable('tip_pools', {
+  id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().references(() => locations.id),
+  jornadaId: text('jornada_id').notNull().references(() => jornadas.id),
+  splitMode: text('split_mode', { enum: ['EQUAL', 'HOURS'] }).notNull().default('EQUAL'),
+  totalCollectedUsdCents: integer('total_collected_usd_cents').notNull().default(0),
+  totalCollectedBsCents: integer('total_collected_bs_cents').notNull().default(0),
+  status: text('status', { enum: ['OPEN', 'CLOSED'] }).notNull().default('OPEN'),
+  closedByUserId: text('closed_by_user_id').references(() => users.id),
+  closedAtMs: integer('closed_at_ms'),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const tipPoolDistributions = sqliteTable('tip_pool_distributions', {
+  id: text('id').primaryKey(),
+  tipPoolId: text('tip_pool_id').notNull().references(() => tipPools.id, { onDelete: 'cascade' }),
+  userId: text('user_id').notNull().references(() => users.id),
+  hoursWorked: real('hours_worked').notNull().default(1.0),
+  sharePercentage: real('share_percentage').notNull(),
+  amountUsdCents: integer('amount_usd_cents').notNull(),
+  amountBsCents: integer('amount_bs_cents').notNull(),
+  status: text('status', { enum: ['PENDIENTE', 'PAGADO'] }).notNull().default('PENDIENTE'),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export type StaffPayrollProfile = typeof staffPayrollProfiles.$inferSelect;
+export type InsertStaffPayrollProfile = typeof staffPayrollProfiles.$inferInsert;
+export type StaffPayrollSettlement = typeof staffPayrollSettlements.$inferSelect;
+export type InsertStaffPayrollSettlement = typeof staffPayrollSettlements.$inferInsert;
+export type StaffPayrollAdjustment = typeof staffPayrollAdjustments.$inferSelect;
+export type InsertStaffPayrollAdjustment = typeof staffPayrollAdjustments.$inferInsert;
+export type StaffConsumption = typeof staffConsumptions.$inferSelect;
+export type InsertStaffConsumption = typeof staffConsumptions.$inferInsert;
+export type TipPool = typeof tipPools.$inferSelect;
+export type InsertTipPool = typeof tipPools.$inferInsert;
+export type TipPoolDistribution = typeof tipPoolDistributions.$inferSelect;
+export type InsertTipPoolDistribution = typeof tipPoolDistributions.$inferInsert;
+
+
 

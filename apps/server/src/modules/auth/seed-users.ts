@@ -121,7 +121,7 @@ export function syncAndSanitizeCorporateUsers(rawDb: Database.Database): void {
         id, name, username, role, pin_hash, pin_salt, pin_length,
         password_hash, password_salt, must_change_pin, is_active,
         failed_attempts, lockout_stage, locked_until_ms, created_at_ms, updated_at_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 1, 0, 0, NULL, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 0, 0, NULL, ?, ?)
     `).run(
       item.canonicalId, item.name, item.username, item.role, pinHash, pinSalt, item.pin.length,
       pwHash, pwSalt, now, now
@@ -131,10 +131,11 @@ export function syncAndSanitizeCorporateUsers(rawDb: Database.Database): void {
   // 3. Saneamiento de usuarios, repartidores y clientes corporativos
   try {
     rawDb.exec(`
-      UPDATE users SET name = 'ADMIN', username = 'admin' WHERE LOWER(name) LIKE '%anthony%' OR LOWER(name) LIKE '%olinelcys%';
-      UPDATE users SET name = 'MESERO', username = 'mesero' WHERE LOWER(name) LIKE '%carlos%' OR LOWER(name) LIKE '%andrea%';
-      UPDATE users SET name = 'PLANCHA', username = 'plancha' WHERE LOWER(name) LIKE '%jose%' OR LOWER(name) LIKE '%josé%';
-      UPDATE users SET name = 'DESPACHO', username = 'despacho' WHERE LOWER(name) LIKE '%miguel%';
+      UPDATE users SET name = 'ADMIN', username = 'admin', must_change_pin = 1 WHERE LOWER(name) LIKE '%anthony%' OR LOWER(name) LIKE '%olinelcys%' OR id = 'usr_admin';
+      UPDATE users SET name = 'MESERO', username = 'mesero', must_change_pin = 1 WHERE LOWER(name) LIKE '%carlos%' OR LOWER(name) LIKE '%andrea%' OR id = 'usr_mesero';
+      UPDATE users SET name = 'PLANCHA', username = 'plancha', must_change_pin = 1 WHERE LOWER(name) LIKE '%jose%' OR LOWER(name) LIKE '%josé%' OR id = 'usr_plancha';
+      UPDATE users SET name = 'DESPACHO', username = 'despacho', must_change_pin = 1 WHERE LOWER(name) LIKE '%miguel%' OR id = 'usr_despacho';
+      UPDATE users SET name = 'CAJERA', username = 'cajera', must_change_pin = 1 WHERE id = 'usr_cajera';
       UPDATE delivery_drivers SET name = 'REPARTIDOR 1' WHERE id = 'drv_carlos_mora' OR name LIKE '%Carlos%';
       UPDATE delivery_drivers SET name = 'REPARTIDOR 2' WHERE id = 'drv_jose_ramirez' OR name LIKE '%José%' OR name LIKE '%Jose%';
       UPDATE delivery_drivers SET name = 'REPARTIDOR 3' WHERE id = 'drv_miguel_perez' OR name LIKE '%Miguel%';
@@ -182,7 +183,7 @@ export function seedInitialUsers(rawDb: Database.Database): number {
         pinLength,
         pwHash,
         pwSalt,
-        0, // must_change_pin = 0
+        1, // must_change_pin = 1 (cambio obligatorio de clave para perfiles semilla)
         1, // is_active = 1
         0, // failed_attempts = 0
         0, // lockout_stage = 0
