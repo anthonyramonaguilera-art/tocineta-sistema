@@ -1,7 +1,8 @@
 # INFORME DE FASE 0: CONGELAR, REPARAR Y AUDITAR
 **Fecha:** 2026-10-26
 **Rama Git:** reconstruccion
-**Commit SHA:** a94a7b1817661d40c473d9759b89af187441d9d5
+**Commit Base (pre-reconstruccion):** a94a7b1817661d40c473d9759b89af187441d9d5
+**Commit Fase 0:** 2b88b070440307cba55df586d38e3ffc4b785ce8
 **Tag Git:** fase-0
 
 ---
