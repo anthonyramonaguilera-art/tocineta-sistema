@@ -7,7 +7,9 @@
   "scripts": {
     "build": "pnpm --filter @tocineta/shared run build && pnpm --filter @tocineta/server run build && pnpm --filter @tocineta/web run build",
     "test": "pnpm -r run test",
-    "lint": "pnpm -r run lint",
+    "guard": "node scripts/ui-guard.mjs",
+    "import:photos": "node scripts/import-photos.mjs",
+    "lint": "pnpm -r run lint && node scripts/ui-guard.mjs",
     "db:migrate": "pnpm --filter @tocineta/server run db:migrate",
     "db:reset-prod": "pnpm --filter @tocineta/server run db:reset-prod",
     "dev:server": "pnpm --filter @tocineta/server run dev",

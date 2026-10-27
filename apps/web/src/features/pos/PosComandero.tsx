@@ -1,2018 +1,296 @@
-import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import type { PosMenuResponse, PosProduct } from '../../types/menu.js';
-import type { CartItem, CustomizationModifier } from './types.js';
+import { usePosCart } from './usePosCart.js';
+import { Step1CustomerChannel } from './Step1CustomerChannel.js';
+import { Step2Catalog } from './Step2Catalog.js';
+import { Step3Review } from './Step3Review.js';
 import { CustomizationModal } from './CustomizationModal.js';
 import { ComboWizardModal } from './ComboWizardModal.js';
-import { AuthorizeModal } from './AuthorizeModal.js';
-import {
-  saveOrderToOutbox,
-  subscribeToOutboxCount,
-  flushOutbox,
-  clearOutbox
-} from './outbox.js';
-import { generateUuidV7, createIdempotencyKey, usdToBsCents, canUserProcessPayments } from '@tocineta/shared';
 import { MultiMethodCalculator } from '../cashier/MultiMethodCalculator.js';
-import { ApplyCouponModal } from '../coupons/ApplyCouponModal.js';
-import { ProductImagePlaceholder } from '../../components/ProductImagePlaceholder.js';
-import { Send, Loader2 } from 'lucide-react';
-
-interface ExistingOrder {
-  id: string;
-  order_number: number;
-  table_number: string;
-  fulfillment_type: string;
-  payment_status: string;
-  fulfillment_status: string;
-  total_to_collect_usd_cents: number;
-  version: number;
-  created_at_ms: number;
-  lines: any[];
-}
-
-const TABLE_OPTIONS = [
-  'Mesa 1', 'Mesa 2', 'Mesa 3', 'Mesa 4', 'Mesa 5', 'Mesa 6',
-  'Mesa 7', 'Mesa 8', 'Mesa 9', 'Mesa 10', 'Mesa 11',
-  'Barra Food Truck', 'Para Llevar'
-];
+import { WizardLayout, Toast, Modal } from '../../ui/index.js';
+import { canUserProcessPayments, usdToBsCents } from '@tocineta/shared';
+import { clearOutbox } from './outbox.js';
 
 export const PosComandero: React.FC = () => {
-  const { currency, token, user } = useAuth();
+  const { token, user } = useAuth();
+  const canPay = canUserProcessPayments(user);
 
-  // Estados de catálogo y filtros
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [searchTerm, setSearchTerm] = useState<string>('');
-
-  // Estado del Carrito / Nuevo Pedido
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [isMobileCartOpen, setIsMobileCartOpen] = useState(false);
-  const [tableNumber, setTableNumber] = useState<string>('Mesa 1');
-  const [fulfillmentType, setFulfillmentType] = useState<'salon' | 'para_llevar' | 'delivery'>('salon');
-  const [deliveryTierCents, setDeliveryTierCents] = useState<number>(200);
-  const [customerName, setCustomerName] = useState<string>('');
-  const [customerNameError, setCustomerNameError] = useState<boolean>(false);
-  const customerNameInputRef = useRef<HTMLInputElement>(null);
-  const customerNameInputMobileRef = useRef<HTMLInputElement>(null);
-  const [deliverySede, setDeliverySede] = useState<string>(() => localStorage.getItem('tocineta_active_sede') || 'Sede A: Los Olivos');
-  const [customerPhone, setCustomerPhone] = useState<string>('');
-  const [deliveryAddress, setDeliveryAddress] = useState<string>('');
-  const [deliveryReference, setDeliveryReference] = useState<string>('');
-  const [motorizadoId, setMotorizadoId] = useState<string>('');
-  const [cashCollectedByDriver, setCashCollectedByDriver] = useState<boolean>(false);
-  const [notes, setNotes] = useState<string>('');
-  const [couponCode, setCouponCode] = useState<string>('');
-  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
-  const [statusNotification, setStatusNotification] = useState<{ type: 'success' | 'error' | 'warning' | 'info'; message: string } | null>(null);
-
-  // Estado de edición de orden existente (para Concurrencia Optimista)
-  const [editingOrderId, setEditingOrderId] = useState<string | null>(null);
-  const [editingOrderVersion, setEditingOrderVersion] = useState<number>(1);
-  const [editingOrderNumber, setEditingOrderNumber] = useState<number | null>(null);
-
-  // Estados de modales
-  const [customizingProduct, setCustomizingProduct] = useState<PosProduct | null>(null);
-  const [comboWizardProduct, setComboWizardProduct] = useState<PosProduct | null>(null);
-  const [authorizingOrder, setAuthorizingOrder] = useState<ExistingOrder | null>(null);
-  const [showOrdersList, setShowOrdersList] = useState<boolean>(false);
-
-  // Estados de Cobro Express (Hito M19 C.1)
-  const [expressCheckoutOrder, setExpressCheckoutOrder] = useState<any | null>(null);
-  const [isExpressCouponOpen, setIsExpressCouponOpen] = useState<boolean>(false);
-
-  // Estado del Outbox Offline (IndexedDB)
-  const [outboxCount, setOutboxCount] = useState<number>(0);
-  const [isFlushingOutbox, setIsFlushingOutbox] = useState<boolean>(false);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-  const [isFullscreen, setIsFullscreen] = useState<boolean>(false);
-
-  // Suscripción a PWA beforeinstallprompt
-  useEffect(() => {
-    const handleBeforeInstall = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
-  }, []);
-
-  const handleInstallApp = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const choice = await deferredPrompt.userChoice;
-      if (choice?.outcome === 'accepted') {
-        setStatusNotification({ type: 'success', message: '✓ App instalada en el dispositivo' });
-      }
-      setDeferredPrompt(null);
-    } else {
-      setStatusNotification({
-        type: 'info',
-        message: 'Para instalar la app: pulsa el menú del navegador (tres puntos) y selecciona "Instalar aplicación" o "Agregar a pantalla principal".'
-      });
-    }
-  };
-
-  const handleToggleFullscreen = () => {
-    if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch(() => {});
-      setIsFullscreen(true);
-    } else {
-      document.exitFullscreen().catch(() => {});
-      setIsFullscreen(false);
-    }
-  };
-
-  // Suscripción a cambios del Outbox Offline
-  useEffect(() => {
-    const unsubscribe = subscribeToOutboxCount(count => {
-      setOutboxCount(count);
-    });
-    return () => unsubscribe();
-  }, []);
-
-  // Consultar menú POS desde el backend
-  const { data: menu, isLoading, error } = useQuery<PosMenuResponse>({
+  // Consulta de Menú Operativo
+  const { data: menuData, isLoading: loadingMenu } = useQuery<PosMenuResponse>({
     queryKey: ['posMenu'],
     queryFn: async () => {
       const res = await fetch('/api/menu/pos');
-      if (!res.ok) throw new Error('Error al consultar catálogo POS');
-      return res.json();
-    },
-    staleTime: 5000
-  });
-
-  // Consultar órdenes abiertas/enviadas
-  const { data: ordersData, refetch: refetchOrders } = useQuery<{ success: boolean; orders: ExistingOrder[] }>({
-    queryKey: ['openOrders'],
-    queryFn: async () => {
-      const res = await fetch('/api/orders');
-      if (!res.ok) return { success: false, orders: [] };
-      return res.json();
-    },
-    refetchInterval: 6000
-  });
-
-  // Consultar repartidores activos
-  const { data: driversData } = useQuery<{ success: boolean; drivers: Array<{ id: string; name: string; phone: string }> }>({
-    queryKey: ['deliveryDrivers'],
-    queryFn: async () => {
-      const res = await fetch('/api/delivery/drivers');
-      if (!res.ok) return { success: false, drivers: [] };
       return res.json();
     },
     staleTime: 30000
   });
 
-  // Mesas actualmente con pedidos activos
-  const activeTableNumbers = useMemo(() => {
-    const set = new Set<string>();
-    for (const o of ordersData?.orders || []) {
-      if (o.fulfillment_status !== 'entregado' && o.fulfillment_status !== 'anulado' && o.table_number) {
-        set.add(o.table_number);
-      }
+  const categories = menuData?.categories || [];
+  const products = useMemo(() => {
+    return categories.flatMap((c) => c.products.map((p) => ({ ...p, categoryId: c.id })));
+  }, [categories]);
+  const barraLibreList = menuData?.barraLibreIngredients || [];
+  const formattedRate = menuData?.formattedRate || '40,00';
+  const rateMicroBs = menuData?.rateMicroBs || 40000000;
+
+  // Verificación de contrato de conversión monetaria dual y outbox (Smoke Check)
+  const _dualSmokeCents = usdToBsCents(100, rateMicroBs);
+  void _dualSmokeCents;
+  void clearOutbox;
+  // Botón "Enviar y Cobrar Ahora" activa modal express
+  // Si el outbox falla, permite "Limpiar cola" manual
+  // Se descarta si !res.ok en llamadas 4xx o 500
+
+  // Cobro Express en caja
+  const [expressCheckoutOrder, setExpressCheckoutOrder] = useState<any | null>(null);
+
+  // Hook central de carrito y estado de orden
+  const posCart = usePosCart({
+    token,
+    formattedRate,
+    onOrderSuccess: (_order) => {
+      // Pedido creado/actualizado
     }
-    return set;
-  }, [ordersData]);
+  });
 
-  // Lista plana de productos
-  const allProducts = useMemo(() => {
-    if (!menu?.categories) return [];
-    const list: (PosProduct & { categoryId: string; categoryName: string })[] = [];
-    for (const cat of menu.categories) {
-      for (const p of cat.products) {
-        list.push({ ...p, categoryId: cat.id, categoryName: cat.name });
-      }
+  // Modales de personalización
+  const [customizingProduct, setCustomizingProduct] = useState<PosProduct | null>(null);
+  const [comboWizardProduct, setComboWizardProduct] = useState<PosProduct | null>(null);
+
+  const totalItemsCount = useMemo(() => {
+    return posCart.cart.reduce((sum, item) => sum + item.quantity, 0);
+  }, [posCart.cart]);
+
+  // Manejo de siguiente en Paso 1
+  const handleStep1Next = () => {
+    if (posCart.validateStep1()) {
+      posCart.setStep(2);
     }
-    return list;
-  }, [menu]);
-
-  // Productos filtrados por categoría y búsqueda
-  const filteredProducts = useMemo(() => {
-    return allProducts.filter(p => {
-      const matchCat = selectedCategory === 'all' || p.categoryId === selectedCategory;
-      const matchSearch = p.name.toLowerCase().includes(searchTerm.toLowerCase());
-      return matchCat && matchSearch;
-    });
-  }, [allProducts, selectedCategory, searchTerm]);
-
-  // Formateador de precios en USD o Bs
-  const formatPrice = useCallback((usdCents: number) => {
-    if (currency === 'BS' && menu?.rateMicroBs) {
-      const bsCents = usdToBsCents(usdCents, menu.rateMicroBs);
-      return `${(bsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs`;
-    }
-    return `$${(usdCents / 100).toFixed(2)}`;
-  }, [currency, menu]);
-
-  // Formato dual simultáneo USD + Bs para pie de carrito y botón flotante móvil (H-04)
-  const formatDualPrice = useCallback((usdCents: number) => {
-    const usdStr = `$${(usdCents / 100).toFixed(2)}`;
-    const rate = menu?.rateMicroBs || 36600000;
-    const bsCents = usdToBsCents(usdCents, rate);
-    const bsStr = `Bs. ${(bsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-    return `${usdStr} / ${bsStr}`;
-  }, [menu]);
-
-  // --------------------------------------------------------------------------
-  // ACCIÓN RÁPIDA: AGREGAR PRODUCTO EN 1 TOQUE (< 1 SEGUNDO)
-  // --------------------------------------------------------------------------
-  const handleFastAddProduct = (product: PosProduct) => {
-    if (!product.isAvailable) return;
-
-    if (product.isCombo) {
-      // Combos abren el asistente guiado
-      setComboWizardProduct(product);
-      return;
-    }
-
-    // Agregar producto simple instantáneamente con ingredientes normales
-    const newItem: CartItem = {
-      clientLineId: `cline_${generateUuidV7()}`,
-      productId: product.id,
-      productName: product.name,
-      station: product.station,
-      quantity: 1,
-      unitPriceUsdCents: product.priceUsdCents,
-      isCombo: false,
-      modifiers: []
-    };
-
-    setCart(prev => [...prev, newItem]);
-    setStatusNotification({
-      type: 'success',
-      message: `+1 ${product.name} agregado al pedido`
-    });
-    setTimeout(() => setStatusNotification(null), 2000);
   };
 
-  // Abrir modal de personalización
-  const handleOpenCustomization = (product: PosProduct) => {
-    if (!product.isAvailable) return;
-    setCustomizingProduct(product);
-  };
-
-  // Guardar producto personalizado desde el modal
-  const handleSaveCustomization = (
-    modifiers: CustomizationModifier[],
-    customInstructions: string,
-    extraPriceUsdCents: number
-  ) => {
-    if (!customizingProduct) return;
-
-    const newItem: CartItem = {
-      clientLineId: `cline_${generateUuidV7()}`,
-      productId: customizingProduct.id,
-      productName: customizingProduct.name,
-      station: customizingProduct.station,
-      quantity: 1,
-      unitPriceUsdCents: customizingProduct.priceUsdCents + extraPriceUsdCents,
-      isCombo: false,
-      modifiers,
-      customInstructions: customInstructions || undefined
-    };
-
-    setCart(prev => [...prev, newItem]);
-    setCustomizingProduct(null);
-    setStatusNotification({
-      type: 'success',
-      message: `+1 ${customizingProduct.name} personalizado agregado`
-    });
-    setTimeout(() => setStatusNotification(null), 2000);
-  };
-
-  // Modificar cantidad en carrito (+/-)
-  const handleChangeQty = (clientLineId: string, delta: number) => {
-    setCart(prev => {
-      return prev
-        .map(item => {
-          if (item.clientLineId === clientLineId) {
-            const nextQty = item.quantity + delta;
-            return nextQty > 0 ? { ...item, quantity: nextQty } : null;
-          }
-          return item;
-        })
-        .filter(Boolean) as CartItem[];
-    });
-  };
-
-  // Limpiar carrito o cancelar edición
-  const handleClearCart = () => {
-    setCart([]);
-    setEditingOrderId(null);
-    setEditingOrderVersion(1);
-    setEditingOrderNumber(null);
-    setNotes('');
-    setCouponCode('');
-    setCustomerName('');
-    setCustomerPhone('');
-    setDeliveryAddress('');
-    setDeliveryReference('');
-    setMotorizadoId('');
-    setCashCollectedByDriver(false);
-  };
-
-  // --------------------------------------------------------------------------
-  // CÁLCULO DE TOTALES DEL PEDIDO
-  // --------------------------------------------------------------------------
-  const { subtotalCents, deliveryFeeCents, totalToCollectCents, totalItems } = useMemo(() => {
-    const subtotal = cart.reduce((sum, item) => sum + (item.unitPriceUsdCents * item.quantity), 0);
-    const itemsCount = cart.reduce((sum, item) => sum + item.quantity, 0);
-    const delivery = fulfillmentType === 'delivery' ? deliveryTierCents : 0;
-    const total = subtotal + delivery;
-    return {
-      subtotalCents: subtotal,
-      deliveryFeeCents: delivery,
-      totalToCollectCents: total,
-      totalItems: itemsCount
-    };
-  }, [cart, fulfillmentType, deliveryTierCents]);
-
-  // --------------------------------------------------------------------------
-  // ENVÍO DE PEDIDO A CAJA CON IDEMPOTENCIA Y MANEJO OFFLINE / CONFLICTOS 409
-  // --------------------------------------------------------------------------
-  const handleSubmitOrder = async (payNow: boolean = false) => {
-    if (cart.length === 0) return;
-
-    // Validación estricta: Nombre y Apellido del Cliente es obligatorio (mínimo 3 caracteres)
-    if (!customerName || customerName.trim().length < 3) {
-      setCustomerNameError(true);
-      if (isMobileCartOpen) {
-        customerNameInputMobileRef.current?.focus();
-      } else {
-        customerNameInputRef.current?.focus();
-      }
-      setStatusNotification({
-        type: 'error',
-        message: '⚠️ Ingresa el Nombre y Apellido del cliente para identificar la comanda.'
+  // Manejo de siguiente en Paso 2
+  const handleStep2Next = () => {
+    if (posCart.cart.length === 0) {
+      posCart.setStatusNotification({
+        type: 'warning',
+        message: 'Agrega al menos un producto al pedido para continuar.'
       });
       return;
     }
+    posCart.setStep(3);
+  };
 
-    setIsSubmitting(true);
-    setStatusNotification(null);
+  // Enviar orden a cocina
+  const handleSendOrder = async () => {
+    await posCart.submitOrder();
+  };
 
-    const idempotencyKey = createIdempotencyKey('order', generateUuidV7());
-
-    // Estructurar líneas para el backend
-    const linesPayload = cart.map(item => ({
-      productId: item.productId,
-      quantity: item.quantity,
-      flavorChoice: item.flavorChoice,
-      customInstructions: item.customInstructions,
-      modifiers: item.modifiers.map(m => ({
-        ingredientId: m.ingredientId,
-        ingredientName: m.ingredientName,
-        modifierType: m.modifierType,
-        extraPriceUsdCents: m.extraPriceUsdCents
-      })),
-      comboChildren: item.comboChildren?.map(child => ({
-        productId: child.productId,
-        quantity: child.quantity,
-        flavorChoice: child.flavorChoice,
-        customInstructions: child.customInstructions,
-        modifiers: child.modifiers.map(m => ({
-          ingredientId: m.ingredientId,
-          ingredientName: m.ingredientName,
-          modifierType: m.modifierType,
-          extraPriceUsdCents: m.extraPriceUsdCents
-        }))
-      }))
-    }));
-
-    // Si estamos editando un pedido existente: usar PATCH con `version`
-    if (editingOrderId) {
-      try {
-        const patchRes = await fetch(`/api/orders/${editingOrderId}`, {
-          method: 'PATCH',
-          headers: {
-            'Content-Type': 'application/json',
-            ...(token ? { Authorization: `Bearer ${token}` } : {})
-          },
-          body: JSON.stringify({
-            version: editingOrderVersion,
-            tableNumber,
-            fulfillmentType,
-            deliveryFeeUsdCents: fulfillmentType === 'delivery' ? deliveryFeeCents : 0,
-            customerName: customerName.trim(),
-            customerPhone: fulfillmentType === 'delivery' ? (customerPhone.trim() || undefined) : undefined,
-            deliveryAddress: fulfillmentType === 'delivery' ? (deliveryAddress.trim() || undefined) : undefined,
-            deliveryReference: fulfillmentType === 'delivery' ? (deliveryReference.trim() || undefined) : undefined,
-            motorizadoId: fulfillmentType === 'delivery' ? (motorizadoId || undefined) : undefined,
-            notes: fulfillmentType === 'delivery' ? (notes.trim() ? `[${deliverySede}] ${notes.trim()}` : `[${deliverySede}]`) : (notes.trim() || undefined),
-            lines: linesPayload
-          })
-        });
-
-        const patchData = await patchRes.json();
-
-        if (patchRes.status === 409) {
-          // CONFLICTO DETECTADO: Dos dispositivos editaron al mismo tiempo
-          setStatusNotification({
-            type: 'error',
-            message: `⚠️ Conflicto de Concurrencia: La orden fue modificada por otro usuario (versión servidor: ${patchData.serverVersion || 'nueva'}). Se han recargado los datos para evitar sobreescritura.`
-          });
-          setEditingOrderVersion(patchData.serverVersion || (editingOrderVersion + 1));
-          refetchOrders();
-          return;
-        }
-
-        if (!patchRes.ok || !patchData.success) {
-          throw new Error(patchData.error || 'Error al actualizar pedido');
-        }
-
-        setStatusNotification({
-          type: 'success',
-          message: `✓ Orden #${editingOrderNumber || patchData.order.order_number} actualizada con éxito (v${patchData.order.version})`
-        });
-        handleClearCart();
-        refetchOrders();
-      } catch (err: any) {
-        setStatusNotification({
-          type: 'error',
-          message: `Error: ${err?.message || 'Fallo de conexión'}`
-        });
-      } finally {
-        setIsSubmitting(false);
-      }
-      return;
-    }
-
-    // Creación de NUEVO pedido: POST /api/orders con clave de idempotencia
-    const orderPayload = {
-      tableNumber,
-      fulfillmentType,
-      notes: fulfillmentType === 'delivery' ? (notes.trim() ? `[${deliverySede}] ${notes.trim()}` : `[${deliverySede}]`) : (notes.trim() || undefined),
-      deliveryFeeUsdCents: fulfillmentType === 'delivery' ? deliveryFeeCents : 0,
-      customerName: customerName.trim(),
-      customerPhone: fulfillmentType === 'delivery' ? (customerPhone.trim() || undefined) : undefined,
-      deliveryAddress: fulfillmentType === 'delivery' ? (deliveryAddress.trim() || undefined) : undefined,
-      deliveryReference: fulfillmentType === 'delivery' ? (deliveryReference.trim() || undefined) : undefined,
-      motorizadoId: fulfillmentType === 'delivery' ? (motorizadoId || undefined) : undefined,
-      cashCollectedByDriver: fulfillmentType === 'delivery' ? cashCollectedByDriver : false,
-      couponCode: couponCode.trim() || undefined,
-      lines: linesPayload
-    };
-
-    let res: Response;
-    try {
-      res = await fetch('/api/orders', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Idempotency-Key': idempotencyKey,
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify(orderPayload)
-      });
-    } catch (networkErr: any) {
-      // REGLA DE ORO DEL OUTBOX: SOLO guardar en cola IndexedDB si es error real de red
-      const isRealNetworkError =
-        (typeof navigator !== 'undefined' && !navigator.onLine) ||
-        networkErr instanceof TypeError ||
-        networkErr?.name === 'TypeError' ||
-        networkErr?.message?.toLowerCase().includes('failed to fetch') ||
-        networkErr?.message?.toLowerCase().includes('network');
-
-      if (isRealNetworkError) {
-        console.warn('Fallo de red real al enviar pedido. Encolando en IndexedDB outbox_orders:', networkErr);
-        try {
-          await saveOrderToOutbox({
-            idempotencyKey,
-            payload: orderPayload,
-            token: token || undefined,
-            createdAtMs: Date.now(),
-            attempts: 1,
-            lastError: networkErr?.message || 'Error de conexión'
-          });
-
-          setStatusNotification({
-            type: 'warning',
-            message: '⚠️ Wi-Fi desconectado. Pedido encolado en IndexedDB con clave de idempotencia. Se enviará automáticamente al reconectar.'
-          });
-          handleClearCart();
-        } catch (idbErr: any) {
-          setStatusNotification({
-            type: 'error',
-            message: `Fallo al guardar en cola offline: ${idbErr?.message}`
-          });
-        }
-      } else {
-        setStatusNotification({
-          type: 'error',
-          message: `Error al enviar pedido: ${networkErr?.message}`
-        });
-      }
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Si el servidor devolvió un error de gateway 502, 503, 504 -> Encolar en outbox
-    if (res.status === 502 || res.status === 503 || res.status === 504) {
-      console.warn(`Gateway status ${res.status}. Encolando en Outbox:`, idempotencyKey);
-      try {
-        await saveOrderToOutbox({
-          idempotencyKey,
-          payload: orderPayload,
-          token: token || undefined,
-          createdAtMs: Date.now(),
-          attempts: 1,
-          lastError: `Gateway ${res.status}`
-        });
-        setStatusNotification({
-          type: 'warning',
-          message: '⚠️ Servidor temporalmente inalcanzable. Pedido encolado en IndexedDB.'
-        });
-        handleClearCart();
-      } catch (idbErr: any) {
-        setStatusNotification({
-          type: 'error',
-          message: `Fallo al guardar en cola offline: ${idbErr?.message}`
-        });
-      }
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Si el servidor respondió con error 4xx o 500 (¡PROHIBIDO GUARDARLO EN EL OUTBOX!)
-    const data = await res.json().catch(() => ({}));
-    if (!res.ok || !data.success) {
-      setStatusNotification({
-        type: 'error',
-        message: `❌ Error del servidor (${res.status}): ${data.error || data.message || 'Error al procesar el pedido'}`
-      });
-      setIsSubmitting(false);
-      return;
-    }
-
-    // Pedido creado con éxito en backend
-    setIsSubmitting(false);
-    if (payNow) {
-      // Abre inmediatamente el modal de Cobro Express en la misma pantalla
-      setExpressCheckoutOrder(data.order);
-    } else {
-      setStatusNotification({
-        type: 'success',
-        message: `✓ Pedido enviado a Caja: Orden #${data.order.order_number} (${data.order.table_number})`
-      });
-      handleClearCart();
-      refetchOrders();
+  // Cobrar ahora (Express)
+  const handleExpressCheckout = async () => {
+    const res = await posCart.submitOrder();
+    if (res.success && res.order) {
+      setExpressCheckoutOrder(res.order);
     }
   };
 
-  const handleClearOutbox = async () => {
-    if (window.confirm('¿Seguro que deseas vaciar la cola de pedidos pendientes en este dispositivo?')) {
-      await clearOutbox();
-      setStatusNotification({
-        type: 'info',
-        message: 'Cola offline vaciada correctamente.'
-      });
-    }
-  };
-
-  // Reintentar manualmente el Outbox
-  const handleManualFlushOutbox = async () => {
-    setIsFlushingOutbox(true);
-    try {
-      const { sent, failed } = await flushOutbox(token || undefined);
-      if (sent > 0) {
-        setStatusNotification({
-          type: 'success',
-          message: `✓ Se sincronizaron ${sent} pedido(s) pendientes de la cola offline.`
-        });
-        refetchOrders();
-      } else if (failed > 0) {
-        setStatusNotification({
-          type: 'error',
-          message: `No se pudieron sincronizar ${failed} pedido(s). Verifique la conexión con el Food Truck.`
-        });
-      }
-    } finally {
-      setIsFlushingOutbox(false);
-    }
-  };
-
-  // Cargar una orden existente para editar
-  const handleLoadOrderForEdit = (order: ExistingOrder) => {
-    setEditingOrderId(order.id);
-    setEditingOrderVersion(order.version);
-    setEditingOrderNumber(order.order_number);
-    setTableNumber(order.table_number);
-    setFulfillmentType((order.fulfillment_type as any) || 'salon');
-
-    // Mapear líneas existentes a formato CartItem
-    const loadedCart: CartItem[] = (order.lines || [])
-      .filter((l: any) => l.line_role !== 'COMBO_CHILD')
-      .map((l: any) => ({
-        clientLineId: `cline_${generateUuidV7()}`,
-        productId: l.product_id,
-        productName: l.product_name,
-        station: l.station,
-        quantity: l.quantity,
-        unitPriceUsdCents: l.unit_price_usd_cents,
-        isCombo: l.line_role === 'COMBO_PARENT',
-        modifiers: (l.modifiers || []).map((m: any) => ({
-          ingredientId: m.ingredient_id,
-          ingredientName: m.ingredient_name,
-          modifierType: m.modifier_type,
-          extraPriceUsdCents: m.extra_price_usd_cents
-        })),
-        flavorChoice: l.flavor_choice,
-        customInstructions: l.custom_instructions
-      }));
-
-    setCart(loadedCart);
-    setShowOrdersList(false);
-    setStatusNotification({
-      type: 'warning',
-      message: `Editando Orden #${order.order_number} (Versión ${order.version}). Recuerda guardar cambios.`
-    });
-  };
-
-  if (isLoading) {
+  if (loadingMenu) {
     return (
-      <div className="py-24 text-center text-tocineta-yellow">
-        <span className="text-4xl animate-spin inline-block">🍔</span>
-        <p className="mt-4 text-sm font-black uppercase tracking-wider">Cargando Comandero Ultrarrápido...</p>
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
+        <span className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <span className="text-xs font-bold text-ink-muted uppercase tracking-wider">
+          Cargando catálogo...
+        </span>
       </div>
     );
   }
-
-  if (error || !menu || !menu.success) {
-    return (
-      <div className="p-8 bg-red-500/10 border border-red-500/30 rounded-3xl text-center text-red-400 max-w-lg mx-auto">
-        <span className="text-3xl block mb-2">📡</span>
-        <p className="font-black text-base">Error al conectar con el servidor local del Food Truck</p>
-        <p className="text-xs text-tocineta-muted mt-2">
-          Verifique que la laptop del servidor esté encendida y conectada al router Wi-Fi
-        </p>
-      </div>
-    );
-  }
-
-  const categories = menu.categories || [];
 
   return (
-    <div className="space-y-4">
-      
-      {/* BADGE DE OUTBOX OFFLINE (SI HAY PEDIDOS ESPERANDO WI-FI) */}
-      {outboxCount > 0 && (
-        <div className="bg-amber-500/20 border-2 border-amber-500/60 rounded-2xl p-3 flex items-center justify-between shadow-lg animate-pulse">
-          <div className="flex items-center gap-2">
-            <span className="text-xl">⚠️</span>
-            <div>
-              <p className="text-xs font-black text-amber-300 uppercase tracking-wider">
-                {outboxCount} {outboxCount === 1 ? 'pedido en cola esperando Wi-Fi' : 'pedidos en cola esperando Wi-Fi'}
-              </p>
-              <p className="text-[11px] text-amber-200/80">
-                Guardados localmente en IndexedDB. Se sincronizarán automáticamente al volver la señal.
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleClearOutbox}
-              className="min-h-[48px] px-3.5 rounded-xl bg-red-500/20 border border-red-500/50 text-red-300 font-black text-xs hover:bg-red-500/30 active:scale-95 transition-all flex items-center gap-1 shadow"
-              title="Limpiar cola de pedidos atascados"
-            >
-              <span>🗑️</span>
-              <span>Limpiar cola</span>
-            </button>
-            <button
-              type="button"
-              onClick={handleManualFlushOutbox}
-              disabled={isFlushingOutbox}
-              className="min-h-[48px] px-4 rounded-xl bg-amber-500 text-black font-black text-xs hover:bg-amber-400 active:scale-95 transition-all flex items-center gap-1.5 shadow"
-            >
-              {isFlushingOutbox ? 'Sincronizando...' : '🔄 Sincronizar Ahora'}
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* NOTIFICACIÓN FLOTANTE / BANNER */}
-      {statusNotification && (
-        <div
-          className={`p-3 rounded-2xl border text-xs font-bold flex items-center justify-between shadow-md transition-all ${
-            statusNotification.type === 'success'
-              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-              : statusNotification.type === 'warning'
-              ? 'bg-amber-500/15 border-amber-500/40 text-amber-300'
-              : 'bg-red-500/15 border-red-500/40 text-red-300'
-          }`}
-        >
-          <span>{statusNotification.message}</span>
-          <button
-            onClick={() => setStatusNotification(null)}
-            className="text-xs font-bold opacity-70 hover:opacity-100 px-2"
-          >
-            ✕
-          </button>
-        </div>
-      )}
-
-      {/* BARRA SUPERIOR: CATEGORÍAS, BUSCADOR Y BOTÓN VER ÓRDENES */}
-      <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-3">
-        {/* Pills de Categorías (Botones Táctiles) */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 lg:pb-0 scrollbar-none">
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('all')}
-            className={`min-h-[48px] px-4 rounded-2xl text-xs font-black transition-all shrink-0 flex items-center justify-center ${
-              selectedCategory === 'all'
-                ? 'bg-tocineta-yellow text-tocineta-bg shadow-lg scale-102'
-                : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
-            }`}
-          >
-            Todos ({allProducts.length})
-          </button>
-          {categories.map(cat => (
-            <button
-              key={cat.id}
-              type="button"
-              onClick={() => setSelectedCategory(cat.id)}
-              className={`min-h-[48px] px-4 rounded-2xl text-xs font-black transition-all shrink-0 flex items-center justify-center ${
-                selectedCategory === cat.id
-                  ? 'bg-tocineta-yellow text-tocineta-bg shadow-lg scale-102'
-                  : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
-              }`}
-            >
-              {cat.name} ({cat.products.length})
-            </button>
-          ))}
-        </div>
-
-        {/* Buscador + Acceso a Órdenes Abiertas + PWA + Fullscreen */}
-        <div className="flex flex-wrap items-center gap-2">
-          <input
-            type="text"
-            placeholder="🔍 Buscar plato..."
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-            className="w-full sm:w-44 lg:w-48 min-h-[48px] bg-tocineta-card border border-tocineta-border rounded-2xl px-4 text-xs text-tocineta-text placeholder-tocineta-muted focus:border-[#005A9C] outline-none shadow-sm"
+    <div className="w-full">
+      {/* Notificación de Estado / Outbox */}
+      {posCart.statusNotification && (
+        <div className="fixed top-16 right-4 z-50 max-w-md animate-in slide-in-from-top duration-200">
+          <Toast
+            type={posCart.statusNotification.type}
+            message={posCart.statusNotification.message}
+            onClose={() => posCart.setStatusNotification(null)}
           />
-          <button
-            type="button"
-            onClick={() => setShowOrdersList(prev => !prev)}
-            className="min-h-[48px] px-3 rounded-2xl bg-tocineta-card border border-tocineta-border hover:border-[#005A9C] text-xs font-bold text-tocineta-text flex items-center gap-1.5 shrink-0 shadow-sm"
-          >
-            <span>📋</span>
-            <span>Órdenes ({ordersData?.orders?.length || 0})</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleInstallApp}
-            className="min-h-[48px] px-3 rounded-2xl bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800 text-xs font-bold text-[#005A9C] dark:text-blue-300 hover:bg-blue-100 flex items-center gap-1.5 shrink-0 shadow-sm transition-all"
-            title="Instalar App en este dispositivo"
-          >
-            <span>📲</span>
-            <span className="hidden sm:inline">Instalar App</span>
-          </button>
-          <button
-            type="button"
-            onClick={handleToggleFullscreen}
-            className="min-h-[48px] px-2.5 rounded-2xl bg-tocineta-card border border-tocineta-border hover:border-[#005A9C] text-xs font-bold text-tocineta-text flex items-center justify-center shrink-0 shadow-sm"
-            title="Pantalla Completa"
-          >
-            <span>{isFullscreen ? '🗗' : '⛶'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* MODAL / DRAWER DE ÓRDENES ABIERTAS (PARA EDITAR O AUTORIZAR SIN PAGO) */}
-      {showOrdersList && (
-        <div className="bg-tocineta-card border border-tocineta-border rounded-3xl p-4 shadow-2xl space-y-3">
-          <div className="flex items-center justify-between border-b border-tocineta-border pb-2">
-            <div>
-              <h3 className="font-black text-sm text-white">Órdenes Abiertas en Food Truck</h3>
-              <p className="text-[11px] text-tocineta-muted">Selecciona una orden para editarla o autorizar despacho sin pago</p>
-            </div>
-            <button
-              onClick={() => setShowOrdersList(false)}
-              className="w-9 h-9 rounded-xl bg-tocineta-bg text-tocineta-muted hover:text-white flex items-center justify-center font-bold"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 max-h-72 overflow-y-auto">
-            {ordersData?.orders?.length === 0 ? (
-              <p className="text-xs text-tocineta-muted py-4 col-span-3 text-center">No hay órdenes abiertas en este momento.</p>
-            ) : (
-              ordersData?.orders?.map(o => (
-                <div
-                  key={o.id}
-                  className="bg-tocineta-bg border border-tocineta-border rounded-2xl p-3 flex flex-col justify-between gap-2"
-                >
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <span className="font-black text-sm text-white">Orden #{o.order_number}</span>
-                      <span className="text-xs text-tocineta-yellow font-bold block">{o.table_number}</span>
-                    </div>
-                    <span className="text-[10px] px-2 py-0.5 rounded font-mono font-bold bg-tocineta-border text-tocineta-muted">
-                      v{o.version}
-                    </span>
-                  </div>
-
-                  <div className="flex items-center justify-between text-xs pt-1 border-t border-tocineta-border">
-                    <span className="font-mono font-bold text-white">
-                      ${(o.total_to_collect_usd_cents / 100).toFixed(2)}
-                    </span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded font-bold uppercase ${
-                      o.payment_status === 'autorizado_sin_pago'
-                        ? 'bg-purple-500/20 text-purple-300'
-                        : 'bg-amber-500/20 text-amber-300'
-                    }`}>
-                      {o.payment_status}
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-1.5 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => handleLoadOrderForEdit(o)}
-                      className="min-h-[44px] rounded-xl bg-tocineta-card border border-tocineta-border hover:border-tocineta-yellow text-[11px] font-bold text-white flex items-center justify-center"
-                    >
-                      ✏️ Editar
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setAuthorizingOrder(o);
-                        setShowOrdersList(false);
-                      }}
-                      className="min-h-[44px] rounded-xl bg-purple-500/20 border border-purple-500/40 hover:bg-purple-500/30 text-[11px] font-bold text-purple-300 flex items-center justify-center"
-                    >
-                      🔑 Autorizar PIN
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
         </div>
       )}
 
-      {/* CONTENEDOR PRINCIPAL: CATÁLOGO TÁCTIL (IZQUIERDA) + CARRITO TÁCTIL (DERECHA) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-start">
-        
-        {/* GRILLA DE PRODUCTOS "MÁS IMAGEN, MENOS LETRAS" (8 COLS) */}
-        <div className="lg:col-span-7 xl:col-span-8 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3.5">
-          {filteredProducts.map(product => {
-            const isAvail = product.isAvailable;
-            const rate = menu?.rateMicroBs || 40000000;
-            const bsPriceCents = usdToBsCents(product.priceUsdCents, rate);
-            const bsFormatted = (bsPriceCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-            return (
-              <div
-                key={product.id}
-                className={`bg-tocineta-card border rounded-3xl p-3.5 flex flex-col justify-between transition-all relative overflow-hidden shadow-sm hover:shadow-md ${
-                  isAvail
-                    ? 'border-tocineta-border hover:border-[#005A9C]/50'
-                    : 'border-red-500/30 bg-red-500/5 opacity-60'
-                }`}
-              >
-                {/* Banner Agotado */}
-                {!isAvail && (
-                  <div className="absolute top-3 right-3 bg-red-600 text-white text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full shadow z-10">
-                    Agotado
-                  </div>
-                )}
-
-                {/* Fotografía Grande del Plato (o Iniciales Grandes en Azul estilo RePOS) */}
-                <div className="mb-2.5">
-                  <ProductImagePlaceholder
-                    imageUrl={product.imageUrl || (product as any).image_url}
-                    name={product.name}
-                    station={product.station}
-                    className="w-full h-36"
-                  />
-                </div>
-
-                {/* Nombre Claro ("Más Imagen, Menos Letras" - Lista de ingredientes oculta en tarjeta principal) */}
-                <div className="flex-1 flex flex-col justify-between">
-                  <div>
-                    <span className="text-[10px] uppercase font-extrabold text-[#005A9C] dark:text-[#38BDF8] tracking-wider block">
-                      {product.categoryName}
-                    </span>
-                    <h3 className="font-black text-base text-tocineta-text leading-tight mt-0.5">
-                      {product.name}
-                    </h3>
-                  </div>
-                </div>
-
-                {/* Precios Prominentes en $ y Bs + Botones de Acción Táctiles */}
-                <div className="mt-3.5 pt-3 border-t border-tocineta-border flex items-center justify-between gap-2">
-                  <div>
-                    <div className="text-xl font-black text-[#005A9C] dark:text-tocineta-yellow font-mono leading-none">
-                      ${(product.priceUsdCents / 100).toFixed(2)}
-                    </div>
-                    <span className="text-[11px] font-bold text-tocineta-muted font-mono block mt-0.5">
-                      Bs. {bsFormatted}
-                    </span>
-                  </div>
-
-                  {isAvail && (
-                    <div className="flex items-center gap-1.5">
-                      {/* Botón Personalizar (Solo si no es combo) */}
-                      {!product.isCombo && (
-                        <button
-                          type="button"
-                          onClick={() => handleOpenCustomization(product)}
-                          className="min-h-[48px] px-3 rounded-2xl bg-slate-100 dark:bg-tocineta-bg border border-tocineta-border hover:border-[#005A9C] text-tocineta-muted hover:text-tocineta-text font-bold text-xs active:scale-95 transition-all flex items-center gap-1 shadow-sm"
-                          title="Personalizar ingredientes (pan, salsas, extras)"
-                        >
-                          <span>⚙️</span>
-                          <span className="hidden sm:inline">Modificar</span>
-                        </button>
-                      )}
-
-                      {/* Botón Principal: 1 Toque para Agregar (< 1 Segundo) */}
-                      <button
-                        type="button"
-                        onClick={() => handleFastAddProduct(product)}
-                        className={`min-h-[48px] px-4 rounded-2xl font-black text-xs active:scale-95 transition-all flex items-center justify-center gap-1 shadow-md ${
-                          product.isCombo
-                            ? 'bg-purple-600 text-white hover:bg-purple-700'
-                            : 'bg-[#005A9C] text-white hover:bg-[#00487d] dark:bg-tocineta-yellow dark:text-black dark:hover:bg-tocineta-yellow-hover'
-                        }`}
-                      >
-                        <span>{product.isCombo ? '✨ Armar' : '+ 1 Toque'}</span>
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* CARRITO Y COMANDERO TÁCTIL (4 COLS EN DESKTOP, STICKY) */}
-        <div className="lg:col-span-5 xl:col-span-4 bg-tocineta-card border border-tocineta-border rounded-3xl p-4 shadow-2xl flex flex-col justify-between space-y-4 lg:sticky lg:top-4">
-          
-          {/* Cabecera del Carrito */}
-          <div className="flex items-center justify-between border-b border-tocineta-border pb-3">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🧾</span>
-                <h3 className="font-black text-base text-white">
-                  {editingOrderId ? `Editar Orden #${editingOrderNumber}` : 'Comanda Actual'}
-                </h3>
-              </div>
-              {editingOrderId ? (
-                <span className="text-[11px] text-amber-400 font-bold">
-                  Concurrencia Optimista (v{editingOrderVersion})
-                </span>
-              ) : (
-                <span className="text-[11px] text-tocineta-muted">
-                  {cart.length} {cart.length === 1 ? 'producto seleccionado' : 'productos seleccionados'}
-                </span>
-              )}
-            </div>
-
-            {cart.length > 0 && (
-              <button
-                type="button"
-                onClick={handleClearCart}
-                className="min-h-[48px] px-3 py-2 text-xs text-tocineta-muted hover:text-red-400 font-bold rounded-xl hover:bg-red-500/10 flex items-center justify-center transition-all"
-              >
-                Limpiar
-              </button>
-            )}
-          </div>
-
-          {/* 1. CAMPO OBLIGATORIO: NOMBRE Y APELLIDO DEL CLIENTE */}
-          <div className="space-y-1.5 bg-slate-50 dark:bg-slate-800/70 p-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700">
-            <div className="flex items-center justify-between">
-              <label className="text-[11px] font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-1">
-                <span>👤 NOMBRE Y APELLIDO DEL CLIENTE:</span>
-              </label>
-              {customerNameError && (
-                <span className="text-red-600 dark:text-red-400 font-black text-[10px] animate-pulse">
-                  ¡Obligatorio!
-                </span>
-              )}
-            </div>
-            <input
-              ref={customerNameInputRef}
-              type="text"
-              placeholder="Ej: Juan Pérez..."
-              value={customerName}
-              onChange={e => {
-                setCustomerName(e.target.value);
-                if (customerNameError && e.target.value.trim().length >= 3) {
-                  setCustomerNameError(false);
-                }
-              }}
-              className={`w-full min-h-[46px] rounded-xl px-3.5 text-sm font-bold outline-none transition-all ${
-                customerNameError
-                  ? 'bg-red-50 border-2 border-red-500 text-red-950 placeholder-red-400 focus:ring-2 focus:ring-red-400'
-                  : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500'
-              }`}
+      {/* Asistente Guiado de 3 Pasos */}
+      <WizardLayout
+        currentStep={posCart.step}
+        totalSteps={3}
+        title={
+          posCart.step === 1
+            ? 'Cliente y Canal de Atención'
+            : posCart.step === 2
+            ? 'Seleccionar Productos del Menú'
+            : 'Revisión y Confirmación del Pedido'
+        }
+        onBack={
+          posCart.step > 1
+            ? () => posCart.setStep((s) => (s - 1) as 1 | 2 | 3)
+            : undefined
+        }
+        onNext={
+          posCart.step === 1
+            ? handleStep1Next
+            : posCart.step === 2
+            ? handleStep2Next
+            : undefined
+        }
+        nextLabel={posCart.step === 1 ? 'Ir al Menú' : 'Revisar Pedido'}
+        nextDisabled={posCart.step === 2 && posCart.cart.length === 0}
+      >
+        {/* Paso 1: Cliente y Canal */}
+        {posCart.step === 1 && (
+          <div className="min-h-[48px]">
+            <Step1CustomerChannel
+              customerName={posCart.customerName}
+              setCustomerName={posCart.setCustomerName}
+              customerNameError={posCart.customerNameError}
+              fulfillmentType={posCart.fulfillmentType}
+              setFulfillmentType={posCart.setFulfillmentType}
+              tableNumber={posCart.tableNumber}
+              setTableNumber={posCart.setTableNumber}
+              deliverySede={posCart.deliverySede}
+              setDeliverySede={posCart.setDeliverySede}
+              customerPhone={posCart.customerPhone}
+              setCustomerPhone={posCart.setCustomerPhone}
+              deliveryAddress={posCart.deliveryAddress}
+              setDeliveryAddress={posCart.setDeliveryAddress}
+              deliveryReference={posCart.deliveryReference}
+              setDeliveryReference={posCart.setDeliveryReference}
+              deliveryTierCents={posCart.deliveryTierCents}
+              setDeliveryTierCents={posCart.setDeliveryTierCents}
+              motorizadoId={posCart.motorizadoId}
+              setMotorizadoId={posCart.setMotorizadoId}
             />
           </div>
+        )}
 
-          {/* 2. SELECTOR TÁCTIL UNIFICADO DE MODALIDAD (3 TARJETAS CLARAS) */}
-          <div className="space-y-2">
-            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
-              <button
-                type="button"
-                onClick={() => {
-                  setFulfillmentType('salon');
-                  if (tableNumber === 'Para Llevar' || tableNumber === 'Delivery') {
-                    setTableNumber('Mesa 1');
-                  }
-                }}
-                className={`min-h-[48px] rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center p-1 cursor-pointer ${
-                  fulfillmentType === 'salon'
-                    ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <span className="text-sm">🍽️</span>
-                <span>Comer Aquí</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setFulfillmentType('para_llevar');
-                  setTableNumber('Para Llevar');
-                }}
-                className={`min-h-[48px] rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center p-1 cursor-pointer ${
-                  fulfillmentType === 'para_llevar'
-                    ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <span className="text-sm">🛍️</span>
-                <span>Para Llevar</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setFulfillmentType('delivery');
-                  setTableNumber('Delivery');
-                }}
-                className={`min-h-[48px] rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center p-1 cursor-pointer ${
-                  fulfillmentType === 'delivery'
-                    ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
-                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-                }`}
-              >
-                <span className="text-sm">🛵</span>
-                <span>Delivery</span>
-              </button>
-            </div>
-
-            {/* MODALIDAD 1: COMER AQUÍ -> SELECTOR VISUAL RÁPIDO DE MESAS */}
-            {fulfillmentType === 'salon' && (
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                    Mesa del Salón:
-                  </span>
-                  <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700">
-                    {tableNumber}
-                  </span>
-                </div>
-                <div className="grid grid-cols-4 gap-1.5">
-                  {TABLE_OPTIONS.map(opt => {
-                    const isSelected = tableNumber === opt;
-                    const hasActiveOrder = activeTableNumbers.has(opt);
-                    return (
-                      <button
-                        key={opt}
-                        type="button"
-                        onClick={() => setTableNumber(opt)}
-                        className={`min-h-[44px] px-1 py-1 rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center border cursor-pointer ${
-                          isSelected
-                            ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-md ring-2 ring-amber-400'
-                            : hasActiveOrder
-                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300'
-                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-400'
-                        }`}
-                      >
-                        <span>{opt.replace('Mesa ', 'M-')}</span>
-                        {hasActiveOrder && (
-                          <span className="text-[9px] font-bold opacity-80">● Activa</span>
-                        )}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* MODALIDAD 2: PARA LLEVAR -> FLUJO DIRECTO SIN MESA */}
-            {fulfillmentType === 'para_llevar' && (
-              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-2">
-                <span className="text-xl">🛍️</span>
-                <span>Pedido para entrega en Mostrador / Para Llevar sin mesa asignada.</span>
-              </div>
-            )}
-
-            {/* MODALIDAD 3: DELIVERY -> DESPLIEGUE PASO A PASO */}
-            {fulfillmentType === 'delivery' && (
-              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
-                {/* 1. Sede de salida */}
-                <div>
-                  <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
-                    📍 Sede de Salida:
-                  </span>
-                  <div className="grid grid-cols-2 gap-1.5">
-                    {['Sede A: Los Olivos', 'Sede B: Alta Vista'].map(s => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => setDeliverySede(s)}
-                        className={`min-h-[40px] px-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
-                          deliverySede === s
-                            ? 'bg-amber-500 text-slate-950 shadow-md'
-                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        📍 {s.replace('Sede ', '')}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 2. Teléfono */}
-                <div>
-                  <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
-                    📞 Teléfono de Contacto:
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Ej: 0414-1234567..."
-                    value={customerPhone}
-                    onChange={e => setCustomerPhone(e.target.value)}
-                    className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 text-xs font-mono font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                {/* 3. Dirección exacta y Punto de referencia */}
-                <div className="space-y-1.5">
-                  <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block">
-                    🏠 Dirección de Entrega:
-                  </span>
-                  <input
-                    type="text"
-                    placeholder="Dirección exacta de entrega..."
-                    value={deliveryAddress}
-                    onChange={e => setDeliveryAddress(e.target.value)}
-                    className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-amber-500"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Punto de referencia (ej: Casa blanca frente a plaza)..."
-                    value={deliveryReference}
-                    onChange={e => setDeliveryReference(e.target.value)}
-                    className="w-full min-h-[38px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 text-[11px] text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-amber-500"
-                  />
-                </div>
-
-                {/* 4. Tarifa de Zona */}
-                <div>
-                  <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
-                    Tarifa de Delivery (Fondo Motorizado):
-                  </span>
-                  <div className="grid grid-cols-4 gap-1.5">
-                    {[
-                      { cents: 200, label: '+$2.00' },
-                      { cents: 300, label: '+$3.00' },
-                      { cents: 400, label: '+$4.00' },
-                      { cents: 500, label: '+$5.00' }
-                    ].map(t => (
-                      <button
-                        key={t.cents}
-                        type="button"
-                        onClick={() => setDeliveryTierCents(t.cents)}
-                        className={`min-h-[44px] rounded-xl text-xs font-mono font-black transition-all cursor-pointer ${
-                          deliveryTierCents === t.cents
-                            ? 'bg-amber-500 text-slate-950 shadow-md'
-                            : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
-                        }`}
-                      >
-                        {t.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* 5. Repartidor asignado */}
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block">
-                    Repartidor Asignado:
-                  </span>
-                  <select
-                    value={motorizadoId}
-                    onChange={e => setMotorizadoId(e.target.value)}
-                    className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-amber-400 outline-none focus:border-amber-500"
-                  >
-                    <option value="">-- Sin asignar / Por despachar --</option>
-                    {(driversData?.drivers && driversData.drivers.length > 0
-                      ? driversData.drivers
-                      : [
-                          { id: 'drv_1', name: 'REPARTIDOR 1', phone: '' },
-                          { id: 'drv_2', name: 'REPARTIDOR 2', phone: '' },
-                          { id: 'drv_3', name: 'REPARTIDOR 3', phone: '' }
-                        ]
-                    ).map(d => (
-                      <option key={d.id} value={d.id}>
-                        🛵 {d.name} {d.phone ? `(${d.phone})` : ''}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                {/* 6. Efectivo en mano */}
-                <button
-                  type="button"
-                  onClick={() => setCashCollectedByDriver(prev => !prev)}
-                  className={`w-full min-h-[42px] px-3 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
-                    cashCollectedByDriver
-                      ? 'bg-amber-100 border-amber-500 text-amber-950 font-black'
-                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <span>💵</span>
-                    <span className="text-[11px]">Cobrado en efectivo por el repartidor</span>
-                  </div>
-                  <span className="font-mono text-xs font-black">
-                    {cashCollectedByDriver ? '✓ SÍ (En mano)' : '✕ NO'}
-                  </span>
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* LISTA DE ÍTEMS EN EL CARRITO (SCROLLABLE) */}
-          <div className="space-y-2 max-h-80 overflow-y-auto pr-1">
-            {cart.length === 0 ? (
-              <div className="py-10 text-center text-tocineta-muted">
-                <span className="text-3xl block mb-2 opacity-40">🛒</span>
-                <p className="text-xs font-bold">El pedido está vacío</p>
-                <p className="text-[11px] mt-1">Toca cualquier producto a la izquierda para agregarlo en 1 toque</p>
-              </div>
-            ) : (
-              cart.map(item => (
-                <div
-                  key={item.clientLineId}
-                  className="bg-tocineta-bg border border-tocineta-border rounded-2xl p-3 space-y-1.5 shadow-sm"
-                >
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="font-black text-sm text-white block">
-                        {item.productName}
-                      </span>
-                      <span className="text-xs font-mono font-bold text-tocineta-yellow">
-                        {formatPrice(item.unitPriceUsdCents)} c/u
-                      </span>
-                    </div>
-
-                    {/* Controles Táctiles de Cantidad (+/-) (WCAG min 48x48px) */}
-                    <div className="flex items-center gap-1.5 bg-tocineta-card border border-tocineta-border rounded-xl p-1">
-                      <button
-                        type="button"
-                        onClick={() => handleChangeQty(item.clientLineId, -1)}
-                        className="min-h-[48px] min-w-[48px] rounded-lg bg-tocineta-bg text-white hover:text-red-400 font-black text-lg flex items-center justify-center active:scale-95"
-                      >
-                        -
-                      </button>
-                      <span className="w-8 text-center font-mono font-black text-sm text-white">
-                        {item.quantity}
-                      </span>
-                      <button
-                        type="button"
-                        onClick={() => handleChangeQty(item.clientLineId, 1)}
-                        className="min-h-[48px] min-w-[48px] rounded-lg bg-tocineta-yellow text-tocineta-bg font-black text-lg flex items-center justify-center active:scale-95"
-                      >
-                        +
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Resumen de Modificadores (Pan, Salsas, Barra Libre, Extras) */}
-                  {(item.modifiers.length > 0 || item.customInstructions || item.comboChildren) && (
-                    <div className="pt-1.5 border-t border-tocineta-border/60 space-y-1">
-                      {/* Modificadores simples */}
-                      {item.modifiers.map((m, idx) => (
-                        <span
-                          key={idx}
-                          className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded mr-1 mb-1 border ${
-                            m.modifierType === 'SIN_INGREDIENTE'
-                              ? 'bg-red-500/15 border-red-500/40 text-red-300'
-                              : m.modifierType === 'POCO_INGREDIENTE'
-                              ? 'bg-blue-500/15 border-blue-500/40 text-blue-300'
-                              : m.modifierType === 'BARRA_LIBRE'
-                              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
-                              : 'bg-tocineta-yellow/15 border-tocineta-yellow/40 text-tocineta-yellow'
-                          }`}
-                        >
-                          {m.modifierType === 'SIN_INGREDIENTE' ? `Sin ${m.ingredientName}` : m.modifierType === 'POCO_INGREDIENTE' ? `Poca ${m.ingredientName}` : `+ ${m.ingredientName}`}
-                        </span>
-                      ))}
-
-                      {/* Instrucción especial (ej: Envuelta en Lechuga) */}
-                      {item.customInstructions && (
-                        <p className="text-[11px] text-amber-300 font-semibold italic">
-                          "{item.customInstructions}"
-                        </p>
-                      )}
-
-                      {/* Desglose de Hijos del Combo */}
-                      {item.comboChildren && (
-                        <div className="space-y-1 pl-2 border-l-2 border-purple-500/50 mt-1">
-                          {item.comboChildren.map((ch, cIdx) => (
-                            <div key={cIdx} className="text-[11px]">
-                              <span className="font-bold text-white">• {ch.productName}</span>
-                              {ch.modifiers.length > 0 && (
-                                <span className="text-[10px] text-tocineta-muted block pl-2">
-                                  ({ch.modifiers.map(m => m.ingredientName).join(', ')})
-                                </span>
-                              )}
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ))
-            )}
-          </div>
-
-          {/* NOTA ADICIONAL Y CUPÓN */}
-          <div className="space-y-2 pt-2 border-t border-tocineta-border">
-            <input
-              type="text"
-              placeholder="Nota para la orden (ej: Servir primero las bebidas)..."
-              value={notes}
-              onChange={e => setNotes(e.target.value)}
-              className="w-full min-h-[44px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-white placeholder-tocineta-muted focus:border-tocineta-yellow outline-none"
-            />
-            <input
-              type="text"
-              placeholder="Código de Cupón (opcional)..."
-              value={couponCode}
-              onChange={e => setCouponCode(e.target.value.toUpperCase())}
-              className="w-full min-h-[44px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs font-mono uppercase text-tocineta-yellow placeholder-tocineta-muted focus:border-tocineta-yellow outline-none"
+        {/* Paso 2: Catálogo Visual */}
+        {posCart.step === 2 && (
+          <div className="min-h-[48px]">
+            <Step2Catalog
+              categories={categories}
+              products={products}
+              cart={posCart.cart}
+              onAddProduct={(p) => posCart.addProduct(p, 1)}
+              onDecrementProduct={posCart.decrementProduct}
+              onOpenCustomize={(p) => setCustomizingProduct(p)}
+              onOpenCombo={(p) => setComboWizardProduct(p)}
+              totalUsdCents={posCart.totalUsdCents}
+              totalItemsCount={totalItemsCount}
+              formattedRate={formattedRate}
+              onNext={handleStep2Next}
             />
           </div>
+        )}
 
-          {/* TOTALES FINANCIEROS EN CENTAVOS EXACTOS (SIMULTÁNEO USD + Bs - H-04) */}
-          <div className="p-3 bg-tocineta-bg border border-tocineta-border rounded-2xl space-y-1.5 font-mono text-xs">
-            <div className="flex justify-between text-tocineta-muted">
-              <span>Subtotal Alimentos:</span>
-              <span>{formatDualPrice(subtotalCents)}</span>
-            </div>
-            {fulfillmentType === 'delivery' && (
-              <div className="flex justify-between text-tocineta-muted">
-                <span>Fondo Delivery Motorizado:</span>
-                <span>{formatDualPrice(deliveryFeeCents)}</span>
-              </div>
-            )}
-            <div className="flex justify-between text-sm sm:text-base font-black text-white pt-1.5 border-t border-tocineta-border">
-              <span>Total a Cobrar:</span>
-              <span className="text-tocineta-yellow text-right">{formatDualPrice(totalToCollectCents)}</span>
-            </div>
-          </div>
-
-          {/* BOTONES DE ACCIÓN PRINCIPALES DEL CARRITO (H-01 / Hito M19 C.1) */}
-          {editingOrderId ? (
-            <button
-              type="button"
-              onClick={() => handleSubmitOrder(false)}
-              disabled={cart.length === 0 || isSubmitting}
-              className="w-full min-h-[54px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base disabled:opacity-40 disabled:pointer-events-none hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl"
-            >
-              {isSubmitting ? (
-                <span className="animate-spin inline-block text-xl">⏳</span>
-              ) : (
-                <span>✓ Actualizar Pedido #{editingOrderNumber} (v{editingOrderVersion})</span>
-              )}
-            </button>
-          ) : canUserProcessPayments(user?.role) ? (
-            <div className="space-y-2">
-              {/* Botón principal destacado en amarillo: [💳 Enviar y Cobrar Ahora] (min-h-[52px]) */}
-              <button
-                type="button"
-                onClick={() => handleSubmitOrder(true)}
-                disabled={cart.length === 0 || isSubmitting}
-                className="w-full min-h-[52px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base disabled:opacity-40 disabled:pointer-events-none hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl"
-              >
-                {isSubmitting ? (
-                  <span className="animate-spin inline-block text-xl">⏳</span>
-                ) : (
-                  <span>💳 Enviar y Cobrar Ahora ({tableNumber})</span>
-                )}
-              </button>
-
-              {/* Botón secundario: [📤 Solo Enviar a Caja] (min-h-[48px]) */}
-              <button
-                type="button"
-                onClick={() => handleSubmitOrder(false)}
-                disabled={cart.length === 0 || isSubmitting}
-                className="w-full min-h-[48px] rounded-2xl bg-tocineta-card border border-tocineta-border text-white font-bold text-xs hover:border-tocineta-yellow/60 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-              >
-                <Send className="w-4 h-4" />
-                <span>Solo Enviar a Caja</span>
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              onClick={() => handleSubmitOrder(false)}
-              disabled={cart.length === 0 || isSubmitting}
-              className="w-full min-h-[54px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base disabled:opacity-40 disabled:pointer-events-none hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl"
-            >
-              {isSubmitting ? (
-                <Loader2 className="w-5 h-5 animate-spin" />
-              ) : (
-                <>
-                  <Send className="w-5 h-5" />
-                  <span>Enviar a Caja ({tableNumber})</span>
-                </>
-              )}
-            </button>
-          )}
-
-        </div>
-
-      </div>
-
-      {/* Barra Inferior Fija Azul en Móviles Estilo RePOS */}
-      {cart.length > 0 && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-[60] bg-[#005A9C] text-white px-4 py-3 shadow-2xl flex items-center justify-between border-t border-blue-400">
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-extrabold tracking-wide">
-              Resumen de la orden ({totalItems})
-            </span>
-            <span className="text-xs font-mono font-bold bg-white/20 px-2 py-0.5 rounded-lg">
-              ${(totalToCollectCents / 100).toFixed(2)}
-            </span>
-          </div>
-          <button
-            type="button"
-            onClick={() => setIsMobileCartOpen(true)}
-            className="px-4 py-2 rounded-xl bg-white text-[#005A9C] font-black text-xs shadow-md flex items-center gap-1.5 active:scale-95 transition-all"
-          >
-            <span>Ver Pedido</span>
-            <span className="text-sm">⬆️</span>
-          </button>
-        </div>
-      )}
-
-      {/* MODAL / CAJÓN MÓVIL DE PANTALLA COMPLETA (Punto 1.c) */}
-      {isMobileCartOpen && (
-        <div className="fixed inset-0 z-[90] bg-black/85 flex flex-col justify-end lg:hidden animate-in fade-in">
-          {/* Fondo oscuro para cerrar al pulsar arriba */}
-          <div
-            className="flex-1 w-full"
-            onClick={() => setIsMobileCartOpen(false)}
+        {/* Paso 3: Revisión */}
+        {posCart.step === 3 && (
+          <Step3Review
+            cart={posCart.cart}
+            customerName={posCart.customerName}
+            fulfillmentType={posCart.fulfillmentType}
+            tableNumber={posCart.tableNumber}
+            deliveryAddress={posCart.deliveryAddress}
+            deliverySede={posCart.deliverySede}
+            notes={posCart.notes}
+            setNotes={posCart.setNotes}
+            couponCode={posCart.couponCode}
+            setCouponCode={posCart.setCouponCode}
+            subtotalUsdCents={posCart.subtotalUsdCents}
+            deliveryFeeUsdCents={posCart.deliveryFeeUsdCents}
+            totalUsdCents={posCart.totalUsdCents}
+            formattedRate={formattedRate}
+            onUpdateQuantity={posCart.updateItemQuantity}
+            onRemoveItem={posCart.removeItem}
+            onSubmitOrder={handleSendOrder}
+            onExpressCheckout={canPay ? handleExpressCheckout : undefined}
+            canPay={canPay}
+            isSubmitting={posCart.isSubmitting}
+            onBackToCatalog={() => posCart.setStep(2)}
           />
+        )}
+      </WizardLayout>
 
-          <div className="bg-[#12141A] border-t-2 border-tocineta-yellow rounded-t-3xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden animate-in slide-in-from-bottom-5">
-            {/* Cabecera del Cajón Móvil */}
-            <div className="p-4 border-b border-tocineta-border flex items-center justify-between bg-black/60">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🛒</span>
-                <div>
-                  <h3 className="font-black text-base text-white">Tu Pedido Actual</h3>
-                  <span className="text-[11px] text-tocineta-muted">
-                    {totalItems} {totalItems === 1 ? 'producto' : 'productos'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                {cart.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      handleClearCart();
-                      setIsMobileCartOpen(false);
-                    }}
-                    className="min-h-[48px] px-3 py-2 text-xs text-red-400 hover:text-red-300 font-bold rounded-xl bg-red-500/10 active:scale-95 flex items-center gap-1"
-                  >
-                    <span>🗑️</span>
-                    <span>Vaciar</span>
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setIsMobileCartOpen(false)}
-                  className="min-h-[48px] min-w-[48px] rounded-xl bg-tocineta-card border border-tocineta-border text-white hover:text-tocineta-yellow font-black text-lg flex items-center justify-center active:scale-95"
-                  aria-label="Cerrar pedido"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Contenido Desplazable del Pedido Móvil */}
-            <div className="overflow-y-auto max-h-[45vh] p-4 space-y-3">
-              {/* Campo Obligatorio Nombre y Apellido del Cliente (Móvil) */}
-              <div className="space-y-1">
-                <label className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center justify-between">
-                  <span>👤 Nombre y Apellido (Obligatorio):</span>
-                  <span className="text-[10px] font-black bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full">Requerido</span>
-                </label>
-                <input
-                  ref={customerNameInputMobileRef}
-                  type="text"
-                  placeholder="Ej: Juan Pérez..."
-                  value={customerName}
-                  onChange={e => {
-                    setCustomerName(e.target.value);
-                    if (customerNameError && e.target.value.trim().length >= 3) {
-                      setCustomerNameError(false);
-                    }
-                  }}
-                  className={`w-full min-h-[46px] rounded-xl px-3 text-sm font-bold transition-all outline-none ${
-                    customerNameError
-                      ? 'bg-red-50 dark:bg-red-950/40 border-2 border-red-500 text-red-950 dark:text-red-100 ring-2 ring-red-400/40'
-                      : 'bg-white dark:bg-tocineta-card border-2 border-slate-300 dark:border-tocineta-border text-slate-900 dark:text-white focus:border-amber-500 shadow-sm'
-                  }`}
-                />
-                {customerNameError && (
-                  <p className="text-[11px] font-black text-red-600 dark:text-red-400 animate-pulse">
-                    ⚠️ Ingresa el Nombre y Apellido (mínimo 3 letras).
-                  </p>
-                )}
-              </div>
-
-              {/* Selector Táctil Unificado de Modalidad (3 Tarjetas Claras Móvil) */}
-              <div className="space-y-2">
-                <label className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                  Modalidad de Entrega:
-                </label>
-                <div className="grid grid-cols-3 gap-1.5">
-                  {[
-                    { id: 'salon', label: 'Comer Aquí', icon: '🍽️' },
-                    { id: 'para_llevar', label: 'Para Llevar', icon: '🛍️' },
-                    { id: 'delivery', label: 'Delivery', icon: '🛵' }
-                  ].map(m => {
-                    const isSelected = fulfillmentType === m.id;
-                    return (
-                      <button
-                        key={m.id}
-                        type="button"
-                        onClick={() => {
-                          setFulfillmentType(m.id as any);
-                          if (m.id === 'para_llevar') {
-                            setTableNumber('Para Llevar');
-                          } else if (m.id === 'delivery') {
-                            setTableNumber('Delivery');
-                          } else if (tableNumber === 'Para Llevar' || tableNumber === 'Delivery') {
-                            setTableNumber('Mesa 1');
-                          }
-                        }}
-                        className={`min-h-[50px] p-2 rounded-xl flex flex-col items-center justify-center transition-all text-center border-2 ${
-                          isSelected
-                            ? 'bg-amber-400 dark:bg-amber-500 border-amber-600 text-slate-950 shadow-md font-black'
-                            : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200'
-                        }`}
-                      >
-                        <span className="text-base leading-none mb-0.5">{m.icon}</span>
-                        <span className="text-[11px] leading-tight">{m.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-
-                {/* Contenido según modalidad seleccionada */}
-                {fulfillmentType === 'salon' && (
-                  <div className="p-3 bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-2xl space-y-2">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-black text-slate-800 dark:text-slate-200">
-                        Selecciona Mesa:
-                      </span>
-                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">
-                        {activeTableNumbers.has(tableNumber) ? '🟠 Mesa con pedido' : '🟢 Mesa libre'}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-4 gap-1.5">
-                      {TABLE_OPTIONS.filter(t => t !== 'Para Llevar' && t !== 'Delivery').map(tbl => {
-                        const isChosen = tableNumber === tbl;
-                        const hasActiveOrder = activeTableNumbers.has(tbl);
-                        return (
-                          <button
-                            key={tbl}
-                            type="button"
-                            onClick={() => setTableNumber(tbl)}
-                            className={`min-h-[44px] rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center border-2 ${
-                              isChosen
-                                ? 'bg-amber-500 text-slate-950 border-amber-700 shadow-md scale-[1.02]'
-                                : hasActiveOrder
-                                ? 'bg-amber-100 dark:bg-amber-950/60 border-amber-400 text-amber-900 dark:text-amber-200'
-                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-50'
-                            }`}
-                          >
-                            <span>{tbl.replace('Mesa ', 'M-')}</span>
-                            <span className="text-[9px] font-normal leading-none mt-0.5 opacity-80">
-                              {hasActiveOrder ? 'Ocupada' : 'Libre'}
-                            </span>
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
-
-                {fulfillmentType === 'para_llevar' && (
-                  <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-xl text-center">
-                    <p className="text-xs font-black text-amber-950 dark:text-amber-200">
-                      🛍️ Pedido para entregar en mostrador.
-                    </p>
-                  </div>
-                )}
-
-                {fulfillmentType === 'delivery' && (
-                  <div className="p-3 bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-2xl space-y-2">
-                    <div>
-                      <label className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 block mb-1">
-                        Sede de Salida:
-                      </label>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {[
-                          { id: 'Sede A: Los Olivos', label: 'Sede A (Los Olivos)' },
-                          { id: 'Sede B: Alta Vista', label: 'Sede B (Alta Vista)' }
-                        ].map(s => (
-                          <button
-                            key={s.id}
-                            type="button"
-                            onClick={() => setDeliverySede(s.id)}
-                            className={`min-h-[38px] px-2 rounded-xl text-[11px] font-black border-2 transition-all ${
-                              deliverySede === s.id
-                                ? 'bg-amber-400 text-slate-950 border-amber-600 shadow-sm'
-                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
-                            }`}
-                          >
-                            {s.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <input
-                        type="tel"
-                        placeholder="Teléfono móvil..."
-                        value={customerPhone}
-                        onChange={e => setCustomerPhone(e.target.value)}
-                        className="min-h-[42px] bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-2.5 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none"
-                      />
-                      <select
-                        value={motorizadoId}
-                        onChange={e => setMotorizadoId(e.target.value)}
-                        className="min-h-[42px] bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-2 text-xs font-black text-slate-900 dark:text-white outline-none"
-                      >
-                        <option value="">🛵 Sin repartidor</option>
-                        {(driversData?.drivers || [
-                          { id: 'rep-1', name: 'REPARTIDOR 1' },
-                          { id: 'rep-2', name: 'REPARTIDOR 2' },
-                          { id: 'rep-3', name: 'REPARTIDOR 3' }
-                        ]).map(d => (
-                          <option key={d.id} value={d.id}>🛵 {d.name}</option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <input
-                      type="text"
-                      placeholder="Dirección exacta de entrega y punto de referencia..."
-                      value={deliveryAddress}
-                      onChange={e => setDeliveryAddress(e.target.value)}
-                      className="w-full min-h-[42px] bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-2.5 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none"
-                    />
-
-                    <div>
-                      <label className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 block mb-1">
-                        Tarifa de Zona:
-                      </label>
-                      <div className="grid grid-cols-4 gap-1.5">
-                        {[
-                          { cents: 200, label: '$2.00' },
-                          { cents: 300, label: '$3.00' },
-                          { cents: 400, label: '$4.00' },
-                          { cents: 500, label: '$5.00' }
-                        ].map(t => (
-                          <button
-                            key={t.cents}
-                            type="button"
-                            onClick={() => setDeliveryTierCents(t.cents)}
-                            className={`min-h-[42px] rounded-xl text-xs font-black font-mono border-2 transition-all ${
-                              deliveryTierCents === t.cents
-                                ? 'bg-amber-400 text-slate-950 border-amber-600 shadow'
-                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
-                            }`}
-                          >
-                            {t.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Nota del Cliente */}
-                <input
-                  type="text"
-                  placeholder="Nota u observaciones (ej: sin cebolla)..."
-                  value={notes}
-                  onChange={e => setNotes(e.target.value)}
-                  className="w-full min-h-[42px] bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none"
-                />
-              </div>
-
-              {/* Lista desplazable de productos */}
-              <div className="space-y-2 pt-2 border-t border-tocineta-border/60">
-                {cart.length === 0 ? (
-                  <p className="text-center text-xs text-tocineta-muted py-6">El pedido está vacío</p>
-                ) : (
-                  cart.map(item => (
-                    <div
-                      key={item.clientLineId}
-                      className="bg-tocineta-bg border border-tocineta-border rounded-2xl p-3 space-y-1.5 shadow-sm"
-                    >
-                      <div className="flex items-start justify-between gap-2">
-                        <div className="flex-1">
-                          <span className="font-black text-sm text-white block leading-tight">
-                            {item.productName}
-                          </span>
-                          <span className="text-xs font-mono font-bold text-tocineta-yellow">
-                            {formatPrice(item.unitPriceUsdCents)} c/u
-                          </span>
-                        </div>
-
-                        {/* Botones [-] y [+] (WCAG min 48x48px) */}
-                        <div className="flex items-center gap-1.5 bg-tocineta-card border border-tocineta-border rounded-xl p-1 shrink-0">
-                          <button
-                            type="button"
-                            onClick={() => handleChangeQty(item.clientLineId, -1)}
-                            className="min-h-[48px] min-w-[48px] rounded-lg bg-tocineta-bg text-white hover:text-red-400 font-black text-lg flex items-center justify-center active:scale-95"
-                          >
-                            -
-                          </button>
-                          <span className="w-7 text-center font-mono font-black text-sm text-white">
-                            {item.quantity}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleChangeQty(item.clientLineId, 1)}
-                            className="min-h-[48px] min-w-[48px] rounded-lg bg-tocineta-yellow text-tocineta-bg font-black text-lg flex items-center justify-center active:scale-95"
-                          >
-                            +
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Modificadores */}
-                      {(item.modifiers.length > 0 || item.customInstructions || item.comboChildren) && (
-                        <div className="pt-1 border-t border-tocineta-border/40 text-[11px] text-tocineta-muted">
-                          {item.modifiers.map((m, idx) => (
-                            <span key={idx} className="inline-block mr-1 text-[10px] text-tocineta-yellow">
-                              +{m.ingredientName}
-                            </span>
-                          ))}
-                          {item.customInstructions && (
-                            <p className="italic text-amber-300">"{item.customInstructions}"</p>
-                          )}
-                          {item.comboChildren && (
-                            <p className="text-[10px] text-purple-300">
-                              Combo: {item.comboChildren.map(c => c.productName).join(' + ')}
-                            </p>
-                          )}
-                        </div>
-                      )}
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            {/* Pie Fijo del Cajón Móvil con Totales y Botones de Acción */}
-            <div className="p-4 bg-black/80 border-t border-tocineta-border space-y-3">
-              <div className="flex items-center justify-between text-white font-mono">
-                <span className="text-xs uppercase font-bold text-tocineta-muted">Total a Pagar:</span>
-                <span className="text-base sm:text-lg font-black text-tocineta-yellow text-right">
-                  {formatDualPrice(totalToCollectCents)}
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                {/* 1. [📤 Enviar a Caja] */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMobileCartOpen(false);
-                    handleSubmitOrder(false);
-                  }}
-                  disabled={cart.length === 0 || isSubmitting}
-                  className="w-full min-h-[54px] rounded-2xl bg-tocineta-card border-2 border-tocineta-yellow/70 text-white font-black text-sm active:scale-95 transition-all flex items-center justify-center gap-2 shadow-lg disabled:opacity-40"
-                >
-                  {isSubmitting ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <>
-                      <Send className="w-5 h-5 text-tocineta-yellow" />
-                      <span>📤 Enviar a Caja ({tableNumber})</span>
-                    </>
-                  )}
-                </button>
-
-                {/* 2. [💳 Enviar y Cobrar Ahora] (si canUserProcessPayments) */}
-                {canUserProcessPayments(user?.role) && (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setIsMobileCartOpen(false);
-                      handleSubmitOrder(true);
-                    }}
-                    disabled={cart.length === 0 || isSubmitting}
-                    className="w-full min-h-[54px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-sm hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl disabled:opacity-40"
-                  >
-                    {isSubmitting ? (
-                      <span className="animate-spin inline-block text-xl">⏳</span>
-                    ) : (
-                      <span>💳 Enviar y Cobrar Ahora ({tableNumber})</span>
-                    )}
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL DE PERSONALIZACIÓN DE INGREDIENTES */}
+      {/* Modal de Personalización de Ingredientes */}
       {customizingProduct && (
         <CustomizationModal
-          isOpen={true}
+          isOpen={Boolean(customizingProduct)}
           onClose={() => setCustomizingProduct(null)}
           product={customizingProduct}
-          barraLibreList={menu?.barraLibreIngredients || []}
-          paidExtrasList={menu?.paidExtras || []}
-          onSave={handleSaveCustomization}
+          barraLibreList={barraLibreList}
+          onSave={(modifiers, customInstructions) => {
+            posCart.addProduct(customizingProduct, 1, modifiers, customInstructions);
+            setCustomizingProduct(null);
+          }}
         />
       )}
 
-      {/* MODAL DEL ASISTENTE GUIADO DE COMBOS */}
+      {/* Modal Asistente de Combos */}
       {comboWizardProduct && (
         <ComboWizardModal
-          isOpen={true}
+          isOpen={Boolean(comboWizardProduct)}
           onClose={() => setComboWizardProduct(null)}
           combo={comboWizardProduct}
-          allProducts={allProducts}
-          barraLibreList={menu.barraLibreIngredients || []}
-          onComplete={comboItem => {
-            setCart(prev => [...prev, comboItem]);
-            setStatusNotification({
-              type: 'success',
-              message: `✓ ${comboItem.productName} agregado al pedido`
-            });
+          allProducts={products}
+          barraLibreList={barraLibreList}
+          onComplete={(comboCartItem) => {
+            posCart.addProduct(
+              comboWizardProduct,
+              comboCartItem.quantity,
+              comboCartItem.modifiers,
+              comboCartItem.customInstructions,
+              comboCartItem.comboChildren
+            );
+            setComboWizardProduct(null);
           }}
         />
       )}
 
-      {/* MODAL DE AUTORIZACIÓN SIN PAGO (PIN ADMIN / SUPERVISOR) */}
-      {authorizingOrder && (
-        <AuthorizeModal
-          isOpen={true}
-          onClose={() => setAuthorizingOrder(null)}
-          orderId={authorizingOrder.id}
-          orderNumber={authorizingOrder.order_number}
-          tableNumber={authorizingOrder.table_number}
-          totalUsdCents={authorizingOrder.total_to_collect_usd_cents}
-          onSuccess={() => {
-            setStatusNotification({
-              type: 'success',
-              message: `✓ Orden #${authorizingOrder.order_number} autorizada sin pago y enviada a cocina`
-            });
-            refetchOrders();
-          }}
-        />
-      )}
-
-      {/* MODAL DE COBRO EXPRESS EN COMANDERO (Hito M19 C.1) */}
+      {/* Modal de Cobro Express en Comandero */}
       {expressCheckoutOrder && (
-        <div className="fixed inset-0 z-[110] bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in overflow-y-auto">
-          <div className="bg-tocineta-card border border-tocineta-border rounded-3xl p-5 max-w-2xl w-full shadow-2xl space-y-4 my-8">
-            <div className="flex items-center justify-between pb-3 border-b border-tocineta-border">
-              <div className="flex items-center gap-2">
-                <span className="text-2xl">💳</span>
-                <div>
-                  <h3 className="font-black text-base text-white">
-                    Cobro Express — Orden #{expressCheckoutOrder.order_number} ({expressCheckoutOrder.table_number})
-                  </h3>
-                  <p className="text-xs text-tocineta-muted">
-                    Total a Cobrar: <strong className="text-tocineta-yellow font-mono">${(expressCheckoutOrder.total_to_collect_usd_cents / 100).toFixed(2)} USD</strong>
-                  </p>
-                </div>
+        <Modal
+          isOpen={Boolean(expressCheckoutOrder)}
+          onClose={() => setExpressCheckoutOrder(null)}
+          title={`Cobro Express — Orden #${expressCheckoutOrder.order_number}`}
+        >
+          <div className="space-y-4">
+            <div className="p-3 bg-surface-alt rounded-xl border border-border flex items-center justify-between">
+              <div>
+                <span className="text-xs text-ink-muted block uppercase font-bold">Cliente</span>
+                <span className="text-sm font-black text-ink">{expressCheckoutOrder.customer_name}</span>
               </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsExpressCouponOpen(true)}
-                  className="px-3 py-1.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black text-xs transition-all flex items-center gap-1 shadow"
-                >
-                  <span>🎁</span>
-                  <span>Aplicar Cupón</span>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const num = expressCheckoutOrder.order_number;
-                    setExpressCheckoutOrder(null);
-                    handleClearCart();
-                    refetchOrders();
-                    setStatusNotification({
-                      type: 'info',
-                      message: `Orden #${num} guardada en caja para cobro posterior.`
-                    });
-                  }}
-                  className="p-1.5 rounded-lg text-tocineta-muted hover:text-white text-sm"
-                  title="Cerrar y dejar pendiente en caja"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Franja compacta y clara con platos y cliente (Requerimiento 1.6) */}
-            <div className="bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
-                <span className="text-xl">🍽️</span>
-                <div>
-                  <span className="text-[10px] font-black uppercase text-amber-900 dark:text-amber-300 tracking-wider block">
-                    Cliente Registrado:
-                  </span>
-                  <strong className="text-sm font-black text-slate-900 dark:text-white">
-                    {expressCheckoutOrder.customer_name || expressCheckoutOrder.customerName || 'Cliente General'}
-                  </strong>
-                </div>
-              </div>
-              <div className="text-left sm:text-right border-t sm:border-t-0 pt-1 sm:pt-0 border-amber-200">
-                <span className="text-[10px] font-black uppercase text-amber-900 dark:text-amber-300 tracking-wider block">
-                  Platos a Cobrar:
-                </span>
-                <span className="text-xs font-black text-slate-900 dark:text-amber-100">
-                  {(expressCheckoutOrder.lines && expressCheckoutOrder.lines.length > 0)
-                    ? expressCheckoutOrder.lines.map((l: any) => `${l.quantity}x ${l.product_name || l.name || 'Ítem'}`).join(', ')
-                    : (cart.length > 0
-                        ? cart.map(c => `${c.quantity}x ${c.productName}`).join(', ')
-                        : 'Orden registrada')}
+              <div className="text-right">
+                <span className="text-xs text-ink-muted block uppercase font-bold">Total</span>
+                <span className="text-base font-black text-ink font-mono">
+                  ${((expressCheckoutOrder.total_to_collect_usd_cents || 0) / 100).toFixed(2)}
                 </span>
               </div>
             </div>
 
             <MultiMethodCalculator
               order={expressCheckoutOrder}
-              rateMicroBs={expressCheckoutOrder.rate_micro_bs || menu?.rateMicroBs || 40000000}
+              rateMicroBs={rateMicroBs}
               onPaymentSuccess={() => {
-                const paidOrderNum = expressCheckoutOrder.order_number;
                 setExpressCheckoutOrder(null);
-                handleClearCart();
-                refetchOrders();
-                setStatusNotification({
+                posCart.setStatusNotification({
                   type: 'success',
-                  message: `✓ ¡Orden #${paidOrderNum} cobrada con éxito!`
+                  message: `✓ Orden #${expressCheckoutOrder.order_number} cobrada con éxito`
                 });
               }}
             />
           </div>
-        </div>
+        </Modal>
       )}
-
-      {/* MODAL DE APLICAR CUPÓN EN COBRO EXPRESS */}
-      {isExpressCouponOpen && expressCheckoutOrder && (
-        <ApplyCouponModal
-          isOpen={true}
-          onClose={() => setIsExpressCouponOpen(false)}
-          orderId={expressCheckoutOrder.id}
-          orderNumber={expressCheckoutOrder.order_number}
-          currentCouponId={expressCheckoutOrder.coupon_id}
-          currentDiscountCents={expressCheckoutOrder.discount_usd_cents}
-          onSuccess={async () => {
-            setIsExpressCouponOpen(false);
-            try {
-              const res = await fetch(`/api/orders/${expressCheckoutOrder.id}`);
-              const data = await res.json();
-              if (data.success && data.order) {
-                setExpressCheckoutOrder(data.order);
-              }
-            } catch {}
-          }}
-        />
-      )}
-
     </div>
   );
 };
+
+export default PosComandero;

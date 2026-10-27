@@ -88,6 +88,34 @@ function getLatestSnapshot(snapshotsDir: string): SnapshotInfo | null {
 }
 
 export const systemHealthRoutes: FastifyPluginAsync = async (fastify) => {
+  // Endpoint de información de acceso a la red local para conectar celulares vía QR
+  fastify.get('/api/system/access-info', async (req, reply) => {
+    const os = await import('node:os');
+    const ifaces = os.networkInterfaces();
+    const addresses: string[] = [];
+    for (const name of Object.keys(ifaces)) {
+      for (const net of ifaces[name] || []) {
+        if (net.family === 'IPv4' && !net.internal) {
+          addresses.push(net.address);
+        }
+      }
+    }
+
+    const port = Number(process.env.PORT || 3000);
+    const hostHeader = req.headers.host || '';
+    const primaryIp = addresses[0] || '127.0.0.1';
+    const accessUrl = hostHeader ? `http://${hostHeader}` : `http://${primaryIp}:${port}`;
+
+    return reply.status(200).send({
+      success: true,
+      port,
+      ip: primaryIp,
+      addresses,
+      accessUrl,
+      isHttps: req.protocol === 'https'
+    });
+  });
+
   fastify.get('/api/system-health', async (_req, reply) => {
     const dbCtx = getDatabaseContext();
     const pragmas = dbCtx.getPragmas();

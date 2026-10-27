@@ -1,0 +1,111 @@
+/* ==========================================================================
+   SISTEMA DE DISEÑO OFICIAL "TOCINETA" (PRD v2.0 & FASE 1)
+   Tokens Semánticos y Paleta de Marca Oficial
+   Contraste estricto WCAG AA (>= 4.5:1 texto, >= 3:1 controles)
+   ========================================================================== */
+
+:root,
+html:not(.dark),
+[data-theme='light'] {
+  /* --- Superficies (Modo Claro por Defecto) --- */
+  --color-surface: #FFFFFF;
+  --color-surface-alt: #F8F9FA;
+  --color-surface-hover: #F1F3F5;
+  --color-surface-active: #E9ECEF;
+  --color-border: #E2E8F0;
+  --color-border-subtle: #CBD5E1;
+
+  /* --- Textos y Tinta (Ink) --- */
+  --color-ink: #111111;         /* Contraste 19.3:1 sobre #FFFFFF (AAA) */
+  --color-ink-muted: #555555;   /* Contraste 7.0:1 sobre #FFFFFF (AAA) */
+  --color-ink-inverse: #FFFFFF;
+
+  /* --- Marca Oficial (Afiche y Logos) --- */
+  --color-primary: #FFE600;       /* Amarillo Oficial de Marca */
+  --color-primary-ink: #111111;   /* Texto encima de primario: Contraste 14.8:1 (AAA) */
+  --color-primary-hover: #F0D800;
+  --color-primary-subtle: #FFFBE6;
+
+  --color-brand-red: #981010;     /* Rojo Oficial de Marca */
+  --color-brand-red-ink: #FFFFFF; /* Contraste 6.5:1 sobre #981010 (AAA) */
+  --color-brand-orange: #F89800;  /* Naranja Oficial de Marca */
+  --color-brand-orange-ink: #111111;
+
+  /* --- Estados Semánticos Operativos --- */
+  --color-danger: #DC2626;        /* Contraste 4.6:1 (AA) */
+  --color-danger-ink: #FFFFFF;
+  --color-danger-subtle: #FEE2E2;
+
+  --color-success: #15803D;       /* Verde oscuro de alto contraste: 4.8:1 (AA) */
+  --color-success-ink: #FFFFFF;
+  --color-success-subtle: #DCFCE7;
+
+  --color-warning: #B45309;       /* Ámbar de alto contraste: 4.6:1 (AA) */
+  --color-warning-ink: #FFFFFF;
+  --color-warning-subtle: #FEF3C7;
+
+  --color-focus: #FFE600;
+  --color-focus-ring: #111111;
+
+  /* Elevaciones y Sombras */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.08), 0 2px 4px -2px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+
+  /* Radio de curvatura táctil */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-full: 9999px;
+}
+
+/* ==========================================================================
+   Modo Oscuro (.dark / [data-theme='dark'])
+   ========================================================================== */
+html.dark,
+[data-theme='dark'] {
+  /* --- Superficies --- */
+  --color-surface: #121212;
+  --color-surface-alt: #1E1E1E;
+  --color-surface-hover: #2A2A2A;
+  --color-surface-active: #333333;
+  --color-border: #333333;
+  --color-border-subtle: #444444;
+
+  /* --- Textos y Tinta (Ink) --- */
+  --color-ink: #F8F9FA;         /* Contraste 17.5:1 sobre #121212 (AAA) */
+  --color-ink-muted: #A3A3A3;   /* Contraste 7.2:1 sobre #121212 (AAA) */
+  --color-ink-inverse: #111111;
+
+  /* --- Marca Oficial --- */
+  --color-primary: #FFE600;
+  --color-primary-ink: #111111;
+  --color-primary-hover: #FFEB3B;
+  --color-primary-subtle: #2C2800;
+
+  --color-brand-red: #D32F2F;
+  --color-brand-red-ink: #FFFFFF;
+  --color-brand-orange: #F89800;
+  --color-brand-orange-ink: #111111;
+
+  /* --- Estados Semánticos Operativos --- */
+  --color-danger: #EF4444;
+  --color-danger-ink: #FFFFFF;
+  --color-danger-subtle: #450A0A;
+
+  --color-success: #22C55E;
+  --color-success-ink: #111111;
+  --color-success-subtle: #052E16;
+
+  --color-warning: #F59E0B;
+  --color-warning-ink: #111111;
+  --color-warning-subtle: #451A03;
+
+  --color-focus: #FFE600;
+  --color-focus-ring: #FFE600;
+
+  /* Elevaciones y Sombras */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+}

@@ -197,17 +197,15 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const dbCtx = getDatabaseContext();
-    // Búsqueda flexible e insensible a mayúsculas: por id, por username, por name o por rol
-    let rawUser: any = dbCtx.rawDb.prepare(`
+    // Búsqueda exclusiva por username exacto (insensible a mayúsculas), id o cédula (nunca por nombre ni rol)
+    const rawUser: any = dbCtx.rawDb.prepare(`
       SELECT * FROM users 
-      WHERE id = ? 
-         OR (username IS NOT NULL AND LOWER(username) = LOWER(?))
-         OR LOWER(name) = LOWER(?)
-         OR (cedula IS NOT NULL AND cedula = ?)
-         OR (LOWER(role) = LOWER(?) AND is_active = 1)
+      WHERE (username IS NOT NULL AND LOWER(username) = LOWER(?))
+         OR id = ?
+         OR cedula = ?
       ORDER BY is_active DESC
       LIMIT 1
-    `).get(identifier, identifier, identifier, identifier, identifier);
+    `).get(identifier, identifier, identifier);
 
     if (!rawUser) {
       return reply.status(404).send({

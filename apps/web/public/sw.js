@@ -1,7 +1,20 @@
-// Service Worker de Tocineta Sonríe POS (Instalabilidad PWA y caché básica de shell)
-const CACHE_NAME = 'tocineta-pwa-v1';
+// Service Worker de TOCINETA POS (Instalabilidad PWA y caché de shell)
+const CACHE_NAME = 'tocineta-pwa-v2';
+const APP_SHELL = [
+  '/',
+  '/index.html',
+  '/manifest.webmanifest',
+  '/brand/logo-light.png',
+  '/brand/logo-dark.png',
+  '/brand/carita.png',
+  '/icon-192.png',
+  '/icon-512.png'
+];
 
 self.addEventListener('install', (event) => {
+  event.waitUntil(
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).catch(() => {})
+  );
   self.skipWaiting();
 });
 
@@ -27,6 +40,14 @@ self.addEventListener('fetch', (event) => {
   }
   // Para assets estáticos: Network-first con fallback a cache si se corta el wifi
   event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request))
+    fetch(event.request)
+      .then((response) => {
+        if (response.status === 200) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      })
+      .catch(() => caches.match(event.request))
   );
 });

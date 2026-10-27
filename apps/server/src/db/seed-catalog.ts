@@ -137,7 +137,7 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'prod_refresco_1lt', category_id: 'cat_bebidas', name: 'Refresco 1 Lt', description: 'Refresco 1 litro sabores Pepsi a elegir', price: 180, cost: 90, station: 'caja_bebidas', is_combo: 0, allows_flavors: 1, is_active: 1 },
       { id: 'prod_malta_lata_250', category_id: 'cat_bebidas', name: 'Malta Lata 250 ml', description: 'Malta Polar en lata 250 ml fría', price: 150, cost: 65, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_vaso_nestea_22oz', category_id: 'cat_bebidas', name: 'Vaso de Nestea 22 Oz', description: 'Té frío Nestea con limón vaso 22 Oz', price: 199, cost: 80, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 1 },
-      { id: 'prod_agua_mineral_500', category_id: 'cat_bebidas', name: 'Agua Mineral 500 ml', description: 'Agua mineral natural 500 ml', price: 100, cost: 40, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_agua_mineral_500', category_id: 'cat_bebidas', name: 'Agua Mineral 500 ml', description: 'Agua mineral natural 500 ml (No incluida en afiche oficial)', price: 100, cost: 40, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 0 },
 
       // --- MALTEADAS Y HELADOS (1 - Feature Flag Categoría Inactiva) ---
       { id: 'prod_malteada_especial', category_id: 'cat_malteadas', name: 'Malteada Especial Tocineta', description: 'Malteada cremosa especial (Próximamente)', price: 350, cost: 130, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 0 },

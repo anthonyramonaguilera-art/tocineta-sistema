@@ -1,4 +1,4 @@
-import React, { useState, Suspense, Component, type ErrorInfo, type ReactNode } from 'react';
+import React, { useState, useEffect, Suspense, Component, type ErrorInfo, type ReactNode } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import { RefreshCw, WifiOff, ArrowLeft } from 'lucide-react';
 import { canUserProcessPayments } from '@tocineta/shared';
@@ -7,8 +7,7 @@ import { AuthScreen } from './components/AuthScreen.js';
 import { AppLayout } from './components/AppLayout.js';
 import { PosView } from './components/PosView.js';
 
-// SUG-01: Code-splitting con React.lazy() para vistas secundarias/administrativas.
-// El Comandero Móvil (PosView) se mantiene en el bundle principal para carga inmediata en teléfonos Android.
+// Vistas Lazy
 const CashierView = React.lazy(() => import('./features/cashier/CashierView.js').then(m => ({ default: m.CashierView })));
 const KdsView = React.lazy(() => import('./features/kds/KdsView.js').then(m => ({ default: m.KdsView })));
 const MenuAdminView = React.lazy(() => import('./components/MenuAdminView.js').then(m => ({ default: m.MenuAdminView })));
@@ -17,24 +16,27 @@ const DeferredPaperView = React.lazy(() => import('./features/emergency/Deferred
 const ProfitabilityDashboard = React.lazy(() => import('./features/profitability/ProfitabilityDashboard.js').then(m => ({ default: m.ProfitabilityDashboard })));
 const StaffManagementView = React.lazy(() => import('./features/staff/StaffManagementView.js').then(m => ({ default: m.StaffManagementView })));
 const QrMenuWebAdminView = React.lazy(() => import('./components/QrMenuWebAdminView.js').then(m => ({ default: m.QrMenuWebAdminView })));
+const HomeView = React.lazy(() => import('./features/home/HomeView.js').then(m => ({ default: m.HomeView })));
+const UiKitView = React.lazy(() => import('./features/uikit/UiKitView.js').then(m => ({ default: m.UiKitView })));
+const AccessQrView = React.lazy(() => import('./features/access/AccessQrView.js').then(m => ({ default: m.AccessQrView })));
 
-export type TabType = 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability' | 'staff' | 'qr-menu';
+export type TabType = 'home' | 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability' | 'staff' | 'qr-menu';
 
-// Mapa canónico de pestañas permitidas y por defecto por rol (Hito M18/M20 RBAC)
+// Mapa canónico de pestañas permitidas y por defecto por rol (Hito M18/M20 RBAC + F1)
 export const ALLOWED_TABS_BY_ROLE: Record<string, TabType[]> = {
   mesonero: ['pos', 'kds', 'health'],
   cocinero: ['kds', 'health'],
   cajera: ['cashier', 'pos', 'kds', 'emergency', 'health'],
-  supervisor: ['pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu'],
-  admin: ['pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu']
+  supervisor: ['home', 'pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu'],
+  admin: ['home', 'pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu']
 };
 
 export const DEFAULT_TAB_BY_ROLE: Record<string, TabType> = {
   mesonero: 'pos',
   cocinero: 'kds',
   cajera: 'pos',
-  supervisor: 'pos',
-  admin: 'pos'
+  supervisor: 'home',
+  admin: 'home'
 };
 
 export { canUserProcessPayments };
@@ -60,7 +62,7 @@ class ViewErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('[ViewErrorBoundary] Error al cargar módulo diferido:', error, errorInfo);
+    console.error('[ViewErrorBoundary] Error al cargar módulo:', error, errorInfo);
   }
 
   handleRetry = () => {
@@ -70,22 +72,22 @@ class ViewErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState
   render() {
     if (this.state.hasError) {
       return (
-        <div className="max-w-md mx-auto my-12 p-6 bg-tocineta-card border border-tocineta-yellow/30 rounded-2xl text-center space-y-4 shadow-2xl">
-          <div className="w-12 h-12 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center text-amber-400">
+        <div className="max-w-md mx-auto my-12 p-6 bg-surface border border-border rounded-2xl text-center space-y-4 shadow-xl">
+          <div className="w-12 h-12 mx-auto rounded-full bg-danger/10 flex items-center justify-center text-danger">
             <WifiOff className="w-6 h-6" />
           </div>
-          <h3 className="text-base font-bold text-white uppercase tracking-tight">
+          <h3 className="text-base font-bold text-ink uppercase tracking-tight">
             Módulo Temporalmente No Disponible
           </h3>
-          <p className="text-xs text-tocineta-muted leading-relaxed">
+          <p className="text-xs text-ink-muted leading-relaxed">
             No se pudo descargar la vista seleccionada. Si el dispositivo perdió la señal Wi-Fi del Food Truck, el Comandero sigue 100% operativo sin interrupción.
           </p>
           <div className="flex gap-2 justify-center pt-2">
             <button
               onClick={this.handleRetry}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-[#1A1F2B] border border-tocineta-border hover:border-tocineta-yellow text-white rounded-xl text-xs font-bold uppercase transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-surface-alt border border-border hover:border-primary text-ink rounded-xl text-xs font-bold uppercase transition"
             >
-              <RefreshCw className="w-3.5 h-3.5 text-tocineta-yellow" />
+              <RefreshCw className="w-3.5 h-3.5 text-primary" />
               Reintentar
             </button>
             <button
@@ -93,7 +95,7 @@ class ViewErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState
                 this.setState({ hasError: false, error: null });
                 this.props.onFallbackToPos();
               }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-tocineta-yellow hover:bg-tocineta-yellow-hover text-black rounded-xl text-xs font-bold uppercase transition"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary hover:bg-primary-hover text-primary-ink rounded-xl text-xs font-bold uppercase transition"
             >
               <ArrowLeft className="w-3.5 h-3.5" />
               Volver al Comandero
@@ -108,8 +110,8 @@ class ViewErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState
 
 const ViewLoadingFallback: React.FC = () => (
   <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-    <RefreshCw className="w-7 h-7 text-tocineta-yellow animate-spin" />
-    <span className="text-xs font-semibold text-tocineta-muted uppercase tracking-wider">
+    <RefreshCw className="w-7 h-7 text-primary animate-spin" />
+    <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
       Cargando módulo...
     </span>
   </div>
@@ -150,6 +152,20 @@ const MainNavigator: React.FC = () => {
     return DEFAULT_TAB_BY_ROLE[user.role] || 'pos';
   });
 
+  const [routeHash, setRouteHash] = useState<string>(() => window.location.hash || window.location.pathname);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      setRouteHash(window.location.hash || window.location.pathname);
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    window.addEventListener('popstate', handleHashChange);
+    return () => {
+      window.removeEventListener('hashchange', handleHashChange);
+      window.removeEventListener('popstate', handleHashChange);
+    };
+  }, []);
+
   // Reseteo limpio de pestaña y caché al cambiar de usuario o hacer logout
   React.useEffect(() => {
     if (!user) {
@@ -186,6 +202,38 @@ const MainNavigator: React.FC = () => {
     staleTime: 10000
   });
 
+  // Ruta especial de Desarrollo: /ui-kit o #ui-kit
+  if (routeHash === '#ui-kit' || routeHash === '/ui-kit') {
+    return (
+      <Suspense fallback={<ViewLoadingFallback />}>
+        <UiKitView />
+      </Suspense>
+    );
+  }
+
+  // Ruta especial de Acceso Rápido / QR: /acceso o #acceso
+  if (routeHash === '#acceso' || routeHash === '/acceso') {
+    return (
+      <div className="min-h-screen bg-surface-alt p-4">
+        <div className="max-w-xl mx-auto mb-4">
+          <button
+            type="button"
+            onClick={() => {
+              window.location.hash = '';
+            }}
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-surface border border-border text-xs font-bold text-ink hover:bg-surface-alt transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span>Volver al Sistema</span>
+          </button>
+        </div>
+        <Suspense fallback={<ViewLoadingFallback />}>
+          <AccessQrView />
+        </Suspense>
+      </div>
+    );
+  }
+
   if (!user) {
     return <AuthScreen />;
   }
@@ -196,8 +244,17 @@ const MainNavigator: React.FC = () => {
       onTabChange={setCurrentTab}
       formattedRate={menuData?.formattedRate}
     >
+      {currentTab === 'home' && (
+        <Suspense fallback={<ViewLoadingFallback />}>
+          <HomeView
+            onNavigate={setCurrentTab}
+            formattedRate={menuData?.formattedRate}
+            userName={user?.name}
+          />
+        </Suspense>
+      )}
       {currentTab === 'pos' && <PosView />}
-      {currentTab !== 'pos' && (
+      {currentTab !== 'pos' && currentTab !== 'home' && (
         <ViewErrorBoundary onFallbackToPos={() => setCurrentTab('pos')}>
           <Suspense fallback={<ViewLoadingFallback />}>
             {currentTab === 'cashier' && (
