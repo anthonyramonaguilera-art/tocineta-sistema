@@ -1,6 +1,7 @@
 # INFORME DE FASE 1: SISTEMA DE DISEÑO + SHELL + LOGIN + INICIO + TOMAR PEDIDO
 **Fecha:** 2026-10-26  
 **Rama Git:** `reconstruccion`  
+**Commit SHA:** `9af3b5cbb8402aa4b478dbc06d1509b5c82bc5fa`  
 **Tag Base:** `f0` (`fase-0`)  
 **Tag Resultante:** `f1`  
 
