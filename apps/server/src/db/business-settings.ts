@@ -18,6 +18,7 @@ export interface BusinessSettingsRecord {
   igtf_enabled: number;
   igtf_rate_bps: number;
   igtf_applies_to: string;
+  blind_closure_enabled: number;
   updated_at_ms: number;
 }
 
@@ -39,6 +40,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettingsRecord = {
   igtf_enabled: 0,
   igtf_rate_bps: 300,
   igtf_applies_to: 'CASH_USD',
+  blind_closure_enabled: 0,
   updated_at_ms: Date.now()
 };
 
@@ -58,14 +60,14 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
           delivery_accounting_mode, delivery_quick_tiers_json, table_service_mode,
           banesco_pago_movil_phone, banesco_pago_movil_id, pos_fee_bps,
           profitability_pro_enabled, fiscal_module_enabled, fiscal_price_mode,
-          igtf_enabled, igtf_rate_bps, igtf_applies_to, updated_at_ms
+          igtf_enabled, igtf_rate_bps, igtf_applies_to, blind_closure_enabled, updated_at_ms
         ) VALUES (
           'default', 'TOCINETA', 'V-17040918-0', '04249728209',
           'Detrás de Torre Movistar, Puerto Ordaz',
           'THIRD_PARTY_PASS_THROUGH', '[200, 300, 400, 500]', 'ticket_independiente',
           '04249728209', '17040918', 75,
           0, 0, 'INCLUSIVE',
-          0, 300, 'CASH_USD', ?
+          0, 300, 'CASH_USD', 0, ?
         )
       `).run(now);
 
@@ -90,6 +92,7 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
       igtf_enabled: existing.igtf_enabled ?? DEFAULT_BUSINESS_SETTINGS.igtf_enabled,
       igtf_rate_bps: existing.igtf_rate_bps ?? DEFAULT_BUSINESS_SETTINGS.igtf_rate_bps,
       igtf_applies_to: existing.igtf_applies_to || DEFAULT_BUSINESS_SETTINGS.igtf_applies_to,
+      blind_closure_enabled: existing.blind_closure_enabled ?? DEFAULT_BUSINESS_SETTINGS.blind_closure_enabled,
       updated_at_ms: existing.updated_at_ms || Date.now()
     };
   } catch (err) {

@@ -8,6 +8,7 @@ export interface NumberPadProps {
   onClear?: () => void;
   maxLength?: number;
   allowDecimal?: boolean;
+  showDecimal?: boolean;
   enterLabel?: string;
   className?: string;
 }
@@ -18,13 +19,15 @@ export const NumberPad: React.FC<NumberPadProps> = ({
   onEnter,
   onClear,
   maxLength = 10,
-  allowDecimal = true,
+  allowDecimal,
+  showDecimal,
   enterLabel,
   className = ''
 }) => {
+  const isDecimalAllowed = allowDecimal !== undefined ? allowDecimal : (showDecimal !== undefined ? showDecimal : true);
   const handleDigit = (digit: string) => {
     if (value.length >= maxLength) return;
-    if (digit === '.' && (value.includes('.') || !allowDecimal)) return;
+    if (digit === '.' && (value.includes('.') || !isDecimalAllowed)) return;
     onChange(value + digit);
   };
 
@@ -38,7 +41,7 @@ export const NumberPad: React.FC<NumberPadProps> = ({
     ['1', '2', '3'],
     ['4', '5', '6'],
     ['7', '8', '9'],
-    [allowDecimal ? '.' : 'C', '0', 'DEL']
+    [isDecimalAllowed ? '.' : 'C', '0', 'DEL']
   ];
 
   return (

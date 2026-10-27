@@ -55,6 +55,56 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
     }
   });
 
+  // 1.1 Listado de pedidos no cobrados para Caja (GET /api/orders/unpaid)
+  fastify.get('/api/orders/unpaid', async (_request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const rows = dbCtx.rawDb.prepare(`
+      SELECT * FROM orders
+      WHERE payment_status IN ('sin_pago', 'parcial', 'autorizado_sin_pago')
+        AND fulfillment_status NOT IN ('cerrado', 'anulado')
+      ORDER BY created_at_ms DESC
+    `).all() as any[];
+
+    const orders = rows.map((o) => {
+      const hydrated = hydrateOrderLines(dbCtx.rawDb, o.id);
+      return {
+        id: o.id,
+        orderNumber: o.order_number,
+        order_number: o.order_number,
+        customerName: o.customer_name || 'Cliente Mostrador',
+        customer_name: o.customer_name || 'Cliente Mostrador',
+        customerPhone: o.customer_phone || '',
+        customer_phone: o.customer_phone || '',
+        tableNumber: o.table_number || '',
+        table_number: o.table_number || '',
+        fulfillmentType: o.fulfillment_type,
+        fulfillment_type: o.fulfillment_type,
+        status: o.fulfillment_status,
+        paymentStatus: o.payment_status,
+        payment_status: o.payment_status,
+        totalCents: o.total_to_collect_usd_cents,
+        totalUsdCents: o.total_to_collect_usd_cents,
+        total_usd_cents: o.total_to_collect_usd_cents,
+        total_to_collect_usd_cents: o.total_to_collect_usd_cents,
+        rate_micro_bs: o.rate_micro_bs,
+        rateMicroBs: o.rate_micro_bs,
+        itemsCount: hydrated.itemsCount,
+        lines: hydrated.lines.map((l: any) => ({
+          ...l,
+          qty: l.quantity,
+          unitPriceUsdCents: l.unit_price_usd_cents,
+          totalPriceUsdCents: l.total_price_usd_cents
+        })),
+        createdAtMs: o.created_at_ms
+      };
+    });
+
+    return reply.status(200).send({
+      success: true,
+      orders
+    });
+  });
+
   // 2. Listado de pedidos (GET /api/orders)
   fastify.get('/api/orders', async (request, reply) => {
     const dbCtx = getDatabaseContext();

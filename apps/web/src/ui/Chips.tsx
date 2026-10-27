@@ -8,8 +8,10 @@ export interface ChipItem {
 }
 
 export interface ChipsProps {
-  items: ChipItem[];
+  items?: ChipItem[];
+  options?: ChipItem[];
   selectedId?: string;
+  value?: string;
   selectedIds?: string[];
   onChange?: (id: string) => void;
   onSelect?: (id: string) => void;
@@ -19,20 +21,25 @@ export interface ChipsProps {
 
 export const Chips: React.FC<ChipsProps> = ({
   items,
+  options,
   selectedId,
+  value,
   selectedIds,
   onChange,
   onSelect,
   onToggle,
   className = ''
 }) => {
+  const chipList = items || options || [];
+  const currentSelectedId = selectedId || value;
+
   return (
     <div className={`overflow-x-auto scrollbar-none py-1.5 ${className}`.trim()}>
       <div className="flex items-center gap-2 min-w-max px-0.5">
-        {items.map((item) => {
+        {chipList.map((item) => {
           const isSelected = selectedIds
             ? selectedIds.includes(item.id)
-            : item.id === selectedId;
+            : item.id === currentSelectedId;
 
           const handleClick = () => {
             if (onToggle) onToggle(item.id);

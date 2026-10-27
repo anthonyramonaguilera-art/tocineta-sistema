@@ -159,7 +159,7 @@ async function run() {
       // Llenar nombre de cliente obligatorio para poder avanzar
       const nameInput = await page.$('input[placeholder*="Nombre y Apellido"]');
       if (nameInput) {
-        await nameInput.fill('Anthony Aguilera');
+        await nameInput.fill('Cliente Mostrador');
       }
       const nextBtn1 = await page.$('footer button:has-text("Ir al Menú"), footer button:has-text("Siguiente")');
       if (nextBtn1) {

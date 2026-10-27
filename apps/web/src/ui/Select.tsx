@@ -2,10 +2,12 @@ import React from 'react';
 
 export interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   hasError?: boolean;
+  options?: Array<{ value: string; label: string }>;
 }
 
 export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
   hasError = false,
+  options,
   className = '',
   disabled,
   children,
@@ -25,7 +27,11 @@ export const Select = React.forwardRef<HTMLSelectElement, SelectProps>(({
         className={`${baseClasses} ${stateClasses} pr-10 appearance-none ${className}`.trim()}
         {...props}
       >
-        {children}
+        {options ? options.map(opt => (
+          <option key={opt.value} value={opt.value}>
+            {opt.label}
+          </option>
+        )) : children}
       </select>
       <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-ink-muted">
         <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">

@@ -721,3 +721,15 @@ export type PurchaseItem = typeof purchaseItems.$inferSelect;
 export type InventoryMovement = typeof inventoryMovements.$inferSelect;
 export type StaffPayrollPayment = typeof staffPayrollPayments.$inferSelect;
 
+export const clientErrors = sqliteTable('client_errors', {
+  id: text('id').primaryKey(),
+  viewName: text('view_name').notNull(),
+  errorMessage: text('error_message').notNull(),
+  errorStack: text('error_stack'),
+  userId: text('user_id'),
+  userRole: text('user_role'),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export type ClientError = typeof clientErrors.$inferSelect;
+

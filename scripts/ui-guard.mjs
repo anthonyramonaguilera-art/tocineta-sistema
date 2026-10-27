@@ -44,8 +44,8 @@ scanDir(WEB_SRC, file => {
   });
 });
 
-// Newly created or refactored files in Phase 1 that MUST be <= 400 lines
-const PHASE1_NEW_OR_REFACTORED_SCREENS = [
+// Newly created or refactored files in Phase 1 & Phase 2 that MUST be <= 400 lines
+const PHASE1_AND_2_SCREENS = [
   'apps/web/src/features/pos/usePosCart.ts',
   'apps/web/src/features/pos/Step1CustomerChannel.tsx',
   'apps/web/src/features/pos/Step2Catalog.tsx',
@@ -56,10 +56,22 @@ const PHASE1_NEW_OR_REFACTORED_SCREENS = [
   'apps/web/src/features/uikit/UiKitView.tsx',
   'apps/web/src/features/auth/LoginView.tsx',
   'apps/web/src/components/AppHeader.tsx',
-  'apps/web/src/components/AppSidebar.tsx'
+  'apps/web/src/components/AppSidebar.tsx',
+  'apps/web/src/features/cashier/PaymentWizard.tsx',
+  'apps/web/src/features/cashier/PaymentWizardStep2.tsx',
+  'apps/web/src/features/cashier/MultiMethodCalculator.tsx',
+  'apps/web/src/features/cashier/CashierView.tsx',
+  'apps/web/src/features/cashier/CashierOrdersTab.tsx',
+  'apps/web/src/features/cashier/CashierSalesTab.tsx',
+  'apps/web/src/features/cashier/CashierClosureWizard.tsx',
+  'apps/web/src/features/cashier/CashierShiftOpeningModal.tsx',
+  'apps/web/src/features/kds/KdsView.tsx',
+  'apps/web/src/features/kds/KdsCard.tsx',
+  'apps/web/src/components/ViewErrorBoundary.tsx',
+  'apps/web/src/features/admin/ClientErrorsView.tsx'
 ];
 
-for (const relPath of PHASE1_NEW_OR_REFACTORED_SCREENS) {
+for (const relPath of PHASE1_AND_2_SCREENS) {
   const fullPath = path.join(ROOT_DIR, relPath);
   if (fs.existsSync(fullPath)) {
     const content = fs.readFileSync(fullPath, 'utf8');
@@ -74,7 +86,7 @@ for (const relPath of PHASE1_NEW_OR_REFACTORED_SCREENS) {
 scanDir(WEB_SRC, file => {
   if (!file.endsWith('.tsx')) return;
   const isInsideUi = file.replace(/\\/g, '/').includes('/apps/web/src/ui/');
-  const isPhase1File = PHASE1_NEW_OR_REFACTORED_SCREENS.some(p => file.replace(/\\/g, '/').endsWith(p));
+  const isPhase1File = PHASE1_AND_2_SCREENS.some(p => file.replace(/\\/g, '/').endsWith(p));
 
   const content = fs.readFileSync(file, 'utf8');
   const lines = content.split('\n');

@@ -184,6 +184,32 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
     });
   });
 
+  // 4.1 Consultar Ventas de la Sesión Actual (GET /api/cash-sessions/current/sales)
+  fastify.get('/api/cash-sessions/current/sales', async (_request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const rows = dbCtx.rawDb.prepare(`
+      SELECT * FROM orders
+      WHERE payment_status = 'pagado'
+      ORDER BY updated_at_ms DESC
+      LIMIT 50
+    `).all() as any[];
+
+    const sales = rows.map((o) => ({
+      id: o.id,
+      orderNumber: o.order_number,
+      customerName: o.customer_name || 'Cliente Mostrador',
+      totalCents: o.total_to_collect_usd_cents,
+      paidAtMs: o.updated_at_ms,
+      paymentMethod: 'cash_usd',
+      status: o.fulfillment_status
+    }));
+
+    return reply.status(200).send({
+      success: true,
+      sales
+    });
+  });
+
   // 5. Procesar Pago de Orden (POST /api/orders/:id/pay)
   fastify.post('/api/orders/:id/pay', async (request, reply) => {
     const dbCtx = getDatabaseContext();

@@ -1,11 +1,12 @@
-import React, { useState, useEffect, Suspense, Component, type ErrorInfo, type ReactNode } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
-import { RefreshCw, WifiOff, ArrowLeft } from 'lucide-react';
+import { RefreshCw, ArrowLeft } from 'lucide-react';
 import { canUserProcessPayments } from '@tocineta/shared';
 import { AuthProvider, useAuth } from './context/AuthContext.js';
 import { AuthScreen } from './components/AuthScreen.js';
 import { AppLayout } from './components/AppLayout.js';
 import { PosView } from './components/PosView.js';
+import { ViewErrorBoundary } from './components/ViewErrorBoundary.js';
 
 // Vistas Lazy
 const CashierView = React.lazy(() => import('./features/cashier/CashierView.js').then(m => ({ default: m.CashierView })));
@@ -40,73 +41,6 @@ export const DEFAULT_TAB_BY_ROLE: Record<string, TabType> = {
 };
 
 export { canUserProcessPayments };
-
-interface ErrorBoundaryProps {
-  children: ReactNode;
-  onFallbackToPos: () => void;
-}
-
-interface ErrorBoundaryState {
-  hasError: boolean;
-  error: Error | null;
-}
-
-class ViewErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
-  constructor(props: ErrorBoundaryProps) {
-    super(props);
-    this.state = { hasError: false, error: null };
-  }
-
-  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
-  }
-
-  componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('[ViewErrorBoundary] Error al cargar módulo:', error, errorInfo);
-  }
-
-  handleRetry = () => {
-    this.setState({ hasError: false, error: null });
-  };
-
-  render() {
-    if (this.state.hasError) {
-      return (
-        <div className="max-w-md mx-auto my-12 p-6 bg-surface border border-border rounded-2xl text-center space-y-4 shadow-xl">
-          <div className="w-12 h-12 mx-auto rounded-full bg-danger/10 flex items-center justify-center text-danger">
-            <WifiOff className="w-6 h-6" />
-          </div>
-          <h3 className="text-base font-bold text-ink uppercase tracking-tight">
-            Módulo Temporalmente No Disponible
-          </h3>
-          <p className="text-xs text-ink-muted leading-relaxed">
-            No se pudo descargar la vista seleccionada. Si el dispositivo perdió la señal Wi-Fi del Food Truck, el Comandero sigue 100% operativo sin interrupción.
-          </p>
-          <div className="flex gap-2 justify-center pt-2">
-            <button
-              onClick={this.handleRetry}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-surface-alt border border-border hover:border-primary text-ink rounded-xl text-xs font-bold uppercase transition"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-primary" />
-              Reintentar
-            </button>
-            <button
-              onClick={() => {
-                this.setState({ hasError: false, error: null });
-                this.props.onFallbackToPos();
-              }}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-primary hover:bg-primary-hover text-primary-ink rounded-xl text-xs font-bold uppercase transition"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              Volver al Comandero
-            </button>
-          </div>
-        </div>
-      );
-    }
-    return this.props.children;
-  }
-}
 
 const ViewLoadingFallback: React.FC = () => (
   <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
@@ -156,10 +90,16 @@ const MainNavigator: React.FC = () => {
 
   useEffect(() => {
     const handleHashChange = () => {
-      setRouteHash(window.location.hash || window.location.pathname);
+      const hashStr = window.location.hash || window.location.pathname;
+      setRouteHash(hashStr);
+      const cleanTab = hashStr.replace(/^[#/]+/, '') as TabType;
+      if (['home', 'pos', 'cashier', 'kds', 'profitability', 'menu-admin', 'staff', 'health', 'emergency', 'qr-menu'].includes(cleanTab)) {
+        setCurrentTab(cleanTab);
+      }
     };
     window.addEventListener('hashchange', handleHashChange);
     window.addEventListener('popstate', handleHashChange);
+    handleHashChange();
     return () => {
       window.removeEventListener('hashchange', handleHashChange);
       window.removeEventListener('popstate', handleHashChange);
@@ -255,7 +195,12 @@ const MainNavigator: React.FC = () => {
       )}
       {currentTab === 'pos' && <PosView />}
       {currentTab !== 'pos' && currentTab !== 'home' && (
-        <ViewErrorBoundary onFallbackToPos={() => setCurrentTab('pos')}>
+        <ViewErrorBoundary
+          onFallbackToPos={() => setCurrentTab('pos')}
+          viewName={currentTab}
+          userId={user?.id}
+          userRole={user?.role}
+        >
           <Suspense fallback={<ViewLoadingFallback />}>
             {currentTab === 'cashier' && (
               <CashierRoleGuard user={user} onRedirect={setCurrentTab} />

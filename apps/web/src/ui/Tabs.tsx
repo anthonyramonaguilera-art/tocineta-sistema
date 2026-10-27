@@ -8,23 +8,30 @@ export interface TabItem {
 }
 
 export interface TabsProps {
-  items: TabItem[];
-  activeId: string;
+  items?: TabItem[];
+  tabs?: TabItem[];
+  activeId?: string;
+  activeTab?: string;
   onChange: (id: string) => void;
   className?: string;
 }
 
 export const Tabs: React.FC<TabsProps> = ({
   items,
+  tabs,
   activeId,
+  activeTab,
   onChange,
   className = ''
 }) => {
+  const tabList = items || tabs || [];
+  const currentActiveId = activeId || activeTab || '';
+
   return (
     <div className={`overflow-x-auto scrollbar-none border-b border-border ${className}`.trim()}>
       <div className="flex gap-2 min-w-max px-1">
-        {items.map(item => {
-          const isActive = item.id === activeId;
+        {tabList.map(item => {
+          const isActive = item.id === currentActiveId;
           return (
             <button
               key={item.id}

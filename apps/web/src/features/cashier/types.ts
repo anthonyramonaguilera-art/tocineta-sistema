@@ -1,4 +1,4 @@
-export type CashierPaymentMethod = 'cash_usd' | 'cash_bs' | 'pago_movil' | 'ubii' | 'binance';
+export type CashierPaymentMethod = 'cash_usd' | 'cash_bs' | 'pago_movil' | 'ubii' | 'binance' | 'credit';
 
 export interface CashierTender {
   id: string;
@@ -58,6 +58,8 @@ export interface CashierOrder {
   id: string;
   order_number: number;
   table_number: string;
+  customer_name?: string | null;
+  customer_phone?: string | null;
   fulfillment_type: string;
   payment_status: string;
   fulfillment_status: string;
