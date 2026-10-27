@@ -20,6 +20,7 @@ import { updaterRoutes } from './modules/updater/routes.js';
 import { qrMenuRoutes } from './modules/qr-menu/routes.js';
 import { profitabilityRoutes } from './modules/profitability/routes.js';
 import { fase3Routes } from './modules/profitability/fase3-routes.js';
+import { fase4Routes } from './modules/transfers/routes.js';
 import { clientErrorsRoutes } from './routes/client-errors.js';
 import { startSnapshotWorker } from './modules/backups/snapshot-service.js';
 import { PrintingWorker } from './modules/printing/worker.js';
@@ -148,6 +149,7 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   await server.register(qrMenuRoutes);
   await server.register(profitabilityRoutes);
   await server.register(fase3Routes);
+  await server.register(fase4Routes);
   await server.register(clientErrorsRoutes);
 
   if (!options.disableStatic) {

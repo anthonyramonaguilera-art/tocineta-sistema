@@ -197,6 +197,32 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     const dbCtx = getDatabaseContext();
+
+    // ── GOBERNANZA ACCESO REMOTO (HITO FASE 4) ───────────────────────────────
+    const proto = (request.headers['x-forwarded-proto'] as string || '').toLowerCase();
+    const forwardedHost = (request.headers['x-forwarded-host'] as string || '').toLowerCase();
+    const cfIp = (request.headers['cf-connecting-ip'] as string || '').trim();
+    const isRemote = Boolean(
+      cfIp ||
+      request.headers['x-remote-access'] ||
+      (forwardedHost && !forwardedHost.includes('localhost') && !forwardedHost.includes('127.0.0.1'))
+    );
+
+    // 1. En acceso remoto: exclusivamente HTTPS
+    if (isRemote && proto && proto !== 'https') {
+      appendAuditEvent(dbCtx.rawDb, {
+        actorUserId: null,
+        action: 'REMOTE_ACCESS_BLOCKED',
+        entityType: 'network',
+        entityId: cfIp || request.ip,
+        payload: { reason: 'HTTPS_REQUIRED', ip: request.ip, host: forwardedHost }
+      });
+      return reply.status(403).send({
+        success: false,
+        error: 'Acceso remoto rechazado: Se requiere conexión cifrada HTTPS exclusivamente'
+      });
+    }
+
     // Búsqueda exclusiva por username exacto (insensible a mayúsculas), id o cédula (nunca por nombre ni rol)
     const rawUser: any = dbCtx.rawDb.prepare(`
       SELECT * FROM users 
@@ -277,13 +303,16 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
       appendAuditEvent(dbCtx.rawDb, {
         actorUserId: user.id,
-        action: 'AUTH_LOGIN_FAILED',
+        action: isRemote ? 'REMOTE_LOGIN_FAILED' : 'AUTH_LOGIN_FAILED',
         entityType: 'user',
         entityId: user.id,
         payload: {
           failedAttempts: user.failedAttempts + 1,
           isLockedNow: failResult.isLockedNow,
-          lockoutStage: failResult.lockoutStage
+          lockoutStage: failResult.lockoutStage,
+          isRemote,
+          remoteIp: cfIp || request.ip,
+          userAgent: request.headers['user-agent']
         }
       });
 
@@ -305,11 +334,13 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     // Credenciales correctas: Resetear intentos fallidos
     resetLockout(dbCtx.rawDb, user.id, now);
 
-    // Crear nueva sesión con token criptográfico de 30 días persistentes (Hito M20 C.1)
+    // En acceso remoto: sesión corta de 2 horas (vs 30 días persistentes para dispositivos locales del Food Truck)
+    const REMOTE_SESSION_TTL_MS = 2 * 3600 * 1000;
+    const effectiveTtlMs = isRemote ? REMOTE_SESSION_TTL_MS : SESSION_TTL_MS;
     const rawToken = crypto.randomBytes(32).toString('hex');
     const tokenHash = hashToken(rawToken);
     const sessionId = `ses_${crypto.randomBytes(16).toString('hex')}`;
-    const expiresAtMs = now + SESSION_TTL_MS;
+    const expiresAtMs = now + effectiveTtlMs;
 
     dbCtx.rawDb.prepare(`
       INSERT INTO sessions (
@@ -323,10 +354,16 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
 
     appendAuditEvent(dbCtx.rawDb, {
       actorUserId: user.id,
-      action: 'AUTH_LOGIN_SUCCESS',
+      action: isRemote ? 'REMOTE_LOGIN_SUCCESS' : 'AUTH_LOGIN_SUCCESS',
       entityType: 'session',
       entityId: sessionId,
-      payload: { role: user.role }
+      payload: {
+        role: user.role,
+        isRemote,
+        sessionTtlHours: isRemote ? 2 : 720,
+        remoteIp: cfIp || request.ip,
+        userAgent: request.headers['user-agent']
+      }
     });
 
     let permissions: string[] = [];
@@ -337,6 +374,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.status(200).send({
       success: true,
       token: rawToken,
+      isRemote: Boolean(isRemote),
       mustChangePin: Boolean(user.mustChangePin),
       user: {
         id: user.id,

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Button, Input, Icon, Badge } from '../../ui/index.js';
 import { TransferModal } from './components/TransferModal.js';
 import { NewSupplyModal } from './components/NewSupplyModal.js';
+import { ProductionModal } from './components/ProductionModal.js';
 
 interface SupplyItemData {
   id: string;
@@ -36,6 +37,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isProductionModalOpen, setIsProductionModalOpen] = useState(false);
 
   const { data: suppliesData, isLoading } = useQuery<{ success: boolean; supplies: SupplyItemData[] }>({
     queryKey: ['fase3Supplies', activeLocationId],
@@ -100,6 +102,14 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         </div>
 
         <div className="flex gap-2">
+          <Button
+            variant="ghost"
+            onClick={() => setIsProductionModalOpen(true)}
+            className="flex-1 sm:flex-none"
+            leftIcon={<Icon name="ChefHat" size={16} />}
+          >
+            Producción
+          </Button>
           <Button
             variant="ghost"
             onClick={() => setIsTransferModalOpen(true)}
@@ -236,6 +246,11 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       <NewSupplyModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+      />
+
+      <ProductionModal
+        isOpen={isProductionModalOpen}
+        onClose={() => setIsProductionModalOpen(false)}
       />
     </div>
   );

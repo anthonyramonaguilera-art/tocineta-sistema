@@ -121,7 +121,43 @@ const rec3 = saveProductRecipe(db, prod3Id, {
 });
 console.log('🥤 Receta 3 Guardada:', rec3.productName, `Modo: ${rec3.recipeMode}, Costo: $${(rec3.calculatedCostUsdCents / 100).toFixed(2)}, Margen: ${(rec3.currentMarginBps / 100).toFixed(1)}%, Sugerido: $${(rec3.suggestedPriceUsdCents / 100).toFixed(2)}`);
 
-console.log('\n🎉 LAS 3 RECETAS REALES DE PRUEBA HAN SIDO CARGADAS CON ÉXITO:');
-console.log('   1. Americana Deluxe (Modo UNITS: Pan Brioche, Carne Smash 150g, Queso Cheddar x2, Tocineta x3, Salsa Especial)');
-console.log('   2. Clásica Tocinetera (Modo GRAMMAGE: Pan Clásico, Carne molida cruda 180g con 15% merma cocción, Queso, Salsa)');
-console.log('   3. Malta Lata 250 ml (Modo FINISHED_PRODUCT: Descuenta 1 lata directo)');
+// 6. RECETA 4: "Street Dog" -> Modo UNITS (Por Unidades)
+const supPanPerro = { id: 'sup_pan_perro_art', name: 'Pan de Perro Caliente', purchase_unit: 'paquete', usage_unit: 'und', conversion_factor: 10, category: 'panaderia', min_stock: 50, cost: 35 };
+const supSalchicha = { id: 'sup_salchicha_pol', name: 'Salchicha Especial de Pollo', purchase_unit: 'paquete', usage_unit: 'und', conversion_factor: 10, category: 'carnes', min_stock: 50, cost: 40 };
+
+for (const s of [supPanPerro, supSalchicha]) {
+  db.prepare(`
+    INSERT INTO supply_items (
+      id, name, unit, unit_measure, purchase_unit, usage_unit, conversion_factor,
+      category, min_stock, cost_per_unit_usd_cents, weighted_avg_cost_usd_cents,
+      last_cost_usd_cents, is_active, created_at_ms, updated_at_ms
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET name = excluded.name, cost_per_unit_usd_cents = excluded.cost_per_unit_usd_cents, updated_at_ms = excluded.updated_at_ms
+  `).run(s.id, s.name, s.purchase_unit, s.usage_unit, s.purchase_unit, s.usage_unit, s.conversion_factor, s.category, s.min_stock, s.cost, s.cost, s.cost, now, now);
+
+  db.prepare(`
+    INSERT INTO location_inventory (id, location_id, supply_id, current_stock_qty, minimum_stock_qty, updated_at_ms)
+    VALUES (?, 'loc_los_olivos', ?, 500, ?, ?)
+    ON CONFLICT(id) DO UPDATE SET current_stock_qty = 500, updated_at_ms = excluded.updated_at_ms
+  `).run(`loc_los_olivos_${s.id}`, s.id, s.min_stock, now);
+}
+
+// También asegurar stock suficiente en origen para Americana Deluxe
+db.prepare("UPDATE location_inventory SET current_stock_qty = 500 WHERE location_id = 'loc_los_olivos'").run();
+
+const prodDog = db.prepare("SELECT id FROM products WHERE id = 'prod_street_dog' OR name LIKE '%street dog%' LIMIT 1").get() as any;
+if (prodDog) {
+  saveProductRecipe(db, prodDog.id, {
+    recipeMode: 'UNITS',
+    targetMarginBps: 6500,
+    notes: 'Ficha técnica oficial de Street Dog',
+    items: [
+      { supplyItemId: 'sup_pan_perro_art', quantityRequired: 1, shrinkagePercentage: 0 },
+      { supplyItemId: 'sup_salchicha_pol', quantityRequired: 1, shrinkagePercentage: 0 }
+    ]
+  });
+  console.log('🌭 Receta Street Dog Guardada con éxito');
+}
+
+console.log('\n🎉 RECETAS REALES CARGADAS CON ÉXITO: Hamburguesas y Perros listos para envíos.');
+

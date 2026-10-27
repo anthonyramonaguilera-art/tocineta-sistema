@@ -851,3 +851,60 @@ export const clientErrors = sqliteTable('client_errors', {
 
 export type ClientError = typeof clientErrors.$inferSelect;
 
+export const interLocationTransfers = sqliteTable('inter_location_transfers', {
+  id: text('id').primaryKey(),
+  transferNumber: integer('transfer_number').notNull(),
+  dispatchNoteCode: text('dispatch_note_code').notNull().unique(),
+  fromLocationId: text('from_location_id').notNull().references(() => locations.id),
+  toLocationId: text('to_location_id').notNull().references(() => locations.id),
+  status: text('status', { enum: ['EN_TRANSITO', 'RECIBIDO', 'COMPLETADO', 'CANCELADO'] }).notNull(),
+  mode: text('mode', { enum: ['DISH_EQUIVALENT', 'LOOSE_SUPPLIES', 'BATCH'] }).notNull(),
+  itemsJson: text('items_json').notNull(),
+  dishEquivalentsJson: text('dish_equivalents_json'),
+  batchId: text('batch_id'),
+  totalCostUsdCents: integer('total_cost_usd_cents').notNull().default(0),
+  forcedWithPin: integer('forced_with_pin').notNull().default(0),
+  forceReason: text('force_reason'),
+  forcedByUserId: text('forced_by_user_id').references(() => users.id),
+  notes: text('notes'),
+  createdByUserId: text('created_by_user_id').notNull().references(() => users.id),
+  receivedByUserId: text('received_by_user_id').references(() => users.id),
+  receivedAtMs: integer('received_at_ms'),
+  createdAtMs: integer('created_at_ms').notNull(),
+  updatedAtMs: integer('updated_at_ms').notNull()
+});
+
+export const transferBatches = sqliteTable('transfer_batches', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  description: text('description'),
+  fromLocationId: text('from_location_id').references(() => locations.id),
+  toLocationId: text('to_location_id').references(() => locations.id),
+  itemsJson: text('items_json').notNull(),
+  isActive: integer('is_active').notNull().default(1),
+  createdAtMs: integer('created_at_ms').notNull(),
+  updatedAtMs: integer('updated_at_ms').notNull()
+});
+
+export const productionLogs = sqliteTable('production_logs', {
+  id: text('id').primaryKey(),
+  locationId: text('location_id').notNull().references(() => locations.id),
+  targetType: text('target_type', { enum: ['SUB_RECIPE', 'PRODUCT'] }).notNull(),
+  targetId: text('target_id').notNull(),
+  targetName: text('target_name').notNull(),
+  quantityProduced: real('quantity_produced').notNull(),
+  unit: text('unit').notNull(),
+  totalCostUsdCents: integer('total_cost_usd_cents').notNull().default(0),
+  consumedSuppliesJson: text('consumed_supplies_json').notNull(),
+  producedByUserId: text('produced_by_user_id').notNull().references(() => users.id),
+  notes: text('notes'),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export type InterLocationTransfer = typeof interLocationTransfers.$inferSelect;
+export type InsertInterLocationTransfer = typeof interLocationTransfers.$inferInsert;
+export type TransferBatch = typeof transferBatches.$inferSelect;
+export type InsertTransferBatch = typeof transferBatches.$inferInsert;
+export type ProductionLog = typeof productionLogs.$inferSelect;
+export type InsertProductionLog = typeof productionLogs.$inferInsert;
+

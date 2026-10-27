@@ -21,6 +21,7 @@ export interface DeliveryDriver {
   id: string;
   name: string;
   phone: string;
+  locationId?: string;
   isActive: boolean;
   createdAtMs: number;
   updatedAtMs: number;
@@ -102,15 +103,23 @@ export function maskAddress(address?: string | null, userRole?: string, isOrderA
 // 2. GESTIÓN DE MOTORIZADOS (CRUD)
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function getDeliveryDrivers(rawDb: Database.Database, includeInactive = false): DeliveryDriver[] {
-  const query = includeInactive
-    ? 'SELECT * FROM delivery_drivers ORDER BY name ASC'
-    : 'SELECT * FROM delivery_drivers WHERE is_active = 1 ORDER BY name ASC';
-  const rows = rawDb.prepare(query).all() as any[];
+export function getDeliveryDrivers(rawDb: Database.Database, includeInactive = false, locationId?: string): DeliveryDriver[] {
+  let query = 'SELECT * FROM delivery_drivers WHERE 1=1';
+  const params: any[] = [];
+  if (!includeInactive) {
+    query += ' AND is_active = 1';
+  }
+  if (locationId) {
+    query += ' AND (location_id = ? OR location_id IS NULL)';
+    params.push(locationId);
+  }
+  query += ' ORDER BY name ASC';
+  const rows = rawDb.prepare(query).all(...params) as any[];
   return rows.map(r => ({
     id: r.id,
     name: r.name,
     phone: r.phone,
+    locationId: r.location_id || 'loc_alta_vista',
     isActive: Boolean(r.is_active),
     createdAtMs: r.created_at_ms,
     updatedAtMs: r.updated_at_ms
@@ -119,7 +128,7 @@ export function getDeliveryDrivers(rawDb: Database.Database, includeInactive = f
 
 export function createDeliveryDriver(
   rawDb: Database.Database,
-  input: { name: string; phone: string; actorUserId?: string }
+  input: { name: string; phone: string; locationId?: string; actorUserId?: string }
 ): DeliveryDriver {
   if (!input.name || input.name.trim() === '') {
     const err: any = new Error('El nombre del motorizado es obligatorio');
@@ -136,11 +145,12 @@ export function createDeliveryDriver(
   const id = `drv_${generateUuidV7()}`;
   const cleanName = input.name.trim();
   const cleanPhone = input.phone.trim();
+  const locId = input.locationId || 'loc_alta_vista';
 
   rawDb.prepare(`
-    INSERT INTO delivery_drivers (id, name, phone, is_active, created_at_ms, updated_at_ms)
-    VALUES (?, ?, ?, 1, ?, ?)
-  `).run(id, cleanName, cleanPhone, now, now);
+    INSERT INTO delivery_drivers (id, name, phone, location_id, is_active, created_at_ms, updated_at_ms)
+    VALUES (?, ?, ?, ?, 1, ?, ?)
+  `).run(id, cleanName, cleanPhone, locId, now, now);
 
   if (input.actorUserId) {
     appendAuditEvent(rawDb, {
@@ -148,7 +158,7 @@ export function createDeliveryDriver(
       action: 'DELIVERY_DRIVER_CREATED',
       entityType: 'delivery_driver',
       entityId: id,
-      payload: { name: cleanName, phone: cleanPhone }
+      payload: { name: cleanName, phone: cleanPhone, locationId: locId }
     });
   }
 
@@ -156,6 +166,7 @@ export function createDeliveryDriver(
     id,
     name: cleanName,
     phone: cleanPhone,
+    locationId: locId,
     isActive: true,
     createdAtMs: now,
     updatedAtMs: now
@@ -165,7 +176,7 @@ export function createDeliveryDriver(
 export function updateDeliveryDriver(
   rawDb: Database.Database,
   id: string,
-  input: { name?: string; phone?: string; isActive?: boolean; actorUserId?: string }
+  input: { name?: string; phone?: string; locationId?: string; isActive?: boolean; actorUserId?: string }
 ): DeliveryDriver {
   const existing = rawDb.prepare('SELECT * FROM delivery_drivers WHERE id = ?').get(id) as any;
   if (!existing) {
@@ -177,13 +188,14 @@ export function updateDeliveryDriver(
   const now = Date.now();
   const name = input.name !== undefined ? input.name.trim() : existing.name;
   const phone = input.phone !== undefined ? input.phone.trim() : existing.phone;
+  const locId = input.locationId !== undefined ? input.locationId : existing.location_id;
   const isActive = input.isActive !== undefined ? (input.isActive ? 1 : 0) : existing.is_active;
 
   rawDb.prepare(`
     UPDATE delivery_drivers
-    SET name = ?, phone = ?, is_active = ?, updated_at_ms = ?
+    SET name = ?, phone = ?, location_id = ?, is_active = ?, updated_at_ms = ?
     WHERE id = ?
-  `).run(name, phone, isActive, now, id);
+  `).run(name, phone, locId, isActive, now, id);
 
   if (input.actorUserId) {
     appendAuditEvent(rawDb, {
@@ -191,7 +203,7 @@ export function updateDeliveryDriver(
       action: 'DELIVERY_DRIVER_UPDATED',
       entityType: 'delivery_driver',
       entityId: id,
-      payload: { name, phone, isActive: Boolean(isActive) }
+      payload: { name, phone, locationId: locId, isActive: Boolean(isActive) }
     });
   }
 
@@ -199,6 +211,7 @@ export function updateDeliveryDriver(
     id,
     name,
     phone,
+    locationId: locId,
     isActive: Boolean(isActive),
     createdAtMs: existing.created_at_ms,
     updatedAtMs: now
@@ -272,11 +285,13 @@ export function syncOrderDelivery(
   // 2. Upsert en tabla deliveries
   const existingDeliv = rawDb.prepare('SELECT id FROM deliveries WHERE order_id = ?').get(orderId) as any;
   let deliveryId = existingDeliv?.id;
+  const orderLocationId = order.location_id || 'loc_alta_vista';
 
   if (existingDeliv) {
     rawDb.prepare(`
       UPDATE deliveries
-      SET driver_id = ?,
+      SET location_id = COALESCE(?, location_id),
+          driver_id = ?,
           motorizado_name = ?,
           delivery_reference = ?,
           delivery_fee_usd_cents = ?,
@@ -284,6 +299,7 @@ export function syncOrderDelivery(
           updated_at_ms = ?
       WHERE order_id = ?
     `).run(
+      orderLocationId,
       input.motorizadoId || null,
       driverName,
       reference,
@@ -296,12 +312,13 @@ export function syncOrderDelivery(
     deliveryId = `deliv_${generateUuidV7()}`;
     rawDb.prepare(`
       INSERT INTO deliveries (
-        id, order_id, driver_id, motorizado_name, delivery_reference,
+        id, location_id, order_id, driver_id, motorizado_name, delivery_reference,
         delivery_fee_usd_cents, cash_collected_by_driver, food_cash_amount_usd_cents,
         status, settled_to_motorizado, created_at_ms, updated_at_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'asignado', 0, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, 'asignado', 0, ?, ?)
     `).run(
       deliveryId,
+      orderLocationId,
       orderId,
       input.motorizadoId || null,
       driverName,
@@ -338,12 +355,14 @@ export function syncOrderDelivery(
 
 export function getDriverSettlementPreview(
   rawDb: Database.Database,
-  jornadaId: string
+  jornadaId: string,
+  locationId?: string
 ): DriverSettlementPreviewItem[] {
-  // Consultar todas las entregas pendientes de liquidación de la jornada activa
-  const rows = rawDb.prepare(`
+  // Consultar todas las entregas pendientes de liquidación de la jornada activa (filtrado opcional por sede)
+  let query = `
     SELECT 
       d.id as delivery_id,
+      d.location_id as delivery_location_id,
       d.order_id,
       d.driver_id,
       d.motorizado_name,
@@ -356,6 +375,7 @@ export function getDriverSettlementPreview(
       o.payment_status,
       o.fulfillment_status,
       o.net_food_sales_usd_cents,
+      o.location_id as order_location_id,
       drv.name as driver_table_name,
       drv.phone as driver_phone
     FROM deliveries d
@@ -364,8 +384,15 @@ export function getDriverSettlementPreview(
     WHERE o.jornada_id = ?
       AND d.settled_to_motorizado = 0
       AND o.fulfillment_status != 'anulado'
-    ORDER BY d.created_at_ms ASC
-  `).all(jornadaId) as any[];
+  `;
+  const params: any[] = [jornadaId];
+  if (locationId) {
+    query += ' AND (o.location_id = ? OR d.location_id = ?)';
+    params.push(locationId, locationId);
+  }
+  query += ' ORDER BY d.created_at_ms ASC';
+
+  const rows = rawDb.prepare(query).all(...params) as any[];
 
   // Agrupar por driver_id (o por motorizado_name si no tiene ID asignado)
   const mapByDriver = new Map<string, DriverSettlementPreviewItem>();
@@ -439,11 +466,12 @@ export function settleDriver(
     jornadaId: string;
     driverId: string;
     settledByUserId: string;
+    locationId?: string;
     notes?: string;
     modeOverride?: 'THIRD_PARTY_PASS_THROUGH' | 'HOUSE_REVENUE';
   }
 ): DriverSettlementResult {
-  const previews = getDriverSettlementPreview(rawDb, input.jornadaId);
+  const previews = getDriverSettlementPreview(rawDb, input.jornadaId, input.locationId);
   const target = previews.find(p => p.driverId === input.driverId);
 
   if (!target || target.totalTrips === 0) {
@@ -456,6 +484,10 @@ export function settleDriver(
   const rateMicroBs = getCurrentExchangeRate(rawDb);
   const settlementId = `settle_${generateUuidV7()}`;
 
+  // Obtener sede de la jornada o usar la indicada
+  const jornada = rawDb.prepare('SELECT location_id FROM jornadas WHERE id = ?').get(input.jornadaId) as any;
+  const settlementLocationId = input.locationId || jornada?.location_id || 'loc_alta_vista';
+
   // Obtener modo contable de delivery
   const settings = rawDb.prepare("SELECT delivery_accounting_mode FROM business_settings WHERE id = 'default'").get() as any;
   const accountingMode = input.modeOverride || settings?.delivery_accounting_mode || 'THIRD_PARTY_PASS_THROUGH';
@@ -463,17 +495,18 @@ export function settleDriver(
   let ledgerEntriesCreated = 0;
 
   const settleTx = rawDb.transaction(() => {
-    // 1. Insertar liquidación en delivery_driver_settlements
+    // 1. Insertar liquidación en delivery_driver_settlements con location_id
     rawDb.prepare(`
       INSERT INTO delivery_driver_settlements (
-        id, jornada_id, driver_id, driver_name, total_trips,
+        id, jornada_id, location_id, driver_id, driver_name, total_trips,
         total_delivery_fees_usd_cents, total_food_cash_collected_usd_cents,
         net_balance_usd_cents, balance_direction, delivery_accounting_mode,
         settled_by_user_id, notes, created_at_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(
       settlementId,
       input.jornadaId,
+      settlementLocationId,
       target.driverId,
       target.driverName,
       target.totalTrips,

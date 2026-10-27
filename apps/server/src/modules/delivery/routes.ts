@@ -31,10 +31,10 @@ export const deliveryRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. Listar Repartidores (GET /api/delivery/drivers)
   fastify.get('/api/delivery/drivers', async (request, reply) => {
     const dbCtx = getDatabaseContext();
-    const query = request.query as { all?: string } | undefined;
+    const query = request.query as { all?: string; locationId?: string } | undefined;
     const includeInactive = query?.all === 'true' || query?.all === '1';
 
-    const drivers = getDeliveryDrivers(dbCtx.rawDb, includeInactive);
+    const drivers = getDeliveryDrivers(dbCtx.rawDb, includeInactive, query?.locationId);
     return reply.status(200).send({
       success: true,
       drivers
@@ -45,7 +45,7 @@ export const deliveryRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/api/delivery/drivers', async (request, reply) => {
     const dbCtx = getDatabaseContext();
     const user = getUserFromRequest(request);
-    const body = request.body as { name?: string; phone?: string } | undefined;
+    const body = request.body as { name?: string; phone?: string; locationId?: string } | undefined;
 
     if (!body?.name || !body?.phone) {
       return reply.status(400).send({
@@ -58,6 +58,7 @@ export const deliveryRoutes: FastifyPluginAsync = async (fastify) => {
       const driver = createDeliveryDriver(dbCtx.rawDb, {
         name: body.name,
         phone: body.phone,
+        locationId: body.locationId,
         actorUserId: user?.user_id
       });
 
@@ -78,12 +79,13 @@ export const deliveryRoutes: FastifyPluginAsync = async (fastify) => {
     const dbCtx = getDatabaseContext();
     const user = getUserFromRequest(request);
     const { id } = request.params as { id: string };
-    const body = request.body as { name?: string; phone?: string; isActive?: boolean } | undefined;
+    const body = request.body as { name?: string; phone?: string; locationId?: string; isActive?: boolean } | undefined;
 
     try {
       const updated = updateDeliveryDriver(dbCtx.rawDb, id, {
         name: body?.name,
         phone: body?.phone,
+        locationId: body?.locationId,
         isActive: body?.isActive,
         actorUserId: user?.user_id
       });
@@ -103,7 +105,7 @@ export const deliveryRoutes: FastifyPluginAsync = async (fastify) => {
   // 4. Vista Previa de Liquidación Nocturna (GET /api/delivery/settlement-preview)
   fastify.get('/api/delivery/settlement-preview', async (request, reply) => {
     const dbCtx = getDatabaseContext();
-    const query = request.query as { jornadaId?: string } | undefined;
+    const query = request.query as { jornadaId?: string; locationId?: string } | undefined;
 
     let targetJornadaId = query?.jornadaId;
     if (!targetJornadaId) {
@@ -119,7 +121,7 @@ export const deliveryRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    const preview = getDriverSettlementPreview(dbCtx.rawDb, targetJornadaId);
+    const preview = getDriverSettlementPreview(dbCtx.rawDb, targetJornadaId, query?.locationId);
     return reply.status(200).send({
       success: true,
       jornadaId: targetJornadaId,
@@ -134,6 +136,7 @@ export const deliveryRoutes: FastifyPluginAsync = async (fastify) => {
     const body = request.body as {
       jornadaId?: string;
       driverId?: string;
+      locationId?: string;
       notes?: string;
       modeOverride?: 'THIRD_PARTY_PASS_THROUGH' | 'HOUSE_REVENUE';
     } | undefined;
@@ -162,6 +165,7 @@ export const deliveryRoutes: FastifyPluginAsync = async (fastify) => {
       const result = settleDriver(dbCtx.rawDb, {
         jornadaId: targetJornadaId,
         driverId: body.driverId,
+        locationId: body.locationId,
         settledByUserId: user?.user_id || 'usr_cajera',
         notes: body.notes,
         modeOverride: body.modeOverride

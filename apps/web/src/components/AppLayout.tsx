@@ -24,7 +24,8 @@ const TAB_TITLES: Record<TabType, string> = {
   staff: 'Personal y Permisos',
   health: 'Salud y Hardware',
   emergency: 'Talonario de Contingencia',
-  'qr-menu': 'Menú Digital QR'
+  'qr-menu': 'Menú Digital QR',
+  owner: 'Panel de la Dueña'
 };
 
 export const AppLayout: React.FC<AppLayoutProps> = ({

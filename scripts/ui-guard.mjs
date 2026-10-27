@@ -85,7 +85,17 @@ const PHASE1_AND_2_SCREENS = [
   'apps/web/src/features/profitability/components/WasteRegisterModal.tsx',
   'apps/web/src/features/profitability/components/StockCountModal.tsx',
   'apps/web/src/features/profitability/components/CsvDataImportCard.tsx',
-  'apps/web/src/features/profitability/components/ResetProductionModals.tsx'
+  'apps/web/src/features/profitability/components/ResetProductionModals.tsx',
+  'apps/web/src/features/delivery/DriverSettlementModal.tsx',
+  'apps/web/src/features/delivery/DriverManagementTab.tsx',
+  'apps/web/src/features/profitability/components/TransferModal.tsx',
+  'apps/web/src/features/profitability/components/TransferDishEquivalentMode.tsx',
+  'apps/web/src/features/profitability/components/TransferBatchesModal.tsx',
+  'apps/web/src/features/profitability/components/DispatchNoteSuccessModal.tsx',
+  'apps/web/src/features/profitability/components/ProductionModal.tsx',
+  'apps/web/src/features/profitability/components/TransferInTransitTab.tsx',
+  'apps/web/src/features/profitability/components/TransferLooseItemsSection.tsx',
+  'apps/web/src/features/owner/OwnerDashboardView.tsx'
 ];
 
 for (const relPath of PHASE1_AND_2_SCREENS) {
