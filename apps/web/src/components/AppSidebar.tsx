@@ -19,6 +19,7 @@ const MENU_ITEMS: MenuItem[] = [
   { tab: 'profitability', label: 'Inventario Rápido', icon: 'Package', mode: 'basico', isImplemented: true },
 
   // MODO PRO
+  { tab: 'finances', label: 'Finanzas (Treinta)', icon: 'CircleDollarSign', mode: 'pro', isImplemented: true },
   { tab: 'owner', label: 'Panel Dueña', icon: 'TrendingUp', mode: 'pro', isImplemented: true },
   { tab: 'menu-admin', label: 'Carta y Precios', icon: 'Utensils', mode: 'pro', isImplemented: true },
   { tab: 'staff', label: 'Personal y Permisos', icon: 'Users', mode: 'pro', isImplemented: true },

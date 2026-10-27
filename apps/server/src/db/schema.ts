@@ -202,6 +202,7 @@ export const businessSettings = sqliteTable('business_settings', {
   igtfRateBps: integer('igtf_rate_bps').notNull().default(300),
   igtfAppliesTo: text('igtf_applies_to').notNull().default('CASH_USD'),
   isDemoMode: integer('is_demo_mode').notNull().default(0),
+  owner5NumbersConfig: text('owner_5_numbers_config').notNull().default('["sales_today","profit_today","cash_today","receivable_total","payable_total"]'),
   updatedAtMs: integer('updated_at_ms').notNull()
 });
 
@@ -608,6 +609,10 @@ export const operatingExpenses = sqliteTable('operating_expenses', {
   category: text('category').notNull(),
   amountUsdCents: integer('amount_usd_cents').notNull(),
   amountBsCents: integer('amount_bs_cents').notNull().default(0),
+  paymentMethod: text('payment_method').notNull().default('EFECTIVO_USD'),
+  isRecurring: integer('is_recurring').notNull().default(0),
+  recurringInterval: text('recurring_interval'),
+  notes: text('notes'),
   description: text('description').notNull(),
   authorizedByUserId: text('authorized_by_user_id').notNull().references(() => users.id),
   receiptPhotoPath: text('receipt_photo_path'),
@@ -740,6 +745,7 @@ export const purchases = sqliteTable('purchases', {
   status: text('status').notNull().default('PAGADA'),
   totalUsdCents: integer('total_usd_cents').notNull(),
   totalBsCents: integer('total_bs_cents').notNull(),
+  balanceOwedUsdCents: integer('balance_owed_usd_cents').notNull().default(0),
   dueDateMs: integer('due_date_ms'),
   notes: text('notes'),
   createdBy: text('created_by').notNull(),
@@ -907,4 +913,87 @@ export type TransferBatch = typeof transferBatches.$inferSelect;
 export type InsertTransferBatch = typeof transferBatches.$inferInsert;
 export type ProductionLog = typeof productionLogs.$inferSelect;
 export type InsertProductionLog = typeof productionLogs.$inferInsert;
+
+export const expenseCategories = sqliteTable('expense_categories', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull().unique(),
+  isDefault: integer('is_default').notNull().default(0),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const receivableAccounts = sqliteTable('receivable_accounts', {
+  id: text('id').primaryKey(),
+  customerId: text('customer_id').notNull().references(() => customers.id),
+  locationId: text('location_id').notNull().references(() => locations.id),
+  orderId: text('order_id').references(() => orders.id),
+  concept: text('concept').notNull(),
+  totalUsdCents: integer('total_usd_cents').notNull(),
+  balanceUsdCents: integer('balance_usd_cents').notNull(),
+  dueDateMs: integer('due_date_ms').notNull(),
+  status: text('status', { enum: ['PENDIENTE', 'PARCIAL', 'PAGADA', 'VENCIDA'] }).notNull().default('PENDIENTE'),
+  notes: text('notes'),
+  createdBy: text('created_by').notNull(),
+  createdAtMs: integer('created_at_ms').notNull(),
+  updatedAtMs: integer('updated_at_ms').notNull()
+});
+
+export const receivablePayments = sqliteTable('receivable_payments', {
+  id: text('id').primaryKey(),
+  receivableId: text('receivable_id').notNull().references(() => receivableAccounts.id, { onDelete: 'cascade' }),
+  customerId: text('customer_id').notNull().references(() => customers.id),
+  locationId: text('location_id').notNull().references(() => locations.id),
+  amountUsdCents: integer('amount_usd_cents').notNull(),
+  amountBsCents: integer('amount_bs_cents').notNull().default(0),
+  exchangeRateMicroBs: integer('exchange_rate_micro_bs').notNull(),
+  paymentMethod: text('payment_method').notNull(),
+  referenceCode: text('reference_code'),
+  receiptPhotoPath: text('receipt_photo_path'),
+  notes: text('notes'),
+  receivedBy: text('received_by').notNull(),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const payablePayments = sqliteTable('payable_payments', {
+  id: text('id').primaryKey(),
+  purchaseId: text('purchase_id').notNull().references(() => purchases.id, { onDelete: 'cascade' }),
+  supplierId: text('supplier_id').notNull().references(() => suppliers.id),
+  locationId: text('location_id').notNull().references(() => locations.id),
+  amountUsdCents: integer('amount_usd_cents').notNull(),
+  amountBsCents: integer('amount_bs_cents').notNull().default(0),
+  exchangeRateMicroBs: integer('exchange_rate_micro_bs').notNull(),
+  paymentMethod: text('payment_method').notNull(),
+  referenceCode: text('reference_code'),
+  receiptPhotoPath: text('receipt_photo_path'),
+  notes: text('notes'),
+  paidBy: text('paid_by').notNull(),
+  createdAtMs: integer('created_at_ms').notNull()
+});
+
+export const monthlyClosures = sqliteTable('monthly_closures', {
+  id: text('id').primaryKey(),
+  year: integer('year').notNull(),
+  month: integer('month').notNull(),
+  locationId: text('location_id').notNull(),
+  totalSalesUsdCents: integer('total_sales_usd_cents').notNull(),
+  totalCogsUsdCents: integer('total_cogs_usd_cents').notNull(),
+  totalWasteUsdCents: integer('total_waste_usd_cents').notNull(),
+  totalExpensesUsdCents: integer('total_expenses_usd_cents').notNull(),
+  netProfitUsdCents: integer('net_profit_usd_cents').notNull(),
+  metricsJson: text('metrics_json').notNull(),
+  closedByUserId: text('closed_by_user_id').notNull().references(() => users.id),
+  closedAtMs: integer('closed_at_ms').notNull(),
+  notes: text('notes')
+});
+
+export type ExpenseCategory = typeof expenseCategories.$inferSelect;
+export type InsertExpenseCategory = typeof expenseCategories.$inferInsert;
+export type ReceivableAccount = typeof receivableAccounts.$inferSelect;
+export type InsertReceivableAccount = typeof receivableAccounts.$inferInsert;
+export type ReceivablePayment = typeof receivablePayments.$inferSelect;
+export type InsertReceivablePayment = typeof receivablePayments.$inferInsert;
+export type PayablePayment = typeof payablePayments.$inferSelect;
+export type InsertPayablePayment = typeof payablePayments.$inferInsert;
+export type MonthlyClosure = typeof monthlyClosures.$inferSelect;
+export type InsertMonthlyClosure = typeof monthlyClosures.$inferInsert;
+
 

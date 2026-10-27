@@ -217,6 +217,14 @@ export const HomeView: React.FC<HomeViewProps> = ({
         <Button
           variant="secondary"
           size="sm"
+          onClick={() => onNavigate('finances')}
+          leftIcon={<Icon name="CircleDollarSign" size={15} />}
+        >
+          Finanzas (Treinta)
+        </Button>
+        <Button
+          variant="secondary"
+          size="sm"
           onClick={() => onNavigate('menu-admin')}
           leftIcon={<Icon name="Utensils" size={15} />}
         >

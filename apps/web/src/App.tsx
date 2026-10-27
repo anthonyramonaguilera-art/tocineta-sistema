@@ -21,16 +21,17 @@ const HomeView = React.lazy(() => import('./features/home/HomeView.js').then(m =
 const UiKitView = React.lazy(() => import('./features/uikit/UiKitView.js').then(m => ({ default: m.UiKitView })));
 const AccessQrView = React.lazy(() => import('./features/access/AccessQrView.js').then(m => ({ default: m.AccessQrView })));
 const OwnerDashboardView = React.lazy(() => import('./features/owner/OwnerDashboardView.js').then(m => ({ default: m.OwnerDashboardView })));
+const FinancesDashboardView = React.lazy(() => import('./features/finances/FinancesDashboardView.js').then(m => ({ default: m.FinancesDashboardView })));
 
-export type TabType = 'home' | 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability' | 'staff' | 'qr-menu' | 'owner';
+export type TabType = 'home' | 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability' | 'staff' | 'qr-menu' | 'owner' | 'finances';
 
 // Mapa canónico de pestañas permitidas y por defecto por rol (Hito M18/M20 RBAC + F1)
 export const ALLOWED_TABS_BY_ROLE: Record<string, TabType[]> = {
   mesonero: ['pos', 'kds', 'health'],
   cocinero: ['kds', 'health'],
   cajera: ['cashier', 'pos', 'kds', 'emergency', 'health'],
-  supervisor: ['home', 'pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu', 'owner'],
-  admin: ['home', 'pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu', 'owner']
+  supervisor: ['home', 'pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu', 'owner', 'finances'],
+  admin: ['home', 'pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu', 'owner', 'finances']
 };
 
 export const DEFAULT_TAB_BY_ROLE: Record<string, TabType> = {
@@ -94,7 +95,7 @@ const MainNavigator: React.FC = () => {
       const hashStr = window.location.hash || window.location.pathname;
       setRouteHash(hashStr);
       const cleanTab = hashStr.replace(/^[#/]+/, '') as TabType;
-      if (['home', 'pos', 'cashier', 'kds', 'profitability', 'menu-admin', 'staff', 'health', 'emergency', 'qr-menu', 'owner'].includes(cleanTab)) {
+      if (['home', 'pos', 'cashier', 'kds', 'profitability', 'menu-admin', 'staff', 'health', 'emergency', 'qr-menu', 'owner', 'finances'].includes(cleanTab)) {
         setCurrentTab(cleanTab);
       }
     };
@@ -214,6 +215,7 @@ const MainNavigator: React.FC = () => {
             {currentTab === 'profitability' && <ProfitabilityDashboard />}
             {currentTab === 'qr-menu' && <QrMenuWebAdminView />}
             {currentTab === 'owner' && <OwnerDashboardView />}
+            {currentTab === 'finances' && <FinancesDashboardView />}
           </Suspense>
         </ViewErrorBoundary>
       )}
