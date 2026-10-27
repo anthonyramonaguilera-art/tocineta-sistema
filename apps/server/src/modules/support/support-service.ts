@@ -225,11 +225,13 @@ export function startSupportMode(
   }
 
   // 1. Validar que el PIN pertenezca estrictamente a un usuario con rol 'admin'
+  // Priorizar el actor de la petición si es admin, o el ID canónico 'usr_admin'
   const admins = rawDb.prepare(`
     SELECT id, name, role, pin_salt, pin_hash
     FROM users
     WHERE role = 'admin' AND is_active = 1
-  `).all() as any[];
+    ORDER BY CASE WHEN id = ? THEN 0 WHEN id = 'usr_admin' THEN 1 ELSE 2 END
+  `).all(input.actorUserId || '') as any[];
 
   let verifiedAdmin: { id: string; name: string } | null = null;
   for (const a of admins) {

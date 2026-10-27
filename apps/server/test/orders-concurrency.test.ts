@@ -10,6 +10,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { createIdempotencyKey, generateUuidV7 } from '@tocineta/shared';
+import { loginAs } from './test-helpers.js';
 
 describe('Hito M4 - Gestión de Pedidos, Concurrencia Optimista, Prorrateo e Idempotencia (@tocineta/server)', () => {
   let app: FastifyInstance;
@@ -36,29 +37,10 @@ describe('Hito M4 - Gestión de Pedidos, Concurrencia Optimista, Prorrateo e Ide
     app = await buildServer({ logger: false, disableStatic: true });
     await app.ready();
 
-    // Login Admin (Sra. Olinelcys, PIN: 123456)
-    const resAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_olinelcys', pin: '123456' }
-    });
-    adminToken = JSON.parse(resAdmin.payload).token;
-
-    // Login Supervisor (PIN: 654321)
-    const resSup = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_supervisor_turno', pin: '654321' }
-    });
-    supervisorToken = JSON.parse(resSup.payload).token;
-
-    // Login Mesonero (Carlos, PIN: 2222)
-    const resMes = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_mesonero_carlos', pin: '2222' }
-    });
-    mesoneroToken = JSON.parse(resMes.payload).token;
+    // Logins canónicos usando helper
+    adminToken = (await loginAs(app, 'admin', rawDb)).token;
+    supervisorToken = (await loginAs(app, 'supervisor', rawDb)).token;
+    mesoneroToken = (await loginAs(app, 'mesero', rawDb)).token;
   });
 
   afterAll(async () => {
@@ -302,18 +284,18 @@ describe('Hito M4 - Gestión de Pedidos, Concurrencia Optimista, Prorrateo e Ide
         method: 'POST',
         url: `/api/orders/${order.id}/authorize-without-payment`,
         payload: {
-          authorizerUserId: 'usr_admin_olinelcys',
+          authorizerUserId: 'usr_admin',
           pin: '000000'
         }
       });
       expect(failPinRes.statusCode).toBe(401);
 
-      // Autorizar con credenciales válidas de la Sra. Olinelcys (Admin)
+      // Autorizar con credenciales válidas de Admin
       const authRes = await app.inject({
         method: 'POST',
         url: `/api/orders/${order.id}/authorize-without-payment`,
         payload: {
-          authorizerUserId: 'usr_admin_olinelcys',
+          authorizerUserId: 'usr_admin',
           pin: '123456'
         }
       });
@@ -322,7 +304,7 @@ describe('Hito M4 - Gestión de Pedidos, Concurrencia Optimista, Prorrateo e Ide
       const authOrder = JSON.parse(authRes.payload).order;
       expect(authOrder.payment_status).toBe('autorizado_sin_pago');
       expect(authOrder.fulfillment_status).toBe('en_preparacion');
-      expect(authOrder.authorized_without_payment_by).toBe('usr_admin_olinelcys');
+      expect(authOrder.authorized_without_payment_by).toBe('usr_admin');
 
       // Verificar que la comanda de cocina está lista
       const detailRes = await app.inject({
@@ -350,7 +332,7 @@ describe('Hito M4 - Gestión de Pedidos, Concurrencia Optimista, Prorrateo e Ide
         method: 'POST',
         url: `/api/orders/${order.id}/authorize-without-payment`,
         payload: {
-          authorizerUserId: 'usr_mesonero_carlos',
+          authorizerUserId: 'usr_mesero',
           pin: '2222'
         }
       });

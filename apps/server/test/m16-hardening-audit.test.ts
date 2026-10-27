@@ -58,7 +58,7 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
     // Asegurar jornada de prueba abierta
     rawDb.prepare(`
       INSERT OR IGNORE INTO jornadas (id, opened_by_user_id, opened_at_ms, status)
-      VALUES (?, 'usr_admin_olinelcys', ?, 'abierta')
+      VALUES (?, 'usr_admin', ?, 'abierta')
     `).run(testJornadaId, Date.now());
   });
 
@@ -81,7 +81,7 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
         fulfillment_status, station_status_hamburguesas, station_status_hot_dogs,
         gross_food_subtotal_usd_cents, net_food_sales_usd_cents, total_to_collect_usd_cents,
         rate_micro_bs, created_by_user_id, created_at_ms, updated_at_ms, kitchen_passed_at_ms
-      ) VALUES (?, ?, 777, 'salon', 'pagado', 'en_preparacion', 'pendiente', 'pendiente', 2500, 2500, 2500, 40000000, 'usr_cajera_principal', ?, ?, ?)
+      ) VALUES (?, ?, 777, 'salon', 'pagado', 'en_preparacion', 'pendiente', 'pendiente', 2500, 2500, 2500, 40000000, 'usr_cajera', ?, ?, ?)
     `).run(orderId, testJornadaId, now, now, now);
 
     const line1Id = `line_kds_1_${Date.now()}`;
@@ -112,7 +112,7 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
     expect(targetCard?.totalCount).toBe(3);
 
     // Pasar línea #1 a 'preparando'
-    const update1 = updateKdsLineStatus(rawDb, line1Id, 'preparando', 'usr_cocina_plancha');
+    const update1 = updateKdsLineStatus(rawDb, line1Id, 'preparando', 'usr_plancha');
     expect(update1.newStatus).toBe('preparando');
 
     kdsOrders = getKdsOrders(rawDb);
@@ -124,7 +124,7 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
     expect(targetCard?.lines.find(l => l.lineId === line3Id)?.status).toBe('pendiente');
 
     // Pasar línea #1 a 'listo'
-    updateKdsLineStatus(rawDb, line1Id, 'listo', 'usr_cocina_plancha');
+    updateKdsLineStatus(rawDb, line1Id, 'listo', 'usr_plancha');
     kdsOrders = getKdsOrders(rawDb);
     targetCard = kdsOrders.find(o => o.orderId === orderId);
     expect(targetCard?.aggregateStatus).toBe('preparando'); // Sigue en preparación porque faltan líneas 2 y 3
@@ -132,8 +132,8 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
     expect(targetCard?.lines.find(l => l.lineId === line1Id)?.status).toBe('listo');
 
     // Completar las otras 2 líneas -> Tarjeta pasa a 'listo'
-    updateKdsLineStatus(rawDb, line2Id, 'listo', 'usr_cocina_plancha');
-    updateKdsLineStatus(rawDb, line3Id, 'listo', 'usr_cocina_plancha');
+    updateKdsLineStatus(rawDb, line2Id, 'listo', 'usr_plancha');
+    updateKdsLineStatus(rawDb, line3Id, 'listo', 'usr_plancha');
     kdsOrders = getKdsOrders(rawDb);
     targetCard = kdsOrders.find(o => o.orderId === orderId);
     expect(targetCard?.aggregateStatus).toBe('listo'); // Columna LISTO PARA ENTREGAR
@@ -235,7 +235,7 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
     // Registro seguro de la opción seleccionada en audit_events
     const fallbackAudit = recordSupportFallbackSelection(rawDb, {
       selectedOption: 'Usar TeamViewer Portable bajo autorización',
-      actorUserId: 'usr_admin_olinelcys',
+      actorUserId: 'usr_admin',
       sessionId: 'sup_audit_test'
     });
     expect(fallbackAudit.success).toBe(true);
@@ -271,10 +271,10 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
         id, jornada_id, order_number, fulfillment_type, payment_status, fulfillment_status,
         gross_food_subtotal_usd_cents, net_food_sales_usd_cents, total_to_collect_usd_cents,
         rate_micro_bs, created_by_user_id, created_at_ms, updated_at_ms
-      ) VALUES (?, ?, 881, 'salon', 'sin_pago', 'pendiente', 1500, 1500, 1500, 40000000, 'usr_cajera_principal', ?, ?)
+      ) VALUES (?, ?, 881, 'salon', 'sin_pago', 'pendiente', 1500, 1500, 1500, 40000000, 'usr_cajera', ?, ?)
     `).run(order1Id, testJornadaId, now, now);
 
-    applyCouponToOrder(rawDb, order1Id, couponCode, 'usr_cajera_principal');
+    applyCouponToOrder(rawDb, order1Id, couponCode, 'usr_cajera');
 
     let coupRow = rawDb.prepare('SELECT used_count FROM coupons WHERE id = ?').get(couponId) as any;
     expect(coupRow.used_count).toBe(1);
@@ -288,7 +288,7 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
       reasonCode: 'CLIENTE_CANCELO',
       responsibleArea: 'cliente',
       resolution: 'refund',
-      authorizerPin: '123456' // PIN de Admin Olinelcys
+      authorizerPin: '123456' // PIN de Admin
     });
     expect(refundResult.success).toBe(true);
 
@@ -309,10 +309,10 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
         id, jornada_id, order_number, fulfillment_type, payment_status, fulfillment_status,
         gross_food_subtotal_usd_cents, net_food_sales_usd_cents, total_to_collect_usd_cents,
         rate_micro_bs, created_by_user_id, created_at_ms, updated_at_ms
-      ) VALUES (?, ?, 882, 'salon', 'sin_pago', 'pendiente', 2000, 2000, 2000, 40000000, 'usr_cajera_principal', ?, ?)
+      ) VALUES (?, ?, 882, 'salon', 'sin_pago', 'pendiente', 2000, 2000, 2000, 40000000, 'usr_cajera', ?, ?)
     `).run(order2Id, testJornadaId, now, now);
 
-    const reapply = applyCouponToOrder(rawDb, order2Id, couponCode, 'usr_cajera_principal');
+    const reapply = applyCouponToOrder(rawDb, order2Id, couponCode, 'usr_cajera');
     expect(reapply.success).toBe(true);
   });
 
@@ -340,7 +340,7 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
         id, jornada_id, order_number, fulfillment_type, payment_status, fulfillment_status,
         gross_food_subtotal_usd_cents, net_food_sales_usd_cents, total_to_collect_usd_cents,
         rate_micro_bs, created_by_user_id, created_at_ms, updated_at_ms
-      ) VALUES (?, ?, 883, 'salon', 'sin_pago', 'pendiente', 1000, 1000, 1000, 40000000, 'usr_cajera_principal', ?, ?)
+      ) VALUES (?, ?, 883, 'salon', 'sin_pago', 'pendiente', 1000, 1000, 1000, 40000000, 'usr_cajera', ?, ?)
     `).run(orderId, testJornadaId, now, now);
 
     // Intento de aplicación vía API

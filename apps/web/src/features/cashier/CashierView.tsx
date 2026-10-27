@@ -23,7 +23,13 @@ import {
   Receipt,
   Utensils,
   ShoppingBag,
-  Gift
+  Gift,
+  Lock,
+  CheckCircle2,
+  FileText,
+  FileSpreadsheet,
+  ArrowRight,
+  ArrowLeft
 } from 'lucide-react';
 
 export const CashierView: React.FC = () => {
@@ -37,7 +43,17 @@ export const CashierView: React.FC = () => {
   const [showCouponModal, setShowCouponModal] = useState<boolean>(false);
   const [showSettlementModal, setShowSettlementModal] = useState<boolean>(false);
 
-  const [cashierTab, setCashierTab] = useState<'cobro' | 'ultimas_ventas'>('cobro');
+  const [cashierTab, setCashierTab] = useState<'cobro' | 'ultimas_ventas' | 'cierre_dia'>('cobro');
+
+  // Estados para Cierre de Caja / Cierre del Día (Hito R2)
+  const [cierreStep, setCierreStep] = useState<1 | 2 | 3>(1);
+  const [countedCashUsd, setCountedCashUsd] = useState<string>('');
+  const [countedCashBs, setCountedCashBs] = useState<string>('');
+  const [closingNotes, setClosingNotes] = useState<string>('');
+  const [closingPin, setClosingPin] = useState<string>('2026');
+  const [isExecutingClose, setIsExecutingClose] = useState<boolean>(false);
+  const [closeSuccessData, setCloseSuccessData] = useState<any | null>(null);
+  const [closeError, setCloseError] = useState<string | null>(null);
 
   // Estados para Modificar Comanda
   const [editingOrder, setEditingOrder] = useState<CashierOrder | null>(null);
@@ -448,6 +464,123 @@ export const CashierView: React.FC = () => {
     }
   };
 
+  // Consulta de resumen financiero para Cierre Z
+  const { data: zReportData, refetch: refetchZReport, isLoading: isLoadingZReport } = useQuery<{
+    success: boolean;
+    summary: any;
+  }>({
+    queryKey: ['zReportSummary', jornadaData?.jornada?.id],
+    queryFn: async () => {
+      const res = await fetch('/api/reports/z-report/summary');
+      if (!res.ok) return { success: false, summary: null };
+      return res.json();
+    },
+    enabled: cashierTab === 'cierre_dia' || !!jornadaData?.jornada?.id,
+    refetchInterval: cashierTab === 'cierre_dia' ? 8000 : false
+  });
+
+  const summary = zReportData?.summary;
+  const rateMicroBs = summary?.rateMicroBs || jornadaData?.jornada?.rate_micro_bs || currentRateMicroBs || 40000000;
+  const netFoodSalesUsdCents = summary?.netFoodSalesUsdCents || 0;
+  const netFoodSalesBs = (netFoodSalesUsdCents * rateMicroBs) / 100_000_000;
+
+  const cashUsdCents = summary?.cashUsdCents || 0;
+  const cashBsCents = summary?.cashBsCents || 0;
+  const pagoMovilBsCents = summary?.pagoMovilBsCents || 0;
+  const ubiiGrossBsCents = summary?.ubiiGrossBsCents || 0;
+  const binanceUsdCents = summary?.binanceUsdCents || 0;
+  const expensesUsdCents = summary?.expensesUsdCents || 0;
+  const deliveryFeesUsdCents = summary?.deliveryFeesUsdCents || 0;
+
+  const initialCashUsdCents = summary?.jornada?.initial_cash_usd_cents || jornadaData?.jornada?.initial_cash_usd_cents || 0;
+  const initialCashBsCents = summary?.jornada?.initial_cash_bs_cents || jornadaData?.jornada?.initial_cash_bs_cents || 0;
+
+  // Efectivo esperado en gaveta
+  const expectedDrawerCashUsdCents = initialCashUsdCents + cashUsdCents - expensesUsdCents;
+  const expectedDrawerCashBsCents = initialCashBsCents + cashBsCents;
+
+  // Conteo físico ingresado
+  const countedUsdCents = Math.round(parseFloat(countedCashUsd || '0') * 100);
+  const countedBsCents = Math.round(parseFloat(countedCashBs || '0') * 100);
+
+  // Descuadre en tiempo real
+  const diffUsdCents = countedCashUsd !== '' ? (countedUsdCents - expectedDrawerCashUsdCents) : null;
+  const diffBsCents = countedCashBs !== '' ? (countedBsCents - expectedDrawerCashBsCents) : null;
+
+  // Ejecución oficial de Cierre Z
+  const handleExecuteCierreZ = async () => {
+    if (!jornadaData?.jornada?.id) {
+      setCloseError('No se encontró una jornada activa para cerrar.');
+      return;
+    }
+    setIsExecutingClose(true);
+    setCloseError(null);
+    try {
+      const jornadaId = jornadaData.jornada.id;
+
+      // 1. Arqueo previo de sesión individual si existe
+      try {
+        const sessionRes = await fetch('/api/cash-sessions/current');
+        if (sessionRes.ok) {
+          const sessionData = await sessionRes.json();
+          if (sessionData.session?.id) {
+            await fetch(`/api/cash-sessions/${sessionData.session.id}/blind-count`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                cash_usd_cents: countedUsdCents,
+                cash_bs_cents: countedBsCents,
+                notes: closingNotes,
+                pin: closingPin || '2026'
+              })
+            });
+          }
+        }
+      } catch (e) {
+        console.warn('Omitiendo arqueo previo de sesión individual:', e);
+      }
+
+      // 2. Ejecutar Cierre Z oficial de Jornada
+      const res = await fetch(`/api/jornadas/${jornadaId}/close`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pin: closingPin || '2026',
+          adminPin: closingPin || '2026',
+          supervisorPin: closingPin || '2026'
+        })
+      });
+
+      const data = await res.json();
+      if (res.ok && (data.success || data.zReport)) {
+        setCloseSuccessData(data.zReport || data);
+        setSuccessBanner('✓ ¡Cierre Z de Jornada ejecutado exitosamente! Ticket térmico encolado.');
+        refetchJornada();
+        refetchZReport();
+      } else {
+        setCloseError(data.error || 'Error al ejecutar el Cierre Z de Jornada. Verifique el PIN.');
+      }
+    } catch {
+      setCloseError('Error de conexión al procesar el cierre.');
+    } finally {
+      setIsExecutingClose(false);
+    }
+  };
+
+  const handleDownloadPdf = () => {
+    const url = jornadaData?.jornada?.id
+      ? `/api/reports/z-report/pdf?jornadaId=${jornadaData.jornada.id}`
+      : '/api/reports/z-report/pdf';
+    window.open(url, '_blank');
+  };
+
+  const handleDownloadExcel = () => {
+    const url = jornadaData?.jornada?.id
+      ? `/api/reports/z-report/excel?jornadaId=${jornadaData.jornada.id}`
+      : '/api/reports/z-report/excel';
+    window.open(url, '_blank');
+  };
+
   // Bloqueo multi-pestaña activo
   if (isBlocked) {
     return (
@@ -577,45 +710,79 @@ export const CashierView: React.FC = () => {
         </div>
       </div>
 
-      {/* SELECTOR DE PESTAÑAS DE CAJA */}
-      <div className="flex items-center gap-2 border-b border-tocineta-border pb-3">
-        <button
-          type="button"
-          onClick={() => setCashierTab('cobro')}
-          className={`px-5 py-3 rounded-2xl font-black text-xs transition-all flex items-center gap-2 shadow-md ${
-            cashierTab === 'cobro'
-              ? 'bg-tocineta-yellow text-tocineta-bg ring-2 ring-tocineta-yellow/50'
-              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
-          }`}
-        >
-          <Zap className="w-4 h-4" />
-          <span>Órdenes Por Cobrar</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-            cashierTab === 'cobro' ? 'bg-black/20 text-tocineta-bg' : 'bg-tocineta-bg text-tocineta-yellow'
-          }`}>
-            {pendingOrders.length}
-          </span>
-        </button>
+      {/* SELECTOR DE PESTAÑAS DE CAJA (3 PESTAÑAS GRANDES + BOTÓN DESTACADO) */}
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-tocineta-border pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Pestaña 1: Órdenes por Cobrar */}
+          <button
+            type="button"
+            onClick={() => setCashierTab('cobro')}
+            className={`min-h-[50px] px-4 py-2.5 rounded-2xl font-black text-xs md:text-sm transition-all flex items-center gap-2 shadow-sm border-2 ${
+              cashierTab === 'cobro'
+                ? 'bg-amber-400 text-slate-950 border-amber-600 shadow-md ring-2 ring-amber-400/30'
+                : 'bg-white dark:bg-tocineta-card border-slate-300 dark:border-tocineta-border text-slate-700 dark:text-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            <Zap className="w-4 h-4 text-amber-900" />
+            <span>1. 🧾 Órdenes por Cobrar (Cola Activa)</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-black ${
+              cashierTab === 'cobro' ? 'bg-slate-950 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-amber-400'
+            }`}>
+              {pendingOrders.length}
+            </span>
+          </button>
 
+          {/* Pestaña 2: Ventas del Día, Reimpresión y Gastos */}
+          <button
+            type="button"
+            onClick={() => {
+              setCashierTab('ultimas_ventas');
+              refetchPaidOrders();
+            }}
+            className={`min-h-[50px] px-4 py-2.5 rounded-2xl font-black text-xs md:text-sm transition-all flex items-center gap-2 shadow-sm border-2 ${
+              cashierTab === 'ultimas_ventas'
+                ? 'bg-amber-400 text-slate-950 border-amber-600 shadow-md ring-2 ring-amber-400/30'
+                : 'bg-white dark:bg-tocineta-card border-slate-300 dark:border-tocineta-border text-slate-700 dark:text-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            <Receipt className="w-4 h-4 text-amber-900" />
+            <span>2. 📋 Ventas del Día, Reimpresión y Gastos</span>
+            <span className={`px-2 py-0.5 rounded-full text-xs font-mono font-black ${
+              cashierTab === 'ultimas_ventas' ? 'bg-slate-950 text-white' : 'bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-emerald-400'
+            }`}>
+              {paidOrders.length}
+            </span>
+          </button>
+
+          {/* Pestaña 3: Cierre de Caja / Cierre del Día */}
+          <button
+            type="button"
+            onClick={() => {
+              setCashierTab('cierre_dia');
+              refetchZReport();
+            }}
+            className={`min-h-[50px] px-4 py-2.5 rounded-2xl font-black text-xs md:text-sm transition-all flex items-center gap-2 shadow-sm border-2 ${
+              cashierTab === 'cierre_dia'
+                ? 'bg-amber-400 text-slate-950 border-amber-600 shadow-md ring-2 ring-amber-400/30'
+                : 'bg-white dark:bg-tocineta-card border-slate-300 dark:border-tocineta-border text-slate-700 dark:text-slate-300 hover:bg-slate-100'
+            }`}
+          >
+            <Lock className="w-4 h-4 text-amber-900" />
+            <span>3. 🔒 Cierre de Caja / Cierre del Día</span>
+          </button>
+        </div>
+
+        {/* Botón Destacado en esquina superior derecha */}
         <button
           type="button"
           onClick={() => {
-            setCashierTab('ultimas_ventas');
-            refetchPaidOrders();
+            setCashierTab('cierre_dia');
+            refetchZReport();
           }}
-          className={`px-5 py-3 rounded-2xl font-black text-xs transition-all flex items-center gap-2 shadow-md ${
-            cashierTab === 'ultimas_ventas'
-              ? 'bg-tocineta-yellow text-tocineta-bg ring-2 ring-tocineta-yellow/50'
-              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
-          }`}
+          className="min-h-[48px] px-4 py-2 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-black text-xs md:text-sm border-2 border-slate-700 shadow-md active:scale-95 transition-all flex items-center gap-2"
         >
-          <Receipt className="w-4 h-4" />
-          <span>Últimas Ventas Cobradas</span>
-          <span className={`px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ${
-            cashierTab === 'ultimas_ventas' ? 'bg-black/20 text-tocineta-bg' : 'bg-tocineta-bg text-emerald-400'
-          }`}>
-            {paidOrders.length}
-          </span>
+          <Lock className="w-4 h-4 text-amber-400" />
+          <span>🔒 Cerrar Caja del Día</span>
         </button>
       </div>
 
@@ -688,7 +855,7 @@ export const CashierView: React.FC = () => {
       )}
 
       {/* DISPOSICIÓN PRINCIPAL EN DOS COLUMNAS (COBRO) */}
-      {cashierTab === 'cobro' ? (
+      {cashierTab === 'cobro' && (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
           
           {/* COLUMNA IZQUIERDA: COLA EN VIVO DE PEDIDOS POR COBRAR (5 COLS) */}
@@ -977,8 +1144,10 @@ export const CashierView: React.FC = () => {
         </div>
 
       </div>
-      ) : (
-        /* VISTA DE ÚLTIMAS VENTAS COBRADAS */
+      )}
+
+      {/* VISTA DE ÚLTIMAS VENTAS COBRADAS */}
+      {cashierTab === 'ultimas_ventas' && (
         <div className="bg-tocineta-card border border-tocineta-border rounded-3xl p-6 space-y-4 shadow-xl">
           <div className="flex items-center justify-between">
             <div>
@@ -1086,6 +1255,499 @@ export const CashierView: React.FC = () => {
                   </div>
                 );
               })}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* VISTA DE CIERRE DE CAJA / CIERRE DEL DÍA (ASISTENTE 3 PASOS - HITO R2) */}
+      {cashierTab === 'cierre_dia' && (
+        <div className="bg-white dark:bg-tocineta-card border-2 border-slate-300 dark:border-tocineta-border rounded-3xl p-6 space-y-6 shadow-xl animate-in fade-in">
+          {/* Encabezado del Asistente */}
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-slate-200 dark:border-tocineta-border">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 dark:bg-amber-950/60 border-2 border-amber-500 flex items-center justify-center text-2xl shadow-sm">
+                <Lock className="w-6 h-6 text-amber-800 dark:text-amber-400" />
+              </div>
+              <div>
+                <h3 className="text-lg font-black text-slate-900 dark:text-white flex items-center gap-2">
+                  Asistente Inteligente de Cierre de Caja (Cierre Z)
+                </h3>
+                <p className="text-xs font-bold text-slate-600 dark:text-tocineta-muted mt-0.5">
+                  Arqueo guiado de gaveta, conciliación con el libro inmutable y generación de reportes térmicos y digitales.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <span className={`px-3 py-1.5 rounded-xl text-xs font-black uppercase border-2 ${
+                jornadaData?.jornada?.status === 'cerrada'
+                  ? 'bg-rose-100 text-rose-900 border-rose-400'
+                  : 'bg-emerald-100 text-emerald-900 border-emerald-500'
+              }`}>
+                Jornada {jornadaData?.jornada?.status === 'cerrada' ? 'CERRADA' : 'ABIERTA'}
+              </span>
+              <button
+                type="button"
+                onClick={() => refetchZReport()}
+                className="min-h-[44px] px-3.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 text-slate-800 dark:text-white font-black text-xs border border-slate-300 dark:border-slate-700 flex items-center gap-1.5 transition-all active:scale-95 shadow-sm"
+              >
+                <RotateCw className="w-4 h-4" />
+                <span>Actualizar Datos</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Stepper Visual de 3 Pasos ("Siguiente ➔ Siguiente") */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 bg-slate-100 dark:bg-slate-900 p-2 rounded-2xl border-2 border-slate-300 dark:border-slate-800">
+            {[
+              { step: 1, title: '1. Resumen en Vivo', desc: 'Ventas, Métodos y Gastos' },
+              { step: 2, title: '2. Conteo de Gaveta', desc: 'Dólares ($) y Bolívares (Bs)' },
+              { step: 3, title: '3. Confirmar Cierre Z', desc: 'Sellar y Descargar Reportes' }
+            ].map(s => {
+              const isActive = cierreStep === s.step;
+              const isPast = cierreStep > s.step;
+              return (
+                <button
+                  key={s.step}
+                  type="button"
+                  onClick={() => setCierreStep(s.step as any)}
+                  className={`p-3 rounded-xl text-left transition-all flex items-center gap-3 border-2 ${
+                    isActive
+                      ? 'bg-white dark:bg-tocineta-card border-amber-500 shadow-md ring-2 ring-amber-400/30'
+                      : isPast
+                      ? 'bg-emerald-50 dark:bg-emerald-950/30 border-emerald-400 text-slate-700 dark:text-slate-300'
+                      : 'bg-transparent border-transparent text-slate-500 hover:bg-slate-200/60'
+                  }`}
+                >
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-black text-xs shrink-0 ${
+                    isActive
+                      ? 'bg-amber-400 text-slate-950 shadow-sm'
+                      : isPast
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-slate-300 dark:bg-slate-800 text-slate-600 dark:text-slate-400'
+                  }`}>
+                    {isPast ? '✓' : s.step}
+                  </div>
+                  <div className="overflow-hidden">
+                    <span className={`block font-black text-xs md:text-sm leading-tight ${
+                      isActive ? 'text-slate-950 dark:text-white' : 'text-slate-700 dark:text-slate-300'
+                    }`}>
+                      {s.title}
+                    </span>
+                    <span className="block text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                      {s.desc}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* PASO 1 — Resumen Transparente del Día en Vivo */}
+          {cierreStep === 1 && (
+            <div className="space-y-6">
+              {isLoadingZReport ? (
+                <div className="py-12 text-center text-slate-800">
+                  <span className="text-3xl animate-spin inline-block">⏳</span>
+                  <p className="text-sm font-black mt-2">Cargando métricas consolidadas del turno...</p>
+                </div>
+              ) : (
+                <>
+                  {/* Grid de Métricas Principales */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {/* Tarjeta 1: Total Vendido en Comida */}
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border-2 border-slate-300 dark:border-slate-700 space-y-1 shadow-sm">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
+                        🍔 Total Vendido en Comida:
+                      </span>
+                      <div className="text-2xl font-black text-slate-950 dark:text-white font-mono">
+                        ${(netFoodSalesUsdCents / 100).toFixed(2)} USD
+                      </div>
+                      <div className="text-xs font-black text-amber-700 dark:text-amber-400 font-mono">
+                        {(netFoodSalesBs / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs
+                      </div>
+                      <span className="text-[10px] text-slate-500 block pt-1">
+                        Venta neta sin delivery ni comisiones.
+                      </span>
+                    </div>
+
+                    {/* Tarjeta 2: Fondo de Delivery */}
+                    <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/80 border-2 border-slate-300 dark:border-slate-700 space-y-1 shadow-sm">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-slate-600 dark:text-slate-400 block">
+                        🛵 Tarifas Delivery Cobradas:
+                      </span>
+                      <div className="text-2xl font-black text-slate-950 dark:text-white font-mono">
+                        ${(deliveryFeesUsdCents / 100).toFixed(2)} USD
+                      </div>
+                      <div className="text-xs font-bold text-slate-600 dark:text-slate-300 font-mono">
+                        {((deliveryFeesUsdCents * rateMicroBs) / 100_000_000).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs
+                      </div>
+                      <span className="text-[10px] text-slate-500 block pt-1">
+                        Fondo exclusivo de repartidores.
+                      </span>
+                    </div>
+
+                    {/* Tarjeta 3: Salidas de Caja Chica */}
+                    <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border-2 border-rose-300 dark:border-rose-700 space-y-1 shadow-sm">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-rose-900 dark:text-rose-300 block">
+                        💸 Salidas Caja Chica / Gastos:
+                      </span>
+                      <div className="text-2xl font-black text-rose-600 dark:text-rose-400 font-mono">
+                        -${(expensesUsdCents / 100).toFixed(2)} USD
+                      </div>
+                      <div className="text-xs font-bold text-rose-700 dark:text-rose-300 font-mono">
+                        -{((expensesUsdCents * rateMicroBs) / 100_000_000).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs
+                      </div>
+                      <span className="text-[10px] text-rose-800/80 block pt-1">
+                        Deducido directamente del efectivo en caja.
+                      </span>
+                    </div>
+
+                    {/* Tarjeta 4: Efectivo Esperado en Gaveta */}
+                    <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-400 dark:border-amber-600 space-y-1 shadow-md">
+                      <span className="text-[11px] font-black uppercase tracking-wider text-amber-950 dark:text-amber-300 block">
+                        💵 Efectivo Esperado en Gaveta:
+                      </span>
+                      <div className="text-2xl font-black text-amber-950 dark:text-amber-200 font-mono">
+                        ${(expectedDrawerCashUsdCents / 100).toFixed(2)} USD
+                      </div>
+                      <div className="text-xs font-black text-amber-900 dark:text-amber-300 font-mono">
+                        {(expectedDrawerCashBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs
+                      </div>
+                      <span className="text-[10px] text-amber-900/90 dark:text-amber-300/80 block pt-1 font-bold">
+                        Fondo Inicial + Cobros Efectivo - Gastos.
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Desglose por Método de Pago */}
+                  <div className="bg-slate-50 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-800 rounded-2xl p-4 space-y-3">
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                      <span>💳</span> Desglose Cobrado por Método de Pago:
+                    </h4>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 shadow-sm">
+                        <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 block">💵 Efectivo USD</span>
+                        <span className="text-base font-black text-slate-900 dark:text-white font-mono">
+                          ${(cashUsdCents / 100).toFixed(2)}
+                        </span>
+                      </div>
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 shadow-sm">
+                        <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 block">🇻🇪 Efectivo Bs</span>
+                        <span className="text-base font-black text-slate-900 dark:text-white font-mono">
+                          {(cashBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs
+                        </span>
+                      </div>
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 shadow-sm">
+                        <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 block">📱 Pago Móvil</span>
+                        <span className="text-base font-black text-slate-900 dark:text-white font-mono">
+                          {(pagoMovilBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs
+                        </span>
+                      </div>
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 shadow-sm">
+                        <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 block">💳 Punto Ubii</span>
+                        <span className="text-base font-black text-slate-900 dark:text-white font-mono">
+                          {(ubiiGrossBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs
+                        </span>
+                      </div>
+                      <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 shadow-sm">
+                        <span className="text-[11px] font-black text-slate-700 dark:text-slate-300 block">🟡 Binance Pay</span>
+                        <span className="text-base font-black text-slate-900 dark:text-white font-mono">
+                          ${(binanceUsdCents / 100).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Botón de Siguiente */}
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="button"
+                      onClick={() => setCierreStep(2)}
+                      className="min-h-[52px] px-6 rounded-2xl bg-amber-400 hover:bg-amber-500 active:bg-amber-600 text-slate-950 font-black text-sm border-2 border-amber-600 shadow-md flex items-center gap-2 active:scale-95 transition-all"
+                    >
+                      <span>Siguiente: Realizar Conteo de Gaveta</span>
+                      <ArrowRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+
+          {/* PASO 2 — Conteo Físico de Gaveta (Guiado o Ciego) */}
+          {cierreStep === 2 && (
+            <div className="space-y-6">
+              <div className="p-4 bg-amber-50 dark:bg-amber-950/30 border-2 border-amber-400 dark:border-amber-700 rounded-2xl">
+                <p className="text-xs font-bold text-amber-950 dark:text-amber-200">
+                  ℹ️ Realiza el conteo físico de todo el efectivo presente en la gaveta. El sistema calculará automáticamente cualquier diferencia o cuadre exacto con respecto al libro contable.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Conteo USD */}
+                <div className="p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border-2 border-slate-300 dark:border-slate-700 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                      💵 Efectivo Físico en Dólares ($ USD):
+                    </label>
+                    <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400">
+                      Esperado: ${(expectedDrawerCashUsdCents / 100).toFixed(2)}
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={countedCashUsd}
+                    onChange={e => setCountedCashUsd(e.target.value)}
+                    className="w-full min-h-[52px] bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-4 text-xl font-mono font-black text-slate-950 dark:text-white outline-none focus:border-amber-500 shadow-sm"
+                  />
+
+                  {/* Badge de Cuadre USD */}
+                  {diffUsdCents !== null && (
+                    <div className="pt-1">
+                      {diffUsdCents === 0 ? (
+                        <div className="p-3 bg-emerald-100 border-2 border-emerald-500 rounded-xl text-emerald-950 font-black text-xs flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                          <span>✓ Cuadre Exacto en USD ($0.00 de diferencia)</span>
+                        </div>
+                      ) : diffUsdCents > 0 ? (
+                        <div className="p-3 bg-blue-100 border-2 border-blue-500 rounded-xl text-blue-950 font-black text-xs flex items-center gap-2">
+                          <span>▲</span>
+                          <span>Sobrante en USD: +${(diffUsdCents / 100).toFixed(2)}</span>
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-rose-100 border-2 border-rose-500 rounded-xl text-rose-950 font-black text-xs flex items-center gap-2">
+                          <span>▼</span>
+                          <span>Faltante en USD: -${(Math.abs(diffUsdCents) / 100).toFixed(2)}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* Conteo Bs */}
+                <div className="p-5 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border-2 border-slate-300 dark:border-slate-700 space-y-3 shadow-sm">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black uppercase text-slate-800 dark:text-slate-200">
+                      🇻🇪 Efectivo Físico en Bolívares (Bs):
+                    </label>
+                    <span className="text-[11px] font-mono font-bold text-slate-600 dark:text-slate-400">
+                      Esperado: {(expectedDrawerCashBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} Bs
+                    </span>
+                  </div>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                    value={countedCashBs}
+                    onChange={e => setCountedCashBs(e.target.value)}
+                    className="w-full min-h-[52px] bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-4 text-xl font-mono font-black text-slate-950 dark:text-white outline-none focus:border-amber-500 shadow-sm"
+                  />
+
+                  {/* Badge de Cuadre Bs */}
+                  {diffBsCents !== null && (
+                    <div className="pt-1">
+                      {diffBsCents === 0 ? (
+                        <div className="p-3 bg-emerald-100 border-2 border-emerald-500 rounded-xl text-emerald-950 font-black text-xs flex items-center gap-2">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+                          <span>✓ Cuadre Exacto en Bolívares (0.00 Bs de diferencia)</span>
+                        </div>
+                      ) : diffBsCents > 0 ? (
+                        <div className="p-3 bg-blue-100 border-2 border-blue-500 rounded-xl text-blue-950 font-black text-xs flex items-center gap-2">
+                          <span>▲</span>
+                          <span>Sobrante en Bs: +${(diffBsCents / 100).toFixed(2)} Bs</span>
+                        </div>
+                      ) : (
+                        <div className="p-3 bg-rose-100 border-2 border-rose-500 rounded-xl text-rose-950 font-black text-xs flex items-center gap-2">
+                          <span>▼</span>
+                          <span>Faltante en Bs: -${(Math.abs(diffBsCents) / 100).toFixed(2)} Bs</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Observaciones del Cierre */}
+              <div className="space-y-1">
+                <label className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 block">
+                  📝 Observaciones o Justificación de Descuadre (Opcional):
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Ej: Billetes de $1 deteriorados reemplazados, propina agregada al fondo, sin novedades..."
+                  value={closingNotes}
+                  onChange={e => setClosingNotes(e.target.value)}
+                  className="w-full rounded-xl bg-white dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 p-3 text-xs font-bold text-slate-900 dark:text-white outline-none focus:border-amber-500 shadow-sm"
+                />
+              </div>
+
+              {/* Botones de Navegación */}
+              <div className="flex items-center justify-between pt-2">
+                <button
+                  type="button"
+                  onClick={() => setCierreStep(1)}
+                  className="min-h-[50px] px-5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-xs border border-slate-300 flex items-center gap-2 active:scale-95 transition-all shadow-sm"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Volver a Resumen</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCierreStep(3)}
+                  className="min-h-[50px] px-6 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-sm border-2 border-amber-600 shadow-md flex items-center gap-2 active:scale-95 transition-all"
+                >
+                  <span>Siguiente: Confirmar Cierre Z</span>
+                  <ArrowRight className="w-5 h-5" />
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* PASO 3 — Confirmar Cierre Z y Descargar Reportes */}
+          {cierreStep === 3 && (
+            <div className="space-y-6">
+              {/* Tarjeta de Confirmación */}
+              <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 space-y-4 shadow-sm">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-black text-base text-slate-900 dark:text-white flex items-center gap-2">
+                    <span>🔒</span> Validación y Sellado de Cierre Z
+                  </h4>
+                  <span className="text-xs font-mono font-black text-slate-700 dark:text-slate-300">
+                    Jornada #{jornadaData?.jornada?.id?.slice(0, 8)}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs font-bold text-slate-700 dark:text-slate-300">
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 shadow-sm">
+                    <span className="block text-slate-500">Conteo Registrado USD:</span>
+                    <strong className="text-sm font-black text-slate-900 dark:text-white font-mono">
+                      ${countedCashUsd ? parseFloat(countedCashUsd).toFixed(2) : '0.00'} USD
+                    </strong>
+                    {diffUsdCents !== null && (
+                      <span className={`block text-[11px] font-black mt-0.5 ${diffUsdCents === 0 ? 'text-emerald-700' : 'text-amber-800'}`}>
+                        {diffUsdCents === 0 ? '✓ Cuadre exacto' : `Diferencia: ${diffUsdCents > 0 ? '+' : ''}${(diffUsdCents / 100).toFixed(2)}`}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="p-3 bg-white dark:bg-slate-800 rounded-xl border-2 border-slate-300 dark:border-slate-700 shadow-sm">
+                    <span className="block text-slate-500">Conteo Registrado Bs:</span>
+                    <strong className="text-sm font-black text-slate-900 dark:text-white font-mono">
+                      {countedCashBs ? parseFloat(countedCashBs).toFixed(2) : '0.00'} Bs
+                    </strong>
+                    {diffBsCents !== null && (
+                      <span className={`block text-[11px] font-black mt-0.5 ${diffBsCents === 0 ? 'text-emerald-700' : 'text-amber-800'}`}>
+                        {diffBsCents === 0 ? '✓ Cuadre exacto' : `Diferencia: ${diffBsCents > 0 ? '+' : ''}${(diffBsCents / 100).toFixed(2)} Bs`}
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Input de PIN de Autorización (si no está cerrada aún) */}
+                {jornadaData?.jornada?.status !== 'cerrada' && !closeSuccessData && (
+                  <div className="space-y-1.5 pt-2">
+                    <label className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                      <span>🔑 PIN de Autorización (Admin / Supervisor):</span>
+                      <span className="text-[11px] font-mono text-slate-500 font-bold">(PIN corporativo: 2026)</span>
+                    </label>
+                    <input
+                      type="password"
+                      maxLength={8}
+                      value={closingPin}
+                      onChange={e => setClosingPin(e.target.value)}
+                      placeholder="Ingrese PIN..."
+                      className="w-full min-h-[48px] bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-4 text-base font-mono font-black text-slate-900 dark:text-white outline-none focus:border-amber-500 shadow-sm"
+                    />
+                  </div>
+                )}
+
+                {closeError && (
+                  <div className="p-3 bg-red-100 border-2 border-red-500 rounded-xl text-red-950 font-black text-xs">
+                    ⚠️ {closeError}
+                  </div>
+                )}
+
+                {/* Botón Principal Ejecutar Cierre */}
+                {jornadaData?.jornada?.status !== 'cerrada' && !closeSuccessData ? (
+                  <button
+                    type="button"
+                    onClick={handleExecuteCierreZ}
+                    disabled={isExecutingClose}
+                    className="w-full min-h-[56px] rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-black text-base md:text-lg border-2 border-emerald-500 shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 disabled:opacity-50"
+                  >
+                    {isExecutingClose ? (
+                      <span className="animate-spin text-xl">⏳ Sellando Cierre Z...</span>
+                    ) : (
+                      <>
+                        <CheckCircle2 className="w-6 h-6" />
+                        <span>✓ Ejecutar Cierre del Día e Imprimir Cierre Z</span>
+                      </>
+                    )}
+                  </button>
+                ) : (
+                  <div className="p-4 bg-emerald-100 border-2 border-emerald-500 rounded-2xl text-emerald-950 space-y-1 shadow-sm">
+                    <div className="flex items-center gap-2 font-black text-sm">
+                      <CheckCircle2 className="w-5 h-5 text-emerald-700" />
+                      <span>Jornada Cerrada y Auditada Exitosamente</span>
+                    </div>
+                    <p className="text-xs text-emerald-900">
+                      El ticket térmico de Cierre Z con Hash SHA-256 inmutable ha sido encolado para impresión en caja.
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {/* Botones de Descarga de Reportes Digitales */}
+              <div className="space-y-3">
+                <h5 className="text-xs font-black uppercase text-slate-800 dark:text-slate-200 tracking-wider">
+                  📥 Descarga de Reportes Consolidados del Turno:
+                </h5>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={handleDownloadPdf}
+                    className="min-h-[52px] rounded-2xl bg-slate-900 hover:bg-slate-800 active:bg-slate-950 text-white font-black text-sm border-2 border-slate-700 shadow-md flex items-center justify-center gap-2.5 transition-all active:scale-95"
+                  >
+                    <FileText className="w-5 h-5 text-amber-400" />
+                    <span>📄 Descargar Reporte PDF del Día</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleDownloadExcel}
+                    className="min-h-[52px] rounded-2xl bg-emerald-700 hover:bg-emerald-800 active:bg-emerald-900 text-white font-black text-sm border-2 border-emerald-600 shadow-md flex items-center justify-center gap-2.5 transition-all active:scale-95"
+                  >
+                    <FileSpreadsheet className="w-5 h-5 text-white" />
+                    <span>📊 Descargar Excel (.xlsx) del Día</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Botones de Navegación Final */}
+              <div className="flex items-center justify-between pt-2 border-t border-slate-200 dark:border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setCierreStep(2)}
+                  className="min-h-[48px] px-5 rounded-xl bg-slate-200 hover:bg-slate-300 text-slate-800 font-black text-xs border border-slate-300 flex items-center gap-2 active:scale-95 transition-all shadow-sm"
+                >
+                  <ArrowLeft className="w-4 h-4" />
+                  <span>Volver a Conteo</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCashierTab('cobro')}
+                  className="min-h-[48px] px-5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-black text-xs border border-slate-300 flex items-center gap-2 active:scale-95 transition-all shadow-sm"
+                >
+                  <span>Ir a Cola de Cobro</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           )}
         </div>

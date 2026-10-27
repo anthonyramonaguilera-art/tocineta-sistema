@@ -38,6 +38,7 @@ import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { syncBcvRateFromInternet } from '../src/modules/menu/bcv-auto-sync.js';
 import { createIdempotencyKey } from '@tocineta/shared';
+import { loginAs } from './test-helpers.js';
 
 function readWebSource(relPath: string): string {
   const candidates = [
@@ -80,29 +81,19 @@ describe('Hito M19 — Suite de Pruebas Operativas Críticas', () => {
     // Abrir jornada y sesión de caja de prueba
     rawDb.prepare(`
       INSERT INTO jornadas (id, opened_by_user_id, opened_at_ms, status, initial_cash_usd_cents)
-      VALUES ('jor_m19_test', 'usr_cajera_principal', ?, 'abierta', 5000)
+      VALUES ('jor_m19_test', 'usr_cajera', ?, 'abierta', 5000)
     `).run(Date.now());
 
     rawDb.prepare(`
       INSERT INTO cash_sessions (id, jornada_id, user_id, opened_at_ms, status)
-      VALUES ('cs_m19_test', 'jor_m19_test', 'usr_cajera_principal', ?, 'abierta')
+      VALUES ('cs_m19_test', 'jor_m19_test', 'usr_cajera', ?, 'abierta')
     `).run(Date.now());
 
     // Login cajera
-    const resCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: '1111' }
-    });
-    cajeraToken = JSON.parse(resCajera.payload).token;
+    cajeraToken = (await loginAs(app, 'cajera')).token;
 
     // Login admin
-    const resAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_general', pin: '9999' }
-    });
-    adminToken = JSON.parse(resAdmin.payload).token;
+    adminToken = (await loginAs(app, 'admin')).token;
   });
 
   afterAll(async () => {

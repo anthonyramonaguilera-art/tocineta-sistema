@@ -5,8 +5,10 @@ import {
   getWorkerPerformance,
   getAdminStaffPerformance,
   generateJornadaExcelReport,
-  generateJornadaPdfReport
+  generateJornadaPdfReport,
+  getJornadaReportData
 } from './reports-service.js';
+import { getCurrentJornada } from '../cashier/cashier-service.js';
 
 export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
   const getUserIdFromRequest = (req: any): string => {
@@ -106,6 +108,68 @@ export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
         success: false,
         error: err.message
       });
+    }
+  });
+
+  // 5. Resumen en vivo de Cierre Z (GET /api/reports/z-report/summary)
+  fastify.get('/api/reports/z-report/summary', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const query = request.query as { jornadaId?: string } | undefined;
+    const currentJornada = getCurrentJornada(dbCtx.rawDb);
+    const jornadaId = query?.jornadaId || currentJornada?.id;
+    if (!jornadaId) {
+      return reply.status(404).send({ success: false, error: 'No hay jornada abierta o registrada' });
+    }
+    try {
+      const summary = getJornadaReportData(dbCtx.rawDb, jornadaId);
+      return reply.status(200).send({
+        success: true,
+        summary
+      });
+    } catch (err: any) {
+      return reply.status(err.statusCode || 400).send({ success: false, error: err.message });
+    }
+  });
+
+  // 6. Descargar Reporte PDF del Día / Cierre Z (GET /api/reports/z-report/pdf)
+  fastify.get('/api/reports/z-report/pdf', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const query = request.query as { jornadaId?: string } | undefined;
+    const currentJornada = getCurrentJornada(dbCtx.rawDb);
+    const jornadaId = query?.jornadaId || currentJornada?.id;
+    if (!jornadaId) {
+      return reply.status(404).send({ success: false, error: 'No hay jornada abierta' });
+    }
+    try {
+      const buffer = await generateJornadaPdfReport(dbCtx.rawDb, jornadaId);
+      return reply
+        .header('Content-Type', 'application/pdf')
+        .header('Content-Disposition', `inline; filename="cierre_z_${jornadaId}.pdf"`)
+        .status(200)
+        .send(buffer);
+    } catch (err: any) {
+      return reply.status(err.statusCode || 400).send({ success: false, error: err.message });
+    }
+  });
+
+  // 7. Descargar Reporte Excel del Día / Cierre Z (GET /api/reports/z-report/excel)
+  fastify.get('/api/reports/z-report/excel', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const query = request.query as { jornadaId?: string } | undefined;
+    const currentJornada = getCurrentJornada(dbCtx.rawDb);
+    const jornadaId = query?.jornadaId || currentJornada?.id;
+    if (!jornadaId) {
+      return reply.status(404).send({ success: false, error: 'No hay jornada abierta' });
+    }
+    try {
+      const buffer = await generateJornadaExcelReport(dbCtx.rawDb, jornadaId);
+      return reply
+        .header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+        .header('Content-Disposition', `attachment; filename="cierre_z_${jornadaId}.xlsx"`)
+        .status(200)
+        .send(buffer);
+    } catch (err: any) {
+      return reply.status(err.statusCode || 400).send({ success: false, error: err.message });
     }
   });
 };

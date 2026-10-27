@@ -1,5 +1,5 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * SISTEMA OPERATIVO LOCAL TOCINETA
  * Pruebas de Aceptación del Hito M6: Motor de Impresión Asíncrono,
  * Representación Intermedia (Ticket IR), Estaciones de Cocina,
  * Nota de Entrega, Reimpresiones y Manejo de Fallos.
@@ -17,6 +17,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { renderTicketToEscPos, type TicketIR } from '@tocineta/shared';
+import { loginAs } from './test-helpers.js';
 
 describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/server)', () => {
   let app: FastifyInstance;
@@ -41,28 +42,13 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
     await app.ready();
 
     // Login Cajera
-    const resCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: '1111' }
-    });
-    cajeraToken = JSON.parse(resCajera.payload).token;
+    cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
 
     // Login Supervisor
-    const resSupervisor = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_supervisor_turno', pin: '654321' }
-    });
-    supervisorToken = JSON.parse(resSupervisor.payload).token;
+    supervisorToken = (await loginAs(app, 'supervisor', rawDb)).token;
 
     // Login Cocinero
-    const resCocinero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cocinero_1', pin: '5555' }
-    });
-    cocineroToken = JSON.parse(resCocinero.payload).token;
+    cocineroToken = (await loginAs(app, 'plancha', rawDb)).token;
 
     // Abrir jornada con tasa 36.60
     await app.inject({
@@ -253,7 +239,7 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
       payload: {
         tableNumber: 'Mesa 4',
         fulfillmentType: 'salon',
-        customerName: 'Olinelcys Aguilera',
+        customerName: 'Cliente VIP',
         lines: [
           {
             productId: 'prod_smash_clasica',
@@ -315,7 +301,7 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
     expect(previewRes.statusCode).toBe(200);
     const previewData = JSON.parse(previewRes.payload);
     expect(previewData.html).toContain('ticket-preview-container');
-    expect(previewData.html).toContain('Olinelcys Aguilera');
+    expect(previewData.html).toContain('Cliente VIP');
     expect(previewData.html).toContain('Cocinamos con amor');
   });
 
@@ -440,7 +426,7 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
       url: `/api/print-jobs/${existingJob.id}/reprint`,
       headers: { authorization: `Bearer ${cocineroToken}` },
       payload: {
-        pin: '5555', // PIN del cocinero
+        pin: '4444', // PIN del cocinero
         reason: 'Ticket mojado'
       }
     });

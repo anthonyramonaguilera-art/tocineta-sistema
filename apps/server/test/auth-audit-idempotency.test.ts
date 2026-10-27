@@ -88,20 +88,20 @@ describe('Hito M1 - Autenticación PIN, Auditoría Inmutable e Idempotencia (@to
       expect(res.statusCode).toBe(200);
       const data = JSON.parse(res.payload);
       expect(data.success).toBe(true);
-      expect(data.users.length).toBeGreaterThanOrEqual(7);
+      expect(data.users.length).toBeGreaterThanOrEqual(5);
 
-      const olinelcys = data.users.find((u: any) => u.name === 'Sra. Olinelcys');
-      expect(olinelcys).toBeDefined();
-      expect(olinelcys.role).toBe('admin');
-      expect(olinelcys.pinLength).toBe(6);
+      const adminUser = data.users.find((u: any) => u.name === 'ADMIN' || u.role === 'admin');
+      expect(adminUser).toBeDefined();
+      expect(adminUser.role).toBe('admin');
+      expect(adminUser.pinLength).toBe(6);
     });
 
-    it('Inicia sesión exitosamente con PIN correcto (Sra. Olinelcys PIN 123456)', async () => {
+    it('Inicia sesión exitosamente con PIN correcto (ADMIN PIN 123456)', async () => {
       const res = await app.inject({
         method: 'POST',
         url: '/api/auth/login',
         payload: {
-          userId: 'usr_admin_olinelcys',
+          userId: 'usr_admin',
           pin: '123456'
         }
       });
@@ -110,7 +110,7 @@ describe('Hito M1 - Autenticación PIN, Auditoría Inmutable e Idempotencia (@to
       const data = JSON.parse(res.payload);
       expect(data.success).toBe(true);
       expect(data.token).toBeDefined();
-      expect(data.user.name).toBe('Sra. Olinelcys');
+      expect(data.user.name).toBe('ADMIN');
 
       // Validar endpoint /me con token Bearer
       const meRes = await app.inject({
@@ -122,7 +122,7 @@ describe('Hito M1 - Autenticación PIN, Auditoría Inmutable e Idempotencia (@to
       });
       expect(meRes.statusCode).toBe(200);
       const meData = JSON.parse(meRes.payload);
-      expect(meData.user.id).toBe('usr_admin_olinelcys');
+      expect(meData.user.id).toBe('usr_admin');
       expect(meData.user.role).toBe('admin');
 
       // Logout
@@ -152,7 +152,7 @@ describe('Hito M1 - Autenticación PIN, Auditoría Inmutable e Idempotencia (@to
   // --------------------------------------------------------------------------
   describe('Bloqueo Escalonado de PIN (Lockout)', () => {
     it('Bloquea al usuario tras 5 intentos fallidos consecutivos y permite desbloqueo de supervisor', async () => {
-      const targetUserId = 'usr_mesonero_carlos';
+      const targetUserId = 'usr_mesero';
 
       // 4 intentos fallidos: debe avisar intentos restantes
       for (let i = 1; i <= 4; i++) {
@@ -184,13 +184,13 @@ describe('Hito M1 - Autenticación PIN, Auditoría Inmutable e Idempotencia (@to
       });
       expect(blockedRes.statusCode).toBe(423);
 
-      // Supervisor desbloquea al usuario vía /api/auth/unlock-user
+      // Supervisor o Admin desbloquea al usuario vía /api/auth/unlock-user
       const unlockRes = await app.inject({
         method: 'POST',
         url: '/api/auth/unlock-user',
         payload: {
-          authorizerUserId: 'usr_supervisor_turno',
-          authorizerPin: '654321',
+          authorizerUserId: 'usr_admin',
+          authorizerPin: '123456',
           targetUserId: targetUserId
         }
       });

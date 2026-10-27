@@ -20,6 +20,7 @@ import {
   signManifest,
   type ReleaseManifest
 } from '../src/modules/updater/signer.js';
+import { loginAs } from './test-helpers.js';
 
 describe('Hito M12 - Modo Soporte Auditado y Motor de Actualizaciones Firmadas Ed25519 (@tocineta/server)', () => {
   let app: FastifyInstance;
@@ -39,21 +40,9 @@ describe('Hito M12 - Modo Soporte Auditado y Motor de Actualizaciones Firmadas E
     await runMigrations(rawDb);
     seedInitialUsers(rawDb);
 
-    // Login Admin (Sra. Olinelcys)
-    const resAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_olinelcys', pin: '123456' }
-    });
-    adminToken = JSON.parse(resAdmin.payload).token;
-
-    // Login Mesonero (Carlos)
-    const resMesonero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_mesonero_carlos', pin: '2222' }
-    });
-    mesoneroToken = JSON.parse(resMesonero.payload).token;
+    // Logins canónicos
+    adminToken = (await loginAs(app, 'admin')).token;
+    mesoneroToken = (await loginAs(app, 'mesero')).token;
   });
 
   afterAll(async () => {
@@ -102,7 +91,7 @@ describe('Hito M12 - Modo Soporte Auditado y Motor de Actualizaciones Firmadas E
     });
 
     it('Activa Modo Soporte con PIN de 6 dígitos de Admin, emite evento y audita sesión de 2 horas', async () => {
-      // 1. Activar con PIN de la Sra. Olinelcys ('123456')
+      // 1. Activar con PIN de Admin ('123456')
       const resStart = await app.inject({
         method: 'POST',
         url: '/api/support/start',
@@ -117,8 +106,8 @@ describe('Hito M12 - Modo Soporte Auditado y Motor de Actualizaciones Firmadas E
       const dataStart = JSON.parse(resStart.payload);
       expect(dataStart.success).toBe(true);
       expect(dataStart.support.active).toBe(true);
-      expect(dataStart.support.startedByName).toContain('Olinelcys');
-      expect(dataStart.support.bannerText).toContain('MODO SOPORTE VARONS MEDIA ACTIVO — SESIÓN AUDITADA');
+      expect(dataStart.support.startedByName).toContain('ADMIN');
+      expect(dataStart.support.bannerText).toContain('MODO SOPORTE TÉCNICO ACTIVO — SESIÓN AUDITADA');
       expect(dataStart.support.remainingSeconds).toBeGreaterThan(7000); // ~2 horas (7200s)
 
       // 2. Consultar GET /api/support/status
@@ -129,7 +118,7 @@ describe('Hito M12 - Modo Soporte Auditado y Motor de Actualizaciones Firmadas E
       expect(resStatus.statusCode).toBe(200);
       const dataStatus = JSON.parse(resStatus.payload);
       expect(dataStatus.support.active).toBe(true);
-      expect(dataStatus.support.startedByUserId).toBe('usr_admin_olinelcys');
+      expect(dataStatus.support.startedByUserId).toBe('usr_admin');
 
       // 3. Verificar persistencia en support_sessions
       const sessionRow = rawDb.prepare(`
@@ -146,7 +135,7 @@ describe('Hito M12 - Modo Soporte Auditado y Motor de Actualizaciones Firmadas E
       `).get(dataStart.support.sessionId) as any;
 
       expect(auditStart).toBeDefined();
-      expect(auditStart.actor_user_id).toBe('usr_admin_olinelcys');
+      expect(auditStart.actor_user_id).toBe('usr_admin');
 
       // 5. Detener Modo Soporte inmediatamente (POST /api/support/stop)
       const resStop = await app.inject({
@@ -216,7 +205,7 @@ describe('Hito M12 - Modo Soporte Auditado y Motor de Actualizaciones Firmadas E
         {
           publicKeyPem: testKeys.publicKeyPem,
           currentDate: outsideSalesDate,
-          actorUserId: 'usr_admin_olinelcys'
+          actorUserId: 'usr_admin'
         }
       );
 
@@ -423,7 +412,7 @@ describe('Hito M12 - Modo Soporte Auditado y Motor de Actualizaciones Firmadas E
           currentDate: salesPeakDate,
           forceEmergencyUpdate: true,
           adminPin: '123456',
-          actorUserId: 'usr_admin_olinelcys'
+          actorUserId: 'usr_admin'
         }
       );
 

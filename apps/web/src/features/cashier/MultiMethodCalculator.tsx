@@ -11,6 +11,24 @@ interface MultiMethodCalculatorProps {
 
 const QUICK_USD_BILLS = [100, 500, 1000, 2000, 5000, 10000]; // en centavos: $1, $5, $10, $20, $50, $100
 
+export const getPaymentMethodHumanLabel = (method: string): string => {
+  const m = method.toLowerCase();
+  switch (m) {
+    case 'cash_usd':
+      return '💵 Efectivo Dólares (USD)';
+    case 'cash_bs':
+      return '🇻🇪 Efectivo Bolívares (Bs)';
+    case 'pago_movil':
+      return '📱 Pago Móvil (Bs)';
+    case 'ubii':
+      return '💳 Punto de Venta Ubii (Bs)';
+    case 'binance':
+      return '🟡 Binance Pay (USD)';
+    default:
+      return method.toUpperCase();
+  }
+};
+
 export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
   order,
   rateMicroBs,
@@ -256,7 +274,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
             <span className="text-3xl font-black text-tocineta-yellow font-mono tracking-tight">
               ${(totalUsdCents / 100).toFixed(2)}
             </span>
-            <span className="text-lg font-bold text-white font-mono">
+            <span className="text-lg font-bold text-tocineta-text font-mono">
               / {(totalBsCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} Bs
             </span>
           </div>
@@ -369,10 +387,8 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
               key={cents}
               type="button"
               onClick={() => handleQuickBill(cents)}
-              className={`min-h-[48px] rounded-2xl bg-tocineta-bg border font-mono font-black text-sm active:scale-95 transition-all flex items-center justify-center shadow ${
-                activeQuickBill === cents
-                  ? 'scale-95 ring-2 ring-[#FFE600] border-[#FFE600] text-tocineta-yellow'
-                  : 'border-tocineta-border hover:border-tocineta-yellow text-white'
+              className={`denomination-btn bg-slate-100 hover:bg-amber-500 active:bg-amber-600 text-slate-900 hover:text-slate-950 border-2 border-slate-300 hover:border-amber-600 font-black text-base md:text-lg min-h-[52px] rounded-xl shadow-sm transition-all flex items-center justify-center font-mono cursor-pointer ${
+                activeQuickBill === cents ? 'scale-95 ring-2 ring-amber-500 border-amber-600 bg-amber-200' : ''
               }`}
             >
               ${cents / 100}
@@ -382,7 +398,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
             type="button"
             onClick={() => handleAddTender(remainingUsdCents, 'cash_usd')}
             disabled={remainingUsdCents <= 0}
-            className="min-h-[48px] px-2 rounded-2xl bg-tocineta-yellow/20 border border-tocineta-yellow text-tocineta-yellow font-black text-xs active:scale-95 transition-all flex items-center justify-center shadow col-span-4 sm:col-span-1 disabled:opacity-30 disabled:pointer-events-none text-center"
+            className="bg-amber-100 hover:bg-amber-500 text-amber-950 hover:text-slate-950 border-2 border-amber-500 font-black min-h-[52px] rounded-xl px-3 shadow-sm transition-all active:scale-95 flex items-center justify-center col-span-4 sm:col-span-1 disabled:opacity-40 disabled:pointer-events-none text-center text-xs md:text-sm cursor-pointer"
           >
             Exacto USD (${(remainingUsdCents / 100).toFixed(2)})
           </button>
@@ -445,7 +461,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
               }
               value={amountInput}
               onChange={e => setAmountInput(e.target.value)}
-              className="w-full min-h-[50px] bg-tocineta-bg border border-tocineta-border rounded-2xl px-4 text-base font-mono font-bold text-white placeholder-tocineta-muted focus:border-tocineta-yellow outline-none"
+              className="w-full min-h-[50px] bg-tocineta-bg border border-tocineta-border rounded-2xl px-4 text-base font-mono font-bold text-tocineta-text placeholder-tocineta-muted focus:border-tocineta-yellow outline-none"
             />
           </div>
 
@@ -462,14 +478,24 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
             </div>
           )}
 
-          <button
-            type="button"
-            onClick={() => handleAddTender()}
-            disabled={!amountInput || parseFloat(amountInput) <= 0}
-            className="min-h-[50px] px-6 rounded-2xl bg-tocineta-card border border-tocineta-yellow/60 hover:bg-tocineta-yellow hover:text-tocineta-bg text-tocineta-yellow font-black text-xs transition-all active:scale-95 disabled:opacity-30 disabled:pointer-events-none shrink-0 flex items-center justify-center gap-1.5 shadow"
-          >
-            <span>+ Agregar Pago</span>
-          </button>
+          {(() => {
+            const hasAmount = Boolean(amountInput && parseFloat(amountInput) > 0);
+            return (
+              <button
+                type="button"
+                onClick={() => handleAddTender()}
+                disabled={!hasAmount}
+                className={
+                  hasAmount
+                    ? "btn-solid-dark bg-slate-900 hover:bg-slate-800 text-white font-black min-h-[52px] px-5 rounded-xl shadow-md transition-all active:scale-95 shrink-0 flex items-center justify-center gap-1.5 cursor-pointer text-sm"
+                    : "bg-slate-200 text-slate-600 border border-slate-300 font-bold min-h-[52px] px-5 rounded-xl cursor-not-allowed shrink-0 flex items-center justify-center gap-1.5 opacity-60 text-sm"
+                }
+                style={hasAmount ? { backgroundColor: '#0F172A', color: '#FFFFFF' } : undefined}
+              >
+                <span>+ Agregar Pago</span>
+              </button>
+            );
+          })()}
         </div>
 
         {/* Botón Exacto Bs. explícito para métodos en Bolívares (H-06 / M19) */}
@@ -485,7 +511,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
                   }, 50);
                 }
               }}
-              className="min-h-[48px] px-4 rounded-2xl bg-emerald-500/20 border border-emerald-500 text-emerald-300 hover:bg-emerald-500 hover:text-black font-black text-xs transition-all active:scale-95 flex items-center justify-center gap-2 shadow"
+              className="bg-amber-100 hover:bg-amber-500 text-amber-950 hover:text-slate-950 border-2 border-amber-500 font-black min-h-[52px] rounded-xl px-4 shadow-sm transition-all active:scale-95 flex items-center justify-center gap-2 text-xs md:text-sm cursor-pointer"
             >
               <span>🇻🇪</span>
               <span>
@@ -517,7 +543,9 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
                 }`}
               >
                 <div className="flex items-center gap-2 flex-wrap">
-                  <span className="font-bold text-white uppercase">{t.method}</span>
+                  <span className="font-black text-slate-900 dark:text-white text-xs md:text-sm">
+                    {getPaymentMethodHumanLabel(t.method)}
+                  </span>
                   {(t.method === 'pago_movil' || t.method === 'ubii' || t.method === 'binance') && (
                     <input
                       type="text"
@@ -532,7 +560,7 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
                   )}
                 </div>
                 <div className="flex items-center justify-between sm:justify-end gap-3">
-                  <span className="font-mono font-black text-sm text-white">
+                  <span className="font-mono font-black text-sm text-slate-900 dark:text-white">
                     {t.currency === 'USD'
                       ? `$${(t.amountCents / 100).toFixed(2)}`
                       : `Bs. ${(t.amountCents / 100).toLocaleString('es-VE', { minimumFractionDigits: 2 })} (Equivale a $${(t.usdEquivalentCents / 100).toFixed(2)} USD)`}
@@ -726,19 +754,30 @@ export const MultiMethodCalculator: React.FC<MultiMethodCalculatorProps> = ({
         </div>
       )}
 
-      {/* BOTÓN FINAL DE COBRO (MÍNIMO 54PX DE ALTO TÁCTIL) */}
-      <button
-        type="button"
-        onClick={() => executePayment()}
-        disabled={remainingUsdCents > 0 || isSubmitting}
-        className="w-full min-h-[56px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base disabled:opacity-30 disabled:pointer-events-none hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-2xl"
-      >
-        {isSubmitting ? (
-          <span className="animate-spin text-xl inline-block">⏳</span>
-        ) : (
-          <span>✓ Finalizar Cobro y Despachar a Cocina</span>
-        )}
-      </button>
+      {/* BOTÓN FINAL DE COBRO (MÍNIMO 56PX DE ALTO TÁCTIL) */}
+      {remainingUsdCents === 0 ? (
+        <button
+          type="button"
+          onClick={() => executePayment()}
+          disabled={isSubmitting}
+          className="btn-solid-emerald w-full min-h-[56px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2 cursor-pointer"
+          style={{ backgroundColor: '#059669', color: '#FFFFFF' }}
+        >
+          {isSubmitting ? (
+            <span className="animate-spin text-xl inline-block">⏳</span>
+          ) : (
+            <span>✓ Finalizar Cobro y Despachar a Cocina</span>
+          )}
+        </button>
+      ) : (
+        <button
+          type="button"
+          disabled={true}
+          className="w-full min-h-[56px] rounded-xl bg-slate-200 text-slate-700 border-2 border-slate-300 font-extrabold text-base cursor-not-allowed flex items-center justify-center gap-2 shadow-sm"
+        >
+          <span>Falta cubrir ${(remainingUsdCents / 100).toFixed(2)} USD para finalizar</span>
+        </button>
+      )}
 
     </div>
   );

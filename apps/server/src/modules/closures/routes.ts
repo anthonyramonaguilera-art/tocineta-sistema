@@ -61,7 +61,7 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    return { id: 'usr_cajera_principal', name: 'Cajera Principal', role: 'cajera', permissions: [] };
+    return { id: 'usr_cajera', name: 'CAJERA', role: 'cajera', permissions: [] };
   };
 
   // 1. Arqueo Ciego de Sesión de Caja (POST /api/cash-sessions/:id/blind-count)

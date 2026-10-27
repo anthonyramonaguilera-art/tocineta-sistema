@@ -9,6 +9,7 @@ import { initSqlite, getDatabaseContext } from '../src/db/connection.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
+import { loginAs } from './test-helpers.js';
 
 describe('Hito M3 - API de Catálogo, Gestor de Menú, Sincronización y Disponibilidad (@tocineta/server)', () => {
   let app: FastifyInstance;
@@ -38,45 +39,11 @@ describe('Hito M3 - API de Catálogo, Gestor de Menú, Sincronización y Disponi
     await app.ready();
 
     // Obtener tokens de autenticación para cada rol
-    // Admin (Sra. Olinelcys, PIN: 123456)
-    const resAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_olinelcys', pin: '123456' }
-    });
-    adminToken = JSON.parse(resAdmin.payload).token;
-
-    // Supervisor (PIN: 654321)
-    const resSup = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_supervisor_turno', pin: '654321' }
-    });
-    supervisorToken = JSON.parse(resSup.payload).token;
-
-    // Cajera (PIN: 1111)
-    const resCaj = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: '1111' }
-    });
-    cajeraToken = JSON.parse(resCaj.payload).token;
-
-    // Mesonero (PIN: 2222)
-    const resMes = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_mesonero_carlos', pin: '2222' }
-    });
-    mesoneroToken = JSON.parse(resMes.payload).token;
-
-    // Cocinero (PIN: 4444)
-    const resCoc = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cocina_plancha', pin: '4444' }
-    });
-    cocineroToken = JSON.parse(resCoc.payload).token;
+    adminToken = (await loginAs(app, 'admin', rawDb)).token;
+    supervisorToken = (await loginAs(app, 'supervisor', rawDb)).token;
+    cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
+    mesoneroToken = (await loginAs(app, 'mesero', rawDb)).token;
+    cocineroToken = (await loginAs(app, 'plancha', rawDb)).token;
   });
 
   afterAll(async () => {
@@ -335,7 +302,7 @@ describe('Hito M3 - API de Catálogo, Gestor de Menú, Sincronización y Disponi
         LIMIT 1
       `).get() as any;
       expect(audit).toBeDefined();
-      expect(audit.actor_user_id).toBe('usr_admin_olinelcys');
+      expect(audit.actor_user_id).toBe('usr_admin');
     });
   });
 

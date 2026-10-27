@@ -10,6 +10,7 @@ import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { buildServer } from '../src/server.js';
 import type { FastifyInstance } from 'fastify';
+import { loginAs, ensureTestSupervisor } from './test-helpers.js';
 
 describe('Hito M8 - Arqueo Ciego, Cierre Z, Incidentes (Re-fire vs Refund) y Reportes Locales (@tocineta/server)', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_m8_test_${Date.now()}`);
@@ -37,38 +38,16 @@ describe('Hito M8 - Arqueo Ciego, Cierre Z, Incidentes (Re-fire vs Refund) y Rep
     await runMigrations(rawDb, { dbPath: tempDb });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    ensureTestSupervisor(rawDb);
 
     // Inicializar servidor Fastify de pruebas
     app = await buildServer({ disableStatic: true });
 
-    // Autenticar roles
-    const loginAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_olinelcys', pin: ADMIN_PIN }
-    });
-    adminToken = loginAdmin.json().token;
-
-    const loginSup = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_supervisor_turno', pin: SUPERVISOR_PIN }
-    });
-    supervisorToken = loginSup.json().token;
-
-    const loginCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: CAJERA_PIN }
-    });
-    cajeraToken = loginCajera.json().token;
-
-    const loginMesonero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_mesonero_carlos', pin: MESONERO_PIN }
-    });
-    mesoneroToken = loginMesonero.json().token;
+    // Autenticar roles usando helper canónico
+    adminToken = (await loginAs(app, 'admin', rawDb)).token;
+    supervisorToken = (await loginAs(app, 'supervisor', rawDb)).token;
+    cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
+    mesoneroToken = (await loginAs(app, 'mesonero', rawDb)).token;
   });
 
   afterAll(async () => {
@@ -532,7 +511,7 @@ describe('Hito M8 - Arqueo Ciego, Cierre Z, Incidentes (Re-fire vs Refund) y Rep
 
       expect(resPerf.statusCode).toBe(200);
       const metrics = resPerf.json().metrics;
-      expect(metrics.userId).toBe('usr_mesonero_carlos');
+      expect(metrics.userId).toBe('usr_mesero');
       expect(metrics.ordersCount).toBeGreaterThanOrEqual(0);
       expect(metrics.incidentFreeRatePct).toBeGreaterThanOrEqual(0);
       expect(metrics.incidentFreeRatePct).toBeLessThanOrEqual(100);

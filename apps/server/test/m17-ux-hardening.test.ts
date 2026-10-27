@@ -17,6 +17,7 @@ import { initSqlite } from '../src/db/connection.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
+import { loginAs } from './test-helpers.js';
 
 function readWebSource(relPath: string): string {
   const candidates = [
@@ -53,29 +54,19 @@ describe('Hito M17 - Endurecimiento UX, Táctil y Robustez Operativa (@tocineta/
     // Abrir jornada de prueba
     rawDb.prepare(`
       INSERT INTO jornadas (id, opened_by_user_id, opened_at_ms, status, initial_cash_usd_cents)
-      VALUES ('jor_m17_test', 'usr_cajera_principal', ?, 'abierta', 5000)
+      VALUES ('jor_m17_test', 'usr_cajera', ?, 'abierta', 5000)
     `).run(Date.now());
 
     rawDb.prepare(`
       INSERT INTO cash_sessions (id, jornada_id, user_id, opened_at_ms, status)
-      VALUES ('cs_m17_test', 'jor_m17_test', 'usr_cajera_principal', ?, 'abierta')
+      VALUES ('cs_m17_test', 'jor_m17_test', 'usr_cajera', ?, 'abierta')
     `).run(Date.now());
 
     // Login cajera
-    const resCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: '1111' }
-    });
-    cajeraToken = JSON.parse(resCajera.payload).token;
+    cajeraToken = (await loginAs(app, 'cajera')).token;
 
     // Login mesonero
-    const resMesonero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_mesonero_carlos', pin: '2222' }
-    });
-    mesoneroToken = JSON.parse(resMesonero.payload).token;
+    mesoneroToken = (await loginAs(app, 'mesero')).token;
   });
 
   afterAll(async () => {
@@ -91,14 +82,14 @@ describe('Hito M17 - Endurecimiento UX, Táctil y Robustez Operativa (@tocineta/
   describe('Bloque 1: Endurecimiento E2E de Backend (Fastify + SQLite)', () => {
 
     it('Test Backend 1 (H-01 API): Validación de longitud de PIN por rol en /api/auth/change-pin', async () => {
-      // 1. Establecer must_change_pin = 1 para usr_mesonero_carlos
-      rawDb.prepare(`UPDATE users SET must_change_pin = 1 WHERE id = 'usr_mesonero_carlos'`).run();
+      // 1. Establecer must_change_pin = 1 para usr_mesero
+      rawDb.prepare(`UPDATE users SET must_change_pin = 1 WHERE id = 'usr_mesero'`).run();
 
       // Login de mesonero con mustChangePin === true
       const loginRes = await app.inject({
         method: 'POST',
         url: '/api/auth/login',
-        payload: { userId: 'usr_mesonero_carlos', pin: '2222' }
+        payload: { userId: 'usr_mesero', pin: '2222' }
       });
       expect(loginRes.statusCode).toBe(200);
       const loginData = JSON.parse(loginRes.payload);
@@ -126,14 +117,14 @@ describe('Hito M17 - Endurecimiento UX, Táctil y Robustez Operativa (@tocineta/
       expect(okChangeRes.statusCode).toBe(200);
       expect(JSON.parse(okChangeRes.payload).success).toBe(true);
 
-      const dbUser = rawDb.prepare(`SELECT must_change_pin FROM users WHERE id = 'usr_mesonero_carlos'`).get() as any;
+      const dbUser = rawDb.prepare(`SELECT must_change_pin FROM users WHERE id = 'usr_mesero'`).get() as any;
       expect(dbUser.must_change_pin).toBe(0);
 
       // 4. Usuario admin envía PIN de 6 dígitos -> 200 OK
       const adminLoginRes = await app.inject({
         method: 'POST',
         url: '/api/auth/login',
-        payload: { userId: 'usr_admin_olinelcys', pin: '123456' }
+        payload: { userId: 'usr_admin', pin: '123456' }
       });
       expect(adminLoginRes.statusCode).toBe(200);
       const adminToken = JSON.parse(adminLoginRes.payload).token;

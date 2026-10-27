@@ -83,7 +83,7 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     // Fallback por defecto si no hay sesión abierta
-    return { id: 'usr_cajera_principal', name: 'Cajera Principal', role: 'cajera', permissions: [] };
+    return { id: 'usr_cajera', name: 'CAJERA', role: 'cajera', permissions: [] };
   };
 
   // 1. Abrir o confirmar Jornada Diaria (POST /api/jornadas/open)

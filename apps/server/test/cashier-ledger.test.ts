@@ -9,6 +9,7 @@ import { initSqlite, getDatabaseContext } from '../src/db/connection.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
+import { loginAs, ensureTestSupervisor } from './test-helpers.js';
 
 describe('Hito M5 - Módulo de Caja, Calculadora Multimétodo, Vueltos Mixtos y Ledger Inmutable (@tocineta/server)', () => {
   let app: FastifyInstance;
@@ -28,33 +29,15 @@ describe('Hito M5 - Módulo de Caja, Calculadora Multimétodo, Vueltos Mixtos y 
     runMigrations(rawDb, path.join(__dirname, '../src/db/migrations'));
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    ensureTestSupervisor(rawDb);
 
     app = await buildServer({ logger: false, disableStatic: true });
     await app.ready();
 
-    // Login Admin
-    const resAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_olinelcys', pin: '123456' }
-    });
-    adminToken = JSON.parse(resAdmin.payload).token;
-
-    // Login Cajera
-    const resCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: '4321' }
-    });
-    cajeraToken = JSON.parse(resCajera.payload).token;
-
-    // Login Supervisor
-    const resSup = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_supervisor_turno', pin: '654321' }
-    });
-    supervisorToken = JSON.parse(resSup.payload).token;
+    // Logins canónicos usando helper
+    adminToken = (await loginAs(app, 'admin', rawDb)).token;
+    cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
+    supervisorToken = (await loginAs(app, 'supervisor', rawDb)).token;
   });
 
   afterAll(async () => {
@@ -108,7 +91,7 @@ describe('Hito M5 - Módulo de Caja, Calculadora Multimétodo, Vueltos Mixtos y 
       const data = JSON.parse(res.payload);
       expect(data.success).toBe(true);
       expect(data.cashSession.status).toBe('abierta');
-      expect(data.cashSession.user_id).toBe('usr_cajera_principal');
+      expect(data.cashSession.user_id).toBe('usr_cajera');
     });
   });
 

@@ -47,7 +47,7 @@ describe('Hito M14 - Módulo de Rentabilidad Profesional (Niveles 1 al 4) y Mód
     // Asegurar jornada de prueba abierta
     rawDb.prepare(`
       INSERT OR IGNORE INTO jornadas (id, opened_by_user_id, opened_at_ms, status)
-      VALUES (?, 'usr_admin_olinelcys', ?, 'abierta')
+      VALUES (?, 'usr_admin', ?, 'abierta')
     `).run(testJornadaId, Date.now());
   });
 
@@ -150,7 +150,7 @@ describe('Hito M14 - Módulo de Rentabilidad Profesional (Niveles 1 al 4) y Mód
       const result = bulkUpdateSupplyCosts(rawDb, [
         { id: 'sup_pan_brioche', costPerUnitUsdCents: 45 }, // sube de 35 a 45
         { id: 'sup_carne_smash', costPerUnitUsdCents: 85 }  // sube de 75 a 85
-      ], 'usr_admin_olinelcys');
+      ], 'usr_admin');
 
       expect(result.updatedCount).toBe(2);
       expect(result.historyCount).toBe(2);
@@ -161,7 +161,7 @@ describe('Hito M14 - Módulo de Rentabilidad Profesional (Niveles 1 al 4) y Mód
 
       expect(historyRows).toBeDefined();
       expect(historyRows.new_cost_usd_cents).toBe(45);
-      expect(historyRows.changed_by_user_id).toBe('usr_admin_olinelcys');
+      expect(historyRows.changed_by_user_id).toBe('usr_admin');
     });
 
     it('1.3 Calcula costo real de plato con Modificadores (Extra Tocineta, 15¢ Barra Libre y 35¢ Cortesías)', () => {
@@ -210,7 +210,7 @@ describe('Hito M14 - Módulo de Rentabilidad Profesional (Niveles 1 al 4) y Mód
           id, order_number, jornada_id, created_by_user_id, fulfillment_type,
           fulfillment_status, payment_status, rate_micro_bs,
           net_food_sales_usd_cents, total_to_collect_usd_cents, created_at_ms, updated_at_ms
-        ) VALUES (?, 201, ?, 'usr_admin_olinelcys', 'salon', 'entregado', 'pagado', 40000000, 3000, 3000, ?, ?)
+        ) VALUES (?, 201, ?, 'usr_admin', 'salon', 'entregado', 'pagado', 40000000, 3000, 3000, ?, ?)
       `).run(orderId, testJornadaId, Date.now(), Date.now());
 
       const insertLine = rawDb.prepare(`
@@ -243,7 +243,7 @@ describe('Hito M14 - Módulo de Rentabilidad Profesional (Niveles 1 al 4) y Mód
           id, order_number, jornada_id, created_by_user_id, fulfillment_type,
           fulfillment_status, payment_status, rate_micro_bs,
           net_food_sales_usd_cents, total_to_collect_usd_cents, created_at_ms, updated_at_ms
-        ) VALUES (?, 202, ?, 'usr_admin_olinelcys', 'salon', 'entregado', 'pagado', 40000000, 1400, 1400, ?, ?)
+        ) VALUES (?, 202, ?, 'usr_admin', 'salon', 'entregado', 'pagado', 40000000, 1400, 1400, ?, ?)
       `).run(orderId, testJornadaId, Date.now(), Date.now());
 
       // Línea de Texas Mex (2 medallones) con instrucción y modificador "Sin Pan / Envuelta en Lechuga"
@@ -278,7 +278,7 @@ describe('Hito M14 - Módulo de Rentabilidad Profesional (Niveles 1 al 4) y Mód
       const reconcileResult = reconcileCriticalInventory(rawDb, testJornadaId, [
         { supplyItemId: 'sup_pan_brioche', physicalQty: 94 }, // esperados: 100 - 4 = 96 -> faltan 2
         { supplyItemId: 'sup_carne_smash', physicalQty: 138 } // esperados: 150 - 12 = 138 -> exacto (0)
-      ], 'usr_admin_olinelcys');
+      ], 'usr_admin');
 
       expect(reconcileResult.items.length).toBe(CRITICAL_SUPPLIES.length);
 
@@ -309,7 +309,7 @@ describe('Hito M14 - Módulo de Rentabilidad Profesional (Niveles 1 al 4) y Mód
           gross_food_subtotal_usd_cents, discount_usd_cents, delivery_fee_usd_cents,
           net_food_sales_usd_cents, total_to_collect_usd_cents, created_at_ms, updated_at_ms
         ) VALUES (
-          ?, 203, ?, 'usr_admin_olinelcys', 'delivery',
+          ?, 203, ?, 'usr_admin', 'delivery',
           'entregado', 'pagado', 40000000,
           1000, 0, 200,
           1000, 1200, ?, ?
@@ -321,7 +321,7 @@ describe('Hito M14 - Módulo de Rentabilidad Profesional (Niveles 1 al 4) y Mód
         INSERT INTO payments (
           id, order_id, method, currency, amount_cents, rate_micro_bs,
           usd_equivalent_cents, recorded_by_user_id, created_at_ms
-        ) VALUES (?, ?, 'UBII', 'BS', 48000, 40000000, 1200, 'usr_admin_olinelcys', ?)
+        ) VALUES (?, ?, 'UBII', 'BS', 48000, 40000000, 1200, 'usr_admin', ?)
       `).run(`pay_ubii_${orderDeliveryId}`, orderDeliveryId, Date.now());
 
       // 2. Registrar gasto de turno en caja chica (Hielo: $5.00)
@@ -330,14 +330,14 @@ describe('Hito M14 - Módulo de Rentabilidad Profesional (Niveles 1 al 4) y Mód
         category: 'HIELO',
         amountUsdCents: 500,
         description: '2 Bolsas de hielo para bebidas',
-        authorizedByUserId: 'usr_admin_olinelcys'
+        authorizedByUserId: 'usr_admin'
       });
 
       // 3. Registrar merma de alimentos ($1.50)
       rawDb.prepare(`
         INSERT INTO worker_incidents (
           id, jornada_id, user_id, incident_type, description, estimated_loss_usd_cents, created_at_ms
-        ) VALUES (?, ?, 'usr_admin_olinelcys', 'MERMA_ALIMENTO', 'Pan caído accidentalmente', 150, ?)
+        ) VALUES (?, ?, 'usr_admin', 'MERMA_ALIMENTO', 'Pan caído accidentalmente', 150, ?)
       `).run(`inc_loss_${Date.now()}`, testJornadaId, Date.now());
 
       // 4. Calcular Utilidad Neta Real

@@ -183,7 +183,7 @@ export function getAdminStaffPerformance(
 /**
  * Cargar datos consolidados de la jornada para reportes
  */
-function getJornadaReportData(rawDb: Database.Database, jornadaId: string) {
+export function getJornadaReportData(rawDb: Database.Database, jornadaId: string) {
   const jornada = rawDb.prepare('SELECT * FROM jornadas WHERE id = ?').get(jornadaId) as any;
   if (!jornada) {
     const err: any = new Error(`Jornada '${jornadaId}' no encontrada`);

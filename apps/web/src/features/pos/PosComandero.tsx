@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import type { PosMenuResponse, PosProduct } from '../../types/menu.js';
@@ -51,6 +51,10 @@ export const PosComandero: React.FC = () => {
   const [fulfillmentType, setFulfillmentType] = useState<'salon' | 'para_llevar' | 'delivery'>('salon');
   const [deliveryTierCents, setDeliveryTierCents] = useState<number>(200);
   const [customerName, setCustomerName] = useState<string>('');
+  const [customerNameError, setCustomerNameError] = useState<boolean>(false);
+  const customerNameInputRef = useRef<HTMLInputElement>(null);
+  const customerNameInputMobileRef = useRef<HTMLInputElement>(null);
+  const [deliverySede, setDeliverySede] = useState<string>(() => localStorage.getItem('tocineta_active_sede') || 'Sede A: Los Olivos');
   const [customerPhone, setCustomerPhone] = useState<string>('');
   const [deliveryAddress, setDeliveryAddress] = useState<string>('');
   const [deliveryReference, setDeliveryReference] = useState<string>('');
@@ -158,6 +162,17 @@ export const PosComandero: React.FC = () => {
     },
     staleTime: 30000
   });
+
+  // Mesas actualmente con pedidos activos
+  const activeTableNumbers = useMemo(() => {
+    const set = new Set<string>();
+    for (const o of ordersData?.orders || []) {
+      if (o.fulfillment_status !== 'entregado' && o.fulfillment_status !== 'anulado' && o.table_number) {
+        set.add(o.table_number);
+      }
+    }
+    return set;
+  }, [ordersData]);
 
   // Lista plana de productos
   const allProducts = useMemo(() => {
@@ -318,6 +333,21 @@ export const PosComandero: React.FC = () => {
   const handleSubmitOrder = async (payNow: boolean = false) => {
     if (cart.length === 0) return;
 
+    // Validación estricta: Nombre y Apellido del Cliente es obligatorio (mínimo 3 caracteres)
+    if (!customerName || customerName.trim().length < 3) {
+      setCustomerNameError(true);
+      if (isMobileCartOpen) {
+        customerNameInputMobileRef.current?.focus();
+      } else {
+        customerNameInputRef.current?.focus();
+      }
+      setStatusNotification({
+        type: 'error',
+        message: '⚠️ Ingresa el Nombre y Apellido del cliente para identificar la comanda.'
+      });
+      return;
+    }
+
     setIsSubmitting(true);
     setStatusNotification(null);
 
@@ -363,12 +393,12 @@ export const PosComandero: React.FC = () => {
             tableNumber,
             fulfillmentType,
             deliveryFeeUsdCents: fulfillmentType === 'delivery' ? deliveryFeeCents : 0,
-            customerName: fulfillmentType === 'delivery' ? (customerName.trim() || undefined) : undefined,
+            customerName: customerName.trim(),
             customerPhone: fulfillmentType === 'delivery' ? (customerPhone.trim() || undefined) : undefined,
             deliveryAddress: fulfillmentType === 'delivery' ? (deliveryAddress.trim() || undefined) : undefined,
             deliveryReference: fulfillmentType === 'delivery' ? (deliveryReference.trim() || undefined) : undefined,
             motorizadoId: fulfillmentType === 'delivery' ? (motorizadoId || undefined) : undefined,
-            notes,
+            notes: fulfillmentType === 'delivery' ? (notes.trim() ? `[${deliverySede}] ${notes.trim()}` : `[${deliverySede}]`) : (notes.trim() || undefined),
             lines: linesPayload
           })
         });
@@ -411,9 +441,9 @@ export const PosComandero: React.FC = () => {
     const orderPayload = {
       tableNumber,
       fulfillmentType,
-      notes: notes.trim() || undefined,
+      notes: fulfillmentType === 'delivery' ? (notes.trim() ? `[${deliverySede}] ${notes.trim()}` : `[${deliverySede}]`) : (notes.trim() || undefined),
       deliveryFeeUsdCents: fulfillmentType === 'delivery' ? deliveryFeeCents : 0,
-      customerName: fulfillmentType === 'delivery' ? (customerName.trim() || undefined) : undefined,
+      customerName: customerName.trim(),
       customerPhone: fulfillmentType === 'delivery' ? (customerPhone.trim() || undefined) : undefined,
       deliveryAddress: fulfillmentType === 'delivery' ? (deliveryAddress.trim() || undefined) : undefined,
       deliveryReference: fulfillmentType === 'delivery' ? (deliveryReference.trim() || undefined) : undefined,
@@ -952,50 +982,205 @@ export const PosComandero: React.FC = () => {
             )}
           </div>
 
-          {/* Selector Táctil de Mesa y Tipo de Pedido */}
+          {/* 1. CAMPO OBLIGATORIO: NOMBRE Y APELLIDO DEL CLIENTE */}
+          <div className="space-y-1.5 bg-slate-50 dark:bg-slate-800/70 p-3 rounded-2xl border-2 border-slate-200 dark:border-slate-700">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-black uppercase tracking-wider text-slate-900 dark:text-slate-100 flex items-center gap-1">
+                <span>👤 NOMBRE Y APELLIDO DEL CLIENTE:</span>
+              </label>
+              {customerNameError && (
+                <span className="text-red-600 dark:text-red-400 font-black text-[10px] animate-pulse">
+                  ¡Obligatorio!
+                </span>
+              )}
+            </div>
+            <input
+              ref={customerNameInputRef}
+              type="text"
+              placeholder="Ej: Juan Pérez..."
+              value={customerName}
+              onChange={e => {
+                setCustomerName(e.target.value);
+                if (customerNameError && e.target.value.trim().length >= 3) {
+                  setCustomerNameError(false);
+                }
+              }}
+              className={`w-full min-h-[46px] rounded-xl px-3.5 text-sm font-bold outline-none transition-all ${
+                customerNameError
+                  ? 'bg-red-50 border-2 border-red-500 text-red-950 placeholder-red-400 focus:ring-2 focus:ring-red-400'
+                  : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:border-amber-500'
+              }`}
+            />
+          </div>
+
+          {/* 2. SELECTOR TÁCTIL UNIFICADO DE MODALIDAD (3 TARJETAS CLARAS) */}
           <div className="space-y-2">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted">
-                Ubicación / Mesa:
-              </span>
-              <select
-                value={tableNumber}
-                onChange={e => setTableNumber(e.target.value)}
-                className="bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-1.5 text-xs font-bold text-tocineta-yellow outline-none min-h-[42px]"
+            <div className="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
+              <button
+                type="button"
+                onClick={() => {
+                  setFulfillmentType('salon');
+                  if (tableNumber === 'Para Llevar' || tableNumber === 'Delivery') {
+                    setTableNumber('Mesa 1');
+                  }
+                }}
+                className={`min-h-[48px] rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center p-1 cursor-pointer ${
+                  fulfillmentType === 'salon'
+                    ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
               >
-                {TABLE_OPTIONS.map(opt => (
-                  <option key={opt} value={opt}>{opt}</option>
-                ))}
-              </select>
+                <span className="text-sm">🍽️</span>
+                <span>Comer Aquí</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFulfillmentType('para_llevar');
+                  setTableNumber('Para Llevar');
+                }}
+                className={`min-h-[48px] rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center p-1 cursor-pointer ${
+                  fulfillmentType === 'para_llevar'
+                    ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span className="text-sm">🛍️</span>
+                <span>Para Llevar</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setFulfillmentType('delivery');
+                  setTableNumber('Delivery');
+                }}
+                className={`min-h-[48px] rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center p-1 cursor-pointer ${
+                  fulfillmentType === 'delivery'
+                    ? 'bg-amber-500 text-slate-950 shadow-md scale-[1.02]'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <span className="text-sm">🛵</span>
+                <span>Delivery</span>
+              </button>
             </div>
 
-            {/* Segmented Control de Modalidad de Despacho */}
-            <div className="grid grid-cols-3 gap-1 bg-tocineta-bg p-1 rounded-2xl border border-tocineta-border">
-              {(['salon', 'para_llevar', 'delivery'] as const).map(type => (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => setFulfillmentType(type)}
-                  className={`min-h-[48px] rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
-                    fulfillmentType === type
-                      ? 'bg-tocineta-yellow text-tocineta-bg shadow'
-                      : 'text-tocineta-muted hover:text-white'
-                  }`}
-                >
-                  {type === 'salon' ? '🍽️ Salón' : type === 'para_llevar' ? '🛍️ Llevar' : '🛵 Delivery'}
-                </button>
-              ))}
-            </div>
+            {/* MODALIDAD 1: COMER AQUÍ -> SELECTOR VISUAL RÁPIDO DE MESAS */}
+            {fulfillmentType === 'salon' && (
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    Mesa del Salón:
+                  </span>
+                  <span className="text-[10px] font-black text-amber-800 dark:text-amber-300 bg-amber-100 dark:bg-amber-950 px-2 py-0.5 rounded-full border border-amber-300 dark:border-amber-700">
+                    {tableNumber}
+                  </span>
+                </div>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {TABLE_OPTIONS.map(opt => {
+                    const isSelected = tableNumber === opt;
+                    const hasActiveOrder = activeTableNumbers.has(opt);
+                    return (
+                      <button
+                        key={opt}
+                        type="button"
+                        onClick={() => setTableNumber(opt)}
+                        className={`min-h-[44px] px-1 py-1 rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center border cursor-pointer ${
+                          isSelected
+                            ? 'bg-amber-500 text-slate-950 border-amber-600 shadow-md ring-2 ring-amber-400'
+                            : hasActiveOrder
+                            ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 text-amber-800 dark:text-amber-300'
+                            : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:border-amber-400'
+                        }`}
+                      >
+                        <span>{opt.replace('Mesa ', 'M-')}</span>
+                        {hasActiveOrder && (
+                          <span className="text-[9px] font-bold opacity-80">● Activa</span>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
-            {/* Si es delivery: Panel Operativo de Despacho, Zonas y Motorizado */}
+            {/* MODALIDAD 2: PARA LLEVAR -> FLUJO DIRECTO SIN MESA */}
+            {fulfillmentType === 'para_llevar' && (
+              <div className="p-3 bg-emerald-50 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200 dark:border-emerald-800 text-xs text-emerald-800 dark:text-emerald-300 font-bold flex items-center gap-2">
+                <span className="text-xl">🛍️</span>
+                <span>Pedido para entrega en Mostrador / Para Llevar sin mesa asignada.</span>
+              </div>
+            )}
+
+            {/* MODALIDAD 3: DELIVERY -> DESPLIEGUE PASO A PASO */}
             {fulfillmentType === 'delivery' && (
-              <div className="p-3 bg-tocineta-bg border border-tocineta-border rounded-2xl space-y-2.5">
-                {/* 4 Botones Táctiles de Tarifa / Zona + Manual */}
+              <div className="p-3 bg-slate-50 dark:bg-slate-800/60 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-2.5">
+                {/* 1. Sede de salida */}
                 <div>
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-tocineta-muted block mb-1">
+                  <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                    📍 Sede de Salida:
+                  </span>
+                  <div className="grid grid-cols-2 gap-1.5">
+                    {['Sede A: Los Olivos', 'Sede B: Alta Vista'].map(s => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setDeliverySede(s)}
+                        className={`min-h-[40px] px-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
+                          deliverySede === s
+                            ? 'bg-amber-500 text-slate-950 shadow-md'
+                            : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        📍 {s.replace('Sede ', '')}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 2. Teléfono */}
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
+                    📞 Teléfono de Contacto:
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Ej: 0414-1234567..."
+                    value={customerPhone}
+                    onChange={e => setCustomerPhone(e.target.value)}
+                    className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 text-xs font-mono font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                {/* 3. Dirección exacta y Punto de referencia */}
+                <div className="space-y-1.5">
+                  <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block">
+                    🏠 Dirección de Entrega:
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Dirección exacta de entrega..."
+                    value={deliveryAddress}
+                    onChange={e => setDeliveryAddress(e.target.value)}
+                    className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-amber-500"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Punto de referencia (ej: Casa blanca frente a plaza)..."
+                    value={deliveryReference}
+                    onChange={e => setDeliveryReference(e.target.value)}
+                    className="w-full min-h-[38px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 text-[11px] text-slate-900 dark:text-white placeholder-slate-400 outline-none focus:border-amber-500"
+                  />
+                </div>
+
+                {/* 4. Tarifa de Zona */}
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block mb-1">
                     Tarifa de Delivery (Fondo Motorizado):
                   </span>
-                  <div className="grid grid-cols-4 gap-1">
+                  <div className="grid grid-cols-4 gap-1.5">
                     {[
                       { cents: 200, label: '+$2.00' },
                       { cents: 300, label: '+$3.00' },
@@ -1006,10 +1191,10 @@ export const PosComandero: React.FC = () => {
                         key={t.cents}
                         type="button"
                         onClick={() => setDeliveryTierCents(t.cents)}
-                        className={`min-h-[48px] rounded-xl text-xs font-mono font-black transition-all ${
+                        className={`min-h-[44px] rounded-xl text-xs font-mono font-black transition-all cursor-pointer ${
                           deliveryTierCents === t.cents
-                            ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                            : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+                            ? 'bg-amber-500 text-slate-950 shadow-md'
+                            : 'bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300'
                         }`}
                       >
                         {t.label}
@@ -1018,76 +1203,47 @@ export const PosComandero: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Datos del Cliente */}
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    placeholder="Nombre del Cliente"
-                    value={customerName}
-                    onChange={e => setCustomerName(e.target.value)}
-                    className="min-h-[40px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none focus:border-tocineta-yellow"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Teléfono (ej: 0414...)"
-                    value={customerPhone}
-                    onChange={e => setCustomerPhone(e.target.value)}
-                    className="min-h-[40px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none focus:border-tocineta-yellow font-mono"
-                  />
-                </div>
-
-                {/* Dirección y Punto de Referencia */}
-                <div className="space-y-1.5">
-                  <input
-                    type="text"
-                    placeholder="Dirección exacta de entrega..."
-                    value={deliveryAddress}
-                    onChange={e => setDeliveryAddress(e.target.value)}
-                    className="w-full min-h-[40px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none focus:border-tocineta-yellow"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Punto de referencia (ej: Casa blanca frente a plaza)..."
-                    value={deliveryReference}
-                    onChange={e => setDeliveryReference(e.target.value)}
-                    className="w-full min-h-[38px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-[11px] text-white placeholder-tocineta-muted outline-none focus:border-tocineta-yellow"
-                  />
-                </div>
-
-                {/* Selector de Motorizado */}
+                {/* 5. Repartidor asignado */}
                 <div className="space-y-1">
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-tocineta-muted block">
-                    Motorizado Asignado:
+                  <span className="text-[10px] font-black uppercase text-slate-600 dark:text-slate-400 block">
+                    Repartidor Asignado:
                   </span>
                   <select
                     value={motorizadoId}
                     onChange={e => setMotorizadoId(e.target.value)}
-                    className="w-full min-h-[42px] bg-tocineta-card border border-tocineta-border rounded-xl px-3 text-xs font-bold text-tocineta-yellow outline-none focus:border-tocineta-yellow"
+                    className="w-full min-h-[42px] bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-amber-400 outline-none focus:border-amber-500"
                   >
                     <option value="">-- Sin asignar / Por despachar --</option>
-                    {(driversData?.drivers || []).map(d => (
+                    {(driversData?.drivers && driversData.drivers.length > 0
+                      ? driversData.drivers
+                      : [
+                          { id: 'drv_1', name: 'REPARTIDOR 1', phone: '' },
+                          { id: 'drv_2', name: 'REPARTIDOR 2', phone: '' },
+                          { id: 'drv_3', name: 'REPARTIDOR 3', phone: '' }
+                        ]
+                    ).map(d => (
                       <option key={d.id} value={d.id}>
-                        🛵 {d.name} ({d.phone})
+                        🛵 {d.name} {d.phone ? `(${d.phone})` : ''}
                       </option>
                     ))}
                   </select>
                 </div>
 
-                {/* Control de Efectivo en Mano del Motorizado */}
+                {/* 6. Efectivo en mano */}
                 <button
                   type="button"
                   onClick={() => setCashCollectedByDriver(prev => !prev)}
-                  className={`w-full min-h-[42px] px-3 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between ${
+                  className={`w-full min-h-[42px] px-3 rounded-xl border text-left text-xs font-bold transition-all flex items-center justify-between cursor-pointer ${
                     cashCollectedByDriver
-                      ? 'bg-amber-500/20 border-amber-500/60 text-amber-300'
-                      : 'bg-tocineta-card border-tocineta-border text-tocineta-muted hover:text-white'
+                      ? 'bg-amber-100 border-amber-500 text-amber-950 font-black'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400'
                   }`}
                 >
                   <div className="flex items-center gap-2">
                     <span>💵</span>
-                    <span className="text-[11px]">Cobrado en efectivo por el motorizado</span>
+                    <span className="text-[11px]">Cobrado en efectivo por el repartidor</span>
                   </div>
-                  <span className="font-mono text-xs">
+                  <span className="font-mono text-xs font-black">
                     {cashCollectedByDriver ? '✓ SÍ (En mano)' : '✕ NO'}
                   </span>
                 </button>
@@ -1361,114 +1517,218 @@ export const PosComandero: React.FC = () => {
 
             {/* Contenido Desplazable del Pedido Móvil */}
             <div className="overflow-y-auto max-h-[45vh] p-4 space-y-3">
-              {/* Selector de Canal / Mesa */}
+              {/* Campo Obligatorio Nombre y Apellido del Cliente (Móvil) */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-black uppercase tracking-wider text-slate-800 dark:text-slate-200 flex items-center justify-between">
+                  <span>👤 Nombre y Apellido (Obligatorio):</span>
+                  <span className="text-[10px] font-black bg-amber-500 text-slate-950 px-2 py-0.5 rounded-full">Requerido</span>
+                </label>
+                <input
+                  ref={customerNameInputMobileRef}
+                  type="text"
+                  placeholder="Ej: Juan Pérez..."
+                  value={customerName}
+                  onChange={e => {
+                    setCustomerName(e.target.value);
+                    if (customerNameError && e.target.value.trim().length >= 3) {
+                      setCustomerNameError(false);
+                    }
+                  }}
+                  className={`w-full min-h-[46px] rounded-xl px-3 text-sm font-bold transition-all outline-none ${
+                    customerNameError
+                      ? 'bg-red-50 dark:bg-red-950/40 border-2 border-red-500 text-red-950 dark:text-red-100 ring-2 ring-red-400/40'
+                      : 'bg-white dark:bg-tocineta-card border-2 border-slate-300 dark:border-tocineta-border text-slate-900 dark:text-white focus:border-amber-500 shadow-sm'
+                  }`}
+                />
+                {customerNameError && (
+                  <p className="text-[11px] font-black text-red-600 dark:text-red-400 animate-pulse">
+                    ⚠️ Ingresa el Nombre y Apellido (mínimo 3 letras).
+                  </p>
+                )}
+              </div>
+
+              {/* Selector Táctil Unificado de Modalidad (3 Tarjetas Claras Móvil) */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted">
-                    Ubicación / Mesa:
-                  </span>
-                  <select
-                    value={tableNumber}
-                    onChange={e => setTableNumber(e.target.value)}
-                    className="bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs font-bold text-tocineta-yellow outline-none min-h-[44px]"
-                  >
-                    {TABLE_OPTIONS.map(opt => (
-                      <option key={opt} value={opt}>{opt}</option>
-                    ))}
-                  </select>
+                <label className="text-[11px] font-black uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                  Modalidad de Entrega:
+                </label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {[
+                    { id: 'salon', label: 'Comer Aquí', icon: '🍽️' },
+                    { id: 'para_llevar', label: 'Para Llevar', icon: '🛍️' },
+                    { id: 'delivery', label: 'Delivery', icon: '🛵' }
+                  ].map(m => {
+                    const isSelected = fulfillmentType === m.id;
+                    return (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => {
+                          setFulfillmentType(m.id as any);
+                          if (m.id === 'para_llevar') {
+                            setTableNumber('Para Llevar');
+                          } else if (m.id === 'delivery') {
+                            setTableNumber('Delivery');
+                          } else if (tableNumber === 'Para Llevar' || tableNumber === 'Delivery') {
+                            setTableNumber('Mesa 1');
+                          }
+                        }}
+                        className={`min-h-[50px] p-2 rounded-xl flex flex-col items-center justify-center transition-all text-center border-2 ${
+                          isSelected
+                            ? 'bg-amber-400 dark:bg-amber-500 border-amber-600 text-slate-950 shadow-md font-black'
+                            : 'bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold hover:bg-slate-200'
+                        }`}
+                      >
+                        <span className="text-base leading-none mb-0.5">{m.icon}</span>
+                        <span className="text-[11px] leading-tight">{m.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
 
-                {/* Modalidad: Salón / Llevar / Delivery */}
-                <div className="grid grid-cols-3 gap-1 bg-tocineta-bg p-1 rounded-2xl border border-tocineta-border">
-                  {(['salon', 'para_llevar', 'delivery'] as const).map(type => (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setFulfillmentType(type)}
-                      className={`min-h-[44px] rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
-                        fulfillmentType === type
-                          ? 'bg-tocineta-yellow text-tocineta-bg shadow font-black'
-                          : 'text-tocineta-muted hover:text-white'
-                      }`}
-                    >
-                      {type === 'salon' ? '🍽️ Salón' : type === 'para_llevar' ? '🛍️ Llevar' : '🛵 Delivery'}
-                    </button>
-                  ))}
-                </div>
+                {/* Contenido según modalidad seleccionada */}
+                {fulfillmentType === 'salon' && (
+                  <div className="p-3 bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-2xl space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-black text-slate-800 dark:text-slate-200">
+                        Selecciona Mesa:
+                      </span>
+                      <span className="text-[10px] font-bold text-slate-600 dark:text-slate-400">
+                        {activeTableNumbers.has(tableNumber) ? '🟠 Mesa con pedido' : '🟢 Mesa libre'}
+                      </span>
+                    </div>
 
-                {/* Delivery: Tarifas, Cliente y Motorizado */}
+                    <div className="grid grid-cols-4 gap-1.5">
+                      {TABLE_OPTIONS.filter(t => t !== 'Para Llevar' && t !== 'Delivery').map(tbl => {
+                        const isChosen = tableNumber === tbl;
+                        const hasActiveOrder = activeTableNumbers.has(tbl);
+                        return (
+                          <button
+                            key={tbl}
+                            type="button"
+                            onClick={() => setTableNumber(tbl)}
+                            className={`min-h-[44px] rounded-xl text-xs font-black transition-all flex flex-col items-center justify-center border-2 ${
+                              isChosen
+                                ? 'bg-amber-500 text-slate-950 border-amber-700 shadow-md scale-[1.02]'
+                                : hasActiveOrder
+                                ? 'bg-amber-100 dark:bg-amber-950/60 border-amber-400 text-amber-900 dark:text-amber-200'
+                                : 'bg-white dark:bg-slate-800 border-slate-300 dark:border-slate-700 text-slate-800 dark:text-slate-200 hover:bg-slate-50'
+                            }`}
+                          >
+                            <span>{tbl.replace('Mesa ', 'M-')}</span>
+                            <span className="text-[9px] font-normal leading-none mt-0.5 opacity-80">
+                              {hasActiveOrder ? 'Ocupada' : 'Libre'}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
+                {fulfillmentType === 'para_llevar' && (
+                  <div className="p-2.5 bg-amber-50 dark:bg-amber-950/30 border border-amber-300 dark:border-amber-700 rounded-xl text-center">
+                    <p className="text-xs font-black text-amber-950 dark:text-amber-200">
+                      🛍️ Pedido para entregar en mostrador.
+                    </p>
+                  </div>
+                )}
+
                 {fulfillmentType === 'delivery' && (
-                  <div className="p-3 bg-tocineta-bg border border-tocineta-border rounded-2xl space-y-2">
-                    <span className="text-[10px] font-bold uppercase tracking-wider text-tocineta-muted block">
-                      Tarifa de Delivery:
-                    </span>
-                    <div className="grid grid-cols-4 gap-1">
-                      {[
-                        { cents: 200, label: '+$2.00' },
-                        { cents: 300, label: '+$3.00' },
-                        { cents: 400, label: '+$4.00' },
-                        { cents: 500, label: '+$5.00' }
-                      ].map(t => (
-                        <button
-                          key={t.cents}
-                          type="button"
-                          onClick={() => setDeliveryTierCents(t.cents)}
-                          className={`min-h-[44px] rounded-xl text-xs font-mono font-black transition-all ${
-                            deliveryTierCents === t.cents
-                              ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted'
-                          }`}
-                        >
-                          {t.label}
-                        </button>
-                      ))}
+                  <div className="p-3 bg-slate-100 dark:bg-slate-900 border-2 border-slate-300 dark:border-slate-700 rounded-2xl space-y-2">
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 block mb-1">
+                        Sede de Salida:
+                      </label>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {[
+                          { id: 'Sede A: Los Olivos', label: 'Sede A (Los Olivos)' },
+                          { id: 'Sede B: Alta Vista', label: 'Sede B (Alta Vista)' }
+                        ].map(s => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => setDeliverySede(s.id)}
+                            className={`min-h-[38px] px-2 rounded-xl text-[11px] font-black border-2 transition-all ${
+                              deliverySede === s.id
+                                ? 'bg-amber-400 text-slate-950 border-amber-600 shadow-sm'
+                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                            }`}
+                          >
+                            {s.label}
+                          </button>
+                        ))}
+                      </div>
                     </div>
 
                     <div className="grid grid-cols-2 gap-2">
                       <input
-                        type="text"
-                        placeholder="Nombre cliente"
-                        value={customerName}
-                        onChange={e => setCustomerName(e.target.value)}
-                        className="min-h-[42px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none"
-                      />
-                      <input
-                        type="text"
-                        placeholder="Teléfono"
+                        type="tel"
+                        placeholder="Teléfono móvil..."
                         value={customerPhone}
                         onChange={e => setCustomerPhone(e.target.value)}
-                        className="min-h-[42px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none font-mono"
+                        className="min-h-[42px] bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-2.5 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none"
                       />
+                      <select
+                        value={motorizadoId}
+                        onChange={e => setMotorizadoId(e.target.value)}
+                        className="min-h-[42px] bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-2 text-xs font-black text-slate-900 dark:text-white outline-none"
+                      >
+                        <option value="">🛵 Sin repartidor</option>
+                        {(driversData?.drivers || [
+                          { id: 'rep-1', name: 'REPARTIDOR 1' },
+                          { id: 'rep-2', name: 'REPARTIDOR 2' },
+                          { id: 'rep-3', name: 'REPARTIDOR 3' }
+                        ]).map(d => (
+                          <option key={d.id} value={d.id}>🛵 {d.name}</option>
+                        ))}
+                      </select>
                     </div>
 
                     <input
                       type="text"
-                      placeholder="Dirección de entrega..."
+                      placeholder="Dirección exacta de entrega y punto de referencia..."
                       value={deliveryAddress}
                       onChange={e => setDeliveryAddress(e.target.value)}
-                      className="w-full min-h-[42px] bg-tocineta-card border border-tocineta-border rounded-xl px-2.5 text-xs text-white placeholder-tocineta-muted outline-none"
+                      className="w-full min-h-[42px] bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-2.5 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none"
                     />
 
-                    <select
-                      value={motorizadoId}
-                      onChange={e => setMotorizadoId(e.target.value)}
-                      className="w-full min-h-[42px] bg-tocineta-card border border-tocineta-border rounded-xl px-3 text-xs font-bold text-tocineta-yellow outline-none"
-                    >
-                      <option value="">-- Sin motorizado asignado --</option>
-                      {(driversData?.drivers || []).map(d => (
-                        <option key={d.id} value={d.id}>🛵 {d.name}</option>
-                      ))}
-                    </select>
+                    <div>
+                      <label className="text-[10px] font-black uppercase text-slate-700 dark:text-slate-300 block mb-1">
+                        Tarifa de Zona:
+                      </label>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {[
+                          { cents: 200, label: '$2.00' },
+                          { cents: 300, label: '$3.00' },
+                          { cents: 400, label: '$4.00' },
+                          { cents: 500, label: '$5.00' }
+                        ].map(t => (
+                          <button
+                            key={t.cents}
+                            type="button"
+                            onClick={() => setDeliveryTierCents(t.cents)}
+                            className={`min-h-[42px] rounded-xl text-xs font-black font-mono border-2 transition-all ${
+                              deliveryTierCents === t.cents
+                                ? 'bg-amber-400 text-slate-950 border-amber-600 shadow'
+                                : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-300 dark:border-slate-700'
+                            }`}
+                          >
+                            {t.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   </div>
                 )}
 
                 {/* Nota del Cliente */}
                 <input
                   type="text"
-                  placeholder="Nota u observaciones del cliente..."
+                  placeholder="Nota u observaciones (ej: sin cebolla)..."
                   value={notes}
                   onChange={e => setNotes(e.target.value)}
-                  className="w-full min-h-[44px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-white placeholder-tocineta-muted focus:border-tocineta-yellow outline-none"
+                  className="w-full min-h-[42px] bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-700 rounded-xl px-3 text-xs font-bold text-slate-900 dark:text-white placeholder-slate-400 outline-none"
                 />
               </div>
 
@@ -1683,6 +1943,33 @@ export const PosComandero: React.FC = () => {
                 >
                   ✕
                 </button>
+              </div>
+            </div>
+
+            {/* Franja compacta y clara con platos y cliente (Requerimiento 1.6) */}
+            <div className="bg-amber-50 dark:bg-amber-950/40 border-2 border-amber-300 dark:border-amber-700/60 rounded-2xl p-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xl">🍽️</span>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-amber-900 dark:text-amber-300 tracking-wider block">
+                    Cliente Registrado:
+                  </span>
+                  <strong className="text-sm font-black text-slate-900 dark:text-white">
+                    {expressCheckoutOrder.customer_name || expressCheckoutOrder.customerName || 'Cliente General'}
+                  </strong>
+                </div>
+              </div>
+              <div className="text-left sm:text-right border-t sm:border-t-0 pt-1 sm:pt-0 border-amber-200">
+                <span className="text-[10px] font-black uppercase text-amber-900 dark:text-amber-300 tracking-wider block">
+                  Platos a Cobrar:
+                </span>
+                <span className="text-xs font-black text-slate-900 dark:text-amber-100">
+                  {(expressCheckoutOrder.lines && expressCheckoutOrder.lines.length > 0)
+                    ? expressCheckoutOrder.lines.map((l: any) => `${l.quantity}x ${l.product_name || l.name || 'Ítem'}`).join(', ')
+                    : (cart.length > 0
+                        ? cart.map(c => `${c.quantity}x ${c.productName}`).join(', ')
+                        : 'Orden registrada')}
+                </span>
               </div>
             </div>
 

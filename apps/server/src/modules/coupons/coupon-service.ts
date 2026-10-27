@@ -180,7 +180,7 @@ export function applyCouponToOrder(
   rawDb: Database.Database,
   orderId: string,
   couponCode: string,
-  actorUserId = 'usr_cajera_principal'
+  actorUserId = 'usr_cajera'
 ) {
   const now = Date.now();
 
@@ -366,7 +366,7 @@ export function applyCouponToOrder(
 export function removeCouponFromOrder(
   rawDb: Database.Database,
   orderId: string,
-  actorUserId = 'usr_cajera_principal'
+  actorUserId = 'usr_cajera'
 ) {
   const now = Date.now();
   const order = rawDb.prepare('SELECT * FROM orders WHERE id = ?').get(orderId) as any;

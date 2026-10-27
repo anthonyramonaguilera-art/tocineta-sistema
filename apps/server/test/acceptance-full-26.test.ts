@@ -1,6 +1,6 @@
 /**
  * SUITE MAESTRA DE CERTIFICACIÓN DEFINITIVA — 26 PRUEBAS DE ACEPTACIÓN
- * Hito M15 - Tocineta Sonríe POS (Varons Media)
+ * Hito M15 - TOCINETA POS
  * 
  * Valida de punta a punta las 26 pruebas de aceptación oficiales correspondientes
  * a las Releases 1, 2 y 3 contenidas en el Informe Definitivo de Entrega:
@@ -108,6 +108,7 @@ import {
   calculateJornadaNetProfit
 } from '../src/modules/profitability/net-profit.js';
 import { generateMenuEngineeringReport } from '../src/modules/profitability/menu-engineering.js';
+import { loginAs } from './test-helpers.js';
 
 describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de Aceptación)', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_m15_acceptance_${Date.now()}`);
@@ -148,37 +149,11 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
     app = await buildServer({ disableStatic: true });
     await app.ready();
 
-    // Login Admin
-    const resAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_olinelcys', pin: ADMIN_PIN }
-    });
-    adminToken = resAdmin.json().token;
-
-    // Login Supervisor
-    const resSup = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_supervisor_turno', pin: SUPERVISOR_PIN }
-    });
-    supervisorToken = resSup.json().token;
-
-    // Login Cajera
-    const resCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: CAJERA_PIN }
-    });
-    cajeraToken = resCajera.json().token;
-
-    // Login Mesonero
-    const resMesonero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_mesonero_carlos', pin: MESONERO_PIN }
-    });
-    mesoneroToken = resMesonero.json().token;
+    // Logins canónicos usando helper
+    adminToken = (await loginAs(app, 'admin', rawDb)).token;
+    supervisorToken = (await loginAs(app, 'supervisor', rawDb)).token;
+    cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
+    mesoneroToken = (await loginAs(app, 'mesero', rawDb)).token;
 
     // Abrir Jornada de prueba
     const openJor = await app.inject({
@@ -509,7 +484,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
       method: 'POST',
       url: `/api/orders/${orderId}/authorize-without-payment`,
       headers: { authorization: `Bearer ${cajeraToken}` },
-      payload: { authorizerUserId: 'usr_supervisor_turno', pin: SUPERVISOR_PIN }
+      payload: { authorizerUserId: 'usr_supervisor_test', pin: SUPERVISOR_PIN }
     });
     expect(authRes.statusCode).toBe(200);
     const body = authRes.json();
@@ -658,7 +633,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
 
   it('Prueba 11: Prorrateo exacto Hamilton y comanda de cocina sin palabra COMBO', async () => {
     const ordClasico = createOrder(rawDb, {
-      createdByUserId: 'usr_cajera_principal',
+      createdByUserId: 'usr_cajera',
       customerName: 'Hamilton Clásico',
       fulfillmentType: 'salon',
       lines: [
@@ -686,7 +661,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
     expect(centsClasico.reduce((a, b) => a + b, 0)).toBe(790);
 
     const ordParaTi = createOrder(rawDb, {
-      createdByUserId: 'usr_cajera_principal',
+      createdByUserId: 'usr_cajera',
       customerName: 'Hamilton Para Ti',
       fulfillmentType: 'salon',
       lines: [
@@ -755,7 +730,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
       INSERT INTO cash_sessions (
         id, jornada_id, user_id, opening_cash_usd_cents, opening_cash_bs_cents,
         status, recount_used, opened_at_ms
-      ) VALUES ('sess_blind_test_26', ?, 'usr_cajera_principal', 5000, 100000, 'abierta', 0, ?)
+      ) VALUES ('sess_blind_test_26', ?, 'usr_cajera', 5000, 100000, 'abierta', 0, ?)
     `).run(currentJornadaId, Date.now());
 
     const res1 = await app.inject({
@@ -797,7 +772,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
 
   it('Prueba 15: Cambio de tasa BCV a mitad de turno no altera pagos históricos', async () => {
     const jorRes = openJornada(rawDb, {
-      openedByUserId: 'usr_admin_olinelcys',
+      openedByUserId: 'usr_admin',
       rateMicroBs: 40_000_000,
       rateStr: '40.00',
       initialCashUsdCents: 1000,
@@ -806,11 +781,11 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
 
     rawDb.prepare(`
       INSERT INTO cash_sessions (id, jornada_id, user_id, opening_cash_usd_cents, opening_cash_bs_cents, status, recount_used, opened_at_ms)
-      VALUES ('sess_rate_test_26', ?, 'usr_cajera_principal', 1000, 1000, 'abierta', 0, ?)
+      VALUES ('sess_rate_test_26', ?, 'usr_cajera', 1000, 1000, 'abierta', 0, ?)
     `).run(jorRes.id, Date.now());
 
     const ord = createOrder(rawDb, {
-      createdByUserId: 'usr_cajera_principal',
+      createdByUserId: 'usr_cajera',
       customerName: 'Cliente Tasa',
       fulfillmentType: 'salon',
       lines: [{ productId: 'prod_smash_clasica', quantity: 1, modifiers: [] }]
@@ -818,7 +793,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
 
     rawDb.prepare(`
       INSERT INTO payments (id, order_id, method, currency, amount_cents, rate_micro_bs, usd_equivalent_cents, recorded_by_user_id, created_at_ms)
-      VALUES ('pay_hist_26', ?, 'PAGO_MOVIL', 'BS', 14000, 40000000, 350, 'usr_cajera_principal', ?)
+      VALUES ('pay_hist_26', ?, 'PAGO_MOVIL', 'BS', 14000, 40000000, 350, 'usr_cajera', ?)
     `).run(ord.id, Date.now());
 
     const changeRateRes = await app.inject({
@@ -1105,7 +1080,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
   });
 
   it('Prueba 24: Modo Soporte Auditado (Quick Assist) y Motor de Actualizaciones Firmadas Ed25519 con Rollback', async () => {
-    // 1. Activar Modo Soporte exclusivamente con PIN de Administrador (Sra. Olinelcys)
+    // 1. Activar Modo Soporte exclusivamente con PIN de Administrador (ADMIN)
     _resetSupportStateForTesting();
 
     // Intentar con PIN no autorizado
@@ -1200,7 +1175,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
     });
     expect(resQrData.statusCode).toBe(200);
     const qrData = resQrData.json();
-    expect(qrData.storeName).toBe('Tocineta Sonríe');
+    expect(qrData.storeName).toBe('TOCINETA');
     expect(qrData.whatsappNumber).toBe(OFFICIAL_WHATSAPP_NUMBER);
     expect(qrData.currency.rateUpdatedAtCaracas).toBeDefined();
     expect(qrData.categories.length).toBeGreaterThan(0);
@@ -1248,7 +1223,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
       ]
     }, 40_000_000, '40.00 Bs/$');
 
-    expect(waResult.text).toContain('Tocineta Sonríe');
+    expect(waResult.text).toContain('TOCINETA');
     expect(waResult.text).toContain('Hamburguesa Texas Mex');
     expect(waResult.text).toContain('Sin Cebolla');
     expect(waResult.url).toContain('https://wa.me/584121928527');
@@ -1270,7 +1245,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
         net_food_sales_usd_cents, delivery_fee_usd_cents, discount_usd_cents,
         total_to_collect_usd_cents, created_at_ms, updated_at_ms
       ) VALUES (
-        'ord_leak_test_26', 991, ?, 'usr_admin_olinelcys', 'delivery',
+        'ord_leak_test_26', 991, ?, 'usr_admin', 'delivery',
         'Cliente Prueba Fuga', '04149991122', 'Calle Falsa 123',
         'entregado', 'pagado', 40000000,
         1400, 200, 0,
@@ -1301,7 +1276,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
     const updateRes = bulkUpdateSupplyCosts(rawDb, [
       { id: 'sup_carne_smash', costPerUnitUsdCents: 95 },
       { id: 'sup_pan_brioche', costPerUnitUsdCents: 45 }
-    ], 'usr_admin_olinelcys');
+    ], 'usr_admin');
     expect(updateRes.updatedCount).toBe(2);
 
     // Costo interno de Barra Libre (15¢) y Obsequio Cupón (35¢)
@@ -1312,7 +1287,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
     const testJornadaM15 = 'jornada_m15_inv_cert';
     rawDb.prepare(`
       INSERT OR IGNORE INTO jornadas (id, opened_by_user_id, opened_at_ms, status)
-      VALUES (?, 'usr_admin_olinelcys', ?, 'abierta')
+      VALUES (?, 'usr_admin', ?, 'abierta')
     `).run(testJornadaM15, Date.now());
 
     // Crear orden con Americana Deluxe (4 carnes) y Pan Brioche
@@ -1322,7 +1297,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
         id, order_number, jornada_id, created_by_user_id, fulfillment_type,
         fulfillment_status, payment_status, rate_micro_bs,
         net_food_sales_usd_cents, total_to_collect_usd_cents, created_at_ms, updated_at_ms
-      ) VALUES (?, 301, ?, 'usr_admin_olinelcys', 'salon', 'entregado', 'pagado', 40000000, 890, 890, ?, ?)
+      ) VALUES (?, 301, ?, 'usr_admin', 'salon', 'entregado', 'pagado', 40000000, 890, 890, ?, ?)
     `).run(orderDeluxeId, testJornadaM15, Date.now(), Date.now());
 
     rawDb.prepare(`
@@ -1339,7 +1314,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
         id, order_number, jornada_id, created_by_user_id, fulfillment_type,
         fulfillment_status, payment_status, rate_micro_bs,
         net_food_sales_usd_cents, total_to_collect_usd_cents, created_at_ms, updated_at_ms
-      ) VALUES (?, 302, ?, 'usr_admin_olinelcys', 'salon', 'entregado', 'pagado', 40000000, 690, 690, ?, ?)
+      ) VALUES (?, 302, ?, 'usr_admin', 'salon', 'entregado', 'pagado', 40000000, 690, 690, ?, ?)
     `).run(orderSinPanId, testJornadaM15, Date.now(), Date.now());
 
     const lineSinPanId = `line_${orderSinPanId}`;
@@ -1369,7 +1344,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
       category: 'HIELO',
       description: 'Bolsa de hielo para bebidas',
       amountUsdCents: 200,
-      authorizedByUserId: 'usr_admin_olinelcys'
+      authorizedByUserId: 'usr_admin'
     });
     expect(expenseRes.id).toBeDefined();
 

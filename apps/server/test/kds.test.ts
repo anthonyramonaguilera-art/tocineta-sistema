@@ -1,5 +1,5 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * SISTEMA OPERATIVO LOCAL TOCINETA
  * Pruebas de Aceptación del Hito M7: Pantalla de Cocina (KDS),
  * Estado de Líneas, Ensamblado Automático, Despacho y Filtros.
  */
@@ -16,6 +16,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { createRefirePrintJob } from '../src/modules/printing/worker.js';
+import { loginAs, ensureTestSupervisor } from './test-helpers.js';
 
 describe('Hito M7 - Pantalla de Cocina (KDS) y Ensamble Automático (@tocineta/server)', () => {
   let app: FastifyInstance;
@@ -35,42 +36,26 @@ describe('Hito M7 - Pantalla de Cocina (KDS) y Ensamble Automático (@tocineta/s
     await runMigrations(rawDb, { migrationsDir: path.join(__dirname, '../src/db/migrations') });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    ensureTestSupervisor(rawDb);
 
     app = await buildServer({ logger: false, disableStatic: true });
     await app.ready();
 
-    // Iniciar jornada de prueba
+    // Iniciar jornada de prueba con usuario canónico
     rawDb.prepare(`
       INSERT INTO jornadas (id, opened_by_user_id, opened_at_ms, status, initial_cash_usd_cents)
-      VALUES ('jor_m7_test', 'usr_cajera_principal', ?, 'abierta', 5000)
+      VALUES ('jor_m7_test', 'usr_cajera', ?, 'abierta', 5000)
     `).run(Date.now());
 
     rawDb.prepare(`
       INSERT INTO cash_sessions (id, jornada_id, user_id, opened_at_ms, status)
-      VALUES ('cs_m7_test', 'jor_m7_test', 'usr_cajera_principal', ?, 'abierta')
+      VALUES ('cs_m7_test', 'jor_m7_test', 'usr_cajera', ?, 'abierta')
     `).run(Date.now());
 
-    // Tokens
-    const resCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: '1111' }
-    });
-    cajeraToken = JSON.parse(resCajera.payload).token;
-
-    const resMesonero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_mesonero_carlos', pin: '2222' }
-    });
-    mesoneroToken = JSON.parse(resMesonero.payload).token;
-
-    const resCocinero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cocina_perros', pin: '5555' }
-    });
-    cocineroToken = JSON.parse(resCocinero.payload).token;
+    // Tokens canónicos usando helper
+    cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
+    mesoneroToken = (await loginAs(app, 'mesonero', rawDb)).token;
+    cocineroToken = (await loginAs(app, 'cocinero', rawDb)).token;
   });
 
   afterAll(async () => {

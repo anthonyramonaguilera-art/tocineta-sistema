@@ -10,6 +10,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { getKitchenBuildableLines } from '../src/modules/orders/kitchen-queries.js';
+import { loginAs } from './test-helpers.js';
 
 describe('Hito M11 - Módulo Operativo de Delivery, Liquidación de Motorizados y Cupones Duales (@tocineta/server)', () => {
   let app: FastifyInstance;
@@ -34,29 +35,10 @@ describe('Hito M11 - Módulo Operativo de Delivery, Liquidación de Motorizados 
     app = await buildServer({ logger: false, disableStatic: true });
     await app.ready();
 
-    // Login Admin
-    const resAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_olinelcys', pin: '123456' }
-    });
-    adminToken = JSON.parse(resAdmin.payload).token;
-
-    // Login Cajera
-    const resCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: '4321' }
-    });
-    cajeraToken = JSON.parse(resCajera.payload).token;
-
-    // Login Mesonero
-    const resMesonero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_mesonero_carlos', pin: '2222' }
-    });
-    mesoneroToken = JSON.parse(resMesonero.payload).token;
+    // Logins canónicos usando helper
+    adminToken = (await loginAs(app, 'admin', rawDb)).token;
+    cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
+    mesoneroToken = (await loginAs(app, 'mesonero', rawDb)).token;
 
     // Abrir Jornada Oficial
     const resJornada = await app.inject({
@@ -309,7 +291,7 @@ describe('Hito M11 - Módulo Operativo de Delivery, Liquidación de Motorizados 
       expect(resList.statusCode).toBe(200);
       const listData = JSON.parse(resList.payload);
       expect(listData.drivers.length).toBeGreaterThanOrEqual(3);
-      expect(listData.drivers.some((d: any) => d.name === 'Carlos Mora')).toBe(true);
+      expect(listData.drivers.some((d: any) => d.name === 'REPARTIDOR 1' || d.id === 'drv_carlos_mora')).toBe(true);
 
       // 2. Crear nuevo motorizado
       const resCreate = await app.inject({

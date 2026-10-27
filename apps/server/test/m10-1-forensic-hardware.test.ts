@@ -12,6 +12,7 @@ import { buildServer } from '../src/server.js';
 import { renderTicketToEscPos, prorateComboLargestRemainder } from '@tocineta/shared';
 import { createOrder } from '../src/modules/orders/order-service.js';
 import { reportOrderIncident } from '../src/modules/incidents/incidents-service.js';
+import { hashPin } from '../src/modules/auth/pin.js';
 
 describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocineta/server)', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_m10_1_test_${Date.now()}`);
@@ -126,7 +127,7 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
 
     if (combo && burger) {
       const orderRes = createOrder(rawDb, {
-        createdByUserId: 'usr_admin_olinelcys',
+        createdByUserId: 'usr_admin',
         fulfillmentType: 'salon',
         lines: [
           {
@@ -158,8 +159,16 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
     const prod = rawDb.prepare('SELECT id, price_usd_cents FROM products WHERE is_combo = 0 LIMIT 1').get() as any;
     const now = Date.now();
 
+    const userRow = rawDb.prepare("SELECT id FROM users WHERE role = 'admin' OR role = 'cajera' LIMIT 1").get() as any;
+    let testUserId = userRow?.id;
+    if (!testUserId) {
+      seedInitialUsers(rawDb);
+      const u = rawDb.prepare("SELECT id FROM users WHERE role = 'admin' LIMIT 1").get() as any;
+      testUserId = u?.id || 'usr_admin';
+    }
+
     const orderRes = createOrder(rawDb, {
-      createdByUserId: 'usr_admin_olinelcys',
+      createdByUserId: testUserId,
       customerName: 'Cliente Pago Movil',
       fulfillmentType: 'salon',
       lines: [{ productId: prod.id, quantity: 1 }]
@@ -172,7 +181,7 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
     if (!sRow) {
       const jRow = rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta' LIMIT 1").get() as any;
       const jId = jRow ? jRow.id : 'jornada_test_refund';
-      rawDb.prepare("INSERT OR IGNORE INTO cash_sessions (id, jornada_id, user_id, opened_at_ms, status) VALUES (?, ?, 'usr_admin_olinelcys', ?, 'abierta')").run(cashSessionId, jId, now);
+      rawDb.prepare("INSERT OR IGNORE INTO cash_sessions (id, jornada_id, user_id, opened_at_ms, status) VALUES (?, ?, ?, ?, 'abierta')").run(cashSessionId, jId, testUserId, now);
     }
 
     // Registrar pago original en payments como PAGO_MOVIL
@@ -181,8 +190,8 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
       INSERT INTO payments (
         id, order_id, method, currency, amount_cents, rate_micro_bs,
         usd_equivalent_cents, reference_code, recorded_by_user_id, created_at_ms
-      ) VALUES (?, ?, 'PAGO_MOVIL', 'BS', ?, 36600000, ?, 'REF-12345', 'usr_admin_olinelcys', ?)
-    `).run(paymentId, orderId, Math.round(prod.price_usd_cents * 36.6), prod.price_usd_cents, now);
+      ) VALUES (?, ?, 'PAGO_MOVIL', 'BS', ?, 36600000, ?, 'REF-12345', ?, ?)
+    `).run(paymentId, orderId, Math.round(prod.price_usd_cents * 36.6), prod.price_usd_cents, testUserId, now);
 
     rawDb.prepare("UPDATE orders SET payment_status = 'pagado' WHERE id = ?").run(orderId);
 
@@ -352,28 +361,25 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
   // ==========================================================================
   // TEST 8: seedInitialUsers sobre DB vacía
   // ==========================================================================
-  it('8. seedInitialUsers sobre DB vacía: admin y supervisor tienen must_change_pin = 1; el resto tiene 0', async () => {
+  // TEST 8: seedInitialUsers sobre DB vacía
+  // ==========================================================================
+  it('8. seedInitialUsers sobre DB vacía: crea los 5 perfiles corporativos con is_active = 1 y must_change_pin = 0', async () => {
     const freshDbPath = path.join(tempDir, 'fresh_seed.db');
     const freshRawDb = new DatabaseConstructor(freshDbPath);
     await runMigrations(freshRawDb, { dbPath: freshDbPath });
 
     seedInitialUsers(freshRawDb);
 
-    const admin = freshRawDb.prepare("SELECT must_change_pin FROM users WHERE role = 'admin'").get() as any;
+    const admin = freshRawDb.prepare("SELECT must_change_pin, is_active FROM users WHERE role = 'admin'").get() as any;
     expect(admin).toBeDefined();
-    expect(admin.must_change_pin).toBe(1);
+    expect(admin.must_change_pin).toBe(0);
+    expect(admin.is_active).toBe(1);
 
-    const supervisor = freshRawDb.prepare("SELECT must_change_pin FROM users WHERE role = 'supervisor'").get() as any;
-    expect(supervisor).toBeDefined();
-    expect(supervisor.must_change_pin).toBe(1);
-
-    const otherStaff = freshRawDb.prepare(
-      "SELECT must_change_pin FROM users WHERE role NOT IN ('admin', 'supervisor')"
-    ).all() as any[];
-
-    expect(otherStaff.length).toBeGreaterThan(0);
-    for (const staff of otherStaff) {
-      expect(staff.must_change_pin).toBe(0);
+    const users = freshRawDb.prepare("SELECT must_change_pin, is_active FROM users").all() as any[];
+    expect(users.length).toBe(5);
+    for (const u of users) {
+      expect(u.must_change_pin).toBe(0);
+      expect(u.is_active).toBe(1);
     }
 
     freshRawDb.close();
@@ -382,7 +388,7 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
   // ==========================================================================
   // TEST 9: Bootstrap automático de usuarios
   // ==========================================================================
-  it('9. Bootstrap automático: al iniciar sobre una base de datos sin usuarios, se crean automáticamente los 7 usuarios semilla', async () => {
+  it('9. Bootstrap automático: al iniciar sobre una base de datos sin usuarios, se crean automáticamente los 5 usuarios semilla', async () => {
     const bootstrapDbPath = path.join(tempDir, 'bootstrap_auto.db');
     const bootRawDb = new DatabaseConstructor(bootstrapDbPath);
     await runMigrations(bootRawDb, { dbPath: bootstrapDbPath });
@@ -398,20 +404,22 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
     }
 
     const countAfter = (bootRawDb.prepare('SELECT count(*) as cnt FROM users').get() as any).cnt;
-    expect(countAfter).toBe(7);
+    expect(countAfter).toBe(5);
 
     bootRawDb.close();
   });
 
   // ==========================================================================
-  // TEST 10: POST /api/auth/login con admin devuelve mustChangePin: true
+  // TEST 10: POST /api/auth/login con admin devuelve mustChangePin: true cuando está configurado
   // ==========================================================================
-  it('10. POST /api/auth/login con admin devuelve mustChangePin: true', async () => {
+  it('10. POST /api/auth/login con admin devuelve mustChangePin: true cuando está configurado', async () => {
+    rawDb.prepare("UPDATE users SET must_change_pin = 1 WHERE id = 'usr_admin'").run();
+
     const res = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: {
-        userId: 'usr_admin_olinelcys',
+        userId: 'usr_admin',
         pin: '123456'
       }
     });
@@ -426,13 +434,13 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
   // TEST 11: POST /api/auth/change-pin cambia el PIN y actualiza must_change_pin = 0
   // ==========================================================================
   it('11. POST /api/auth/change-pin cambia el PIN y actualiza must_change_pin = 0', async () => {
-    // 1. Iniciar sesión como supervisor
+    // 1. Iniciar sesión como admin (que tiene must_change_pin = 1)
     const resLogin = await app.inject({
       method: 'POST',
       url: '/api/auth/login',
       payload: {
-        userId: 'usr_supervisor_turno',
-        pin: '654321'
+        userId: 'usr_admin',
+        pin: '123456'
       }
     });
 
@@ -446,7 +454,7 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
       url: '/api/auth/change-pin',
       headers: { authorization: `Bearer ${token}` },
       payload: {
-        currentPin: '654321',
+        currentPin: '123456',
         newPin: '987654'
       }
     });
@@ -455,7 +463,7 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
     expect(resChange.json().success).toBe(true);
 
     // 3. Verificar que must_change_pin ahora es 0 en base de datos
-    const userRow = rawDb.prepare('SELECT must_change_pin FROM users WHERE id = ?').get('usr_supervisor_turno') as any;
+    const userRow = rawDb.prepare('SELECT must_change_pin FROM users WHERE id = ?').get('usr_admin') as any;
     expect(userRow.must_change_pin).toBe(0);
 
     // 4. Iniciar sesión con el nuevo PIN
@@ -463,12 +471,16 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
       method: 'POST',
       url: '/api/auth/login',
       payload: {
-        userId: 'usr_supervisor_turno',
+        userId: 'usr_admin',
         pin: '987654'
       }
     });
 
     expect(resNewLogin.statusCode).toBe(200);
     expect(resNewLogin.json().mustChangePin).toBe(false);
+
+    // Restaurar PIN original para no afectar otros tests
+    const { hash: origHash, salt: origSalt } = hashPin('123456');
+    rawDb.prepare("UPDATE users SET pin_hash = ?, pin_salt = ?, must_change_pin = 0 WHERE id = 'usr_admin'").run(origHash, origSalt);
   });
 });

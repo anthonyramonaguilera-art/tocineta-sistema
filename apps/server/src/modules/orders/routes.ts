@@ -18,7 +18,7 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
     const dbCtx = getDatabaseContext();
     const rawToken = extractSessionToken(request.headers.authorization);
 
-    let createdByUserId = 'usr_cajera_principal';
+    let createdByUserId = 'usr_cajera';
     if (rawToken) {
       const tokenHash = hashToken(rawToken);
       const session = dbCtx.rawDb.prepare(`
@@ -142,7 +142,7 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
     const dbCtx = getDatabaseContext();
     const rawToken = extractSessionToken(request.headers.authorization);
 
-    let actorUserId = 'usr_cajera_principal';
+    let actorUserId = 'usr_cajera';
     if (rawToken) {
       const tokenHash = hashToken(rawToken);
       const session = dbCtx.rawDb.prepare(`

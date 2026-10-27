@@ -78,6 +78,30 @@ html:not(.dark) .bg-\[\#0E1118\]\/95 {
   color: #0F172A;
 }
 
+/* Altísimo contraste garantizado para botones de cobro en Modo Claro */
+html:not(.dark) .denomination-btn {
+  color: #0F172A !important;
+  font-weight: 900 !important;
+  background-color: #F1F5F9 !important;
+  border-color: #CBD5E1 !important;
+}
+
+html:not(.dark) .denomination-btn:hover {
+  background-color: #F59E0B !important;
+  border-color: #D97706 !important;
+  color: #0F172A !important;
+}
+
+html:not(.dark) .btn-solid-dark {
+  background-color: #0F172A !important;
+  color: #FFFFFF !important;
+}
+
+html:not(.dark) .btn-solid-emerald {
+  background-color: #059669 !important;
+  color: #FFFFFF !important;
+}
+
 /* Scrollbar adaptativo */
 ::-webkit-scrollbar {
   width: 8px;

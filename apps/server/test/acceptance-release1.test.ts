@@ -1,6 +1,6 @@
 /**
  * SUITE MAESTRA DE CERTIFICACIÓN DE LA RELEASE 1 (22 PRUEBAS DE ACEPTACIÓN)
- * Hito M10.3 - Tocineta Sonríe POS (Varons Media)
+ * Hito M10.3 - TOCINETA POS
  * 
  * Valida de punta a punta los 22 escenarios de aceptación del Informe Definitivo:
  * 1. Operación 100% sin internet (LAN/Loopback sin dependencias WAN).
@@ -51,6 +51,7 @@ import {
 } from '../src/modules/backups/backup-service.js';
 import { restoreAndVerifyDatabase } from '../src/modules/backups/restore-engine.js';
 import { appendAuditEvent, verifyAuditChain } from '../src/modules/audit/audit-service.js';
+import { loginAs } from './test-helpers.js';
 
 describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de Aceptación)', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_m10_3_${Date.now()}`);
@@ -89,29 +90,10 @@ describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de 
     app = await buildServer({ disableStatic: true });
     await app.ready();
 
-    // Login Admin
-    const resAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_olinelcys', pin: ADMIN_PIN }
-    });
-    adminToken = resAdmin.json().token;
-
-    // Login Supervisor
-    const resSup = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_supervisor_turno', pin: SUPERVISOR_PIN }
-    });
-    supervisorToken = resSup.json().token;
-
-    // Login Cajera
-    const resCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: CAJERA_PIN }
-    });
-    cajeraToken = resCajera.json().token;
+    // Logins canónicos usando helper
+    adminToken = (await loginAs(app, 'admin', rawDb)).token;
+    supervisorToken = (await loginAs(app, 'supervisor', rawDb)).token;
+    cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
 
     // Abrir Jornada de prueba
     const openJor = await app.inject({
@@ -475,7 +457,7 @@ describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de 
       method: 'POST',
       url: `/api/orders/${orderId}/authorize-without-payment`,
       headers: { authorization: `Bearer ${cajeraToken}` },
-      payload: { authorizerUserId: 'usr_supervisor_turno', pin: SUPERVISOR_PIN }
+      payload: { authorizerUserId: 'usr_supervisor_test', pin: SUPERVISOR_PIN }
     });
     expect(authRes.statusCode).toBe(200);
     const body = authRes.json();
@@ -640,7 +622,7 @@ describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de 
   it('Prueba 11: Prorrateo exacto Hamilton y comanda de cocina sin palabra COMBO', async () => {
     // 1. Combo Clásico ($7.90 -> 325 + 325 + 140)
     const ordClasico = createOrder(rawDb, {
-      createdByUserId: 'usr_cajera_principal',
+      createdByUserId: 'usr_cajera',
       customerName: 'Hamilton Clásico',
       fulfillmentType: 'salon',
       lines: [
@@ -669,7 +651,7 @@ describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de 
 
     // 2. Combo Para Ti ($13.90 -> 615 + 615 + 160)
     const ordParaTi = createOrder(rawDb, {
-      createdByUserId: 'usr_cajera_principal',
+      createdByUserId: 'usr_cajera',
       customerName: 'Hamilton Para Ti',
       fulfillmentType: 'salon',
       lines: [
@@ -746,7 +728,7 @@ describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de 
       INSERT INTO cash_sessions (
         id, jornada_id, user_id, opening_cash_usd_cents, opening_cash_bs_cents,
         status, recount_used, opened_at_ms
-      ) VALUES ('sess_blind_test', ?, 'usr_cajera_principal', 5000, 100000, 'abierta', 0, ?)
+      ) VALUES ('sess_blind_test', ?, 'usr_cajera', 5000, 100000, 'abierta', 0, ?)
     `).run(currentJornadaId, Date.now());
 
     // 1er intento con diferencia -> RECOUNT_REQUIRED sin números
@@ -796,7 +778,7 @@ describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de 
   // ───────────────────────────────────────────────────────────────────────────
   it('Prueba 15: Cambio de tasa BCV a mitad de turno no altera pagos históricos', async () => {
     const jorRes = openJornada(rawDb, {
-      openedByUserId: 'usr_admin_olinelcys',
+      openedByUserId: 'usr_admin',
       rateMicroBs: 40_000_000, // 40.00
       rateStr: '40.00',
       initialCashUsdCents: 1000,
@@ -805,11 +787,11 @@ describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de 
 
     rawDb.prepare(`
       INSERT INTO cash_sessions (id, jornada_id, user_id, opening_cash_usd_cents, opening_cash_bs_cents, status, recount_used, opened_at_ms)
-      VALUES ('sess_rate_test', ?, 'usr_cajera_principal', 1000, 1000, 'abierta', 0, ?)
+      VALUES ('sess_rate_test', ?, 'usr_cajera', 1000, 1000, 'abierta', 0, ?)
     `).run(jorRes.id, Date.now());
 
     const ord = createOrder(rawDb, {
-      createdByUserId: 'usr_cajera_principal',
+      createdByUserId: 'usr_cajera',
       customerName: 'Cliente Tasa',
       fulfillmentType: 'salon',
       lines: [{ productId: 'prod_smash_clasica', quantity: 1, modifiers: [] }]
@@ -818,7 +800,7 @@ describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de 
     // Pagar a tasa 40.00 Bs/$ -> 140 Bs
     rawDb.prepare(`
       INSERT INTO payments (id, order_id, method, currency, amount_cents, rate_micro_bs, usd_equivalent_cents, recorded_by_user_id, created_at_ms)
-      VALUES ('pay_hist_01', ?, 'PAGO_MOVIL', 'BS', 14000, 40000000, 350, 'usr_cajera_principal', ?)
+      VALUES ('pay_hist_01', ?, 'PAGO_MOVIL', 'BS', 14000, 40000000, 350, 'usr_cajera', ?)
     `).run(ord.id, Date.now());
 
     // Cambiar la tasa a 45.00 Bs/$

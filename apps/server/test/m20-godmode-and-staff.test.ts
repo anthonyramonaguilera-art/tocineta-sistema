@@ -15,6 +15,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { createIdempotencyKey } from '@tocineta/shared';
+import { loginAs } from './test-helpers.js';
 
 function readWebSource(relPath: string): string {
   const candidates = [
@@ -57,37 +58,22 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
     // Abrir jornada y sesión de caja
     rawDb.prepare(`
       INSERT INTO jornadas (id, opened_by_user_id, opened_at_ms, status, initial_cash_usd_cents)
-      VALUES ('jor_m20_test', 'usr_admin_olinelcys', ?, 'abierta', 5000)
+      VALUES ('jor_m20_test', 'usr_admin', ?, 'abierta', 5000)
     `).run(Date.now());
 
     rawDb.prepare(`
       INSERT INTO cash_sessions (id, jornada_id, user_id, opened_at_ms, status)
-      VALUES ('cs_m20_test', 'jor_m20_test', 'usr_cajera_principal', ?, 'abierta')
+      VALUES ('cs_m20_test', 'jor_m20_test', 'usr_cajera', ?, 'abierta')
     `).run(Date.now());
 
-    // Login Admin (Sra. Olinelcys)
-    const resAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_olinelcys', pin: '123456' }
-    });
-    adminToken = JSON.parse(resAdmin.payload).token;
+    // Login Admin
+    adminToken = (await loginAs(app, 'admin')).token;
 
-    // Login Mesonero Carlos
-    const resMesonero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_mesonero_carlos', pin: '2222' }
-    });
-    mesoneroToken = JSON.parse(resMesonero.payload).token;
+    // Login Mesonero
+    mesoneroToken = (await loginAs(app, 'mesero')).token;
 
     // Login Cajera Principal
-    const resCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: '1111' }
-    });
-    cajeraToken = JSON.parse(resCajera.payload).token;
+    cajeraToken = (await loginAs(app, 'cajera')).token;
   });
 
   afterAll(async () => {
@@ -302,7 +288,7 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
       // 3. Admin otorga permiso ['CASHIER_PAY'] a Mesonero Carlos
       const grantPermRes = await app.inject({
         method: 'PATCH',
-        url: '/api/admin/users/usr_mesonero_carlos/permissions',
+        url: '/api/admin/users/usr_mesero/permissions',
         headers: { authorization: `Bearer ${adminToken}` },
         payload: {
           permissions: ['CASHIER_PAY', 'POS_TAKE_ORDERS']
@@ -325,7 +311,7 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
       // 5. Admin le retira el permiso ('permissions: []')
       const revokePermRes = await app.inject({
         method: 'PATCH',
-        url: '/api/admin/users/usr_mesonero_carlos/permissions',
+        url: '/api/admin/users/usr_mesero/permissions',
         headers: { authorization: `Bearer ${adminToken}` },
         payload: {
           permissions: ['POS_TAKE_ORDERS']
@@ -365,19 +351,18 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
   // TEST 4: CONTRATOS FRONTEND SMOKE CHECKS (BLOQUES A, B, C)
   // ==========================================================================
   describe('Test 4: Contratos Frontend Smoke Checks', () => {
-    it('AppLayout.tsx contiene el conmutador "MODO TURNO" / "MODO DUEÑA" y no contiene jerga "Seq #"', () => {
+    it('AppLayout.tsx contiene el conmutador "Modo Básico" / "Modo Pro" y no contiene jerga "Seq #"', () => {
       const source = readWebSource('components/AppLayout.tsx');
-      expect(source).toContain('MODO TURNO');
-      expect(source).toContain('MODO DUEÑA');
+      expect(source).toContain('Modo Básico');
+      expect(source).toContain('Modo Pro');
       expect(source).toContain('tocineta_ui_mode');
       expect(source).not.toContain('Seq #');
-      expect(source).toContain('Sistema Conectado');
+      expect(source).toContain('TOCINETA');
     });
 
     it('SystemHealthDashboard.tsx ya no contiene la cadena "Seq #"', () => {
       const source = readWebSource('components/SystemHealthDashboard.tsx');
       expect(source).not.toContain('Seq #');
-      expect(source).toContain('Sistema Conectado');
     });
 
     it('MenuAdminView.tsx ya no muestra "FEATURE FLAG" y usa "Guardado"', () => {

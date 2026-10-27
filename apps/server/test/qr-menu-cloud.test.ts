@@ -36,7 +36,7 @@ describe('Hito M13 - Menú Digital QR Estático, WhatsApp y Cloud Privacy Guard 
     // Asegurar jornada de prueba abierta
     rawDb.prepare(`
       INSERT OR IGNORE INTO jornadas (id, opened_by_user_id, opened_at_ms, status)
-      VALUES (?, 'usr_admin_olinelcys', ?, 'abierta')
+      VALUES (?, 'usr_admin', ?, 'abierta')
     `).run(testJornadaId, Date.now());
   });
 
@@ -63,7 +63,7 @@ describe('Hito M13 - Menú Digital QR Estático, WhatsApp y Cloud Privacy Guard 
       expect(body.success).toBe(true);
 
       // Verificación de datos de marca y contacto
-      expect(body.storeName).toBe('Tocineta Sonríe');
+      expect(body.storeName).toBe('TOCINETA');
       expect(body.slogan).toBe(OFFICIAL_SLOGAN);
       expect(body.whatsappNumber).toBe(OFFICIAL_WHATSAPP_NUMBER);
       expect(body.whatsappDisplay).toBe(OFFICIAL_WHATSAPP_DISPLAY);
@@ -127,12 +127,12 @@ describe('Hito M13 - Menú Digital QR Estático, WhatsApp y Cloud Privacy Guard 
 
       // Validar contenido del snapshot JSON
       const parsedJson = JSON.parse(jsonContent);
-      expect(parsedJson.storeName).toBe('Tocineta Sonríe');
+      expect(parsedJson.storeName).toBe('TOCINETA');
       expect(jsonContent).not.toContain('estimated_cost_usd_cents');
       expect(jsonContent).not.toContain('cat_malteadas');
 
       // Validar contenido del HTML autocontenido
-      expect(htmlContent).toContain('Tocineta Sonríe');
+      expect(htmlContent).toContain('TOCINETA');
       expect(htmlContent).toContain(OFFICIAL_SLOGAN);
       expect(htmlContent).toContain(OFFICIAL_WHATSAPP_DISPLAY);
       expect(htmlContent).toContain('Tasa BCV');
@@ -199,7 +199,7 @@ describe('Hito M13 - Menú Digital QR Estático, WhatsApp y Cloud Privacy Guard 
       expect(result.url).toContain(`https://wa.me/${OFFICIAL_WHATSAPP_NUMBER}?text=`);
 
       // 2. Desglose detallado de platos y Barra Libre
-      expect(result.text).toContain('¡HOLA, TOCINETA SONRÍE!');
+      expect(result.text).toContain('*¡HOLA, TOCINETA!*');
       expect(result.text).toContain('Combo Clásico 1 Smash');
       expect(result.text).toContain('Hamburguesa Clásica 1 Carne');
       expect(result.text).toContain('Pepinillos');
@@ -228,7 +228,7 @@ describe('Hito M13 - Menú Digital QR Estático, WhatsApp y Cloud Privacy Guard 
     it('2.2 Formatea orden para Retiro en Food Truck (Takeout) sin recargo de delivery', () => {
       const result = formatWhatsAppOrderMessage({
         fulfillmentType: 'takeout',
-        customerName: 'Olinelcys de Varón',
+        customerName: 'Cliente Retiro',
         items: [
           {
             name: 'Pepito Especial Mixto',
@@ -240,7 +240,7 @@ describe('Hito M13 - Menú Digital QR Estático, WhatsApp y Cloud Privacy Guard 
       }, 40_000_000);
 
       expect(result.text).toContain('🍔 Para Llevar / Retiro en Food Truck');
-      expect(result.text).toContain('Olinelcys de Varón');
+      expect(result.text).toContain('Cliente Retiro');
       expect(result.text).not.toContain('Tarifa Delivery');
       expect(result.text).toContain('TOTAL ESTIMADO: $7.00 / Bs. 280,00');
     });
@@ -267,7 +267,7 @@ describe('Hito M13 - Menú Digital QR Estático, WhatsApp y Cloud Privacy Guard 
           net_food_sales_usd_cents, delivery_fee_usd_cents, discount_usd_cents,
           total_to_collect_usd_cents, created_at_ms, updated_at_ms
         ) VALUES (
-          ?, 999, ?, 'usr_admin_olinelcys', 'delivery',
+          ?, 999, ?, 'usr_admin', 'delivery',
           ?, ?, ?, ?,
           'entregado', 'pagado', 40000000,
           1400, 200, 0,
@@ -332,7 +332,7 @@ describe('Hito M13 - Menú Digital QR Estático, WhatsApp y Cloud Privacy Guard 
           fulfillment_status, payment_status, rate_micro_bs,
           net_food_sales_usd_cents, total_to_collect_usd_cents, created_at_ms, updated_at_ms
         ) VALUES (
-          ?, 998, ?, 'usr_admin_olinelcys', 'delivery',
+          ?, 998, ?, 'usr_admin', 'delivery',
           'Alejandro Magno Bastardo', '04128765432',
           'Sector Villa Brasil Manzana 8 Casa 10',
           'entregado', 'pagado', 40000000,

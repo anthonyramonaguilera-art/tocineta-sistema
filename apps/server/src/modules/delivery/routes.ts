@@ -162,7 +162,7 @@ export const deliveryRoutes: FastifyPluginAsync = async (fastify) => {
       const result = settleDriver(dbCtx.rawDb, {
         jornadaId: targetJornadaId,
         driverId: body.driverId,
-        settledByUserId: user?.user_id || 'usr_cajera_principal',
+        settledByUserId: user?.user_id || 'usr_cajera',
         notes: body.notes,
         modeOverride: body.modeOverride
       });

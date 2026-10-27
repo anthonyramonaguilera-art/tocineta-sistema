@@ -16,6 +16,7 @@ import { decryptWithAge } from '../src/modules/backups/age-service.js';
 import { generateIdentity, identityToRecipient } from 'age-encryption';
 import { restoreAndVerifyDatabase } from '../src/modules/backups/restore-engine.js';
 import { generateEmergencySlipsPdf, formatSlipNumber } from '../src/modules/emergency/slips-generator.js';
+import { loginAs } from './test-helpers.js';
 
 describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y Modo Emergencia (@tocineta/server)', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_m9_test_${Date.now()}`);
@@ -26,10 +27,10 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
   let app: FastifyInstance;
 
   // Claves de prueba generadas efímeramente en runtime (Higiene de claves A.4)
-  let olinelcysPublic = '';
-  let olinelcysPrivate = '';
-  let varonsPublic = '';
-  let varonsPrivate = '';
+  let adminPublic = '';
+  let adminPrivate = '';
+  let supportPublic = '';
+  let supportPrivate = '';
 
   let adminToken = '';
   let supervisorToken = '';
@@ -45,10 +46,10 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
     fs.mkdirSync(tempUsbDir, { recursive: true });
 
     // Generar claves efímeras en RAM (Higiene de claves A.4)
-    olinelcysPrivate = await generateIdentity();
-    olinelcysPublic = await identityToRecipient(olinelcysPrivate);
-    varonsPrivate = await generateIdentity();
-    varonsPublic = await identityToRecipient(varonsPrivate);
+    adminPrivate = await generateIdentity();
+    adminPublic = await identityToRecipient(adminPrivate);
+    supportPrivate = await generateIdentity();
+    supportPublic = await identityToRecipient(supportPrivate);
 
     const dbCtx = initSqlite(tempDb);
     rawDb = dbCtx.rawDb;
@@ -59,35 +60,18 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
 
     app = await buildServer({ disableStatic: true });
 
-    // Autenticar usuarios para los tests
-    const resAdmin = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_admin_olinelcys', pin: ADMIN_PIN }
-    });
-    adminToken = resAdmin.json().token;
-
-    const resSup = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_supervisor_turno', pin: SUPERVISOR_PIN }
-    });
-    supervisorToken = resSup.json().token;
-
-    const resCaj = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: CAJERA_PIN }
-    });
-    cajeraToken = resCaj.json().token;
+    // Autenticar usuarios para los tests usando helper canónico
+    adminToken = (await loginAs(app, 'admin', rawDb)).token;
+    supervisorToken = (await loginAs(app, 'supervisor', rawDb)).token;
+    cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
   });
 
   afterAll(async () => {
     // Higiene de claves: limpiar variables de claves privadas en RAM
-    olinelcysPrivate = '';
-    olinelcysPublic = '';
-    varonsPrivate = '';
-    varonsPublic = '';
+    adminPrivate = '';
+    adminPublic = '';
+    supportPrivate = '';
+    supportPublic = '';
 
     await app.close();
     try {
@@ -177,7 +161,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
       const backupResult = await createEncryptedBackup(rawDb, {
         destinationDir: tempUsbDir,
         backupType: 'ENCRYPTED_USB_DAILY',
-        recipients: [olinelcysPublic, varonsPublic]
+        recipients: [adminPublic, supportPublic]
       });
 
       expect(backupResult.backupId).toMatch(/^bck_/);
@@ -212,17 +196,17 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
       await expect(decryptWithAge(fileBuffer, fakePrivateKey)).rejects.toThrow();
     });
 
-    it('Aceptación Dual: SÍ se descifra perfectamente con la clave privada de Sra. Olinelcys', async () => {
+    it('Aceptación Dual: SÍ se descifra perfectamente con la clave privada de ADMIN', async () => {
       const fileBuffer = fs.readFileSync(encryptedBackupFile);
-      const decrypted = await decryptWithAge(fileBuffer, olinelcysPrivate);
+      const decrypted = await decryptWithAge(fileBuffer, adminPrivate);
 
       expect(decrypted.length).toBeGreaterThan(0);
       expect(decrypted.slice(0, 16).toString('utf-8')).toContain('SQLite format 3');
     });
 
-    it('Aceptación Dual: SÍ se descifra perfectamente con la clave privada de Varons Media', async () => {
+    it('Aceptación Dual: SÍ se descifra perfectamente con la clave privada de Soporte', async () => {
       const fileBuffer = fs.readFileSync(encryptedBackupFile);
-      const decrypted = await decryptWithAge(fileBuffer, varonsPrivate);
+      const decrypted = await decryptWithAge(fileBuffer, supportPrivate);
 
       expect(decrypted.length).toBeGreaterThan(0);
       expect(decrypted.slice(0, 16).toString('utf-8')).toContain('SQLite format 3');
@@ -235,7 +219,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
         headers: { authorization: `Bearer ${adminToken}` },
         payload: {
           destinationDir: tempUsbDir,
-          recipients: [olinelcysPublic, varonsPublic]
+          recipients: [adminPublic, supportPublic]
         }
       });
 
@@ -254,7 +238,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
       // 1. Crear respaldo cifrado fresco
       const backupResult = await createEncryptedBackup(rawDb, {
         destinationDir: tempUsbDir,
-        recipients: [olinelcysPublic]
+        recipients: [adminPublic]
       });
 
       const restoredTargetDb = path.join(tempDir, 'restored_test.db');
@@ -262,7 +246,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
       // 2. Ejecutar restauración con clave privada autorizada
       const restoreRes = await restoreAndVerifyDatabase({
         backupFilePath: backupResult.encryptedFilePath,
-        privateKey: olinelcysPrivate,
+        privateKey: adminPrivate,
         targetDbPath: restoredTargetDb,
         dryRun: false
       });
@@ -347,14 +331,14 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
         method: 'POST',
         url: '/api/jornadas/open',
         headers: { authorization: `Bearer ${adminToken}` },
-        payload: { openedByUserId: 'usr_admin_olinelcys', initialCashUsdCents: 5000, initialCashBsCents: 100000 }
+        payload: { openedByUserId: 'usr_admin', initialCashUsdCents: 5000, initialCashBsCents: 100000 }
       });
 
       await app.inject({
         method: 'POST',
         url: '/api/cash-sessions/open',
         headers: { authorization: `Bearer ${cajeraToken}` },
-        payload: { userId: 'usr_cajera_principal', openingCashUsdCents: 2000, openingCashBsCents: 50000 }
+        payload: { userId: 'usr_cajera', openingCashUsdCents: 2000, openingCashBsCents: 50000 }
       });
 
       // Obtener un producto activo del catálogo

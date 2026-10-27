@@ -113,7 +113,7 @@ describe('Hito M2 - Esquema de Dominio, Catálogo Oficial y Triggers Contables (
       // Crear jornada de prueba
       rawDb.prepare(`
         INSERT OR IGNORE INTO jornadas (id, opened_by_user_id, opened_at_ms, status)
-        VALUES (?, 'usr_admin_olinelcys', ?, 'abierta')
+        VALUES (?, 'usr_admin', ?, 'abierta')
       `).run(jornadaId, now);
 
       // Crear Orden con 1 Combo Clásico ($7.90) + 1 Cupón Obsequio (Café de Cortesía $0.00)
@@ -124,7 +124,7 @@ describe('Hito M2 - Esquema de Dominio, Catálogo Oficial y Triggers Contables (
           total_to_collect_usd_cents, rate_micro_bs,
           payment_status, fulfillment_status, created_at_ms, updated_at_ms
         ) VALUES (
-          ?, 101, ?, 'usr_admin_olinelcys',
+          ?, 101, ?, 'usr_admin',
           790, 790,
           790, 40000000,
           'pagado', 'pendiente', ?, ?
@@ -271,7 +271,7 @@ describe('Hito M2 - Esquema de Dominio, Catálogo Oficial y Triggers Contables (
     beforeAll(() => {
       rawDb.prepare(`
         INSERT OR IGNORE INTO jornadas (id, opened_by_user_id, opened_at_ms, status)
-        VALUES (?, 'usr_admin_olinelcys', ?, 'abierta')
+        VALUES (?, 'usr_admin', ?, 'abierta')
       `).run(jornadaId, Date.now());
 
       // Insertar un asiento contable inicial en ledger_entries
@@ -312,7 +312,7 @@ describe('Hito M2 - Esquema de Dominio, Catálogo Oficial y Triggers Contables (
           total_to_collect_usd_cents, rate_micro_bs,
           payment_status, fulfillment_status, created_at_ms, updated_at_ms
         ) VALUES (
-          ?, 102, ?, 'usr_admin_olinelcys',
+          ?, 102, ?, 'usr_admin',
           1200, 1200,
           1200, 40000000,
           'autorizado_sin_pago', 'entregado', ?, ?
@@ -338,7 +338,7 @@ describe('Hito M2 - Esquema de Dominio, Catálogo Oficial y Triggers Contables (
           total_to_collect_usd_cents, rate_micro_bs,
           payment_status, fulfillment_status, created_at_ms, updated_at_ms
         ) VALUES (
-          ?, 103, ?, 'usr_admin_olinelcys',
+          ?, 103, ?, 'usr_admin',
           1200, 1200,
           1200, 40000000,
           'sin_pago', 'entregado', ?, ?

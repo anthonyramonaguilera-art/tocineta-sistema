@@ -75,7 +75,7 @@ export const couponRoutes: FastifyPluginAsync = async (fastify) => {
         dbCtx.rawDb,
         id,
         body.couponCode,
-        user?.user_id || 'usr_cajera_principal'
+        user?.user_id || 'usr_cajera'
       );
 
       return reply.status(200).send(result);
@@ -99,7 +99,7 @@ export const couponRoutes: FastifyPluginAsync = async (fastify) => {
       const result = removeCouponFromOrder(
         dbCtx.rawDb,
         id,
-        user?.user_id || 'usr_cajera_principal'
+        user?.user_id || 'usr_cajera'
       );
 
       return reply.status(200).send(result);

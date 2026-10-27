@@ -32,6 +32,7 @@ import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { canUserProcessPayments } from '../src/modules/cashier/cashier-service.js';
 import { PrintingWorker } from '../src/modules/printing/worker.js';
+import { loginAs } from './test-helpers.js';
 
 function readWebSource(relPath: string): string {
   const candidates = [
@@ -69,37 +70,22 @@ describe('Hito M18 — Suite de Calidad QA, RBAC en Caja, Detalle de Platos y Vu
     // Abrir jornada de prueba
     rawDb.prepare(`
       INSERT INTO jornadas (id, opened_by_user_id, opened_at_ms, status, initial_cash_usd_cents)
-      VALUES ('jor_m18_test', 'usr_cajera_principal', ?, 'abierta', 5000)
+      VALUES ('jor_m18_test', 'usr_cajera', ?, 'abierta', 5000)
     `).run(Date.now());
 
     rawDb.prepare(`
       INSERT INTO cash_sessions (id, jornada_id, user_id, opened_at_ms, status)
-      VALUES ('cs_m18_test', 'jor_m18_test', 'usr_cajera_principal', ?, 'abierta')
+      VALUES ('cs_m18_test', 'jor_m18_test', 'usr_cajera', ?, 'abierta')
     `).run(Date.now());
 
     // Login cajera
-    const resCajera = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cajera_principal', pin: '1111' }
-    });
-    cajeraToken = JSON.parse(resCajera.payload).token;
+    cajeraToken = (await loginAs(app, 'cajera')).token;
 
-    // Login mesonero (Carlos)
-    const resMesonero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_mesonero_carlos', pin: '2222' }
-    });
-    mesoneroToken = JSON.parse(resMesonero.payload).token;
+    // Login mesonero
+    mesoneroToken = (await loginAs(app, 'mesero')).token;
 
     // Login cocinero (Cocina Plancha)
-    const resCocinero = await app.inject({
-      method: 'POST',
-      url: '/api/auth/login',
-      payload: { userId: 'usr_cocina_plancha', pin: '4444' }
-    });
-    cocineroToken = JSON.parse(resCocinero.payload).token;
+    cocineroToken = (await loginAs(app, 'plancha')).token;
   });
 
   afterAll(async () => {
@@ -133,14 +119,14 @@ describe('Hito M18 — Suite de Calidad QA, RBAC en Caja, Detalle de Platos y Vu
           id, jornada_id, order_number, fulfillment_type, payment_status, fulfillment_status,
           gross_food_subtotal_usd_cents, net_food_sales_usd_cents, total_to_collect_usd_cents,
           rate_micro_bs, created_by_user_id, created_at_ms, updated_at_ms
-        ) VALUES (?, 'jor_m18_test', 901, 'salon', 'sin_pago', 'pendiente', 600, 600, 600, 40000000, 'usr_mesonero_carlos', ?, ?)
+        ) VALUES (?, 'jor_m18_test', 901, 'salon', 'sin_pago', 'pendiente', 600, 600, 600, 40000000, 'usr_mesero', ?, ?)
       `).run(orderId, now, now);
 
       // 2. Mesonero intenta pagar con su token Bearer
       const res = await app.inject({
         method: 'POST',
         url: `/api/orders/${orderId}/pay`,
-        headers: { authorization: `Bearer ${mesoneroToken}` },
+        headers: { authorization: `Bearer ${mesoneroToken}`, 'x-user-id': 'usr_mesero' },
         payload: {
           tenders: [{ method: 'cash_usd', amountCents: 600 }]
         }
@@ -158,7 +144,7 @@ describe('Hito M18 — Suite de Calidad QA, RBAC en Caja, Detalle de Platos y Vu
         ORDER BY created_at_ms DESC LIMIT 1
       `).get(orderId) as any;
       expect(audit).toBeDefined();
-      expect(audit.actor_user_id).toBe('usr_mesonero_carlos');
+      expect(audit.actor_user_id).toBe('usr_mesero');
     });
 
     it('Usuario con rol cocinero intenta POST /api/orders/:id/pay -> 403 Forbidden', async () => {
@@ -169,13 +155,13 @@ describe('Hito M18 — Suite de Calidad QA, RBAC en Caja, Detalle de Platos y Vu
           id, jornada_id, order_number, fulfillment_type, payment_status, fulfillment_status,
           gross_food_subtotal_usd_cents, net_food_sales_usd_cents, total_to_collect_usd_cents,
           rate_micro_bs, created_by_user_id, created_at_ms, updated_at_ms
-        ) VALUES (?, 'jor_m18_test', 902, 'salon', 'sin_pago', 'pendiente', 800, 800, 800, 40000000, 'usr_cocina_plancha', ?, ?)
+        ) VALUES (?, 'jor_m18_test', 902, 'salon', 'sin_pago', 'pendiente', 800, 800, 800, 40000000, 'usr_plancha', ?, ?)
       `).run(orderId, now, now);
 
       const res = await app.inject({
         method: 'POST',
         url: `/api/orders/${orderId}/pay`,
-        headers: { authorization: `Bearer ${cocineroToken}` },
+        headers: { authorization: `Bearer ${cocineroToken}`, 'x-user-id': 'usr_plancha' },
         payload: {
           tenders: [{ method: 'cash_usd', amountCents: 800 }]
         }
@@ -194,7 +180,7 @@ describe('Hito M18 — Suite de Calidad QA, RBAC en Caja, Detalle de Platos y Vu
           id, jornada_id, order_number, fulfillment_type, payment_status, fulfillment_status,
           gross_food_subtotal_usd_cents, net_food_sales_usd_cents, total_to_collect_usd_cents,
           rate_micro_bs, created_by_user_id, created_at_ms, updated_at_ms
-        ) VALUES (?, 'jor_m18_test', 903, 'salon', 'sin_pago', 'pendiente', 1000, 1000, 1000, 40000000, 'usr_cajera_principal', ?, ?)
+        ) VALUES (?, 'jor_m18_test', 903, 'salon', 'sin_pago', 'pendiente', 1000, 1000, 1000, 40000000, 'usr_cajera', ?, ?)
       `).run(orderId, now, now);
 
       const res = await app.inject({
@@ -220,7 +206,7 @@ describe('Hito M18 — Suite de Calidad QA, RBAC en Caja, Detalle de Platos y Vu
           id, jornada_id, order_number, fulfillment_type, payment_status, fulfillment_status,
           gross_food_subtotal_usd_cents, net_food_sales_usd_cents, total_to_collect_usd_cents,
           rate_micro_bs, created_by_user_id, created_at_ms, updated_at_ms
-        ) VALUES (?, 'jor_m18_test', 904, 'salon', 'sin_pago', 'pendiente', 500, 500, 500, 40000000, 'usr_cajera_principal', ?, ?)
+        ) VALUES (?, 'jor_m18_test', 904, 'salon', 'sin_pago', 'pendiente', 500, 500, 500, 40000000, 'usr_cajera', ?, ?)
       `).run(orderId, now, now);
 
       const res = await app.inject({
