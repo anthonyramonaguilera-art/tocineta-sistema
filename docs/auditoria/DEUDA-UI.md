@@ -13,7 +13,8 @@
 | **Declaraciones `!important`** | **13** | **Medio** | Presentes en hojas de estilos CSS (`index.css`), forzando overrides en clases utilitarias. Deben reemplazarse por especificidad limpia de CSS o variables de tema. |
 | **Clases `text-white` rígidas** | **444** | **Crítico** | En **Modo Claro (`light`)**, el uso indiscriminado de `text-white` sobre fondos sin clase oscura (`bg-neutral-900`) genera texto invisible (blanco sobre blanco). Debe condicionarse semánticamente a `text-slate-900 dark:text-white`. |
 | **Colores Hex fijos (`#HEX`)** | **112** | **Alto** | Valores como `#121620`, `#1A1F2B`, `#0d1117` incrustados en componentes TSX. Impiden una adaptación fluida del sistema de diseño. Deben migrarse a tokens semánticos en Tailwind y CSS variables. |
-| **Líneas con Emojis como Íconos** | **322** | **Medio** | Uso de emojis de sistema (🍔, 🥤, 🟢, 🟣, 🇻🇪, 💵, 📦, 🕒, ✕) en botones y títulos. Se renderizan de forma inconsistente según la versión de Android/iOS/Windows. Deben migrarse a SVG vectoriales de `lucide-react`. |
+| **Líneas con Emojis como Íconos** | **322** | **Medio** | Uso de emojis de sistema (🍔, 🥤, 🟢, 🟣, 🇻🇪, 💵, 📦, 🕒, ✕) en botones y títulos. Se renderizan de forma inconsistente según la versión de Android/iOS/Windows. Deben migrarse a SVG vectoriales de `lucide-re
+act`. |
 | **Archivos con más de 400 líneas** | **13** | **Alto** | Monolitos de UI de alta complejidad que dificultan mantenimiento, testing unitario y refactorización. Requieren descomposición en subcomponentes atómicos. |
 
 ---
@@ -63,3 +64,5 @@ Durante la inspección de la arquitectura de carpetas entre `src/components/` y 
   ```
 - **Riesgo:** Mantenimiento de capas intermedias innecesarias que aumentan el árbol de renderizado de React.
 - **Acción requerida (Fase posterior):** Montar directamente `<PosComandero />` en `App.tsx` y retirar el componente puente `PosView.tsx`.
+
+

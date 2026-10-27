@@ -10,8 +10,12 @@ dist/
 # Bases de datos y snapshots
 data/
 **/data/
-data/*.db
+data/*.db*
 data/backups/
+data/backups
+data/backups-r2/
+data/snapshots/
+data/snapshots
 apps/server/data/**
 *.db
 *.db-journal
