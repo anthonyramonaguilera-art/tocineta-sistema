@@ -1188,5 +1188,19 @@ export type InsertBusinessPartner = typeof businessPartners.$inferInsert;
 export type PartnerTransaction = typeof partnerTransactions.$inferSelect;
 export type InsertPartnerTransaction = typeof partnerTransactions.$inferInsert;
 
+export const serverErrors = sqliteTable('server_errors', {
+  id: text('id').primaryKey(),
+  requestId: text('request_id').notNull(),
+  method: text('method').notNull(),
+  url: text('url').notNull(),
+  status: integer('status').notNull(),
+  code: text('code').notNull(),
+  message: text('message').notNull(),
+  stack: text('stack'),
+  bodyJson: text('body_json'),
+  userId: text('user_id'),
+  createdAtMs: integer('created_at_ms').notNull()
+});
 
-
+export type ServerError = typeof serverErrors.$inferSelect;
+export type InsertServerError = typeof serverErrors.$inferInsert;

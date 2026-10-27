@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import type Database from 'better-sqlite3';
 import { buildServer } from '../src/server.js';
-import { getDatabaseContext } from '../src/db/connection.js';
+import { initSqlite, getDatabaseContext } from '../src/db/connection.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
@@ -11,17 +11,18 @@ import { loginAs, ensureTestSupervisor } from './test-helpers.js';
 import { restoreAndVerifyDatabase } from '../src/modules/backups/restore-engine.js';
 import path from 'node:path';
 import fs from 'node:fs';
+import os from 'node:os';
 
 describe('FASE 7 — COTIZADOR + SOCIOS + MENÚ QR + CONFIGURACIÓN DEL NEGOCIO + ENDURECIMIENTO', () => {
   let app: FastifyInstance;
+  const tempDir = path.join(os.tmpdir(), `tocineta_fase7_test_${Date.now()}`);
+  const tempDb = path.join(tempDir, 'test_fase7.db');
   let rawDb: Database.Database;
   let adminToken: string;
 
   beforeAll(async () => {
-    app = await buildServer({ disableStatic: true, logger: false });
-    await app.ready();
-
-    const dbCtx = getDatabaseContext();
+    fs.mkdirSync(tempDir, { recursive: true });
+    const dbCtx = initSqlite(tempDb);
     rawDb = dbCtx.rawDb;
 
     await runMigrations(rawDb);
@@ -29,6 +30,9 @@ describe('FASE 7 — COTIZADOR + SOCIOS + MENÚ QR + CONFIGURACIÓN DEL NEGOCIO 
     seedCatalog(rawDb);
     ensureOfficialLocations(rawDb);
     ensureTestSupervisor(rawDb);
+
+    app = await buildServer({ disableStatic: true, logger: false });
+    await app.ready();
 
     const loginRes = await loginAs(app, 'admin', rawDb);
     adminToken = loginRes.token;
@@ -42,7 +46,14 @@ describe('FASE 7 — COTIZADOR + SOCIOS + MENÚ QR + CONFIGURACIÓN DEL NEGOCIO 
   });
 
   afterAll(async () => {
-    await app.close();
+    if (app) await app.close();
+    try {
+      const dbCtx = getDatabaseContext();
+      dbCtx.rawDb.close();
+    } catch {}
+    try {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    } catch {}
   });
 
   // =========================================================================
@@ -396,12 +407,8 @@ describe('FASE 7 — COTIZADOR + SOCIOS + MENÚ QR + CONFIGURACIÓN DEL NEGOCIO 
   // =========================================================================
   describe('E) Endurecimiento, Simulacro de Restauración y Concurrencia', () => {
     it('Ejecuta el simulacro de restauración de respaldo verificado (dry-run)', async () => {
-      const latestSnapshot = path.resolve(process.cwd(), 'data/snapshots/pre-migrate-1793096315970.db');
-      let testBackupPath = latestSnapshot;
-
-      if (!fs.existsSync(testBackupPath)) {
-        testBackupPath = path.resolve(process.cwd(), 'data/tocineta.db');
-      }
+      const testBackupPath = path.join(tempDir, 'backup_drill.db');
+      await rawDb.backup(testBackupPath);
 
       const result = await restoreAndVerifyDatabase({
         backupFilePath: testBackupPath,

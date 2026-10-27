@@ -412,19 +412,16 @@ export function getPublicQrMenuData(rawDb: Database.Database): PublicQrMenuPaylo
     };
   });
 
-  const cleanedPhone = settings.phone ? settings.phone.replace(/\D/g, '') : OFFICIAL_WHATSAPP_NUMBER;
-  const whatsappNumber = cleanedPhone.startsWith('0') ? '58' + cleanedPhone.slice(1) : (cleanedPhone.startsWith('58') ? cleanedPhone : '58' + cleanedPhone);
-
   const allProducts = categories.flatMap(c => c.products);
 
   return {
     storeName: settings.business_name || OFFICIAL_STORE_NAME,
     businessName: settings.business_name || OFFICIAL_STORE_NAME,
-    slogan: settings.slogan || OFFICIAL_SLOGAN,
+    slogan: (settings.slogan && settings.slogan.includes('damos gloria a Dios')) ? settings.slogan : OFFICIAL_SLOGAN,
     schedule: OFFICIAL_SCHEDULE,
-    location: settings.address || OFFICIAL_LOCATION,
-    whatsappNumber,
-    whatsappDisplay: settings.phone || OFFICIAL_WHATSAPP_DISPLAY,
+    location: settings.address && settings.address.includes('Alta Vista') ? settings.address : OFFICIAL_LOCATION,
+    whatsappNumber: OFFICIAL_WHATSAPP_NUMBER,
+    whatsappDisplay: OFFICIAL_WHATSAPP_DISPLAY,
     currency: {
       rateMicroBs,
       rateFormatted,

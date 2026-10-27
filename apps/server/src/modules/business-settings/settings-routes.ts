@@ -9,10 +9,8 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const settings = ensureBusinessSettingsDefensive(rawDb);
       const locations = rawDb.prepare('SELECT * FROM locations WHERE is_active = 1 ORDER BY name ASC').all();
-      return reply.send({
-        success: true,
-        settings,
-        locations,
+      const augmentedSettings = {
+        ...settings,
         brandName: settings.business_name,
         businessName: settings.business_name,
         legalName: settings.business_name,
@@ -31,6 +29,13 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         partnersModuleEnabled: Boolean(settings.partners_module_enabled),
         eventsQuoteEnabled: Boolean(settings.events_quote_enabled),
         onboardingCompleted: Boolean(settings.onboarding_completed)
+      };
+
+      return reply.send({
+        success: true,
+        settings: augmentedSettings,
+        locations,
+        ...augmentedSettings
       });
     } catch (err: any) {
       return reply.status(500).send({ success: false, message: err.message });

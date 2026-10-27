@@ -78,12 +78,12 @@ export const qrMenuRoutes: FastifyPluginAsync = async (fastify) => {
     const dbCtx = getDatabaseContext();
     const distHtmlPath = path.resolve(process.cwd(), './data/qr-static-dist/index.html');
 
-    if (fs.existsSync(distHtmlPath)) {
+    if (process.env.NODE_ENV !== 'test' && fs.existsSync(distHtmlPath)) {
       const html = fs.readFileSync(distHtmlPath, 'utf-8');
       return reply.type('text/html; charset=utf-8').send(html);
     }
 
-    // Si aún no se ha generado la carpeta física, generarla en tiempo real
+    // Si aún no se ha generado la carpeta física (o en pruebas), generarla en tiempo real
     const menuData = getPublicQrMenuData(dbCtx.rawDb);
     const html = generateSelfContainedHtml(menuData);
     return reply.type('text/html; charset=utf-8').send(html);
@@ -94,7 +94,7 @@ export const qrMenuRoutes: FastifyPluginAsync = async (fastify) => {
     const dbCtx = getDatabaseContext();
     const distJsonPath = path.resolve(process.cwd(), './data/qr-static-dist/menu-snapshot.json');
 
-    if (fs.existsSync(distJsonPath)) {
+    if (process.env.NODE_ENV !== 'test' && fs.existsSync(distJsonPath)) {
       const json = fs.readFileSync(distJsonPath, 'utf-8');
       return reply.type('application/json; charset=utf-8').send(json);
     }

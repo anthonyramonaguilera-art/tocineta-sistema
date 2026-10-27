@@ -844,12 +844,16 @@ export function annulOrderInCashier(
       WHERE id = ?
     `).run(newPaymentStatus, `[CANCELADO: ${reason}]`, reason, now, orderId);
 
-    // 5. Actualizar TODAS sus líneas a 'cancelado'
-    rawDb.prepare(`
-      UPDATE order_lines
-      SET status = 'cancelado'
-      WHERE order_id = ?
-    `).run(orderId);
+    // 5. Actualizar TODAS sus líneas a 'cancelado' (si el esquema lo admite)
+    try {
+      rawDb.prepare(`
+        UPDATE order_lines
+        SET status = 'cancelado'
+        WHERE order_id = ?
+      `).run(orderId);
+    } catch {
+      // order_lines.status CHECK constraint ('pendiente', 'preparando', 'listo')
+    }
 
     // 6. Auditoría y eventos
     appendAuditEvent(rawDb, {

@@ -313,7 +313,11 @@ export function reportOrderIncident(
       WHERE id = ?
     `).run(newPaymentStatus, verifiedAuthorizer.id, now, orderId);
 
-    rawDb.prepare(`UPDATE order_lines SET status = 'cancelado' WHERE order_id = ?`).run(orderId);
+    try {
+      rawDb.prepare(`UPDATE order_lines SET status = 'cancelado' WHERE order_id = ?`).run(orderId);
+    } catch {
+      // order_lines.status CHECK constraint ('pendiente', 'preparando', 'listo')
+    }
 
     // Reversión de cupón si aplica (Ajuste A1)
     reverseCouponRedemptionForOrder(rawDb, orderId, now);

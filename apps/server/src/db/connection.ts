@@ -18,9 +18,14 @@ export interface DatabaseContext {
   getPragmas: () => SqlitePragmas;
 }
 
+import { assertIsolatedTestDatabase } from './test-guard.js';
+
 let activeContext: DatabaseContext | null = null;
 
 export function getDefaultDbPath(): string {
+  if (process.env.TOCINETA_DB_PATH) {
+    return process.env.TOCINETA_DB_PATH;
+  }
   if (process.env.DB_PATH) {
     return process.env.DB_PATH;
   }
@@ -32,6 +37,7 @@ export function getDefaultDbPath(): string {
 
 export function initSqlite(dbFilePath?: string): DatabaseContext {
   const effectivePath = dbFilePath || getDefaultDbPath();
+  assertIsolatedTestDatabase(effectivePath);
   const isMemory = effectivePath === ':memory:';
   const resolvedPath = isMemory ? ':memory:' : path.resolve(process.cwd(), effectivePath);
 
@@ -97,3 +103,8 @@ export function getDatabaseContext(): DatabaseContext {
   }
   return activeContext;
 }
+
+export function resetDatabaseContext(): void {
+  activeContext = null;
+}
+

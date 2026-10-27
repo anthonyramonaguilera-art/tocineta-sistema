@@ -36,6 +36,7 @@ import { idempotencyPlugin } from './modules/idempotency/idempotency-plugin.js';
 import { seedInitialUsers } from './modules/auth/seed-users.js';
 import { recoverStuckUpdatesOnBoot } from './modules/updater/updater-service.js';
 import { syncBcvRateFromInternet } from './modules/menu/bcv-auto-sync.js';
+import { globalErrorHandler } from './lib/error-handler.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -66,6 +67,9 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   const server = Fastify({
     logger: options.logger !== undefined ? options.logger : defaultLogger
   });
+
+  // Manejador global de errores (Respuesta uniforme y auditoría server_errors)
+  server.setErrorHandler(globalErrorHandler);
 
   // Parser tolerante a cuerpos vacíos (Evita 400 Bad Request FST_ERR_CTP_EMPTY_JSON_BODY)
   server.addContentTypeParser('application/json', { parseAs: 'string' }, function (_req, body, done) {

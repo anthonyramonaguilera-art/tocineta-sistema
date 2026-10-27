@@ -363,7 +363,7 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
   // ==========================================================================
   // TEST 8: seedInitialUsers sobre DB vacía
   // ==========================================================================
-  it('8. seedInitialUsers sobre DB vacía: crea los 5 perfiles corporativos con is_active = 1 y must_change_pin = 0', async () => {
+  it('8. seedInitialUsers sobre DB vacía: crea los 5 perfiles corporativos con is_active = 1 y must_change_pin = 1', async () => {
     const freshDbPath = path.join(tempDir, 'fresh_seed.db');
     const freshRawDb = new DatabaseConstructor(freshDbPath);
     await runMigrations(freshRawDb, { dbPath: freshDbPath });
@@ -372,13 +372,13 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
 
     const admin = freshRawDb.prepare("SELECT must_change_pin, is_active FROM users WHERE role = 'admin'").get() as any;
     expect(admin).toBeDefined();
-    expect(admin.must_change_pin).toBe(0);
+    expect(admin.must_change_pin).toBe(1);
     expect(admin.is_active).toBe(1);
 
     const users = freshRawDb.prepare("SELECT must_change_pin, is_active FROM users").all() as any[];
     expect(users.length).toBe(5);
     for (const u of users) {
-      expect(u.must_change_pin).toBe(0);
+      expect(u.must_change_pin).toBe(1);
       expect(u.is_active).toBe(1);
     }
 

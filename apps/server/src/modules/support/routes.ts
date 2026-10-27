@@ -105,5 +105,43 @@ export const supportRoutes: FastifyPluginAsync = async (fastify) => {
     const result = launchQuickAssistCascade();
     return reply.status(200).send(result);
   });
+
+  // 6. Consultar Registro de Errores del Servidor (GET /api/support/server-errors?limit=50) - Exclusivo Admin
+  fastify.get('/api/support/server-errors', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const session = getUserFromRequest(request);
+    if (!session?.user_id) {
+      return reply.status(401).send({
+        success: false,
+        error: 'No autorizado',
+        code: 'UNAUTHORIZED'
+      });
+    }
+
+    const user = dbCtx.rawDb.prepare('SELECT role FROM users WHERE id = ?').get(session.user_id) as { role: string } | undefined;
+    if (user?.role !== 'admin') {
+      return reply.status(403).send({
+        success: false,
+        error: 'Acceso restringido a administradores',
+        code: 'FORBIDDEN'
+      });
+    }
+
+    const query = request.query as { limit?: string } | undefined;
+    const limit = Math.min(Math.max(parseInt(query?.limit || '50', 10) || 50, 1), 500);
+
+    const errors = dbCtx.rawDb.prepare(`
+      SELECT id, request_id, method, url, status, code, message, stack, body_json, user_id, created_at_ms
+      FROM server_errors
+      ORDER BY created_at_ms DESC
+      LIMIT ?
+    `).all(limit);
+
+    return reply.status(200).send({
+      success: true,
+      errors
+    });
+  });
 };
+
 

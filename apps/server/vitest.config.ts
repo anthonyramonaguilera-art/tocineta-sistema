@@ -7,6 +7,7 @@ export default defineConfig({
     include: ['test/**/*.test.ts'],
     testTimeout: 10000,
     fileParallelism: false,
+    setupFiles: ['./test/setup.ts'],
     env: {
       NODE_ENV: 'test',
       VITEST: 'true',

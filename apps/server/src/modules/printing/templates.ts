@@ -227,7 +227,9 @@ export function buildReceiptTicketIR(
   blocks.push({ type: 'header_logo' });
 
   // 2. Eslogan oficial dinámico
-  const receiptSlogan = settings?.slogan || 'Cocinamos con amor y servimos como mereces';
+  const receiptSlogan = (settings?.slogan && settings?.slogan.includes('damos gloria a Dios'))
+    ? settings.slogan
+    : 'Cocinamos con amor, te servimos como mereces y damos gloria a Dios';
   blocks.push({
     type: 'text',
     text: `"${receiptSlogan}"`,

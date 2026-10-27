@@ -458,6 +458,7 @@ export function deductInventoryForOrder(
     if (qtyToDeduct <= 0) continue;
 
     const supply = rawDb.prepare('SELECT cost_per_unit_usd_cents, weighted_avg_cost_usd_cents FROM supply_items WHERE id = ?').get(supplyId) as any;
+    if (!supply) continue;
     const unitCost = supply?.weighted_avg_cost_usd_cents || supply?.cost_per_unit_usd_cents || 0;
     const totalCost = Math.round(qtyToDeduct * unitCost);
 

@@ -183,7 +183,7 @@ export function seedInitialUsers(rawDb: Database.Database): number {
         pinLength,
         pwHash,
         pwSalt,
-        1, // must_change_pin = 1 (cambio obligatorio de clave para perfiles semilla)
+        1, // must_change_pin = 1
         1, // is_active = 1
         0, // failed_attempts = 0
         0, // lockout_stage = 0

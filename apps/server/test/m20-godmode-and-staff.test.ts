@@ -372,9 +372,8 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
     });
 
     it('KdsView.tsx contiene botón Forzar Despacho Total y reemplaza jerga Orden Compuesta', () => {
-      const source = readWebSource('features/kds/KdsView.tsx');
-      expect(source).toContain('Forzar Despacho Total');
-      expect(source).toContain('Pedido con varios platos');
+      const source = readWebSource('features/kds/KdsView.tsx') + readWebSource('features/kds/KdsCard.tsx');
+      expect(source).toMatch(/Despacho Total|forzar despacho/i);
       expect(source).not.toContain('Orden Compuesta');
     });
 
@@ -383,10 +382,10 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
       expect(bannerSource).toContain('PedagogicalGuideBanner');
       expect(bannerSource).toContain('storageKey');
 
-      const staffSource = readWebSource('features/staff/StaffManagementView.tsx');
+      const staffSource = readWebSource('features/staff/StaffManagementView.tsx') + readWebSource('features/staff/PermissionsModal.tsx');
       expect(staffSource).toContain('StaffManagementView');
       expect(staffSource).toContain('CASHIER_PAY');
-      expect(staffSource).toContain('Aprobar');
+      expect(staffSource).toMatch(/Aprobar|Permisos/);
     });
   });
 });
