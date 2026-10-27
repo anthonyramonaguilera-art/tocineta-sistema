@@ -1,6 +1,7 @@
 # INFORME DE FASE 2: COBRO EN 3 PASOS + CAJA + CIERRE + COCINA
 **Fecha:** 2026-10-26  
 **Rama Git:** `reconstruccion`  
+**Commit SHA:** `5afccc0`  
 **Tag Base:** `f1`  
 **Tag Resultante:** `f2`  
 
