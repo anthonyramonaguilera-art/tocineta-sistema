@@ -137,7 +137,7 @@ export const PayablePaymentModal: React.FC<PayablePaymentModalProps> = ({
             <button
               type="button"
               onClick={() => setPercentage(1.0)}
-              className="flex-1 py-1.5 text-xs font-bold bg-primary/10 border border-primary text-primary hover:bg-primary/20 rounded-lg"
+              className="flex-1 py-1.5 text-xs font-bold bg-primary text-primary-ink hover:opacity-90 rounded-lg"
             >
               Liquidar Factura (100%)
             </button>

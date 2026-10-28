@@ -142,7 +142,7 @@ export const ReceivablePaymentModal: React.FC<ReceivablePaymentModalProps> = ({
             <button
               type="button"
               onClick={() => setPercentage(1.0)}
-              className="flex-1 py-1.5 text-xs font-bold bg-primary/10 border border-primary text-primary hover:bg-primary/20 rounded-lg"
+              className="flex-1 py-1.5 text-xs font-bold bg-primary text-primary-ink hover:opacity-90 rounded-lg"
             >
               Total (100%)
             </button>

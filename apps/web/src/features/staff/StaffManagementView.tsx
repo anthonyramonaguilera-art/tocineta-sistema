@@ -85,13 +85,13 @@ export const StaffManagementView: React.FC = () => {
       )}
 
       {/* Navegación por Pestañas */}
-      <div className="flex border-b border-border gap-2">
+      <div className="flex border-b border-border gap-2 overflow-x-auto max-w-full pb-1">
         <button
           type="button"
           onClick={() => setActiveTab('staff')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm border-b-2 transition-all cursor-pointer ${
             activeTab === 'staff'
-              ? 'border-primary text-primary'
+              ? 'border-primary text-ink'
               : 'border-transparent text-ink-muted hover:text-ink'
           }`}
         >
@@ -107,7 +107,7 @@ export const StaffManagementView: React.FC = () => {
           onClick={() => setActiveTab('payroll')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm border-b-2 transition-all cursor-pointer ${
             activeTab === 'payroll'
-              ? 'border-primary text-primary'
+              ? 'border-primary text-ink'
               : 'border-transparent text-ink-muted hover:text-ink'
           }`}
         >
@@ -120,7 +120,7 @@ export const StaffManagementView: React.FC = () => {
           onClick={() => setActiveTab('tips')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm border-b-2 transition-all cursor-pointer ${
             activeTab === 'tips'
-              ? 'border-primary text-primary'
+              ? 'border-primary text-ink'
               : 'border-transparent text-ink-muted hover:text-ink'
           }`}
         >

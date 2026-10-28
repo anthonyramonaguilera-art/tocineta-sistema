@@ -552,7 +552,7 @@ export const MenuAdminView: React.FC = () => {
           onClick={() => setActiveTab('pricing-calculator')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === 'pricing-calculator'
-              ? 'bg-blue-600 text-white shadow-xs'
+              ? 'bg-primary text-primary-ink shadow-xs'
               : 'bg-surface border border-border text-ink-muted hover:text-ink'
           }`}
         >
@@ -563,7 +563,7 @@ export const MenuAdminView: React.FC = () => {
           onClick={() => setActiveTab('supplies-costs')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === 'supplies-costs'
-              ? 'bg-blue-600 text-white shadow-xs'
+              ? 'bg-primary text-primary-ink shadow-xs'
               : 'bg-surface border border-border text-ink-muted hover:text-ink'
           }`}
         >
@@ -618,8 +618,8 @@ export const MenuAdminView: React.FC = () => {
                   onClick={() => setSelectedCategory(c.id)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 ${
                     selectedCategory === c.id
-                      ? 'bg-tocineta-yellow text-tocineta-bg'
-                      : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted'
+                      ? 'bg-primary text-primary-ink'
+                      : 'bg-surface border border-border text-ink-muted hover:text-ink'
                   }`}
                 >
                   {c.name}
@@ -629,7 +629,7 @@ export const MenuAdminView: React.FC = () => {
 
             <button
               onClick={openCreateModal}
-              className="px-4 py-2 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-extrabold uppercase tracking-wider hover:bg-tocineta-yellow/90 transition-all shrink-0 shadow-md cursor-pointer"
+              className="px-4 py-2 rounded-xl bg-primary text-primary-ink text-xs font-extrabold uppercase tracking-wider hover:opacity-90 transition-all shrink-0 shadow-md cursor-pointer"
             >
               + Nuevo Producto
             </button>
@@ -648,8 +648,8 @@ export const MenuAdminView: React.FC = () => {
               return (
                 <div
                   key={p.id}
-                  className={`bg-tocineta-card border rounded-2xl p-4 flex flex-col justify-between shadow-md transition-all ${
-                    p.isAvailable ? 'border-tocineta-border' : 'border-red-950/60 bg-red-950/10'
+                  className={`bg-surface border rounded-2xl p-4 flex flex-col justify-between shadow-md transition-all ${
+                    p.isAvailable ? 'border-border' : 'border-danger/30 bg-danger-subtle'
                   }`}
                 >
                   <div>
@@ -697,10 +697,10 @@ export const MenuAdminView: React.FC = () => {
                     </div>
 
                     {/* Calculadora de Margen Financiero en vivo */}
-                    <div className="mt-3 p-2.5 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+                    <div className="mt-3 p-2.5 rounded-xl bg-surface-alt border border-border space-y-2">
                       <div className="flex items-center justify-between text-[11px]">
-                        <span className="font-bold text-slate-300 flex items-center gap-1">
-                          <Calculator className="w-3.5 h-3.5 text-blue-400" /> Margen Objetivo:
+                        <span className="font-bold text-ink flex items-center gap-1">
+                          <Calculator className="w-3.5 h-3.5 text-primary-ink" /> Margen Objetivo:
                         </span>
                         <div className="flex items-center gap-1">
                           <input
@@ -712,16 +712,16 @@ export const MenuAdminView: React.FC = () => {
                               const val = Number(e.target.value);
                               setCustomMargins(prev => ({ ...prev, [p.id]: val }));
                             }}
-                            className="w-12 px-1 py-0.5 text-center text-xs font-mono font-bold bg-slate-800 border border-slate-700 rounded text-white"
+                            className="w-12 px-1 py-0.5 text-center text-xs font-mono font-bold bg-surface border border-border rounded text-ink"
                           />
                           <span className="text-[10px] font-bold text-slate-400">%</span>
                         </div>
                       </div>
 
-                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-slate-800 text-[11px]">
+                      <div className="flex items-center justify-between gap-2 pt-1 border-t border-border text-[11px]">
                         <div>
-                          <span className="text-[9px] text-slate-400 block uppercase">Precio Sugerido:</span>
-                          <span className="font-black text-blue-400 font-mono text-xs">
+                          <span className="text-[9px] text-ink-muted block uppercase">Precio Sugerido:</span>
+                          <span className="font-black text-ink font-mono text-xs">
                             ${suggestedPrice.toFixed(2)}
                           </span>
                         </div>
@@ -735,7 +735,7 @@ export const MenuAdminView: React.FC = () => {
                               });
                             }}
                             disabled={applySuggestedPriceMutation.isPending}
-                            className="px-2 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[10px] font-black transition-all shadow-xs cursor-pointer"
+                            className="px-2 py-1 rounded-lg bg-primary hover:opacity-90 text-primary-ink text-[10px] font-black transition-all shadow-xs cursor-pointer"
                             title="Aplicar Precio Sugerido al Menú"
                           >
                             Aplicar al Menú
@@ -746,8 +746,8 @@ export const MenuAdminView: React.FC = () => {
 
                     {/* Sabores Pepsi con Toggle Rápido si es Refresco 1 Lt */}
                     {productFlavors.length > 0 && (
-                      <div className="mt-3 pt-3 border-t border-tocineta-border/60">
-                        <span className="text-[10px] font-bold text-tocineta-muted uppercase block mb-1.5">
+                      <div className="mt-3 pt-3 border-t border-border">
+                        <span className="text-[10px] font-bold text-ink-muted uppercase block mb-1.5">
                           Disponibilidad de Sabores (Pepsi):
                         </span>
                         <div className="grid grid-cols-2 gap-1.5">
@@ -762,8 +762,8 @@ export const MenuAdminView: React.FC = () => {
                               }
                               className={`px-2 py-1 rounded text-[11px] font-medium border flex items-center justify-between transition-all ${
                                 f.is_available
-                                  ? 'bg-blue-500/10 border-blue-500/30 text-blue-300'
-                                  : 'bg-red-500/10 border-red-500/30 text-red-400 line-through'
+                                  ? 'bg-success-subtle border-success/30 text-success font-bold'
+                                  : 'bg-danger-subtle border-danger/30 text-danger line-through font-bold'
                               }`}
                             >
                               <span>{f.flavor_name}</span>
@@ -778,13 +778,13 @@ export const MenuAdminView: React.FC = () => {
                   </div>
 
                   {/* Switch Rápido Disponible / Agotado */}
-                  <div className="mt-4 pt-3 border-t border-tocineta-border flex items-center justify-between">
+                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-tocineta-muted">
+                      <span className="text-xs font-semibold text-ink-muted">
                         Estado Operativo:
                       </span>
                       {!p.isActive && (
-                        <span className="text-[10px] text-amber-400 font-bold">
+                        <span className="text-[10px] text-warning font-bold font-bold">
                           Guardado (No visible para mesoneros)
                         </span>
                       )}
@@ -798,7 +798,7 @@ export const MenuAdminView: React.FC = () => {
                       }
                       className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                         p.isAvailable
-                          ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40'
+                          ? 'bg-emerald-500/20 text-success font-bold border border-emerald-500/40'
                           : 'bg-red-500/20 text-red-400 border border-red-500/40'
                       }`}
                     >
@@ -817,25 +817,25 @@ export const MenuAdminView: React.FC = () => {
       {/* -------------------------------------------------------------------- */}
       {activeTab === 'pricing-calculator' && (
         <div className="space-y-4">
-          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-sm">
+          <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
               <div>
-                <h3 className="text-base font-extrabold text-tocineta-text flex items-center gap-2">
-                  <Calculator className="w-5 h-5 text-blue-400" />
+                <h3 className="text-base font-extrabold text-ink flex items-center gap-2">
+                  <Calculator className="w-5 h-5 text-primary-ink" />
                   <span>Calculadora Financiera de Precios de Venta</span>
                 </h3>
-                <p className="text-xs text-tocineta-muted mt-1 leading-relaxed">
-                  Fórmula financiera estándar: <code className="bg-slate-800 px-1.5 py-0.5 rounded text-blue-300 font-mono">Precio Sugerido = Costo / (1 - (Margen % / 100))</code>.
+                <p className="text-xs text-ink-muted mt-1 leading-relaxed">
+                  Fórmula financiera estándar: <code className="bg-surface-alt px-1.5 py-0.5 rounded text-ink font-mono border border-border">Precio Sugerido = Costo / (1 - (Margen % / 100))</code>.
                   Garantiza que el margen deseado sobre el precio final se cumpla con exactitud contable.
                 </p>
               </div>
             </div>
           </div>
 
-          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl overflow-hidden shadow-md">
+          <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-md">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-900/80 text-slate-300 border-b border-tocineta-border">
+                <thead className="bg-surface-alt text-ink-muted border-b border-border">
                   <tr>
                     <th className="p-3">Plato / Producto</th>
                     <th className="p-3">Estación</th>
@@ -856,10 +856,10 @@ export const MenuAdminView: React.FC = () => {
                     const profitEst = suggestedPrice - costUsd;
 
                     return (
-                      <tr key={p.id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="p-3 font-bold text-white">{p.name}</td>
-                        <td className="p-3 text-slate-400 uppercase text-[10px] font-mono">{p.station}</td>
-                        <td className="p-3 font-mono font-bold text-amber-400">${costUsd.toFixed(2)}</td>
+                      <tr key={p.id} className="hover:bg-surface-hover transition-colors">
+                        <td className="p-3 font-bold text-ink">{p.name}</td>
+                        <td className="p-3 text-ink-muted uppercase text-[10px] font-mono">{p.station}</td>
+                        <td className="p-3 font-mono font-bold text-warning font-bold">${costUsd.toFixed(2)}</td>
                         <td className="p-3">
                           <div className="flex items-center gap-1.5">
                             <input
@@ -871,18 +871,18 @@ export const MenuAdminView: React.FC = () => {
                                 const val = Number(e.target.value);
                                 setCustomMargins(prev => ({ ...prev, [p.id]: val }));
                               }}
-                              className="w-16 px-2 py-1 text-center font-mono font-bold bg-slate-800 border border-slate-700 rounded-lg text-white"
+                              className="w-16 px-2 py-1 text-center font-mono font-bold bg-surface border border-border rounded-lg text-ink"
                             />
-                            <span className="text-slate-400 font-bold">%</span>
+                            <span className="text-ink-muted font-bold">%</span>
                           </div>
                         </td>
-                        <td className="p-3 font-mono font-black text-blue-400 text-sm">
+                        <td className="p-3 font-mono font-black text-primary-ink text-sm">
                           ${suggestedPrice.toFixed(2)}
                         </td>
                         <td className="p-3 font-mono text-slate-300">
                           ${currentPrice.toFixed(2)}
                         </td>
-                        <td className="p-3 font-mono text-emerald-400 font-bold">
+                        <td className="p-3 font-mono text-success font-bold font-bold">
                           +${profitEst.toFixed(2)} ({margin}%)
                         </td>
                         <td className="p-3 text-right">
@@ -895,7 +895,7 @@ export const MenuAdminView: React.FC = () => {
                               });
                             }}
                             disabled={applySuggestedPriceMutation.isPending}
-                            className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs transition-all shadow-xs cursor-pointer"
+                            className="px-3 py-1.5 rounded-xl bg-primary hover:opacity-90 text-primary-ink font-bold text-xs transition-all shadow-xs cursor-pointer"
                           >
                             Aplicar al Menú
                           </button>
@@ -915,20 +915,20 @@ export const MenuAdminView: React.FC = () => {
       {/* -------------------------------------------------------------------- */}
       {activeTab === 'supplies-costs' && (
         <div className="space-y-4">
-          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-sm">
-            <h3 className="text-base font-extrabold text-tocineta-text flex items-center gap-2">
-              <Package className="w-5 h-5 text-blue-400" />
+          <div className="bg-surface border border-border rounded-2xl p-5 shadow-sm">
+            <h3 className="text-base font-extrabold text-ink flex items-center gap-2">
+              <Package className="w-5 h-5 text-primary-ink" />
               <span>Historial de Costos de Proveedores y Materia Prima</span>
             </h3>
-            <p className="text-xs text-tocineta-muted mt-1 leading-relaxed">
+            <p className="text-xs text-ink-muted mt-1 leading-relaxed">
               Monitoreo continuo de variaciones de costos en compras. Los incrementos de precio aplicados por proveedores se destacan automáticamente con alerta roja.
             </p>
           </div>
 
-          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl overflow-hidden shadow-md">
+          <div className="bg-surface border border-border rounded-2xl overflow-hidden shadow-md">
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
-                <thead className="bg-slate-900/80 text-slate-300 border-b border-tocineta-border">
+                <thead className="bg-surface-alt text-ink-muted border-b border-border">
                   <tr>
                     <th className="p-3">Insumo / Materia Prima</th>
                     <th className="p-3">Categoría</th>
@@ -947,19 +947,19 @@ export const MenuAdminView: React.FC = () => {
                     const didIncrease = diffPct > 0.01;
 
                     return (
-                      <tr key={s.id} className="hover:bg-slate-800/40 transition-colors">
-                        <td className="p-3 font-bold text-white">{s.name}</td>
-                        <td className="p-3 text-slate-400 uppercase text-[10px] font-mono">{s.category}</td>
-                        <td className="p-3 text-slate-300 font-mono">{s.unitMeasure || s.unit_measure || 'und'}</td>
+                      <tr key={s.id} className="hover:bg-surface-hover transition-colors">
+                        <td className="p-3 font-bold text-ink">{s.name}</td>
+                        <td className="p-3 text-ink-muted uppercase text-[10px] font-mono">{s.category}</td>
+                        <td className="p-3 text-ink-muted font-mono">{s.unitMeasure || s.unit_measure || 'und'}</td>
                         <td className="p-3 font-mono text-slate-400">${prevCost.toFixed(2)}</td>
-                        <td className="p-3 font-mono font-bold text-white">${currCost.toFixed(2)}</td>
+                        <td className="p-3 font-mono font-bold text-ink">${currCost.toFixed(2)}</td>
                         <td className="p-3 font-mono">
                           {didIncrease ? (
-                            <span className="px-2 py-0.5 rounded-md bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black inline-flex items-center gap-1">
+                            <span className="px-2 py-0.5 rounded-md bg-danger-subtle text-danger border border-danger/30 text-[10px] font-black inline-flex items-center gap-1">
                               <Icon name="TrendingUp" size={12} className="inline mr-1" /> Subió +{diffPct.toFixed(1)}%
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-success font-bold border border-emerald-500/30 text-[10px] font-bold">
                               ✓ Estable
                             </span>
                           )}
@@ -983,15 +983,15 @@ export const MenuAdminView: React.FC = () => {
       {activeTab === 'coupons' && (
         <div className="space-y-6">
           {/* Formulario Crear Cupón */}
-          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-md">
-            <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
+          <div className="bg-surface border border-border rounded-2xl p-5 shadow-md">
+            <h3 className="text-sm font-bold text-ink mb-3 flex items-center gap-2">
               <Icon name="Ticket" size={16} />
               <span>Crear Nuevo Cupón ("Cupones Para Ti")</span>
             </h3>
 
             <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
               <div>
-                <label className="text-[10px] text-tocineta-muted uppercase font-bold block mb-1">
+                <label className="text-[10px] text-ink-muted uppercase font-bold block mb-1">
                   Código (ej. PROMO10):
                 </label>
                 <input
@@ -999,18 +999,18 @@ export const MenuAdminView: React.FC = () => {
                   value={couponCode}
                   onChange={e => setCouponCode(e.target.value.toUpperCase())}
                   placeholder="CODIGO"
-                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white font-mono"
+                  className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-ink font-mono"
                 />
               </div>
 
               <div>
-                <label className="text-[10px] text-tocineta-muted uppercase font-bold block mb-1">
+                <label className="text-[10px] text-ink-muted uppercase font-bold block mb-1">
                   Tipo de Cupón:
                 </label>
                 <select
                   value={couponType}
                   onChange={e => setCouponType(e.target.value as any)}
-                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                  className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-ink"
                 >
                   <option value="DISCOUNT">Descuento ($ o %)</option>
                   <option value="COURTESY_ITEM">Regalo / Cortesía</option>
@@ -1020,13 +1020,13 @@ export const MenuAdminView: React.FC = () => {
               {couponType === 'DISCOUNT' && (
                 <>
                   <div>
-                    <label className="text-[10px] text-tocineta-muted uppercase font-bold block mb-1">
+                    <label className="text-[10px] text-ink-muted uppercase font-bold block mb-1">
                       Modalidad:
                     </label>
                     <select
                       value={discountMode}
                       onChange={e => setDiscountMode(e.target.value as any)}
-                      className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-ink"
                     >
                       <option value="PERCENTAGE_BPS">% de Descuento</option>
                       <option value="FIXED_USD">Monto Fijo en USD ($)</option>
@@ -1034,7 +1034,7 @@ export const MenuAdminView: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="text-[10px] text-tocineta-muted uppercase font-bold block mb-1">
+                    <label className="text-[10px] text-ink-muted uppercase font-bold block mb-1">
                       {discountMode === 'PERCENTAGE_BPS' ? 'Porcentaje (%):' : 'Monto en USD ($):'}
                     </label>
                     <input
@@ -1042,7 +1042,7 @@ export const MenuAdminView: React.FC = () => {
                       step="0.01"
                       value={discountValue}
                       onChange={e => setDiscountValue(e.target.value)}
-                      className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                      className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-ink"
                     />
                   </div>
                 </>
@@ -1055,12 +1055,12 @@ export const MenuAdminView: React.FC = () => {
                 placeholder="Descripción del cupón..."
                 value={couponDesc}
                 onChange={e => setCouponDesc(e.target.value)}
-                className="flex-1 bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                className="flex-1 bg-surface border border-border rounded-xl px-3 py-2 text-xs text-ink"
               />
               <button
                 onClick={() => createCouponMutation.mutate()}
                 disabled={!couponCode || createCouponMutation.isPending}
-                className="px-4 py-2 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-bold hover:bg-tocineta-yellow/90 disabled:opacity-50"
+                className="px-4 py-2 rounded-xl bg-primary text-primary-ink text-xs font-bold hover:bg-primary/90 disabled:opacity-50"
               >
                 Crear Cupón
               </button>
@@ -1070,19 +1070,19 @@ export const MenuAdminView: React.FC = () => {
           {/* Listado de Cupones */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-white">
+              <span className="text-xs font-bold text-ink">
                 Cupones ({adminMenu.coupons.filter(c => {
                   const isExhausted = c.max_uses !== null && c.max_uses !== undefined && c.used_count >= c.max_uses;
                   if (showAllCoupons) return true;
                   return c.is_active === 1 && !isExhausted;
                 }).length} de {adminMenu.coupons.length})
               </span>
-              <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-tocineta-muted hover:text-white">
+              <label className="flex items-center gap-2 cursor-pointer text-xs font-medium text-ink-muted hover:text-ink">
                 <input
                   type="checkbox"
                   checked={showAllCoupons}
                   onChange={e => setShowAllCoupons(e.target.checked)}
-                  className="rounded bg-tocineta-bg border-tocineta-border text-tocineta-yellow focus:ring-0"
+                  className="rounded bg-surface border-border text-ink focus:ring-0"
                 />
                 <span>Mostrar cupones agotados / inactivos</span>
               </label>
@@ -1100,26 +1100,26 @@ export const MenuAdminView: React.FC = () => {
                   return (
                     <div
                       key={c.id}
-                      className="bg-tocineta-card border border-tocineta-border rounded-2xl p-4 flex items-center justify-between"
+                      className="bg-surface border border-border rounded-2xl p-4 flex items-center justify-between"
                     >
                       <div>
                         <div className="flex items-center gap-2">
-                          <span className="font-mono font-extrabold text-sm text-tocineta-yellow">
+                          <span className="font-mono font-extrabold text-sm text-ink">
                             {c.code}
                           </span>
-                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-tocineta-border text-tocineta-muted uppercase font-bold">
+                          <span className="text-[10px] px-2 py-0.5 rounded-md bg-tocineta-border text-ink-muted uppercase font-bold">
                             {c.coupon_type === 'COURTESY_ITEM' ? 'Regalo / Cortesía' : 'Descuento ($ o %)'}
                           </span>
                         </div>
-                        <p className="text-xs text-tocineta-muted mt-1">{c.description || 'Sin descripción'}</p>
-                        <div className="text-[10px] text-tocineta-muted font-mono mt-1">
+                        <p className="text-xs text-ink-muted mt-1">{c.description || 'Sin descripción'}</p>
+                        <div className="text-[10px] text-ink-muted font-mono mt-1">
                           Usos: {c.used_count} {c.max_uses ? `/ ${c.max_uses}` : ''}
                         </div>
                       </div>
 
                       <div className="flex items-center gap-2">
                         {isExhausted ? (
-                          <span className="px-3 py-1 rounded-full text-xs font-bold border bg-amber-500/20 text-amber-300 border-amber-500/40">
+                          <span className="px-3 py-1 rounded-full text-xs font-bold border bg-warning-subtle text-warning border-warning/30">
                             Agotado ({c.used_count}/{c.max_uses})
                           </span>
                         ) : (
@@ -1128,8 +1128,8 @@ export const MenuAdminView: React.FC = () => {
                             onClick={() => toggleCouponMutation.mutate(c.id)}
                             className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${
                               c.is_active
-                                ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                                : 'bg-red-500/20 text-red-400 border-red-500/40'
+                                ? 'bg-emerald-500/20 text-success font-bold border-emerald-500/40'
+                                : 'bg-danger-subtle text-danger border-danger/30'
                             }`}
                           >
                             {c.is_active ? 'Activo' : 'Inactivo'}
@@ -1142,7 +1142,7 @@ export const MenuAdminView: React.FC = () => {
                               deleteCouponMutation.mutate(c.id);
                             }
                           }}
-                          className="p-1.5 rounded-lg text-xs font-bold text-tocineta-muted hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center gap-1"
+                          className="p-1.5 rounded-lg text-xs font-bold text-ink-muted hover:text-danger hover:bg-danger-subtle transition-all flex items-center gap-1"
                           title="Eliminar cupón"
                         >
                           <Icon name="Trash2" size={16} />
@@ -1160,17 +1160,17 @@ export const MenuAdminView: React.FC = () => {
       {/* VISTA 3: ACTUALIZACIÓN TASA BCV                                      */}
       {/* -------------------------------------------------------------------- */}
       {activeTab === 'bcv' && (
-        <div className="max-w-md mx-auto bg-tocineta-card border border-tocineta-border rounded-2xl p-6 shadow-xl space-y-4">
+        <div className="max-w-md mx-auto bg-surface border border-border rounded-2xl p-6 shadow-xl space-y-4">
           <div className="text-center">
-            <Icon name="Banknote" size={32} className="mx-auto text-tocineta-yellow" />
-            <h3 className="text-lg font-extrabold text-white mt-1">Tasa Oficial BCV del Food Truck</h3>
-            <p className="text-xs text-tocineta-muted mt-0.5">
-              Tasa vigente: <strong className="text-tocineta-yellow font-mono">{adminMenu.formattedRate} Bs/$</strong>
+            <Icon name="Banknote" size={32} className="mx-auto text-ink" />
+            <h3 className="text-lg font-extrabold text-ink mt-1">Tasa Oficial BCV del Food Truck</h3>
+            <p className="text-xs text-ink-muted mt-0.5">
+              Tasa vigente: <strong className="text-ink font-mono">{adminMenu.formattedRate} Bs/$</strong>
             </p>
           </div>
 
           <div>
-            <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">
+            <label className="text-xs text-ink-muted uppercase font-bold block mb-1">
               Nueva Tasa BCV (ej. 42.50):
             </label>
             <input
@@ -1178,19 +1178,19 @@ export const MenuAdminView: React.FC = () => {
               placeholder="42.50"
               value={newRateInput}
               onChange={e => setNewRateInput(e.target.value)}
-              className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-4 py-3 text-lg font-mono text-center text-white focus:border-tocineta-yellow outline-none"
+              className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-lg font-mono text-center text-ink focus:border-primary outline-none"
             />
           </div>
 
           {rateMessage && (
-            <p className="text-xs text-center text-tocineta-yellow font-medium">{rateMessage}</p>
+            <p className="text-xs text-center text-ink font-medium">{rateMessage}</p>
           )}
 
           <div className="space-y-2 pt-2">
             <button
               onClick={() => updateRateMutation.mutate()}
               disabled={!newRateInput || updateRateMutation.isPending}
-              className="w-full min-h-[48px] rounded-xl bg-tocineta-yellow text-tocineta-bg font-extrabold text-xs uppercase tracking-wider hover:bg-tocineta-yellow/90 transition-all disabled:opacity-50 flex items-center justify-center shadow"
+              className="w-full min-h-[48px] rounded-xl bg-primary text-primary-ink font-extrabold text-xs uppercase tracking-wider hover:bg-primary/90 transition-all disabled:opacity-50 flex items-center justify-center shadow"
             >
               {updateRateMutation.isPending ? 'Actualizando Tasa...' : 'Actualizar Tasa BCV Oficial'}
             </button>
@@ -1219,7 +1219,7 @@ export const MenuAdminView: React.FC = () => {
                 }
               }}
               disabled={isSyncingBcv}
-              className="w-full min-h-[46px] rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow/50 text-white font-bold text-xs transition-all flex items-center justify-center gap-2"
+              className="w-full min-h-[46px] rounded-xl bg-surface border border-border hover:border-tocineta-yellow/50 text-ink font-bold text-xs transition-all flex items-center justify-center gap-2"
             >
               <Icon name="RefreshCw" size={16} className={isSyncingBcv ? 'animate-spin' : ''} />
               <span>{isSyncingBcv ? 'Sincronizando con BCV oficial...' : 'Sincronizar BCV por Internet'}</span>
@@ -1329,45 +1329,45 @@ export const MenuAdminView: React.FC = () => {
 
               {/* Subida Local de Fotografía */}
               <div>
-                <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">
+                <label className="text-xs text-ink-muted uppercase font-bold block mb-1">
                   Fotografía del Plato (JPG, PNG, WEBP máx 2MB):
                 </label>
                 <input
                   type="file"
                   accept="image/png, image/jpeg, image/webp"
                   onChange={handlePhotoSelect}
-                  className="w-full text-xs text-tocineta-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border file:border-tocineta-border file:bg-tocineta-bg file:text-white file:text-xs hover:file:border-tocineta-yellow cursor-pointer"
+                  className="w-full text-xs text-ink-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border file:border-border file:bg-surface file:text-white file:text-xs hover:file:border-tocineta-yellow cursor-pointer"
                 />
                 {photoBase64 && (
-                  <div className="mt-2 text-[10px] text-tocineta-green flex items-center gap-1 font-semibold">
+                  <div className="mt-2 text-[10px] text-success flex items-center gap-1 font-semibold">
                     <span>✓</span> Foto seleccionada y lista para cargar localmente
                   </div>
                 )}
               </div>
 
               {/* Sección: Ingredientes de este plato */}
-              <div className="pt-3 border-t border-tocineta-border/60">
-                <label className="text-xs text-tocineta-muted uppercase font-bold block mb-2">
+              <div className="pt-3 border-t border-border">
+                <label className="text-xs text-ink-muted uppercase font-bold block mb-2">
                   Ingredientes de este plato:
                 </label>
 
                 {/* Lista de ingredientes actuales con botón [✕] */}
                 <div className="flex flex-wrap gap-1.5 mb-3">
                   {productIngredients.length === 0 ? (
-                    <span className="text-xs text-tocineta-muted italic">
+                    <span className="text-xs text-ink-muted italic">
                       Este plato no tiene ingredientes desglosables asignados.
                     </span>
                   ) : (
                     productIngredients.map((ing, idx) => (
                       <span
                         key={ing.id || `${ing.ingredientId}_${idx}`}
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-tocineta-bg border border-tocineta-border text-xs text-white"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-surface border border-border text-xs text-ink"
                       >
                         <span>{ing.name}</span>
                         <button
                           type="button"
                           onClick={() => handleRemoveIngredient(ing)}
-                          className="text-tocineta-muted hover:text-red-400 font-bold ml-1"
+                          className="text-ink-muted hover:text-red-400 font-bold ml-1"
                           title="Quitar ingrediente"
                         >
                           ✕
@@ -1378,8 +1378,8 @@ export const MenuAdminView: React.FC = () => {
                 </div>
 
                 {/* Controles para agregar ingrediente existente o crear uno nuevo */}
-                <div className="bg-tocineta-bg/60 border border-tocineta-border rounded-xl p-3 space-y-2">
-                  <span className="text-[11px] font-semibold text-tocineta-muted block">
+                <div className="bg-surface-alt border border-border rounded-xl p-3 space-y-2">
+                  <span className="text-[11px] font-semibold text-ink-muted block">
                     Vincular ingrediente existente o crear uno nuevo:
                   </span>
                   <div className="flex flex-col sm:flex-row gap-2">
@@ -1389,7 +1389,7 @@ export const MenuAdminView: React.FC = () => {
                         setSelectedExistingIng(e.target.value);
                         if (e.target.value) setNewIngName('');
                       }}
-                      className="flex-1 bg-tocineta-bg border border-tocineta-border rounded-lg px-2.5 py-1.5 text-xs text-white"
+                      className="flex-1 bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-ink"
                     >
                       <option value="">-- Seleccionar existente --</option>
                       {availableIngredients.map(ing => (
@@ -1399,7 +1399,7 @@ export const MenuAdminView: React.FC = () => {
                       ))}
                     </select>
 
-                    <span className="text-xs text-tocineta-muted self-center">o</span>
+                    <span className="text-xs text-ink-muted self-center">o</span>
 
                     <input
                       type="text"
@@ -1409,14 +1409,14 @@ export const MenuAdminView: React.FC = () => {
                         setNewIngName(e.target.value);
                         if (e.target.value) setSelectedExistingIng('');
                       }}
-                      className="flex-1 bg-tocineta-bg border border-tocineta-border rounded-lg px-2.5 py-1.5 text-xs text-white"
+                      className="flex-1 bg-surface border border-border rounded-lg px-2.5 py-1.5 text-xs text-ink"
                     />
 
                     <button
                       type="button"
                       onClick={handleAddIngredient}
                       disabled={isAddingIngredient || (!selectedExistingIng && !newIngName.trim())}
-                      className="px-3 py-1.5 rounded-lg bg-tocineta-yellow text-tocineta-bg font-bold text-xs hover:bg-tocineta-yellow/90 disabled:opacity-50 transition-all shrink-0"
+                      className="px-3 py-1.5 rounded-lg bg-primary text-primary-ink font-bold text-xs hover:bg-primary/90 disabled:opacity-50 transition-all shrink-0"
                     >
                       {isAddingIngredient ? '...' : '+ Agregar'}
                     </button>
@@ -1425,7 +1425,7 @@ export const MenuAdminView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-3 border-t border-tocineta-border">
+            <div className="flex gap-2 pt-3 border-t border-border">
               <button
                 onClick={closeProductModal}
                 className="flex-1 py-2.5 rounded-xl border border-border text-xs font-bold text-ink-muted hover:text-ink hover:bg-surface-alt cursor-pointer"

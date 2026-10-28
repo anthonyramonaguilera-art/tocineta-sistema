@@ -1,0 +1,40 @@
+﻿
+========================================================================================
+­ƒôè TABLA OFICIAL DE DEFECTOS ÔÇö RONDA 2 (TOCINETA)
+========================================================================================
+| ID   | Estado | Fase            | T├¡tulo                                                |
+|------|--------|-----------------|-------------------------------------------------------|
+| B01  | ­ƒƒó GREEN | P1-A            | ├ìconos impresos como texto                            |
+| B02  | ­ƒö┤ RED   | P1-B            | Cabecera: t├¡tulo truncado                             |
+| B03  | ­ƒö┤ RED   | P1-B            | Contraste ilegible                                    |
+| B04  | ­ƒö┤ RED   | P1-B            | Personal y Carta con 'CargandoÔÇª' infinito             |
+| B05  | ­ƒö┤ RED   | P3              | Tomar pedido: textos, scroll, mesa opcional, cobro ar |
+| B06  | ­ƒö┤ RED   | P1-B            | 'Mesa Mesa 1'                                         |
+| B07  | ­ƒƒó GREEN | P2-C            | Vuelto: $0.00, sin vuelto mixto, sin monto a entregar |
+| B08  | ­ƒƒó GREEN | P2-C            | Cobro Express: ventana peque├▒a en PC / fondo que se m |
+| B09  | ­ƒƒó GREEN | P2-B + P2-C     | Caja y Cierre en $0.00 (contratos rotos)              |
+| B10  | ­ƒƒó GREEN | P1-A + P2-C     | Ventas del d├¡a: Anular/Recibo/pesta├▒as cortadas       |
+| B11  | ­ƒö┤ RED   | P3              | KDS: ilegible y demasiados toques                     |
+| B12  | ­ƒƒó GREEN | P2-B + P2-C     | Cifras distintas entre Caja/Panel/Finanzas/Inicio     |
+| B13  | ­ƒƒó GREEN | P2-A            | Tercera sede '(Alias)'                                |
+| B14  | ­ƒö┤ RED   | P4-A + P4-B     | Inventario r├ípido no deja agregar insumos             |
+| B15  | ­ƒö┤ RED   | P4-A + P4-B     | Sub-receta: 500 y falta explicar 'rendimiento del bat |
+| B16  | ­ƒö┤ RED   | P4-A + P4-B     | No se pueden crear recetas desde cero                 |
+| B17  | ­ƒö┤ RED   | P4-A + P4-B     | Merma: '($NaN)' y 500 por insumo                      |
+| B18  | ­ƒö┤ RED   | P4-A + P4-B     | Compras: casillas sin pedagog├¡a y sin foto de factura |
+| B19  | ­ƒö┤ RED   | P4-A + P4-C     | Asistente: 1 solo insumo/proveedor, recetas inoperant |
+| B20  | ­ƒö┤ RED   | P4-C            | Cotizador de eventos sin platos                       |
+| B21  | ­ƒö┤ RED   | P1-B            | 'Treinta' en la interfaz                              |
+| B22  | ­ƒö┤ RED   | P2-B + P6-A + P6-B | P&L: margen negativo en verde; datos basura de prueba |
+| B23  | ­ƒö┤ RED   | P3              | Sin alerta de pedido nuevo (sonido/vibraci├│n/borde)   |
+| B24  | ­ƒö┤ RED   | P4-A            | Anulaci├│n por LIKE                                    |
+| B25  | ­ƒö┤ RED   | P1-B            | 'Siguiente' deshabilitado sin motivo; contenido tapad |
+| B26  | ­ƒƒó GREEN | P1-A            | Emoji residual (­ƒô©, ÔÜÖ)                                |
+| B27  | ­ƒö┤ RED   | P6-B            | Stock negativo sin alerta clara (Salchicha ÔêÆ4)        |
+| B28  | ­ƒƒó GREEN | P2-A            | Turno por sede en vez de jornada global               |
+| B29  | ­ƒö┤ RED   | P4-A            | Merma duplicada como gasto                            |
+| B30  | ­ƒö┤ RED   | P7              | MenuAdminView.tsx de 1.496 l├¡neas                     |
+========================================================================================
+­ƒôê Resumen: 30 Defectos | ­ƒƒó Verdes: 9 (30.0%) | ­ƒö┤ Rojos: 21 (70.0%)
+========================================================================================
+

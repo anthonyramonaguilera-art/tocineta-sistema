@@ -27,6 +27,7 @@ const VARIANT_STYLES: Record<
   {
     container: string;
     iconColor: string;
+    iconBg: string;
     titleColor: string;
     textColor: string;
     dismissBtn: string;
@@ -34,7 +35,8 @@ const VARIANT_STYLES: Record<
 > = {
   info: {
     container: 'bg-surface-alt border-border text-ink',
-    iconColor: 'text-primary',
+    iconColor: 'text-primary-ink',
+    iconBg: 'bg-primary border-primary/40',
     titleColor: 'text-ink',
     textColor: 'text-ink-muted',
     dismissBtn: 'bg-surface hover:bg-surface-hover text-ink border-border hover:border-ink-muted'
@@ -42,6 +44,7 @@ const VARIANT_STYLES: Record<
   success: {
     container: 'bg-success-subtle border-success/30 text-ink',
     iconColor: 'text-success',
+    iconBg: 'bg-surface border-success/30',
     titleColor: 'text-success',
     textColor: 'text-ink',
     dismissBtn: 'bg-surface hover:bg-surface-hover text-ink border-success/30'
@@ -49,6 +52,7 @@ const VARIANT_STYLES: Record<
   warning: {
     container: 'bg-warning-subtle border-warning/40 text-ink',
     iconColor: 'text-warning',
+    iconBg: 'bg-surface border-warning/40',
     titleColor: 'text-warning',
     textColor: 'text-ink',
     dismissBtn: 'bg-surface hover:bg-surface-hover text-ink border-warning/40'
@@ -56,6 +60,7 @@ const VARIANT_STYLES: Record<
   danger: {
     container: 'bg-danger-subtle border-danger/40 text-ink',
     iconColor: 'text-danger',
+    iconBg: 'bg-surface border-danger/40',
     titleColor: 'text-danger',
     textColor: 'text-ink',
     dismissBtn: 'bg-surface hover:bg-surface-hover text-ink border-danger/40'
@@ -116,7 +121,7 @@ export const InfoCallout: React.FC<InfoCalloutProps> = ({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-xl bg-surface border border-border text-ink hover:bg-surface-alt transition-colors"
           title="Mostrar guía explicativa"
         >
-          <Icon name="Lightbulb" size={14} className="text-primary" />
+          <Icon name="Lightbulb" size={14} className="text-ink" />
           <span>Ver guía rápida</span>
         </button>
       </div>
@@ -131,7 +136,7 @@ export const InfoCallout: React.FC<InfoCalloutProps> = ({
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="p-2 rounded-xl bg-surface border border-border shrink-0 mt-0.5">
+          <div className={`p-2 rounded-xl border shrink-0 mt-0.5 ${styles.iconBg}`}>
             <Icon name={currentIcon} size={20} className={styles.iconColor} />
           </div>
           <div>

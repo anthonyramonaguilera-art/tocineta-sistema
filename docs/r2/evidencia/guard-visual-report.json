@@ -18,7 +18,7 @@
     "viewport": "movil-360x800",
     "role": "admin",
     "route": "#kds",
-    "detail": "20 elemento(s) con contraste inferior a WCAG AA"
+    "detail": "26 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -38,13 +38,6 @@
     "type": "COLOR_CONTRAST",
     "viewport": "movil-360x800",
     "role": "admin",
-    "route": "#profitability",
-    "detail": "12 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "movil-360x800",
-    "role": "admin",
     "route": "#finances",
     "detail": "2 elemento(s) con contraste inferior a WCAG AA"
   },
@@ -60,27 +53,6 @@
     "viewport": "movil-360x800",
     "role": "admin",
     "route": "#owner",
-    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "movil-360x800",
-    "role": "admin",
-    "route": "#menu-admin",
-    "detail": "173 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "HORIZONTAL_OVERFLOW",
-    "viewport": "movil-360x800",
-    "role": "admin",
-    "route": "#staff",
-    "detail": "Página desborda horizontalmente: scrollWidth=427px > innerWidth=360px"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "movil-360x800",
-    "role": "admin",
-    "route": "#staff",
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
@@ -109,7 +81,7 @@
     "viewport": "movil-360x800",
     "role": "cajera",
     "route": "#kds",
-    "detail": "20 elemento(s) con contraste inferior a WCAG AA"
+    "detail": "26 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -129,13 +101,6 @@
     "type": "COLOR_CONTRAST",
     "viewport": "movil-360x800",
     "role": "cajera",
-    "route": "#profitability",
-    "detail": "12 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "movil-360x800",
-    "role": "cajera",
     "route": "#finances",
     "detail": "2 elemento(s) con contraste inferior a WCAG AA"
   },
@@ -159,20 +124,6 @@
     "role": "cajera",
     "route": "#menu-admin",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "HORIZONTAL_OVERFLOW",
-    "viewport": "movil-360x800",
-    "role": "cajera",
-    "route": "#staff",
-    "detail": "Página desborda horizontalmente: scrollWidth=429px > innerWidth=360px"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "movil-360x800",
-    "role": "cajera",
-    "route": "#staff",
-    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "CONSOLE_ERROR",
@@ -207,7 +158,7 @@
     "viewport": "movil-360x800",
     "role": "mesero",
     "route": "#kds",
-    "detail": "20 elemento(s) con contraste inferior a WCAG AA"
+    "detail": "26 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "HORIZONTAL_OVERFLOW",
@@ -220,13 +171,6 @@
     "type": "COLOR_CONTRAST",
     "viewport": "movil-360x800",
     "role": "mesero",
-    "route": "#profitability",
-    "detail": "12 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "movil-360x800",
-    "role": "mesero",
     "route": "#finances",
     "detail": "2 elemento(s) con contraste inferior a WCAG AA"
   },
@@ -250,20 +194,6 @@
     "role": "mesero",
     "route": "#menu-admin",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "HORIZONTAL_OVERFLOW",
-    "viewport": "movil-360x800",
-    "role": "mesero",
-    "route": "#staff",
-    "detail": "Página desborda horizontalmente: scrollWidth=429px > innerWidth=360px"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "movil-360x800",
-    "role": "mesero",
-    "route": "#staff",
-    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "CONSOLE_ERROR",
@@ -298,7 +228,7 @@
     "viewport": "movil-360x800",
     "role": "plancha",
     "route": "#kds",
-    "detail": "20 elemento(s) con contraste inferior a WCAG AA"
+    "detail": "26 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "HORIZONTAL_OVERFLOW",
@@ -311,13 +241,6 @@
     "type": "COLOR_CONTRAST",
     "viewport": "movil-360x800",
     "role": "plancha",
-    "route": "#profitability",
-    "detail": "12 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "movil-360x800",
-    "role": "plancha",
     "route": "#finances",
     "detail": "2 elemento(s) con contraste inferior a WCAG AA"
   },
@@ -341,20 +264,6 @@
     "role": "plancha",
     "route": "#menu-admin",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "HORIZONTAL_OVERFLOW",
-    "viewport": "movil-360x800",
-    "role": "plancha",
-    "route": "#staff",
-    "detail": "Página desborda horizontalmente: scrollWidth=429px > innerWidth=360px"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "movil-360x800",
-    "role": "plancha",
-    "route": "#staff",
-    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "CONSOLE_ERROR",
@@ -382,7 +291,7 @@
     "viewport": "escritorio-1280x800",
     "role": "admin",
     "route": "#kds",
-    "detail": "20 elemento(s) con contraste inferior a WCAG AA"
+    "detail": "26 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -395,13 +304,6 @@
     "type": "COLOR_CONTRAST",
     "viewport": "escritorio-1280x800",
     "role": "admin",
-    "route": "#profitability",
-    "detail": "12 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "escritorio-1280x800",
-    "role": "admin",
     "route": "#finances",
     "detail": "2 elemento(s) con contraste inferior a WCAG AA"
   },
@@ -417,20 +319,6 @@
     "viewport": "escritorio-1280x800",
     "role": "admin",
     "route": "#owner",
-    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "escritorio-1280x800",
-    "role": "admin",
-    "route": "#menu-admin",
-    "detail": "173 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "escritorio-1280x800",
-    "role": "admin",
-    "route": "#staff",
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
@@ -452,7 +340,7 @@
     "viewport": "escritorio-1280x800",
     "role": "cajera",
     "route": "#kds",
-    "detail": "20 elemento(s) con contraste inferior a WCAG AA"
+    "detail": "26 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -465,13 +353,6 @@
     "type": "COLOR_CONTRAST",
     "viewport": "escritorio-1280x800",
     "role": "cajera",
-    "route": "#profitability",
-    "detail": "12 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "escritorio-1280x800",
-    "role": "cajera",
     "route": "#finances",
     "detail": "2 elemento(s) con contraste inferior a WCAG AA"
   },
@@ -495,13 +376,6 @@
     "role": "cajera",
     "route": "#menu-admin",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "escritorio-1280x800",
-    "role": "cajera",
-    "route": "#staff",
-    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "CONSOLE_ERROR",
@@ -529,14 +403,7 @@
     "viewport": "escritorio-1280x800",
     "role": "mesero",
     "route": "#kds",
-    "detail": "21 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "escritorio-1280x800",
-    "role": "mesero",
-    "route": "#profitability",
-    "detail": "12 elemento(s) con contraste inferior a WCAG AA"
+    "detail": "26 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -565,13 +432,6 @@
     "role": "mesero",
     "route": "#menu-admin",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "escritorio-1280x800",
-    "role": "mesero",
-    "route": "#staff",
-    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "CONSOLE_ERROR",
@@ -599,14 +459,7 @@
     "viewport": "escritorio-1280x800",
     "role": "plancha",
     "route": "#kds",
-    "detail": "21 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "escritorio-1280x800",
-    "role": "plancha",
-    "route": "#profitability",
-    "detail": "12 elemento(s) con contraste inferior a WCAG AA"
+    "detail": "26 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -635,13 +488,6 @@
     "role": "plancha",
     "route": "#menu-admin",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "COLOR_CONTRAST",
-    "viewport": "escritorio-1280x800",
-    "role": "plancha",
-    "route": "#staff",
-    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "CONSOLE_ERROR",

@@ -1,0 +1,31 @@
+# ESTADO DE EJECUCIÓN — NOCHE-02
+
+- **Fase actual:** Fase 0 — Reconciliación P1-B (COMPLETA) -> Transición a P3
+- **Tarea actual:** Cierre de Fase 0 y arranque de P3
+- **Piso de pruebas:** 337 pruebas pasando (29 en shared + 308 en server). Cero pruebas rotas ni omitidas.
+- **Defectos verdes acumulados:** 15 verdes (B01, B02, B03, B04, B06, B07, B08, B09, B10, B12, B13, B21, B25, B26, B28), 15 rojos (50.0% de la suite completa).
+- **Puertas de calidad Fase 0:**
+  - `pnpm guard`: VERDE
+  - `pnpm -r run lint`: VERDE
+  - `pnpm -r run build`: VERDE
+  - `pnpm test`: VERDE (337/337 pasando, piso mantenido)
+  - `r2:e2e` (B02, B03, B04, B06, B21, B25): VERDE (12/12 pasando en Chromium real)
+  - `guard:visual`: Vistas de P1-B (`#staff`, `#menu-admin`) con 0 violaciones de contraste y 0 desbordes.
+  - `git diff Núcleo Sagrado`: VACÍO
+- **Rama activa:** `r2/noche-02`
+- **Tareas hechas:**
+  - Preparación y confirmación de tags previos de P2 ancestros de HEAD (`a225500` chore(r2): estado previo a noche-02).
+  - Creación de rama de trabajo aislada `r2/noche-02`.
+  - Verificación de línea base de tests (337 pruebas) y estado inicial de defectos (9 verdes / 21 rojos).
+  - Auditoría de migración 0029 en solo lectura (solo reasigna `sede_alta_vista` -> `loc_alta_vista`).
+  - Ejecución de pruebas Playwright de P1-B: B02, B03, B04, B06, B21, B25 pasando 100% en Chromium real.
+  - Corrección de desborde horizontal en `#staff` agregando navegación deslizable a las pestañas.
+  - Corrección de tokens de contraste en `tokens.css` (`--color-success: #166534`, `--color-danger: #B91C1C` / `#F87171`).
+  - Corrección de contraste en `InfoCallout` (badge `bg-primary text-primary-ink`, restore icon `text-ink`).
+  - Corrección de estilos legacy en `MenuAdminView.tsx` y `StaffManagementView.tsx` (eliminación de textos amarillos sobre fondos claros y tablas oscuras hardcodeadas).
+  - Actualización formal de `docs/r2/defects.json` (15 verdes / 50.0%) con validación ratchet de `pnpm r2:status`.
+- **Decisiones:**
+  - Fase 0 cerrada satisfactoriamente con tag `r2-p1-b-cierre`.
+  - Habilitado inicio de P3 según regla de avance.
+- **Bloqueos:** Ninguno.
+- **Siguiente paso exacto:** Iniciar Fase P3 (Comandero táctil sin scroll vertical a 360x640, ajuste `ask_table_on_order`, y KDS de un toque con alertas).
