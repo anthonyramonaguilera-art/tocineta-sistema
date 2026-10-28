@@ -3,6 +3,7 @@ import { type Station } from '../../db/schema.js';
 import { getKitchenBuildableLines } from '../orders/kitchen-queries.js';
 import { publishDomainEvent } from '../events/event-bus.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
+import { deductInventoryForOrder } from '../profitability/recipes-service.js';
 
 export interface KdsOrderLineDto {
   lineId: string;
@@ -327,6 +328,12 @@ export function updateKdsLineStatus(
         updated_at_ms = ?
     WHERE id = ?
   `).run(newFulfillmentStatus, stationStatusHotDogs, stationStatusHamburguesas, now, line.order_id);
+
+  // D2: Descuento de inventario una sola vez por orden (al entrar a cocina)
+  if (newStatus === 'preparando' || newFulfillmentStatus === 'en_preparacion') {
+    const ord = rawDb.prepare('SELECT location_id FROM orders WHERE id = ?').get(line.order_id) as any;
+    deductInventoryForOrder(rawDb, line.order_id, ord?.location_id || 'loc_alta_vista', now, actorUserId || 'usr_kds');
+  }
 
   // Calcular estaciones faltantes
   const missingStations: Station[] = [];

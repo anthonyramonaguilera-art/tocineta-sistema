@@ -7,7 +7,7 @@
       "-c",
       "playwright.r2.config.ts",
       "--grep",
-      "B05|B11|B23"
+      "B15|B17|B24|B29"
     ],
     "configFile": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\playwright.r2.config.ts",
     "rootDir": "C:/Users/Shell/Documents/Varonsmedia/clientes/tocinetasonrie/SISTEMA/tools/r2-harness/specs",
@@ -186,8 +186,8 @@
           "column": 6,
           "specs": [
             {
-              "title": "[B05] Tomar pedido permite flujo rápido sin mesa obligatoria y cobro accesible sin scroll excesivo",
-              "ok": true,
+              "title": "[B15] Sub-receta se guarda exitosamente con cálculo de rendimiento de batch sin 500",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -200,44 +200,73 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2549,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 796,
+                      "error": {
+                        "message": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-3\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m",
+                        "stack": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-3\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:311:80",
+                        "location": {
+                          "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                          "column": 80,
+                          "line": 311
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 309 |\u001b[39m     }\n \u001b[90m 310 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 311 |\u001b[39m     expect(status\u001b[33m,\u001b[39m \u001b[32m`POST /api/fase3/sub-recipes falló con ${status}: ${body}`\u001b[39m)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m400\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 312 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 313 |\u001b[39m\n \u001b[90m 314 |\u001b[39m   test(\u001b[32m'[B16] Creación de recetas desde cero permite vincular insumos y guardar modo de receta'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                            "column": 80,
+                            "line": 311
+                          },
+                          "message": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-3\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n\n  309 |     }\n  310 |\n> 311 |     expect(status, `POST /api/fase3/sub-recipes falló con ${status}: ${body}`).toBeLessThan(400);\n      |                                                                                ^\n  312 |   });\n  313 |\n  314 |   test('[B16] Creación de recetas desde cero permite vincular insumos y guardar modo de receta', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:311:80"
+                        }
+                      ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T15:32:28.767Z",
+                      "startTime": "2026-10-28T16:56:02.588Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-90be4-cesible-sin-scroll-excesivo-movil-360x800\\test-finished-1.png"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-9d500-endimiento-de-batch-sin-500-movil-360x800\\test-failed-1.png"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-90be4-cesible-sin-scroll-excesivo-movil-360x800\\video.webm"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-9d500-endimiento-de-batch-sin-500-movil-360x800\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-9d500-endimiento-de-batch-sin-500-movil-360x800\\error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-90be4-cesible-sin-scroll-excesivo-movil-360x800\\trace.zip"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-9d500-endimiento-de-batch-sin-500-movil-360x800\\trace.zip"
                         }
-                      ]
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                        "column": 80,
+                        "line": 311
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "63668c65b43239daec34-17acb6d9c4b5b460ebec",
+              "id": "63668c65b43239daec34-ffcb7977e8aee76d2c37",
               "file": "r2-defects.spec.ts",
-              "line": 86,
+              "line": 281,
               "column": 3
             },
             {
-              "title": "[B11] KDS presenta comandas legibles y permite avanzar estado con un solo toque",
-              "ok": true,
+              "title": "[B17] Registro de merma no muestra \"($NaN)\" y responde 2xx sin 500",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -248,46 +277,79 @@
                   "projectName": "movil-360x800",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 1902,
-                      "errors": [],
-                      "stdout": [],
+                      "status": "failed",
+                      "duration": 721,
+                      "error": {
+                        "message": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-5\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m",
+                        "stack": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-5\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:355:74",
+                        "location": {
+                          "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                          "column": 74,
+                          "line": 355
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 353 |\u001b[39m     }\n \u001b[90m 354 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 355 |\u001b[39m     expect(status\u001b[33m,\u001b[39m \u001b[32m`POST /api/fase3/waste falló con ${status}: ${body}`\u001b[39m)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m400\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 356 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 357 |\u001b[39m\n \u001b[90m 358 |\u001b[39m   test(\u001b[32m'[B18] Registro de compras incluye guía pedagógica y foto de factura'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                            "column": 74,
+                            "line": 355
+                          },
+                          "message": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-5\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n\n  353 |     }\n  354 |\n> 355 |     expect(status, `POST /api/fase3/waste falló con ${status}: ${body}`).toBeLessThan(400);\n      |                                                                          ^\n  356 |   });\n  357 |\n  358 |   test('[B18] Registro de compras incluye guía pedagógica y foto de factura', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:355:74"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "[B17 SERVER ERROR CAPTURED] {\n  id: \u001b[32m'serr_1793206565098_kc9zvl0'\u001b[39m,\n  request_id: \u001b[32m'req-5'\u001b[39m,\n  method: \u001b[32m'POST'\u001b[39m,\n  url: \u001b[32m'/api/fase3/waste'\u001b[39m,\n  status: \u001b[33m500\u001b[39m,\n  code: \u001b[32m'INTERNAL'\u001b[39m,\n  message: \u001b[32m\"Producto 'null' no encontrado\"\u001b[39m,\n  stack: \u001b[32m\"Error: Producto 'null' no encontrado\\n\"\u001b[39m +\n    \u001b[32m'    at <anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:125:24)\\n'\u001b[39m +\n    \u001b[32m'    at sqliteTransaction (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\better-sqlite3@13.0.3\\\\node_modules\\\\better-sqlite3\\\\lib\\\\methods\\\\transaction.js:65:24)\\n'\u001b[39m +\n    \u001b[32m'    at registerWasteLog (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:170:3)\\n'\u001b[39m +\n    \u001b[32m'    at Object.<anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\fase3-routes.ts:448:17)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallbackInner (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:190:24)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallback (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:155:5)\\n'\u001b[39m +\n    \u001b[32m'    at next (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:236:9)\\n'\u001b[39m +\n    \u001b[32m'    at handleResolve (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:253:7)\\n'\u001b[39m +\n    \u001b[32m'    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)'\u001b[39m,\n  body_json: \u001b[32m'{\"locationId\":\"loc_alta_vista\",\"supplyId\":\"sup_salchicha\",\"productId\":null,\"quantity\":2,\"unitCostUsdCents\":40,\"reason\":\"MERMA_VENCIMIENTO\",\"notes\":\"Test B17\"}'\u001b[39m,\n  user_id: \u001b[32m'usr_test_admin'\u001b[39m,\n  created_at_ms: \u001b[33m1793206565098\u001b[39m\n}\n"
+                        }
+                      ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T15:32:31.778Z",
+                      "startTime": "2026-10-28T16:56:04.620Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-31e50-ar-estado-con-un-solo-toque-movil-360x800\\test-finished-1.png"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b301b--NaN-y-responde-2xx-sin-500-movil-360x800\\test-failed-1.png"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-31e50-ar-estado-con-un-solo-toque-movil-360x800\\video.webm"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b301b--NaN-y-responde-2xx-sin-500-movil-360x800\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b301b--NaN-y-responde-2xx-sin-500-movil-360x800\\error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-31e50-ar-estado-con-un-solo-toque-movil-360x800\\trace.zip"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b301b--NaN-y-responde-2xx-sin-500-movil-360x800\\trace.zip"
                         }
-                      ]
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                        "column": 74,
+                        "line": 355
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "63668c65b43239daec34-483b52c244bf9bdae71d",
+              "id": "63668c65b43239daec34-3a05dbff19f7df3bf357",
               "file": "r2-defects.spec.ts",
-              "line": 217,
+              "line": 324,
               "column": 3
             },
             {
-              "title": "[B23] KDS ejecuta audio, navigator.vibrate y clase de destello al recibir nuevo pedido",
-              "ok": true,
+              "title": "[B24] Anular orden #1 no modifica movimientos de órdenes #10 ni #11 (reversa exacta por ID, no LIKE)",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -298,46 +360,134 @@
                   "projectName": "movil-360x800",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 2,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2596,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 38,
+                      "error": {
+                        "message": "Error: La anulación por LIKE '%1%' coincidió indebidamente con: ORD-1, ORD-10, ORD-11\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m3\u001b[39m",
+                        "stack": "Error: La anulación por LIKE '%1%' coincidió indebidamente con: ORD-1, ORD-10, ORD-11\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:481:136",
+                        "location": {
+                          "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                          "column": 136,
+                          "line": 481
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 479 |\u001b[39m     rawDb\u001b[33m.\u001b[39mclose()\u001b[33m;\u001b[39m\n \u001b[90m 480 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 481 |\u001b[39m     expect(matched\u001b[33m.\u001b[39mlength\u001b[33m,\u001b[39m \u001b[32m`La anulación por LIKE '%1%' coincidió indebidamente con: ${matched.map(m => m.reference_doc).join(', ')}`\u001b[39m)\u001b[33m.\u001b[39mtoBe(\u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                                                                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 482 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 483 |\u001b[39m\n \u001b[90m 484 |\u001b[39m   test(\u001b[32m'[B25] Botón \"Siguiente\" en asistentes no se deshabilita sin validación visible y contenido no queda tapado por el pie'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                            "column": 136,
+                            "line": 481
+                          },
+                          "message": "Error: La anulación por LIKE '%1%' coincidió indebidamente con: ORD-1, ORD-10, ORD-11\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n\n  479 |     rawDb.close();\n  480 |\n> 481 |     expect(matched.length, `La anulación por LIKE '%1%' coincidió indebidamente con: ${matched.map(m => m.reference_doc).join(', ')}`).toBe(1);\n      |                                                                                                                                        ^\n  482 |   });\n  483 |\n  484 |   test('[B25] Botón \"Siguiente\" en asistentes no se deshabilita sin validación visible y contenido no queda tapado por el pie', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:481:136"
+                        }
+                      ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T15:32:33.883Z",
+                      "startTime": "2026-10-28T16:56:07.227Z",
                       "annotations": [],
                       "attachments": [
                         {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-8b267-llo-al-recibir-nuevo-pedido-movil-360x800\\test-finished-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-8b267-llo-al-recibir-nuevo-pedido-movil-360x800\\video.webm"
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-57d82-ersa-exacta-por-ID-no-LIKE--movil-360x800\\error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-8b267-llo-al-recibir-nuevo-pedido-movil-360x800\\trace.zip"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-57d82-ersa-exacta-por-ID-no-LIKE--movil-360x800\\trace.zip"
                         }
-                      ]
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                        "column": 136,
+                        "line": 481
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "63668c65b43239daec34-518c9095cbb701138b11",
+              "id": "63668c65b43239daec34-54139556a1d25dbaef15",
               "file": "r2-defects.spec.ts",
-              "line": 419,
+              "line": 459,
               "column": 3
             },
             {
-              "title": "[B05] Tomar pedido permite flujo rápido sin mesa obligatoria y cobro accesible sin scroll excesivo",
-              "ok": true,
+              "title": "[B29] Registro de merma no genera fila duplicada en operating_expenses",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "movil-360x800",
+                  "projectName": "movil-360x800",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 38,
+                      "error": {
+                        "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m25\u001b[39m\nReceived: \u001b[31m26\u001b[39m",
+                        "stack": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m25\u001b[39m\nReceived: \u001b[31m26\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:562:90",
+                        "location": {
+                          "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                          "column": 90,
+                          "line": 562
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 560 |\u001b[39m     rawDb\u001b[33m.\u001b[39mclose()\u001b[33m;\u001b[39m\n \u001b[90m 561 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 562 |\u001b[39m     expect(countAfter\u001b[33m,\u001b[39m \u001b[32m'La merma se duplicó como gasto operativo en operating_expenses'\u001b[39m)\u001b[33m.\u001b[39mtoBe(countBefore)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 563 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 564 |\u001b[39m\n \u001b[90m 565 |\u001b[39m   test(\u001b[32m'[B30] MenuAdminView.tsx respeta el límite estricto de gobernanza de 400 líneas'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                            "column": 90,
+                            "line": 562
+                          },
+                          "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m25\u001b[39m\nReceived: \u001b[31m26\u001b[39m\n\n  560 |     rawDb.close();\n  561 |\n> 562 |     expect(countAfter, 'La merma se duplicó como gasto operativo en operating_expenses').toBe(countBefore);\n      |                                                                                          ^\n  563 |   });\n  564 |\n  565 |   test('[B30] MenuAdminView.tsx respeta el límite estricto de gobernanza de 400 líneas', () => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:562:90"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T16:56:08.633Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-04135-icada-en-operating-expenses-movil-360x800\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-04135-icada-en-operating-expenses-movil-360x800\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                        "column": 90,
+                        "line": 562
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "63668c65b43239daec34-a42a50836b45600ed7d5",
+              "file": "r2-defects.spec.ts",
+              "line": 544,
+              "column": 3
+            },
+            {
+              "title": "[B15] Sub-receta se guarda exitosamente con cálculo de rendimiento de batch sin 500",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -348,46 +498,75 @@
                   "projectName": "escritorio-1280x800",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 4,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2237,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 1407,
+                      "error": {
+                        "message": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-7\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m",
+                        "stack": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-7\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:311:80",
+                        "location": {
+                          "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                          "column": 80,
+                          "line": 311
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 309 |\u001b[39m     }\n \u001b[90m 310 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 311 |\u001b[39m     expect(status\u001b[33m,\u001b[39m \u001b[32m`POST /api/fase3/sub-recipes falló con ${status}: ${body}`\u001b[39m)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m400\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 312 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 313 |\u001b[39m\n \u001b[90m 314 |\u001b[39m   test(\u001b[32m'[B16] Creación de recetas desde cero permite vincular insumos y guardar modo de receta'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                            "column": 80,
+                            "line": 311
+                          },
+                          "message": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-7\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n\n  309 |     }\n  310 |\n> 311 |     expect(status, `POST /api/fase3/sub-recipes falló con ${status}: ${body}`).toBeLessThan(400);\n      |                                                                                ^\n  312 |   });\n  313 |\n  314 |   test('[B16] Creación de recetas desde cero permite vincular insumos y guardar modo de receta', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:311:80"
+                        }
+                      ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T15:32:38.718Z",
+                      "startTime": "2026-10-28T16:56:09.818Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-90be4-cesible-sin-scroll-excesivo-escritorio-1280x800\\test-finished-1.png"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-9d500-endimiento-de-batch-sin-500-escritorio-1280x800\\test-failed-1.png"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-90be4-cesible-sin-scroll-excesivo-escritorio-1280x800\\video.webm"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-9d500-endimiento-de-batch-sin-500-escritorio-1280x800\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-9d500-endimiento-de-batch-sin-500-escritorio-1280x800\\error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-90be4-cesible-sin-scroll-excesivo-escritorio-1280x800\\trace.zip"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-9d500-endimiento-de-batch-sin-500-escritorio-1280x800\\trace.zip"
                         }
-                      ]
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                        "column": 80,
+                        "line": 311
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "63668c65b43239daec34-d4c81dc06a0700f95309",
+              "id": "63668c65b43239daec34-acbd4d6e88c29aa3c347",
               "file": "r2-defects.spec.ts",
-              "line": 86,
+              "line": 281,
               "column": 3
             },
             {
-              "title": "[B11] KDS presenta comandas legibles y permite avanzar estado con un solo toque",
-              "ok": true,
+              "title": "[B17] Registro de merma no muestra \"($NaN)\" y responde 2xx sin 500",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -398,46 +577,79 @@
                   "projectName": "escritorio-1280x800",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 5,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2723,
-                      "errors": [],
-                      "stdout": [],
+                      "status": "failed",
+                      "duration": 808,
+                      "error": {
+                        "message": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-9\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m",
+                        "stack": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-9\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:355:74",
+                        "location": {
+                          "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                          "column": 74,
+                          "line": 355
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 353 |\u001b[39m     }\n \u001b[90m 354 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 355 |\u001b[39m     expect(status\u001b[33m,\u001b[39m \u001b[32m`POST /api/fase3/waste falló con ${status}: ${body}`\u001b[39m)\u001b[33m.\u001b[39mtoBeLessThan(\u001b[35m400\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 356 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 357 |\u001b[39m\n \u001b[90m 358 |\u001b[39m   test(\u001b[32m'[B18] Registro de compras incluye guía pedagógica y foto de factura'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                            "column": 74,
+                            "line": 355
+                          },
+                          "message": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-9\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n\n  353 |     }\n  354 |\n> 355 |     expect(status, `POST /api/fase3/waste falló con ${status}: ${body}`).toBeLessThan(400);\n      |                                                                          ^\n  356 |   });\n  357 |\n  358 |   test('[B18] Registro de compras incluye guía pedagógica y foto de factura', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:355:74"
+                        }
+                      ],
+                      "stdout": [
+                        {
+                          "text": "[B17 SERVER ERROR CAPTURED] {\n  id: \u001b[32m'serr_1793206574878_ua6r7q8'\u001b[39m,\n  request_id: \u001b[32m'req-9'\u001b[39m,\n  method: \u001b[32m'POST'\u001b[39m,\n  url: \u001b[32m'/api/fase3/waste'\u001b[39m,\n  status: \u001b[33m500\u001b[39m,\n  code: \u001b[32m'INTERNAL'\u001b[39m,\n  message: \u001b[32m\"Producto 'null' no encontrado\"\u001b[39m,\n  stack: \u001b[32m\"Error: Producto 'null' no encontrado\\n\"\u001b[39m +\n    \u001b[32m'    at <anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:125:24)\\n'\u001b[39m +\n    \u001b[32m'    at sqliteTransaction (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\better-sqlite3@13.0.3\\\\node_modules\\\\better-sqlite3\\\\lib\\\\methods\\\\transaction.js:65:24)\\n'\u001b[39m +\n    \u001b[32m'    at registerWasteLog (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:170:3)\\n'\u001b[39m +\n    \u001b[32m'    at Object.<anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\fase3-routes.ts:448:17)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallbackInner (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:190:24)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallback (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:155:5)\\n'\u001b[39m +\n    \u001b[32m'    at next (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:236:9)\\n'\u001b[39m +\n    \u001b[32m'    at handleResolve (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:253:7)\\n'\u001b[39m +\n    \u001b[32m'    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)'\u001b[39m,\n  body_json: \u001b[32m'{\"locationId\":\"loc_alta_vista\",\"supplyId\":\"sup_salchicha\",\"productId\":null,\"quantity\":2,\"unitCostUsdCents\":40,\"reason\":\"MERMA_VENCIMIENTO\",\"notes\":\"Test B17\"}'\u001b[39m,\n  user_id: \u001b[32m'usr_test_admin'\u001b[39m,\n  created_at_ms: \u001b[33m1793206574878\u001b[39m\n}\n"
+                        }
+                      ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T15:32:41.331Z",
+                      "startTime": "2026-10-28T16:56:14.198Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-31e50-ar-estado-con-un-solo-toque-escritorio-1280x800\\test-finished-1.png"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b301b--NaN-y-responde-2xx-sin-500-escritorio-1280x800\\test-failed-1.png"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-31e50-ar-estado-con-un-solo-toque-escritorio-1280x800\\video.webm"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b301b--NaN-y-responde-2xx-sin-500-escritorio-1280x800\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b301b--NaN-y-responde-2xx-sin-500-escritorio-1280x800\\error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-31e50-ar-estado-con-un-solo-toque-escritorio-1280x800\\trace.zip"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b301b--NaN-y-responde-2xx-sin-500-escritorio-1280x800\\trace.zip"
                         }
-                      ]
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                        "column": 74,
+                        "line": 355
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "63668c65b43239daec34-c1587e3ff5dbb0ed7322",
+              "id": "63668c65b43239daec34-90e0ccd89204ee183666",
               "file": "r2-defects.spec.ts",
-              "line": 217,
+              "line": 324,
               "column": 3
             },
             {
-              "title": "[B23] KDS ejecuta audio, navigator.vibrate y clase de destello al recibir nuevo pedido",
-              "ok": true,
+              "title": "[B24] Anular orden #1 no modifica movimientos de órdenes #10 ni #11 (reversa exacta por ID, no LIKE)",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -448,41 +660,129 @@
                   "projectName": "escritorio-1280x800",
                   "results": [
                     {
-                      "workerIndex": 1,
+                      "workerIndex": 6,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2589,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 40,
+                      "error": {
+                        "message": "Error: La anulación por LIKE '%1%' coincidió indebidamente con: ORD-1, ORD-10, ORD-11\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m3\u001b[39m",
+                        "stack": "Error: La anulación por LIKE '%1%' coincidió indebidamente con: ORD-1, ORD-10, ORD-11\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:481:136",
+                        "location": {
+                          "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                          "column": 136,
+                          "line": 481
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 479 |\u001b[39m     rawDb\u001b[33m.\u001b[39mclose()\u001b[33m;\u001b[39m\n \u001b[90m 480 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 481 |\u001b[39m     expect(matched\u001b[33m.\u001b[39mlength\u001b[33m,\u001b[39m \u001b[32m`La anulación por LIKE '%1%' coincidió indebidamente con: ${matched.map(m => m.reference_doc).join(', ')}`\u001b[39m)\u001b[33m.\u001b[39mtoBe(\u001b[35m1\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                                                                        \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 482 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 483 |\u001b[39m\n \u001b[90m 484 |\u001b[39m   test(\u001b[32m'[B25] Botón \"Siguiente\" en asistentes no se deshabilita sin validación visible y contenido no queda tapado por el pie'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                            "column": 136,
+                            "line": 481
+                          },
+                          "message": "Error: La anulación por LIKE '%1%' coincidió indebidamente con: ORD-1, ORD-10, ORD-11\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n\n  479 |     rawDb.close();\n  480 |\n> 481 |     expect(matched.length, `La anulación por LIKE '%1%' coincidió indebidamente con: ${matched.map(m => m.reference_doc).join(', ')}`).toBe(1);\n      |                                                                                                                                        ^\n  482 |   });\n  483 |\n  484 |   test('[B25] Botón \"Siguiente\" en asistentes no se deshabilita sin validación visible y contenido no queda tapado por el pie', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:481:136"
+                        }
+                      ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T15:32:44.225Z",
+                      "startTime": "2026-10-28T16:56:18.042Z",
                       "annotations": [],
                       "attachments": [
                         {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-8b267-llo-al-recibir-nuevo-pedido-escritorio-1280x800\\test-finished-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-8b267-llo-al-recibir-nuevo-pedido-escritorio-1280x800\\video.webm"
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-57d82-ersa-exacta-por-ID-no-LIKE--escritorio-1280x800\\error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-8b267-llo-al-recibir-nuevo-pedido-escritorio-1280x800\\trace.zip"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-57d82-ersa-exacta-por-ID-no-LIKE--escritorio-1280x800\\trace.zip"
                         }
-                      ]
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                        "column": 136,
+                        "line": 481
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "63668c65b43239daec34-ecdd51d39ff28347ebbd",
+              "id": "63668c65b43239daec34-18b1def065a2b3a8dc6d",
               "file": "r2-defects.spec.ts",
-              "line": 419,
+              "line": 459,
+              "column": 3
+            },
+            {
+              "title": "[B29] Registro de merma no genera fila duplicada en operating_expenses",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "escritorio-1280x800",
+                  "projectName": "escritorio-1280x800",
+                  "results": [
+                    {
+                      "workerIndex": 7,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 56,
+                      "error": {
+                        "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m26\u001b[39m\nReceived: \u001b[31m27\u001b[39m",
+                        "stack": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m26\u001b[39m\nReceived: \u001b[31m27\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:562:90",
+                        "location": {
+                          "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                          "column": 90,
+                          "line": 562
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 560 |\u001b[39m     rawDb\u001b[33m.\u001b[39mclose()\u001b[33m;\u001b[39m\n \u001b[90m 561 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 562 |\u001b[39m     expect(countAfter\u001b[33m,\u001b[39m \u001b[32m'La merma se duplicó como gasto operativo en operating_expenses'\u001b[39m)\u001b[33m.\u001b[39mtoBe(countBefore)\u001b[33m;\u001b[39m\n \u001b[90m     |\u001b[39m                                                                                          \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 563 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 564 |\u001b[39m\n \u001b[90m 565 |\u001b[39m   test(\u001b[32m'[B30] MenuAdminView.tsx respeta el límite estricto de gobernanza de 400 líneas'\u001b[39m\u001b[33m,\u001b[39m () \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                            "column": 90,
+                            "line": 562
+                          },
+                          "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m26\u001b[39m\nReceived: \u001b[31m27\u001b[39m\n\n  560 |     rawDb.close();\n  561 |\n> 562 |     expect(countAfter, 'La merma se duplicó como gasto operativo en operating_expenses').toBe(countBefore);\n      |                                                                                          ^\n  563 |   });\n  564 |\n  565 |   test('[B30] MenuAdminView.tsx respeta el límite estricto de gobernanza de 400 líneas', () => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:562:90"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T16:56:19.729Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-04135-icada-en-operating-expenses-escritorio-1280x800\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-04135-icada-en-operating-expenses-escritorio-1280x800\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                        "column": 90,
+                        "line": 562
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "63668c65b43239daec34-88897fcabbc4c359e446",
+              "file": "r2-defects.spec.ts",
+              "line": 544,
               "column": 3
             }
           ]
@@ -492,11 +792,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-28T15:32:19.756Z",
-    "duration": 28120.833,
-    "expected": 6,
+    "startTime": "2026-10-28T16:55:53.848Z",
+    "duration": 26351.523999999998,
+    "expected": 0,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 8,
     "flaky": 0
   }
 }
