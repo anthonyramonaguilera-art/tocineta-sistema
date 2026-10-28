@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
+import { resolveLocationId } from './locations-service.js';
 
 export interface SubRecipeRecord {
   id: string;
@@ -521,7 +522,7 @@ export function revertInventoryForOrder(
   try {
     const order = rawDb.prepare('SELECT order_number, location_id FROM orders WHERE id = ?').get(orderId) as any;
     const orderNum = order?.order_number || 0;
-    const locationId = rawLocationId || order?.location_id || 'sede_alta_vista';
+    const locationId = resolveLocationId(rawDb, rawLocationId || order?.location_id, actorUserId);
     const now = Date.now();
 
     // 1. Buscar si esta orden ya tuvo movimientos previos en inventory_movements

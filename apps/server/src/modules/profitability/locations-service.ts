@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
+import { AppError } from '../../lib/app-error.js';
 
 export interface LocationRecord {
   id: string;
@@ -28,16 +29,42 @@ export const OFFICIAL_LOCATIONS = [
     isActive: 1,
     address: 'Detrás de Torre Movistar, Alta Vista, Puerto Ordaz',
     phone: '0424-9728209'
-  },
-  {
-    id: 'sede_alta_vista',
-    name: 'Sede B: Alta Vista (Alias)',
-    type: 'sale' as const,
-    isActive: 1,
-    address: 'Detrás de Torre Movistar, Alta Vista, Puerto Ordaz',
-    phone: '0424-9728209'
   }
 ];
+
+/**
+ * Resuelve y valida el locationId de forma estricta (D7 / P2-A):
+ * 1. Si candidate es provisto, debe existir y estar activo en la tabla `locations`.
+ * 2. Si candidate no es provisto, intenta resolver la sede asignada al usuario (`users.default_location_id`).
+ * 3. Si ninguno es válido/activo, lanza AppError('LOCATION_REQUIRED', 400, ..., 'locationId').
+ * Prohibido devolver un literal fijo como fallback.
+ */
+export function resolveLocationId(
+  rawDb: Database.Database,
+  candidate?: string | null,
+  userId?: string | null
+): string {
+  if (candidate && typeof candidate === 'string' && candidate.trim() !== '') {
+    const trimmed = candidate.trim();
+    const loc = rawDb.prepare('SELECT id, is_active FROM locations WHERE id = ?').get(trimmed) as { id: string; is_active: number } | undefined;
+    if (loc && loc.is_active === 1) {
+      return loc.id;
+    }
+    throw new AppError('LOCATION_REQUIRED', 400, `La sede '${candidate}' no es válida o no está activa`, 'locationId');
+  }
+
+  if (userId && typeof userId === 'string' && userId.trim() !== '') {
+    const user = rawDb.prepare('SELECT default_location_id FROM users WHERE id = ?').get(userId.trim()) as { default_location_id?: string } | undefined;
+    if (user?.default_location_id) {
+      const loc = rawDb.prepare('SELECT id, is_active FROM locations WHERE id = ?').get(user.default_location_id) as { id: string; is_active: number } | undefined;
+      if (loc && loc.is_active === 1) {
+        return loc.id;
+      }
+    }
+  }
+
+  throw new AppError('LOCATION_REQUIRED', 400, 'Se requiere una sede válida y activa', 'locationId');
+}
 
 export function ensureOfficialLocations(rawDb: Database.Database): void {
   const now = Date.now();

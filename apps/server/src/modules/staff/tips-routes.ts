@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { extractSessionToken, hashToken } from '../../routes/auth.js';
 import { getDatabaseContext } from '../../db/connection.js';
 import { TipsService } from './tips-service.js';
+import { resolveLocationId } from '../profitability/locations-service.js';
 
 export const staffTipsRoutes: FastifyPluginAsync = async (fastify) => {
   const getSessionUser = (request: any, reply: any) => {
@@ -133,7 +134,8 @@ export const staffTipsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!session) return;
 
     const query = request.query as { locationId?: string; limit?: string };
-    const locationId = query.locationId || 'sede_alta_vista';
+    const dbCtx = getDatabaseContext();
+    const locationId = resolveLocationId(dbCtx.rawDb, query.locationId, session.user_id);
     const limit = query.limit ? parseInt(query.limit, 10) : 20;
 
     const pools = await TipsService.listPools(locationId, limit);

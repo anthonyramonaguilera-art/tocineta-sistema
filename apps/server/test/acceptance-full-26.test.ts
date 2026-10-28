@@ -1285,6 +1285,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
 
     // 3. Nivel 2: Deducción exacta de carne en inventario crítico y ahorro de Pan Brioche
     const testJornadaM15 = 'jornada_m15_inv_cert';
+    rawDb.prepare("UPDATE jornadas SET status = 'cerrada' WHERE status = 'abierta'").run();
     rawDb.prepare(`
       INSERT OR IGNORE INTO jornadas (id, opened_by_user_id, opened_at_ms, status)
       VALUES (?, 'usr_admin', ?, 'abierta')

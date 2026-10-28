@@ -269,6 +269,8 @@ describe('Hito M2 - Esquema de Dominio, Catálogo Oficial y Triggers Contables (
     const jornadaId = 'jornada_triggers_test';
 
     beforeAll(() => {
+      // Regla D1: Cerrar jornada de prueba previa antes de abrir nueva jornada en el mismo archivo
+      rawDb.prepare("UPDATE jornadas SET status = 'cerrada' WHERE status = 'abierta'").run();
       rawDb.prepare(`
         INSERT OR IGNORE INTO jornadas (id, opened_by_user_id, opened_at_ms, status)
         VALUES (?, 'usr_admin', ?, 'abierta')

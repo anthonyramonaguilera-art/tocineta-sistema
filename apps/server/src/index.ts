@@ -34,7 +34,7 @@ async function bootstrap() {
     console.log(`✨ Base de datos al día. Cero migraciones pendientes.`);
   }
 
-  // 2.1 Asegurar sedes oficiales y alias válidos (Sede A, Sede B / sede_alta_vista)
+  // 2.1 Asegurar sedes oficiales (Sede A: Los Olivos, Sede B: Alta Vista)
   ensureOfficialLocations(dbContext.rawDb);
 
   // 3. Saneamiento y sincronización de perfiles corporativos limpios (PRD v2.0)

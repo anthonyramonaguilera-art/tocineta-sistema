@@ -21,6 +21,7 @@ import {
 import { getPrinterConfig } from '../printing/worker.js';
 import { reverseCouponRedemptionForOrder } from '../coupons/coupon-service.js';
 import { revertInventoryForOrder } from '../profitability/recipes-service.js';
+import { resolveLocationId } from '../profitability/locations-service.js';
 
 export const SUPERVISOR_REFUND_LIMIT_USD_CENTS = 2000; // $20.00 USD límite para supervisor
 
@@ -296,8 +297,8 @@ export function reportOrderIncident(
       );
     }
 
-    // Asignación de sede con fallback seguro oficial
-    const locationId = order.location_id || 'sede_alta_vista';
+    // Asignación de sede sin fallbacks silenciosos (P2-A)
+    const locationId = resolveLocationId(rawDb, order.location_id, verifiedAuthorizer.id);
 
     // Reversión limpia e inmutable de inventario si existían movimientos
     revertInventoryForOrder(rawDb, orderId, locationId, input.reasonCode, verifiedAuthorizer.id);

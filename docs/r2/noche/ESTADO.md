@@ -1,21 +1,24 @@
 # ESTADO DE EJECUCIÓN — NOCHE-01
 
-- **Fase actual:** P2-A (Datos: dos sedes oficiales y jornada global única)
-- **Tarea actual:** Tarea 1: Quitar el alias del código (`OFFICIAL_LOCATIONS` y `ensureOfficialLocations`)
-- **Piso de pruebas (Línea Base):** 296 pruebas pasando (33 archivos de test). Prohibido bajar de 296.
-- **Defectos verdes baseline:** 3 verdes (B01, B10, B26), 27 rojos.
-- **Comandos verificados (coinciden con P0-B):**
-  - `pnpm guard`: `node scripts/ui-guard.mjs` (verde)
-  - `pnpm -r run lint`: `tsc --noEmit` en shared, server, web (verde)
-  - `pnpm -r run build`: compila shared, server y web (verde)
-  - `pnpm test`: vitest en server (296 pruebas verdes)
-  - `pnpm guard:visual`: `node scripts/guard-visual.mjs` (operativo, 94 violaciones detectadas en baseline)
-  - `pnpm r2:e2e`: `playwright test -c playwright.r2.config.ts` (operativo, 30 specs ejecutadas)
-  - `pnpm r2:status`: `node scripts/r2-status.mjs` (operativo)
+- **Fase actual:** P2-B (Servicio de Verdad Financiera única y contratos de dinero)
+- **Tarea actual:** Re-anclaje y lectura completa de `docs/r2/P2-B.md`
+- **Piso de pruebas (Línea Base):** 296 pruebas pasando.
+- **Piso actual verificado:** 301 pruebas pasando (34 archivos de test). Cero pruebas rotas ni omitidas.
+- **Defectos verdes acumulados:** 5 verdes (B01, B10, B13, B26, B28), 25 rojos.
+- **Puertas de calidad P2-A:**
+  - `pnpm guard`: VERDE (`docs/r2/evidencia/P2-A/gate-1-guard.txt`)
+  - `pnpm -r run lint`: VERDE (`docs/r2/evidencia/P2-A/gate-2-lint.txt`)
+  - `pnpm -r run build`: VERDE (`docs/r2/evidencia/P2-A/gate-3-build.txt`)
+  - `pnpm test`: VERDE 301/301 (`docs/r2/evidencia/P2-A/gate-4-test.txt`)
+  - `pnpm r2:e2e`: VERDE 34 specs pasadas (`docs/r2/evidencia/P2-A/gate-5-r2-e2e.txt`)
+  - `git diff Núcleo Sagrado`: VACÍO (0 líneas modificadas en archivos sagrados)
 - **Rama activa:** `r2/noche-01`
 - **Tareas hechas:**
   - Preparación completa e inicio de sesión nocturna (`8e87192` chore(r2): estado previo a noche-01).
+  - Inicialización y confirmación D1/D2 (`0a6b173` chore(r2): preparacion e inicio de noche-01).
+  - P2-A completo: migración 0029, sedes oficiales únicas, jornada global única con índice parcial, resolveLocationId sin fallbacks literales, informe `docs/informes/R2-P2-A.md`.
 - **Decisiones:**
   - D1 (Jornada global única) y D2 (inventario al entrar a cocina o cobrar) confirmados formalmente por el dueño.
+  - Columna heredada `jornadas.location_id` se preserva como deprecated documentada en `docs/r2/LIBRO-DE-REGLAS.md`.
 - **Bloqueos:** Ninguno.
-- **Siguiente paso exacto:** Iniciar Tarea 1 de P2-A confirmando con grep los hechos verificados de `OFFICIAL_LOCATIONS` en `locations-service.ts`.
+- **Siguiente paso exacto:** Realizar commit atómico de P2-A, crear tag `r2-p2-a`, re-anclarse leyendo `docs/r2/P2-B.md` y verificar los hechos verificados de P2-B.

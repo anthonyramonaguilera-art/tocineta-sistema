@@ -13,6 +13,7 @@ import { publishDomainEvent } from '../events/event-bus.js';
 import { getCurrentExchangeRate } from '../menu/menu-service.js';
 import { enqueueOrderPrintJobs } from '../printing/worker.js';
 import { deductInventoryForOrder, revertInventoryForOrder } from '../profitability/recipes-service.js';
+import { resolveLocationId } from '../profitability/locations-service.js';
 
 export interface OpenJornadaInput {
   openedByUserId: string;
@@ -75,9 +76,9 @@ export function openJornada(rawDb: Database.Database, input: OpenJornadaInput) {
 
   const currentRate = getCurrentExchangeRate(rawDb);
 
-  // Verificar si ya existe una jornada abierta
+  // Verificar si ya existe una jornada abierta (idempotente - D1 / P2-A)
   const existing = rawDb.prepare(`
-    SELECT * FROM jornadas WHERE status = 'abierta'
+    SELECT * FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1
   `).get() as any;
 
   if (existing) {
@@ -138,8 +139,8 @@ export function openJornada(rawDb: Database.Database, input: OpenJornadaInput) {
 export function openCashSession(rawDb: Database.Database, input: OpenCashSessionInput) {
   const now = Date.now();
 
-  // Asegurar jornada abierta
-  let jornada = rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta'").get() as any;
+  // Asegurar jornada abierta global (D1 / P2-A)
+  let jornada = rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
   if (!jornada) {
     jornada = openJornada(rawDb, {
       openedByUserId: input.userId,
@@ -200,7 +201,7 @@ export function openCashSession(rawDb: Database.Database, input: OpenCashSession
  * Obtener jornada abierta actual
  */
 export function getCurrentJornada(rawDb: Database.Database) {
-  const current = rawDb.prepare("SELECT * FROM jornadas WHERE status = 'abierta'").get() as any;
+  const current = rawDb.prepare("SELECT * FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
   if (!current) return null;
   return {
     ...current,
@@ -745,7 +746,7 @@ export interface AnnulOrderInCashierInput {
 
 /**
  * Anulación limpia de comanda en Caja:
- * - Fallback seguro de Sede: const locationId = order.location_id || 'sede_alta_vista'
+ * - Resolución estricta de Sede con resolveLocationId
  * - Actualiza atómicamente orders.fulfillment_status = 'cancelado' y order_lines.status = 'cancelado'
  * - Revierte inventario de recetas/insumos si existían movimientos previos (sin lanzar 500 si no hay receta)
  * - Emite el evento WebSocket correspondientes para limpiar el KDS inmediatamente.
@@ -765,8 +766,8 @@ export function annulOrderInCashier(
     throw err;
   }
 
-  // 1. Fallback seguro de Sede
-  const locationId = order.location_id || 'sede_alta_vista';
+  // 1. Resolución estricta de sede sin fallbacks silenciosos (P2-A)
+  const locationId = resolveLocationId(rawDb, order.location_id, input.actorUserId);
   const isPaid = order.payment_status === 'pagado';
   const newPaymentStatus = isPaid ? 'reembolsado' : 'anulado';
 

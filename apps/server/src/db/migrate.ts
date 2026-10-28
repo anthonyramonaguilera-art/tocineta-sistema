@@ -146,6 +146,32 @@ export async function runMigrations(
     const fullPath = path.join(migrationsFolder, migrationFile);
     const sqlContent = fs.readFileSync(fullPath, 'utf-8');
 
+    // Verificación especial R2 para jornadas abiertas en conflicto con actividad previa
+    if (migrationFile.includes('jornada') || sqlContent.includes('ux_jornada_abierta')) {
+      try {
+        const openJornadas = rawDb.prepare(
+          "SELECT id, opened_at_ms FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC"
+        ).all() as Array<{ id: string; opened_at_ms: number }>;
+        if (openJornadas.length > 1) {
+          const older = openJornadas.slice(1);
+          for (const j of older) {
+            const ordersCount = (rawDb.prepare('SELECT COUNT(*) as cnt FROM orders WHERE jornada_id = ?').get(j.id) as any).cnt;
+            const paymentsCount = (rawDb.prepare('SELECT COUNT(*) as cnt FROM payments p JOIN orders o ON p.order_id = o.id WHERE o.jornada_id = ?').get(j.id) as any).cnt;
+            if (ordersCount > 0 || paymentsCount > 0) {
+              throw new Error(
+                `MIGRACION_R2_ABORT: La jornada '${j.id}' está abierta y tiene actividad previa (${ordersCount} órdenes, ${paymentsCount} pagos). No se cerrará automáticamente.`
+              );
+            }
+          }
+        }
+      } catch (err: any) {
+        if (err.message.startsWith('MIGRACION_R2_ABORT')) {
+          throw err;
+        }
+        // Si la tabla jornadas no existe aún, ignorar
+      }
+    }
+
     const executeMigration = rawDb.transaction(() => {
       executeSqlIdempotently(rawDb, sqlContent);
       rawDb.prepare('INSERT INTO _migrations (name, applied_at_ms) VALUES (?, ?)').run(

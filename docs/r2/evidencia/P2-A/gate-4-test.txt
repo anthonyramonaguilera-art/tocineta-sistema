@@ -1,0 +1,400 @@
+﻿pnpm.exe : $ pnpm -r run test
+En C:\Users\Shell\AppData\Roaming\npm\pnpm.ps1: 14 Carácter: 3
++   & "$basedir/node_modules/pnpm/pnpm.exe"   $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ($ pnpm -r run test:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+Scope: 4 of 5 workspace projects
+$ vitest run
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mC:/Users/Shell/Documents/Varonsmedia/clientes/tocinetasonrie/SISTEMA/packages/shared[39m
+
+ [32mÔ£ô[39m test/ticket-ir.test.ts [2m([22m[2m4 tests[22m[2m)[22m[32m 20[2mms[22m[39m
+ [32mÔ£ô[39m test/money.test.ts [2m([22m[2m12 tests[22m[2m)[22m[32m 19[2mms[22m[39m
+ [32mÔ£ô[39m test/schemas.test.ts [2m([22m[2m6 tests[22m[2m)[22m[32m 81[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m3 passed[39m[22m[90m (3)[39m
+[2m      Tests [22m [1m[32m22 passed[39m[22m[90m (22)[39m
+[2m   Start at [22m 23:22:57
+[2m   Duration [22m 2.31s[2m (transform 1.09s, setup 0ms, collect 1.84s, tests 120ms, environment 1ms, prepare 1.61s)[22m
+
+$ vitest run
+
+[1m[46m RUN [49m[22m [36mv3.2.7 [39m[90mC:/Users/Shell/Documents/Varonsmedia/clientes/tocinetasonrie/SISTEMA/apps/server[39m
+
+ [32mÔ£ô[39m test/fase3-inventory-recipes-locations.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 3348[2mms[22m[39m
+ [32mÔ£ô[39m test/m10-1-forensic-hardware.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 8276[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocineta/server)[2m > [22m4. Escaneo de seguridad: ning├║n archivo en apps/, packages/, scripts/ o tools/ contiene claves privadas est├íticas [33m 430[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocineta/server)[2m > [22m8. seedInitialUsers sobre DB vac├¡a: crea los 5 perfiles corporativos con is_active = 1 y must_change_pin = 1 [33m 2279[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocineta/server)[2m > [22m9. Bootstrap autom├ítico: al iniciar sobre una base de datos sin usuarios, se crean autom├íticamente los 5 usuarios semilla [33m 2224[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocineta/server)[2m > [22m11. POST /api/auth/change-pin cambia el PIN y actualiza must_change_pin = 0 [33m 519[2mms[22m[39m
+ [32mÔ£ô[39m test/r2-sedes-jornada.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 8341[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m R2 / P2-A ÔÇö Dos Sedes Oficiales y Jornada Global ├Ünica[2m > [22m3. Migraci├│n con datos sembrados en sede_alta_vista ÔåÆ quedan en loc_alta_vista sin hu├®rfanos (FK check vac├¡o) [33m 3258[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m R2 / P2-A ÔÇö Dos Sedes Oficiales y Jornada Global ├Ünica[2m > [22m4. Migraci├│n aborta de forma segura si hay m├ís de una jornada abierta con actividad [33m 3037[2mms[22m[39m
+{"level":30,"time":1793157824891,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825045,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","res":{"statusCode":200},"responseTime":152.42069999999967,"msg":"request completed"}
+{"level":30,"time":1793157825131,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825254,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","res":{"statusCode":200},"responseTime":122.85950000000048,"msg":"request completed"}
+{"level":30,"time":1793157825255,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825406,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","res":{"statusCode":200},"responseTime":151.48739999999998,"msg":"request completed"}
+{"level":30,"time":1793157825407,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825576,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","res":{"statusCode":200},"responseTime":169.15800000000036,"msg":"request completed"}
+{"level":30,"time":1793157825577,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-5","req":{"method":"POST","url":"/api/jornadas/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825627,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-5","res":{"statusCode":200},"responseTime":50.213700000000244,"msg":"request completed"}
+{"level":30,"time":1793157825628,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-6","req":{"method":"POST","url":"/api/cash-sessions/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825653,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-6","res":{"statusCode":200},"responseTime":25.248999999999796,"msg":"request completed"}
+{"level":30,"time":1793157825656,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-7","req":{"method":"GET","url":"/api/system-health","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825695,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-7","res":{"statusCode":200},"responseTime":39.0663999999997,"msg":"request completed"}
+{"level":30,"time":1793157825706,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-8","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825722,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-8","res":{"statusCode":201},"responseTime":15.754400000000714,"msg":"request completed"}
+{"level":30,"time":1793157825723,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-9","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825724,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-9","res":{"statusCode":201},"responseTime":1.5744999999997162,"msg":"request completed"}
+{"level":30,"time":1793157825726,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-a","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825738,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-a","res":{"statusCode":201},"responseTime":11.74579999999969,"msg":"request completed"}
+{"level":30,"time":1793157825738,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-b","req":{"method":"POST","url":"/api/orders/ord_01a18089-04bf-77c2-872a-061a79107970/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825771,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-b","res":{"statusCode":200},"responseTime":32.91150000000016,"msg":"request completed"}
+{"level":30,"time":1793157825773,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-c","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825784,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-c","res":{"statusCode":201},"responseTime":10.504400000000714,"msg":"request completed"}
+{"level":30,"time":1793157825784,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-d","req":{"method":"POST","url":"/api/orders/ord_01a18089-04ee-7bc9-b850-a7b04fc6ff27/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825803,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-d","res":{"statusCode":200},"responseTime":18.91280000000006,"msg":"request completed"}
+{"level":30,"time":1793157825805,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-e","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825812,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-e","res":{"statusCode":201},"responseTime":7.198699999999917,"msg":"request completed"}
+{"level":30,"time":1793157825812,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-f","req":{"method":"POST","url":"/api/orders/ord_01a18089-050d-7802-848c-5d466c1c76bf/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825825,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-f","res":{"statusCode":200},"responseTime":13.00880000000052,"msg":"request completed"}
+{"level":30,"time":1793157825826,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-g","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825834,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-g","res":{"statusCode":201},"responseTime":8.151699999999437,"msg":"request completed"}
+{"level":30,"time":1793157825834,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-h","req":{"method":"POST","url":"/api/orders/ord_01a18089-0522-7af4-8d66-85c6cce24fd2/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157825836,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-h","res":{"statusCode":400},"responseTime":1.7704000000003361,"msg":"request completed"}
+{"level":30,"time":1793157825837,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-i","req":{"method":"POST","url":"/api/orders/ord_01a18089-0522-7af4-8d66-85c6cce24fd2/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826029,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-i","res":{"statusCode":200},"responseTime":192.47469999999976,"msg":"request completed"}
+{"level":30,"time":1793157826030,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-j","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826040,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-j","res":{"statusCode":201},"responseTime":9.9983000000002,"msg":"request completed"}
+{"level":30,"time":1793157826040,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-k","req":{"method":"POST","url":"/api/orders/ord_01a18089-05ee-7230-ae6f-7c6cf10d55b5/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826042,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-k","res":{"statusCode":400},"responseTime":1.614900000000489,"msg":"request completed"}
+{"level":30,"time":1793157826042,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-l","req":{"method":"POST","url":"/api/orders/ord_01a18089-05ee-7230-ae6f-7c6cf10d55b5/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826055,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-l","res":{"statusCode":200},"responseTime":13,"msg":"request completed"}
+{"level":30,"time":1793157826056,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-m","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826063,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-m","res":{"statusCode":201},"responseTime":6.759600000000319,"msg":"request completed"}
+{"level":30,"time":1793157826063,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-n","req":{"method":"POST","url":"/api/orders/ord_01a18089-0609-7437-bbc7-d51b795ad2a2/authorize-without-payment","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826165,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-n","res":{"statusCode":200},"responseTime":101.5064999999995,"msg":"request completed"}
+{"level":30,"time":1793157826166,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-o","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826173,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-o","res":{"statusCode":201},"responseTime":7.370600000000195,"msg":"request completed"}
+{"level":30,"time":1793157826174,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-p","req":{"method":"POST","url":"/api/orders/ord_01a18089-0677-7655-9042-8a7bd64fd5f3/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826188,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-p","res":{"statusCode":200},"responseTime":14.384999999999309,"msg":"request completed"}
+{"level":30,"time":1793157826189,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-q","req":{"method":"POST","url":"/api/orders/ord_01a18089-0677-7655-9042-8a7bd64fd5f3/incident","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826360,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-q","res":{"statusCode":200},"responseTime":170.78130000000056,"msg":"request completed"}
+{"level":30,"time":1793157826361,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-r","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826371,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-r","res":{"statusCode":201},"responseTime":10.517899999998917,"msg":"request completed"}
+{"level":30,"time":1793157826372,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-s","req":{"method":"POST","url":"/api/orders/ord_01a18089-073a-7d11-9937-1989e1363c77/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826382,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-s","res":{"statusCode":200},"responseTime":10.161399999999048,"msg":"request completed"}
+{"level":30,"time":1793157826382,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-t","req":{"method":"POST","url":"/api/orders/ord_01a18089-073a-7d11-9937-1989e1363c77/incident","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826528,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-t","res":{"statusCode":403},"responseTime":145.16369999999915,"msg":"request completed"}
+{"level":30,"time":1793157826528,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-u","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826537,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-u","res":{"statusCode":201},"responseTime":9.309299999998984,"msg":"request completed"}
+{"level":30,"time":1793157826538,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-v","req":{"method":"POST","url":"/api/orders/ord_01a18089-07e1-774f-a925-43d281e7a853/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826550,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-v","res":{"statusCode":200},"responseTime":11.705400000000736,"msg":"request completed"}
+{"level":30,"time":1793157826550,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-w","req":{"method":"POST","url":"/api/orders/ord_01a18089-07e1-774f-a925-43d281e7a853/incident","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826731,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-w","res":{"statusCode":200},"responseTime":180.83009999999922,"msg":"request completed"}
+{"level":30,"time":1793157826753,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-x","req":{"method":"GET","url":"/api/menu/pos","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826758,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-x","res":{"statusCode":200},"responseTime":5.589700000000448,"msg":"request completed"}
+{"level":30,"time":1793157826762,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-y","req":{"method":"POST","url":"/api/cash-sessions/sess_blind_test_26/blind-count","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826771,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-y","res":{"statusCode":200},"responseTime":8.080299999999625,"msg":"request completed"}
+{"level":30,"time":1793157826771,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-z","req":{"method":"POST","url":"/api/cash-sessions/sess_blind_test_26/blind-count","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826779,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-z","res":{"statusCode":200},"responseTime":7.468399999999747,"msg":"request completed"}
+{"level":30,"time":1793157826779,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-10","req":{"method":"POST","url":"/api/jornadas/jor_01a18089-042e-7e82-ba2f-7876e19a3c35/close","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826897,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-10","res":{"statusCode":200},"responseTime":117.35239999999976,"msg":"request completed"}
+{"level":30,"time":1793157826925,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-11","req":{"method":"POST","url":"/api/menu/exchange-rate","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157826931,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-11","res":{"statusCode":200},"responseTime":6.065300000000207,"msg":"request completed"}
+{"level":30,"time":1793157827387,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-12","req":{"method":"POST","url":"/api/emergency/deferred-orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827423,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-12","res":{"statusCode":201},"responseTime":35.32340000000113,"msg":"request completed"}
+{"level":30,"time":1793157827423,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-13","req":{"method":"POST","url":"/api/emergency/deferred-orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":50,"time":1793157827424,"pid":213748,"hostname":"DESKTOP-GD7MG8T","err":{"type":"Error","message":"La comanda de papel #EMG-189 ya fue registrada previamente en la orden #2","stack":"Error: La comanda de papel #EMG-189 ya fue registrada previamente en la orden #2\n    at createDeferredPaperOrder (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\emergency\\emergency-service.ts:59:22)\n    at Object.<anonymous> (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\emergency\\routes.ts:111:28)\n    at preHandlerCallbackInner (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\handle-request.js:190:24)\n    at preHandlerCallback (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\handle-request.js:155:5)\n    at next (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\hooks.js:236:9)\n    at handleResolve (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\hooks.js:253:7)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)","statusCode":409},"msg":"Error en transcripci├│n de comanda de papel"}
+{"level":30,"time":1793157827427,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-13","res":{"statusCode":409},"responseTime":3.597799999999552,"msg":"request completed"}
+{"level":30,"time":1793157827436,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-14","req":{"method":"GET","url":"/api/auth/me","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827438,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-14","res":{"statusCode":401},"responseTime":1.2753999999986263,"msg":"request completed"}
+{"level":30,"time":1793157827508,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-15","req":{"method":"POST","url":"/api/backups/dry-run-verify","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827535,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-15","res":{"statusCode":200},"responseTime":26.694099999998798,"msg":"request completed"}
+{"level":30,"time":1793157827537,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-16","req":{"method":"GET","url":"/api/delivery/drivers","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827539,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-16","res":{"statusCode":200},"responseTime":1.0564999999987776,"msg":"request completed"}
+{"level":30,"time":1793157827539,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-17","req":{"method":"POST","url":"/api/delivery/drivers","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827548,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-17","res":{"statusCode":201},"responseTime":8.831599999999526,"msg":"request completed"}
+{"level":30,"time":1793157827549,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-18","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827555,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-18","res":{"statusCode":201},"responseTime":6.7828000000008615,"msg":"request completed"}
+{"level":30,"time":1793157827556,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-19","req":{"method":"GET","url":"/api/orders/ord_01a18089-0bdd-769a-9794-4825217a9274","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827558,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-19","res":{"statusCode":200},"responseTime":2.142100000000937,"msg":"request completed"}
+{"level":30,"time":1793157827559,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1a","req":{"method":"POST","url":"/api/orders/ord_01a18089-0bdd-769a-9794-4825217a9274/apply-coupon","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827566,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1a","res":{"statusCode":200},"responseTime":7.311200000000099,"msg":"request completed"}
+{"level":30,"time":1793157827567,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1b","req":{"method":"POST","url":"/api/orders/ord_01a18089-0bdd-769a-9794-4825217a9274/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827578,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1b","res":{"statusCode":200},"responseTime":11.607200000000375,"msg":"request completed"}
+{"level":30,"time":1793157827579,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1c","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827586,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1c","res":{"statusCode":201},"responseTime":7.307600000000093,"msg":"request completed"}
+{"level":30,"time":1793157827586,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1d","req":{"method":"POST","url":"/api/orders/ord_01a18089-0bfb-7202-9421-8600a5f2e77b/apply-coupon","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827593,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1d","res":{"statusCode":200},"responseTime":6.973900000000867,"msg":"request completed"}
+{"level":30,"time":1793157827594,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1e","req":{"method":"POST","url":"/api/delivery/settle-driver","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827602,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1e","res":{"statusCode":200},"responseTime":7.467400000001362,"msg":"request completed"}
+{"level":30,"time":1793157827603,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1f","req":{"method":"POST","url":"/api/support/start","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827674,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1f","res":{"statusCode":403},"responseTime":70.9416999999994,"msg":"request completed"}
+{"level":30,"time":1793157827675,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1g","req":{"method":"POST","url":"/api/support/start","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827763,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1g","res":{"statusCode":200},"responseTime":88.12920000000122,"msg":"request completed"}
+{"level":30,"time":1793157827764,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1h","req":{"method":"GET","url":"/api/support/status","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827765,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1h","res":{"statusCode":200},"responseTime":0.35269999999945867,"msg":"request completed"}
+{"level":30,"time":1793157827765,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1i","req":{"method":"POST","url":"/api/support/stop","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827775,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1i","res":{"statusCode":200},"responseTime":9.747299999999086,"msg":"request completed"}
+{"level":30,"time":1793157827783,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1j","req":{"method":"GET","url":"/api/qr-menu/data","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827791,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1j","res":{"statusCode":200},"responseTime":7.482699999998658,"msg":"request completed"}
+{"level":30,"time":1793157827796,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1k","req":{"method":"POST","url":"/api/qr-menu/export-static","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827805,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1k","res":{"statusCode":200},"responseTime":8.464600000001155,"msg":"request completed"}
+{"level":30,"time":1793157827812,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1l","req":{"method":"GET","url":"/api/profitability/settings","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157827813,"pid":213748,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1l","res":{"statusCode":200},"responseTime":0.5354999999999563,"msg":"request completed"}
+ [32mÔ£ô[39m test/acceptance-full-26.test.ts [2m([22m[2m26 tests[22m[2m)[22m[33m 5337[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M15 - Suite Maestra de Certificaci├│n Definitiva (26 Pruebas de Aceptaci├│n)[2m > [22mPrueba 10: Reembolso respeta tope de $20 para supervisor y contra-asiento en Bs sin tocar CASH_USD [33m 371[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M15 - Suite Maestra de Certificaci├│n Definitiva (26 Pruebas de Aceptaci├│n)[2m > [22mPrueba 16: Restauraci├│n verificada valida integridad y cadena SHA-256 [33m 447[2mms[22m[39m
+{"level":30,"time":1793157835567,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157835732,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","res":{"statusCode":200},"responseTime":164.02469999999994,"msg":"request completed"}
+{"level":30,"time":1793157835798,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157835874,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","res":{"statusCode":200},"responseTime":75.78099999999995,"msg":"request completed"}
+{"level":30,"time":1793157835875,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836009,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","res":{"statusCode":200},"responseTime":134.23320000000058,"msg":"request completed"}
+{"level":30,"time":1793157836009,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","req":{"method":"POST","url":"/api/jornadas/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836061,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","res":{"statusCode":200},"responseTime":51.663800000000265,"msg":"request completed"}
+{"level":30,"time":1793157836062,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-5","req":{"method":"POST","url":"/api/cash-sessions/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836072,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-5","res":{"statusCode":200},"responseTime":10.097099999999955,"msg":"request completed"}
+{"level":30,"time":1793157836075,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-6","req":{"method":"GET","url":"/api/system-health","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836134,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-6","res":{"statusCode":200},"responseTime":59.671400000000176,"msg":"request completed"}
+{"level":30,"time":1793157836147,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-7","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836164,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-7","res":{"statusCode":201},"responseTime":17.568499999999403,"msg":"request completed"}
+{"level":30,"time":1793157836165,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-8","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836167,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-8","res":{"statusCode":201},"responseTime":1.602100000000064,"msg":"request completed"}
+{"level":30,"time":1793157836168,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-9","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836179,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-9","res":{"statusCode":201},"responseTime":10.592000000000553,"msg":"request completed"}
+{"level":30,"time":1793157836179,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-a","req":{"method":"POST","url":"/api/orders/ord_01a18089-2d89-7706-a7f8-885a0a0fdadb/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836207,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-a","res":{"statusCode":200},"responseTime":27.940599999999904,"msg":"request completed"}
+{"level":30,"time":1793157836209,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-b","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836218,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-b","res":{"statusCode":201},"responseTime":9.068499999999403,"msg":"request completed"}
+{"level":30,"time":1793157836218,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-c","req":{"method":"POST","url":"/api/orders/ord_01a18089-2db2-71b6-87ef-e6e94f94f438/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836233,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-c","res":{"statusCode":200},"responseTime":14.419599999999264,"msg":"request completed"}
+{"level":30,"time":1793157836235,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-d","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836242,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-d","res":{"statusCode":201},"responseTime":7.134299999999712,"msg":"request completed"}
+{"level":30,"time":1793157836242,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-e","req":{"method":"POST","url":"/api/orders/ord_01a18089-2dcb-7af6-9cc6-d382e42e475e/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836255,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-e","res":{"statusCode":200},"responseTime":12.295100000001185,"msg":"request completed"}
+{"level":30,"time":1793157836255,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-f","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836263,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-f","res":{"statusCode":201},"responseTime":7.751699999998891,"msg":"request completed"}
+{"level":30,"time":1793157836263,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-g","req":{"method":"POST","url":"/api/orders/ord_01a18089-2ddf-74cc-ac20-ce3b8e0d27f5/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836265,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-g","res":{"statusCode":400},"responseTime":1.481999999999971,"msg":"request completed"}
+{"level":30,"time":1793157836265,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-h","req":{"method":"POST","url":"/api/orders/ord_01a18089-2ddf-74cc-ac20-ce3b8e0d27f5/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836438,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-h","res":{"statusCode":200},"responseTime":172.4890000000014,"msg":"request completed"}
+{"level":30,"time":1793157836438,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-i","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836445,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-i","res":{"statusCode":201},"responseTime":7.486500000000888,"msg":"request completed"}
+{"level":30,"time":1793157836446,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-j","req":{"method":"POST","url":"/api/orders/ord_01a18089-2e97-7480-8356-24c71ac715ec/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836447,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-j","res":{"statusCode":400},"responseTime":1.2507999999997992,"msg":"request completed"}
+{"level":30,"time":1793157836448,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-k","req":{"method":"POST","url":"/api/orders/ord_01a18089-2e97-7480-8356-24c71ac715ec/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836461,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-k","res":{"statusCode":200},"responseTime":13.131200000001627,"msg":"request completed"}
+{"level":30,"time":1793157836462,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-l","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836512,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-l","res":{"statusCode":201},"responseTime":50.6216000000004,"msg":"request completed"}
+{"level":30,"time":1793157836513,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-m","req":{"method":"POST","url":"/api/orders/ord_01a18089-2eae-7f14-b86b-499a23d08ea2/authorize-without-payment","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836617,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-m","res":{"statusCode":200},"responseTime":104.02570000000014,"msg":"request completed"}
+{"level":30,"time":1793157836618,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-n","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836628,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-n","res":{"statusCode":201},"responseTime":9.589099999999235,"msg":"request completed"}
+{"level":30,"time":1793157836628,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-o","req":{"method":"POST","url":"/api/orders/ord_01a18089-2f4b-798b-a6b8-415a35ff9548/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836641,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-o","res":{"statusCode":200},"responseTime":12.571600000001126,"msg":"request completed"}
+{"level":30,"time":1793157836641,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-p","req":{"method":"POST","url":"/api/orders/ord_01a18089-2f4b-798b-a6b8-415a35ff9548/incident","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836788,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-p","res":{"statusCode":200},"responseTime":147.01190000000133,"msg":"request completed"}
+{"level":30,"time":1793157836790,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-q","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836800,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-q","res":{"statusCode":201},"responseTime":10.15690000000177,"msg":"request completed"}
+{"level":30,"time":1793157836800,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-r","req":{"method":"POST","url":"/api/orders/ord_01a18089-2ff6-71cf-baaa-02b4eddc8c73/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836812,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-r","res":{"statusCode":200},"responseTime":11.7562999999991,"msg":"request completed"}
+{"level":30,"time":1793157836812,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-s","req":{"method":"POST","url":"/api/orders/ord_01a18089-2ff6-71cf-baaa-02b4eddc8c73/incident","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836932,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-s","res":{"statusCode":403},"responseTime":120.0072999999993,"msg":"request completed"}
+{"level":30,"time":1793157836933,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-t","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836943,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-t","res":{"statusCode":201},"responseTime":10.221300000001065,"msg":"request completed"}
+{"level":30,"time":1793157836943,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-u","req":{"method":"POST","url":"/api/orders/ord_01a18089-3086-7295-8fd4-dcb36484d879/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157836953,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-u","res":{"statusCode":200},"responseTime":9.252199999998993,"msg":"request completed"}
+{"level":30,"time":1793157836953,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-v","req":{"method":"POST","url":"/api/orders/ord_01a18089-3086-7295-8fd4-dcb36484d879/incident","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157837130,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-v","res":{"statusCode":200},"responseTime":176.61759999999958,"msg":"request completed"}
+{"level":30,"time":1793157837152,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-w","req":{"method":"GET","url":"/api/menu/pos","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157837160,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-w","res":{"statusCode":200},"responseTime":7.660499999999956,"msg":"request completed"}
+{"level":30,"time":1793157837164,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-x","req":{"method":"POST","url":"/api/cash-sessions/sess_blind_test/blind-count","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157837173,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-x","res":{"statusCode":200},"responseTime":8.969600000000355,"msg":"request completed"}
+{"level":30,"time":1793157837174,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-y","req":{"method":"POST","url":"/api/cash-sessions/sess_blind_test/blind-count","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157837181,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-y","res":{"statusCode":200},"responseTime":7.0495000000009895,"msg":"request completed"}
+{"level":30,"time":1793157837182,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-z","req":{"method":"POST","url":"/api/jornadas/jor_01a18089-2cef-7409-aed0-77b58d2ca6ba/close","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157837281,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-z","res":{"statusCode":200},"responseTime":98.97010000000046,"msg":"request completed"}
+{"level":30,"time":1793157837309,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-10","req":{"method":"POST","url":"/api/menu/exchange-rate","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157837315,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-10","res":{"statusCode":200},"responseTime":6.062200000000303,"msg":"request completed"}
+{"level":30,"time":1793157837688,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-11","req":{"method":"POST","url":"/api/emergency/deferred-orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157837717,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-11","res":{"statusCode":201},"responseTime":28.72559999999976,"msg":"request completed"}
+{"level":30,"time":1793157837717,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-12","req":{"method":"POST","url":"/api/emergency/deferred-orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":50,"time":1793157837718,"pid":217972,"hostname":"DESKTOP-GD7MG8T","err":{"type":"Error","message":"La comanda de papel #EMG-142 ya fue registrada previamente en la orden #2","stack":"Error: La comanda de papel #EMG-142 ya fue registrada previamente en la orden #2\n    at createDeferredPaperOrder (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\emergency\\emergency-service.ts:59:22)\n    at Object.<anonymous> (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\emergency\\routes.ts:111:28)\n    at preHandlerCallbackInner (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\handle-request.js:190:24)\n    at preHandlerCallback (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\handle-request.js:155:5)\n    at next (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\hooks.js:236:9)\n    at handleResolve (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\hooks.js:253:7)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)","statusCode":409},"msg":"Error en transcripci├│n de comanda de papel"}
+{"level":30,"time":1793157837720,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-12","res":{"statusCode":409},"responseTime":2.9657999999999447,"msg":"request completed"}
+{"level":30,"time":1793157837729,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-13","req":{"method":"GET","url":"/api/auth/me","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157837730,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-13","res":{"statusCode":401},"responseTime":0.7723000000005413,"msg":"request completed"}
+{"level":30,"time":1793157837800,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-14","req":{"method":"POST","url":"/api/backups/dry-run-verify","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157837828,"pid":217972,"hostname":"DESKTOP-GD7MG8T","reqId":"req-14","res":{"statusCode":200},"responseTime":28.502599999999802,"msg":"request completed"}
+ [32mÔ£ô[39m test/acceptance-release1.test.ts [2m([22m[2m22 tests[22m[2m)[22m[33m 4806[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M10.3 - Suite Maestra de Certificaci├│n Release 1 (22 Pruebas de Aceptaci├│n)[2m > [22mPrueba 10: Reembolso respeta tope de $20 para supervisor y contra-asiento en Bs sin tocar CASH_USD [33m 342[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M10.3 - Suite Maestra de Certificaci├│n Release 1 (22 Pruebas de Aceptaci├│n)[2m > [22mPrueba 16: Restauraci├│n verificada valida integridad y cadena SHA-256 [33m 364[2mms[22m[39m
+{"level":30,"time":1793157844691,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157844828,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","res":{"statusCode":200},"responseTime":135.52090000000044,"msg":"request completed"}
+{"level":30,"time":1793157844829,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157844994,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","res":{"statusCode":200},"responseTime":164.90200000000004,"msg":"request completed"}
+{"level":30,"time":1793157844997,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","req":{"method":"POST","url":"/api/support/start","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157845067,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","res":{"statusCode":403},"responseTime":70.55130000000008,"msg":"request completed"}
+{"level":30,"time":1793157845069,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","req":{"method":"POST","url":"/api/support/start","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157845157,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","res":{"statusCode":403},"responseTime":88.26909999999953,"msg":"request completed"}
+{"level":30,"time":1793157845169,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-5","req":{"method":"POST","url":"/api/support/start","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157845282,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-5","res":{"statusCode":200},"responseTime":112.59400000000005,"msg":"request completed"}
+{"level":30,"time":1793157845284,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-6","req":{"method":"GET","url":"/api/support/status","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157845284,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-6","res":{"statusCode":200},"responseTime":0.5797000000002299,"msg":"request completed"}
+{"level":30,"time":1793157845286,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-7","req":{"method":"POST","url":"/api/support/stop","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157845296,"pid":214848,"hostname":"DESKTOP-GD7MG8T","reqId":"req-7","res":{"statusCode":200},"responseTime":9.983400000000074,"msg":"request completed"}
+ [32mÔ£ô[39m test/support-and-updater.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 3122[2mms[22m[39m
+{"level":30,"time":1793157852415,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157852600,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","res":{"statusCode":200},"responseTime":183.91809999999987,"msg":"request completed"}
+{"level":30,"time":1793157852601,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157852719,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","res":{"statusCode":200},"responseTime":117.94360000000052,"msg":"request completed"}
+{"level":30,"time":1793157852720,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157852872,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","res":{"statusCode":200},"responseTime":151.88190000000031,"msg":"request completed"}
+{"level":30,"time":1793157852872,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853003,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","res":{"statusCode":200},"responseTime":130.1965999999993,"msg":"request completed"}
+{"level":30,"time":1793157853004,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-5","req":{"method":"POST","url":"/api/jornadas/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853050,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-5","res":{"statusCode":200},"responseTime":46.035499999999956,"msg":"request completed"}
+{"level":30,"time":1793157853051,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-6","req":{"method":"POST","url":"/api/cash-sessions/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853060,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-6","res":{"statusCode":200},"responseTime":8.448199999999815,"msg":"request completed"}
+{"level":30,"time":1793157853060,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-7","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853072,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-7","res":{"statusCode":201},"responseTime":11.285500000000866,"msg":"request completed"}
+{"level":30,"time":1793157853076,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-8","req":{"method":"POST","url":"/api/orders/ord_01a18089-6f86-7d4b-a29c-526014d541fe/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853156,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-8","res":{"statusCode":200},"responseTime":79.84060000000045,"msg":"request completed"}
+{"level":30,"time":1793157853158,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-9","req":{"method":"POST","url":"/api/cash-sessions/cs_01a18089-6f7d-7fe2-a6cc-00c9d839d8ea/blind-count","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853168,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-9","res":{"statusCode":200},"responseTime":10.11489999999958,"msg":"request completed"}
+{"level":30,"time":1793157853172,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-a","req":{"method":"POST","url":"/api/cash-sessions/cs_01a18089-6f7d-7fe2-a6cc-00c9d839d8ea/blind-count","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853181,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-a","res":{"statusCode":200},"responseTime":9.585000000000036,"msg":"request completed"}
+{"level":30,"time":1793157853183,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-b","req":{"method":"POST","url":"/api/cash-sessions/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853190,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-b","res":{"statusCode":200},"responseTime":7.103799999999865,"msg":"request completed"}
+{"level":30,"time":1793157853191,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-c","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853200,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-c","res":{"statusCode":201},"responseTime":9.208599999999933,"msg":"request completed"}
+{"level":30,"time":1793157853203,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-d","req":{"method":"POST","url":"/api/orders/ord_01a18089-7008-7dfb-8276-e6ef26ff1499/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853219,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-d","res":{"statusCode":200},"responseTime":15.95259999999962,"msg":"request completed"}
+{"level":30,"time":1793157853219,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-e","req":{"method":"POST","url":"/api/cash-sessions/cs_01a18089-7000-78bf-8ec9-efe10ba54065/blind-count","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853227,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-e","res":{"statusCode":200},"responseTime":7.869899999999689,"msg":"request completed"}
+{"level":30,"time":1793157853229,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-f","req":{"method":"POST","url":"/api/jornadas/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853267,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-f","res":{"statusCode":200},"responseTime":38.08770000000004,"msg":"request completed"}
+{"level":30,"time":1793157853267,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-g","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853275,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-g","res":{"statusCode":201},"responseTime":7.854899999999361,"msg":"request completed"}
+{"level":30,"time":1793157853276,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-h","req":{"method":"POST","url":"/api/orders/ord_01a18089-7054-7630-9661-246fd27d9c76/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853296,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-h","res":{"statusCode":200},"responseTime":20.36160000000018,"msg":"request completed"}
+{"level":30,"time":1793157853297,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-i","req":{"method":"POST","url":"/api/jornadas/jor_01a18089-6f51-77c3-a154-f57cc1d33811/close","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853298,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-i","res":{"statusCode":403},"responseTime":1.3589999999994689,"msg":"request completed"}
+{"level":30,"time":1793157853299,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-j","req":{"method":"POST","url":"/api/jornadas/jor_01a18089-6f51-77c3-a154-f57cc1d33811/close","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853322,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-j","res":{"statusCode":200},"responseTime":22.948099999999613,"msg":"request completed"}
+{"level":30,"time":1793157853324,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-k","req":{"method":"POST","url":"/api/jornadas/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853371,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-k","res":{"statusCode":200},"responseTime":47.01020000000062,"msg":"request completed"}
+{"level":30,"time":1793157853372,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-l","req":{"method":"POST","url":"/api/cash-sessions/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853380,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-l","res":{"statusCode":200},"responseTime":8.160100000000057,"msg":"request completed"}
+{"level":30,"time":1793157853381,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-m","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853390,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-m","res":{"statusCode":201},"responseTime":9.096999999999753,"msg":"request completed"}
+{"level":30,"time":1793157853390,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-n","req":{"method":"POST","url":"/api/orders/ord_01a18089-70c7-7cd2-b96c-50bd83af729e/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853446,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-n","res":{"statusCode":200},"responseTime":55.283800000000156,"msg":"request completed"}
+{"level":30,"time":1793157853446,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-o","req":{"method":"POST","url":"/api/orders/ord_01a18089-70c7-7cd2-b96c-50bd83af729e/incident","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853597,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-o","res":{"statusCode":200},"responseTime":151.02930000000015,"msg":"request completed"}
+{"level":30,"time":1793157853600,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-p","req":{"method":"POST","url":"/api/orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853608,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-p","res":{"statusCode":201},"responseTime":7.927300000000287,"msg":"request completed"}
+{"level":30,"time":1793157853608,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-q","req":{"method":"POST","url":"/api/orders/ord_01a18089-71a1-72ce-bf63-6b49bc322c92/pay","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853692,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-q","res":{"statusCode":200},"responseTime":84.10730000000058,"msg":"request completed"}
+{"level":30,"time":1793157853693,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-r","req":{"method":"POST","url":"/api/orders/ord_01a18089-71a1-72ce-bf63-6b49bc322c92/incident","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853832,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-r","res":{"statusCode":403},"responseTime":139.57150000000001,"msg":"request completed"}
+{"level":30,"time":1793157853833,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-s","req":{"method":"POST","url":"/api/orders/ord_01a18089-71a1-72ce-bf63-6b49bc322c92/incident","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853927,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-s","res":{"statusCode":200},"responseTime":93.76170000000002,"msg":"request completed"}
+{"level":30,"time":1793157853928,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-t","req":{"method":"POST","url":"/api/jornadas/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853961,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-t","res":{"statusCode":200},"responseTime":32.32409999999982,"msg":"request completed"}
+{"level":30,"time":1793157853961,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-u","req":{"method":"GET","url":"/api/reports/my-performance","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853963,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-u","res":{"statusCode":200},"responseTime":1.3949000000002343,"msg":"request completed"}
+{"level":30,"time":1793157853964,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-v","req":{"method":"GET","url":"/api/reports/staff-performance","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157853967,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-v","res":{"statusCode":200},"responseTime":3.108499999999367,"msg":"request completed"}
+{"level":30,"time":1793157853967,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-w","req":{"method":"GET","url":"/api/reports/jornada/jor_01a18089-7093-7815-9b7f-b0ea8e5b3ac2/excel","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157854147,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-w","res":{"statusCode":200},"responseTime":178.98389999999927,"msg":"request completed"}
+{"level":30,"time":1793157854249,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-x","req":{"method":"GET","url":"/api/reports/jornada/jor_01a18089-7093-7815-9b7f-b0ea8e5b3ac2/pdf","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157854302,"pid":217796,"hostname":"DESKTOP-GD7MG8T","reqId":"req-x","res":{"statusCode":200},"responseTime":52.60940000000119,"msg":"request completed"}
+ [32mÔ£ô[39m test/closures-incidents-reports.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 4315[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M8 - Arqueo Ciego, Cierre Z, Incidentes (Re-fire vs Refund) y Reportes Locales (@tocineta/server)[2m > [22m3. Incidentes y Devoluciones (POST /api/orders/:id/incident)[2m > [22mRefund: Supervisor est├í restringido al tope configurado ($20.00 USD / 2000 cents); montos mayores requieren Admin [33m 328[2mms[22m[39m
+ [32mÔ£ô[39m test/printing-engine.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 4345[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M6 - Motor de Impresi├│n, Ticket IR y Estaciones (@tocineta/server)[2m > [22mReimpresi├│n manual exige motivo y PIN autorizado, agregando banner de copia #1 y bloqueando al cocinero [33m 405[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M6 - Motor de Impresi├│n, Ticket IR y Estaciones (@tocineta/server)[2m > [22mReposici├│n urgente (Re-fire) genera ticket para cocina con banner *** REPOSICI├ôN URGENTE SIN COBRO *** [33m 525[2mms[22m[39m
+{"level":30,"time":1793157870095,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157870285,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","res":{"statusCode":200},"responseTime":188.52569999999923,"msg":"request completed"}
+{"level":30,"time":1793157870368,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157870462,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","res":{"statusCode":200},"responseTime":94.73579999999947,"msg":"request completed"}
+{"level":30,"time":1793157870463,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","req":{"method":"POST","url":"/api/auth/login","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157870594,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","res":{"statusCode":200},"responseTime":130.84400000000005,"msg":"request completed"}
+{"level":30,"time":1793157870777,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","req":{"method":"POST","url":"/api/backups/snapshot","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157870847,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","res":{"statusCode":201},"responseTime":68.94880000000012,"msg":"request completed"}
+{"level":30,"time":1793157871107,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-5","req":{"method":"POST","url":"/api/backups/export-encrypted","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157871228,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-5","res":{"statusCode":201},"responseTime":120.91740000000027,"msg":"request completed"}
+{"level":30,"time":1793157871566,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-6","req":{"method":"GET","url":"/api/emergency/slips-pdf?count=10","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157871607,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-6","res":{"statusCode":200},"responseTime":39.99689999999828,"msg":"request completed"}
+{"level":30,"time":1793157871608,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-7","req":{"method":"POST","url":"/api/emergency/print-slips","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157871635,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-7","res":{"statusCode":201},"responseTime":27.256400000000212,"msg":"request completed"}
+{"level":30,"time":1793157871637,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-8","req":{"method":"POST","url":"/api/jornadas/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157871682,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-8","res":{"statusCode":200},"responseTime":44.78199999999924,"msg":"request completed"}
+{"level":30,"time":1793157871682,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-9","req":{"method":"POST","url":"/api/cash-sessions/open","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157871691,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-9","res":{"statusCode":200},"responseTime":8.203299999999217,"msg":"request completed"}
+{"level":30,"time":1793157871691,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-a","req":{"method":"POST","url":"/api/emergency/deferred-orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793157871767,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-a","res":{"statusCode":201},"responseTime":75.45370000000003,"msg":"request completed"}
+{"level":30,"time":1793157871769,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-b","req":{"method":"POST","url":"/api/emergency/deferred-orders","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":50,"time":1793157871771,"pid":214932,"hostname":"DESKTOP-GD7MG8T","err":{"type":"Error","message":"La comanda de papel #EMG-042 ya fue registrada previamente en la orden #1","stack":"Error: La comanda de papel #EMG-042 ya fue registrada previamente en la orden #1\n    at createDeferredPaperOrder (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\emergency\\emergency-service.ts:59:22)\n    at Object.<anonymous> (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\emergency\\routes.ts:111:28)\n    at preHandlerCallbackInner (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\handle-request.js:190:24)\n    at preHandlerCallback (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\handle-request.js:155:5)\n    at next (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\hooks.js:236:9)\n    at handleResolve (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\hooks.js:253:7)\n    at processTicksAndRejections (node:internal/process/task_queues:104:5)","statusCode":409},"msg":"Error en transcripci├│n de comanda de papel"}
+{"level":30,"time":1793157871774,"pid":214932,"hostname":"DESKTOP-GD7MG8T","reqId":"req-b","res":{"statusCode":409},"responseTime":4.5635999999994965,"msg":"request completed"}
+ [32mÔ£ô[39m test/backup-restore-emergency.test.ts [2m([22m[2m15 tests[22m[2m)[22m[33m 4011[2mms[22m[39m
+ [32mÔ£ô[39m test/auth-audit-idempotency.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 4085[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M1 - Autenticaci├│n PIN, Auditor├¡a Inmutable e Idempotencia (@tocineta/server)[2m > [22mBloqueo Escalonado de PIN (Lockout)[2m > [22mBloquea al usuario tras 5 intentos fallidos consecutivos y permite desbloqueo de supervisor [33m 1083[2mms[22m[39m
+[90mstdout[2m | test/m17-ux-hardening.test.ts[2m > [22m[2mHito M17 - Endurecimiento UX, T├íctil y Robustez Operativa (@tocineta/server & @tocineta/web)[2m > [22m[2mBloque 2: [SMOKE CHECK - SOURCE CONTRACT] Verificaci├│n de Contratos Frontend[2m > [22m[2m[SMOKE CHECK - SOURCE CONTRACT] 1. components/AppLayout.tsx contiene requiredPinLength, admin y supervisor
+[22m[39mRuta de ejecuci├│n Smoke: C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\apps\server\test C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\apps\server
+
+ [32mÔ£ô[39m test/m17-ux-hardening.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 3861[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M17 - Endurecimiento UX, T├íctil y Robustez Operativa (@tocineta/server & @tocineta/web)[2m > [22mBloque 1: Endurecimiento E2E de Backend (Fastify + SQLite)[2m > [22mTest Backend 1 (H-01 API): Validaci├│n de longitud de PIN por rol en /api/auth/change-pin [33m 693[2mms[22m[39m
+ [32mÔ£ô[39m test/kds.test.ts [2m([22m[2m6 tests[22m[2m)[22m[33m 3993[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M7 - Pantalla de Cocina (KDS) y Ensamble Autom├ítico (@tocineta/server)[2m > [22mReposici├│n urgente (re-fire) reactiva la orden en KDS con isRefire = true y alerta auditada [33m 572[2mms[22m[39m
+ [32mÔ£ô[39m test/fase6-staff-payroll-tips.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 3143[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m FASE 6 ÔÇö PERSONAL, PERMISOS, N├ôMINA Y PROPINAS[2m > [22m5. Propinas: pool acumulado, reparto equitativo y por horas entre meseros [33m 457[2mms[22m[39m
+ [32mÔ£ô[39m test/cashier-ledger.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 3311[2mms[22m[39m
+ [32mÔ£ô[39m test/m18-qa-fixes.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 3261[2mms[22m[39m
+ [32mÔ£ô[39m test/delivery-and-coupons.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 3117[2mms[22m[39m
+ [32mÔ£ô[39m test/m20-godmode-and-staff.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 3142[2mms[22m[39m
+ [32mÔ£ô[39m test/menu-manager.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 3394[2mms[22m[39m
+ [32mÔ£ô[39m test/fase4-transfers-delivery-remote.test.ts [2m([22m[2m11 tests[22m[2m)[22m[33m 2783[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m FASE 4 ÔÇö Env├¡os entre Sedes, Delivery por Sede, Panel de la Due├▒a y Acceso Remoto[2m > [22m3. Validaci├│n de stock insuficiente: rechaza sin PIN y autoriza con PIN de supervisor [33m 339[2mms[22m[39m
+ [32mÔ£ô[39m test/orders-concurrency.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 3422[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M4 - Gesti├│n de Pedidos, Concurrencia Optimista, Prorrateo e Idempotencia (@tocineta/server)[2m > [22mAutorizaci├│n Sin Pago (POST /api/orders/:id/authorize-without-payment)[2m > [22mAdmin autoriza pedido: pasa a autorizado_sin_pago y en_preparacion dejando deuda abierta [33m 339[2mms[22m[39m
+ [32mÔ£ô[39m test/fase5-finances.test.ts [2m([22m[2m9 tests[22m[2m)[22m[33m 2670[2mms[22m[39m
+ [32mÔ£ô[39m test/payment-wizard-and-closure.test.ts [2m([22m[2m5 tests[22m[2m)[22m[33m 2911[2mms[22m[39m
+ [32mÔ£ô[39m test/m19-operational-qa.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 2916[2mms[22m[39m
+ [32mÔ£ô[39m test/fase7-quotes-partners-settings.test.ts [2m([22m[2m16 tests[22m[2m)[22m[33m 3219[2mms[22m[39m
+ [32mÔ£ô[39m test/r2-error-handler.test.ts [2m([22m[2m12 tests[22m[2m)[22m[33m 2929[2mms[22m[39m
+ [32mÔ£ô[39m test/m10-2-optimizations.test.ts [2m([22m[2m4 tests[22m[2m)[22m[33m 2533[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M10.2 - Optimizaciones Operativas (SUG-01 a SUG-05)[2m > [22mSUG-03: Simulacro Dry-Run de Restauraci├│n[2m > [22mvalida integridad y cadena SHA-256 en solo lectura sin bloquear ni alterar la DB activa [33m 790[2mms[22m[39m
+   [33m[2mÔ£ô[22m[39m Hito M10.2 - Optimizaciones Operativas (SUG-01 a SUG-05)[2m > [22mSUG-04: Archivado Seguro de Eventos y Purga de Idempotencia[2m > [22mmueve eventos > 30 d├¡as a events_log_archive preservando los ├║ltimos 1.000 activos y purga idempotency expiradas [33m 1289[2mms[22m[39m
+{"level":30,"time":1793158009223,"pid":212656,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","req":{"method":"GET","url":"/api/profitability/settings","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793158009237,"pid":212656,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","res":{"statusCode":200},"responseTime":11.106999999999971,"msg":"request completed"}
+{"level":30,"time":1793158009239,"pid":212656,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","req":{"method":"PATCH","url":"/api/profitability/settings","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793158009245,"pid":212656,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","res":{"statusCode":200},"responseTime":5.963600000000042,"msg":"request completed"}
+ [32mÔ£ô[39m test/profitability-pro.test.ts [2m([22m[2m10 tests[22m[2m)[22m[33m 2077[2mms[22m[39m
+{"level":30,"time":1793158016550,"pid":215744,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","req":{"method":"GET","url":"/api/qr-menu/data","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793158016599,"pid":215744,"hostname":"DESKTOP-GD7MG8T","reqId":"req-1","res":{"statusCode":200},"responseTime":47.01389999999992,"msg":"request completed"}
+{"level":30,"time":1793158016615,"pid":215744,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","req":{"method":"POST","url":"/api/qr-menu/export-static","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793158016628,"pid":215744,"hostname":"DESKTOP-GD7MG8T","reqId":"req-2","res":{"statusCode":200},"responseTime":13.432799999999588,"msg":"request completed"}
+{"level":30,"time":1793158016635,"pid":215744,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","req":{"method":"GET","url":"/qr","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793158016639,"pid":215744,"hostname":"DESKTOP-GD7MG8T","reqId":"req-3","res":{"statusCode":200},"responseTime":3.8215000000000146,"msg":"request completed"}
+{"level":30,"time":1793158016648,"pid":215744,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","req":{"method":"GET","url":"/api/qr-menu/cloud-summary?jornadaId=jornada_m13_test","host":"localhost:80","remoteAddress":"127.0.0.1"},"msg":"incoming request"}
+{"level":30,"time":1793158016651,"pid":215744,"hostname":"DESKTOP-GD7MG8T","reqId":"req-4","res":{"statusCode":200},"responseTime":2.817699999999604,"msg":"request completed"}
+ [32mÔ£ô[39m test/qr-menu-cloud.test.ts [2m([22m[2m7 tests[22m[2m)[22m[33m 2583[2mms[22m[39m
+ [32mÔ£ô[39m test/m16-hardening-audit.test.ts [2m([22m[2m8 tests[22m[2m)[22m[33m 2225[2mms[22m[39m
+ [32mÔ£ô[39m test/domain-schema-catalog.test.ts [2m([22m[2m13 tests[22m[2m)[22m[33m 2098[2mms[22m[39m
+ [32mÔ£ô[39m test/health.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 463[2mms[22m[39m
+ [32mÔ£ô[39m test/system-health.test.ts [2m([22m[2m1 test[22m[2m)[22m[33m 524[2mms[22m[39m
+ [32mÔ£ô[39m test/migrate-snapshot.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 67[2mms[22m[39m
+ [32mÔ£ô[39m test/db-pragmas.test.ts [2m([22m[2m1 test[22m[2m)[22m[32m 21[2mms[22m[39m
+
+[2m Test Files [22m [1m[32m34 passed[39m[22m[90m (34)[39m
+[2m      Tests [22m [1m[32m301 passed[39m[22m[90m (301)[39m
+[2m   Start at [22m 23:23:02
+[2m   Duration [22m 257.83s[2m (transform 3.95s, setup 34.88s, collect 88.52s, tests 110.65s, environment 14ms, prepare 9.93s)[22m
+
