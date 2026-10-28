@@ -25,6 +25,7 @@ interface Step3ReviewProps {
   canPay: boolean;
   isSubmitting: boolean;
   onBackToCatalog: () => void;
+  askTableOnOrder?: boolean;
 }
 
 export const Step3Review: React.FC<Step3ReviewProps> = ({
@@ -48,17 +49,67 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
   onExpressCheckout,
   canPay,
   isSubmitting,
-  onBackToCatalog
+  onBackToCatalog,
+  askTableOnOrder = false
 }) => {
   return (
-    <div className="space-y-6 max-w-2xl mx-auto pb-10">
-      {/* 1. Resumen del Cliente y Canal */}
-      <Card variant="alt" className="p-4 flex items-center justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="font-black text-sm text-ink">{customerName}</h3>
+    <div className="space-y-4 max-w-2xl mx-auto pb-12">
+      {/* 1. Barra Superior Fija con Total y Botones Principales de Acción */}
+      <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur-md border border-border p-3.5 rounded-2xl shadow-md space-y-2.5">
+        <div className="flex items-center justify-between">
+          <div>
+            <span className="text-[11px] font-black uppercase tracking-wider text-ink-muted block">
+              Total a Pagar
+            </span>
+            <span className="text-xs font-medium text-ink-muted">
+              {cart.reduce((sum, i) => sum + i.quantity, 0)} productos
+            </span>
+          </div>
+          <div className="text-right">
+            <Money cents={totalUsdCents} rate={formattedRate} size="lg" />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {canPay && onExpressCheckout && (
+            <Button
+              variant="primary"
+              size="md"
+              loading={isSubmitting}
+              onClick={onExpressCheckout}
+              leftIcon={<Icon name="DollarSign" size={18} />}
+              className="min-h-[48px] font-black text-xs shadow-xs"
+            >
+              Cobrar ahora
+            </Button>
+          )}
+
+          <Button
+            variant={canPay ? 'secondary' : 'primary'}
+            size="md"
+            loading={isSubmitting}
+            onClick={onSubmitOrder}
+            leftIcon={<Icon name="Send" size={18} />}
+            className="min-h-[48px] font-black text-xs"
+          >
+            Enviar a cocina
+          </Button>
+        </div>
+      </div>
+
+      {/* 2. Resumen del Cliente y Canal */}
+      <Card variant="alt" className="p-3.5 flex items-center justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-2">
+            <h3 className="font-black text-sm text-ink truncate">{customerName}</h3>
             <Badge variant="primary">
-              {fulfillmentType === 'salon' ? formatTableLabel(tableNumber) : fulfillmentType === 'para_llevar' ? 'Para Llevar' : 'Delivery'}
+              {fulfillmentType === 'salon'
+                ? askTableOnOrder && tableNumber
+                  ? formatTableLabel(tableNumber)
+                  : 'Comer aquí'
+                : fulfillmentType === 'para_llevar'
+                ? 'Para Llevar'
+                : 'Delivery'}
             </Badge>
             {fulfillmentType === 'delivery' && deliverySede && (
               <span className="text-[10px] text-ink-muted font-bold">({deliverySede})</span>
@@ -76,11 +127,11 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
         </Button>
       </Card>
 
-      {/* 2. Lista Editable de Productos */}
-      <Card variant="surface" className="p-4 sm:p-5 space-y-3">
+      {/* 3. Lista Editable de Productos */}
+      <Card variant="surface" className="p-4 space-y-3">
         <div className="flex items-center justify-between pb-2 border-b border-border">
           <h2 className="text-xs font-black text-ink-muted uppercase tracking-wider">
-            Detalle de Productos ({cart.reduce((sum, i) => sum + i.quantity, 0)})
+            Detalle de Productos
           </h2>
           <Button variant="ghost" size="sm" onClick={onBackToCatalog} leftIcon={<Icon name="Plus" size={14} />}>
             Agregar más
@@ -102,7 +153,6 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
                     {item.isCombo && <Badge variant="neutral">Combo</Badge>}
                   </div>
 
-                  {/* Modificadores */}
                   {item.modifiers && item.modifiers.length > 0 && (
                     <div className="mt-1 flex flex-wrap gap-1">
                       {item.modifiers.map((m, idx) => (
@@ -129,7 +179,6 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
                   </div>
                 </div>
 
-                {/* Controles de Cantidad */}
                 <div className="flex items-center gap-1 shrink-0 bg-surface-alt rounded-xl border border-border p-0.5">
                   <button
                     type="button"
@@ -138,7 +187,7 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
                         ? onRemoveItem(item.clientLineId)
                         : onUpdateQuantity(item.clientLineId, item.quantity - 1)
                     }
-                    className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center text-ink hover:text-danger hover:bg-danger/10 transition-colors"
+                    className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center text-ink hover:text-danger hover:bg-danger/10 transition-colors cursor-pointer"
                   >
                     <Icon name={item.quantity === 1 ? 'Trash2' : 'Minus'} size={13} />
                   </button>
@@ -148,7 +197,7 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
                   <button
                     type="button"
                     onClick={() => onUpdateQuantity(item.clientLineId, item.quantity + 1)}
-                    className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center text-ink hover:bg-surface-alt transition-colors"
+                    className="w-7 h-7 rounded-lg bg-surface flex items-center justify-center text-ink hover:bg-surface-alt transition-colors cursor-pointer"
                   >
                     <Icon name="Plus" size={13} />
                   </button>
@@ -159,9 +208,9 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
         </div>
       </Card>
 
-      {/* 3. Notas e Instrucciones para Cocina */}
-      <Card variant="surface" className="p-4 sm:p-5 space-y-2">
-        <label className="text-xs font-black text-ink-muted uppercase tracking-wider block">
+      {/* 4. Notas para Cocina */}
+      <Card variant="surface" className="p-3.5 space-y-1.5">
+        <label className="text-[11px] font-black text-ink-muted uppercase tracking-wider block">
           Notas para Cocina o Empaque
         </label>
         <Input
@@ -172,24 +221,22 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
         />
       </Card>
 
-      {/* 4. Cupón de Descuento */}
-      <Card variant="surface" className="p-4 sm:p-5 space-y-2">
-        <label className="text-xs font-black text-ink-muted uppercase tracking-wider block">
+      {/* 5. Cupón de Descuento */}
+      <Card variant="surface" className="p-3.5 space-y-1.5">
+        <label className="text-[11px] font-black text-ink-muted uppercase tracking-wider block">
           Cupón de Descuento o Cortesía
         </label>
-        <div className="flex gap-2">
-          <Input
-            value={couponCode}
-            onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
-            placeholder="CÓDIGO DE CUPÓN"
-            leftIcon={<Icon name="Ticket" size={16} />}
-            className="font-mono uppercase"
-          />
-        </div>
+        <Input
+          value={couponCode}
+          onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+          placeholder="CÓDIGO DE CUPÓN"
+          leftIcon={<Icon name="Ticket" size={16} />}
+          className="font-mono uppercase"
+        />
       </Card>
 
-      {/* 5. Desglose de Totales */}
-      <Card variant="alt" className="p-4 sm:p-5 space-y-2.5">
+      {/* 6. Desglose de Totales */}
+      <Card variant="alt" className="p-3.5 space-y-2">
         <div className="flex justify-between text-xs font-medium text-ink-muted">
           <span>Subtotal de platos:</span>
           <span className="font-mono font-bold text-ink">${(subtotalUsdCents / 100).toFixed(2)}</span>
@@ -209,37 +256,6 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
           </div>
         </div>
       </Card>
-
-      {/* 6. Botones de Acción */}
-      <div className="space-y-2.5 pt-2">
-        {/* Botón Cobrar Ahora (si tiene permisos) */}
-        {canPay && onExpressCheckout && (
-          <Button
-            variant="primary"
-            size="lg"
-            fullWidth
-            loading={isSubmitting}
-            onClick={onExpressCheckout}
-            leftIcon={<Icon name="DollarSign" size={20} />}
-            className="font-black"
-          >
-            Cobrar Ahora en Caja
-          </Button>
-        )}
-
-        {/* Botón Enviar a Cocina */}
-        <Button
-          variant={canPay ? 'secondary' : 'primary'}
-          size="lg"
-          fullWidth
-          loading={isSubmitting}
-          onClick={onSubmitOrder}
-          leftIcon={<Icon name="Send" size={20} />}
-          className="font-black"
-        >
-          Enviar Pedido a Cocina
-        </Button>
-      </div>
     </div>
   );
 };

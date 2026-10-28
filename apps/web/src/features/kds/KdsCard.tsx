@@ -5,16 +5,24 @@ import { formatTableLabel } from '../../lib/format.js';
 
 interface KdsCardProps {
   order: KdsOrder;
+  isNew?: boolean;
+  onAcknowledge?: () => void;
   onUpdateLineStatus: (lineId: string, status: 'pendiente' | 'preparando' | 'listo') => void;
   onDeliverOrder: (orderId: string) => void;
+  onStartPreparation?: (order: KdsOrder) => void;
+  onMarkAllReady?: (order: KdsOrder) => void;
   onForceComplete?: (orderId: string) => void;
   isSupervisor?: boolean;
 }
 
 export const KdsCard: React.FC<KdsCardProps> = ({
   order,
+  isNew = false,
+  onAcknowledge,
   onUpdateLineStatus,
   onDeliverOrder,
+  onStartPreparation,
+  onMarkAllReady,
   onForceComplete,
   isSupervisor
 }) => {
@@ -34,12 +42,22 @@ export const KdsCard: React.FC<KdsCardProps> = ({
   const timeSeverity: 'green' | 'yellow' | 'red' = minutes >= 12 ? 'red' : minutes >= 8 ? 'yellow' : 'green';
 
   const isAllReady = order.allStationsReady || (order.lines.length > 0 && order.lines.every(l => l.status === 'listo'));
+  const isAllPending = order.lines.length > 0 && order.lines.every(l => l.status === 'pendiente');
+
+  const handleCardClick = () => {
+    if (isNew && onAcknowledge) {
+      onAcknowledge();
+    }
+  };
 
   return (
     <Card
       variant="surface"
+      onClick={handleCardClick}
       className={`p-4 space-y-3.5 border transition-all ${
-        order.isRefire
+        isNew
+          ? 'kds-card-flash ring-2 ring-primary border-primary'
+          : order.isRefire
           ? 'border-danger bg-danger/5 ring-2 ring-danger/30'
           : isAllReady
           ? 'border-success bg-success/5'
@@ -49,14 +67,17 @@ export const KdsCard: React.FC<KdsCardProps> = ({
       {/* Cabecera de la comanda */}
       <div className="flex items-start justify-between gap-2 border-b border-border/60 pb-3">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <span className="text-xl font-black text-ink">#{order.orderNumber}</span>
             <Badge variant="primary">{order.tableNumber ? formatTableLabel(order.tableNumber) : order.fulfillmentType}</Badge>
+            {isNew && (
+              <Badge variant="warning" className="font-black">NUEVO</Badge>
+            )}
             {order.isRefire && (
               <Badge variant="danger">REPOSICIÓN URGENTE</Badge>
             )}
           </div>
-          {/* Nombre del cliente destacado en grande */}
+          {/* Nombre del cliente */}
           <h3 className="text-lg font-black text-ink tracking-tight mt-1">
             {order.customerName || 'Cliente de Mostrador'}
           </h3>
@@ -66,10 +87,10 @@ export const KdsCard: React.FC<KdsCardProps> = ({
         <div
           className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-mono text-xs font-bold border ${
             timeSeverity === 'red'
-              ? 'bg-danger/10 border-danger/40 text-danger animate-pulse'
+              ? 'bg-danger-subtle border-danger/40 text-danger font-black'
               : timeSeverity === 'yellow'
-              ? 'bg-warning/10 border-warning/40 text-warning'
-              : 'bg-success/10 border-success/40 text-success'
+              ? 'bg-warning-subtle border-warning/40 text-warning'
+              : 'bg-success-subtle border-success/40 text-success'
           }`}
         >
           <Icon name="Clock" className="w-4 h-4" />
@@ -83,7 +104,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
         </div>
       )}
 
-      {/* Renglones / Platos individuales de la comanda */}
+      {/* Renglones / Platos individuales de la comanda con tipografía >= 18px */}
       <div className="space-y-2">
         {order.lines.map((line: KdsLineItem) => {
           const isLineReady = line.status === 'listo';
@@ -100,15 +121,17 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                   : 'border-border bg-surface-alt/60'
               }`}
             >
-              <div className="space-y-0.5">
-                <div className="flex items-center gap-2">
-                  <span className="text-base font-black text-ink">{line.quantity}x {line.productName}</span>
+              <div className="space-y-0.5 flex-1 min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-[18px] font-black text-ink leading-snug break-words">
+                    {line.quantity}x {line.productName}
+                  </span>
                   <Badge variant={isLineReady ? 'success' : isLineCooking ? 'primary' : 'neutral'}>
                     {line.status.toUpperCase()}
                   </Badge>
                 </div>
 
-                {/* Exclusiones / Modificadores críticos */}
+                {/* Exclusiones / Modificadores */}
                 {line.ingredientExclusions && line.ingredientExclusions.length > 0 && (
                   <p className="text-xs font-bold text-danger">
                     SIN: {line.ingredientExclusions.join(', ')}
@@ -126,8 +149,8 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                 )}
               </div>
 
-              {/* Acciones de 1 toque y botón Revertir (Contrato Smoke Hito M17: min-h-[48px] y Revertir) */}
-              <div className="flex items-center gap-2 w-full sm:w-auto justify-end">
+              {/* Acción de 1 toque por plato */}
+              <div className="flex items-center gap-2 w-full sm:w-auto justify-end shrink-0">
                 {isLineReady ? (
                   <Button
                     variant="ghost"
@@ -136,36 +159,25 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                     leftIcon="RotateCcw"
                     className="min-h-[48px]"
                   >
-                    Revertir
+                    Deshacer
                   </Button>
                 ) : isLineCooking ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onUpdateLineStatus(line.lineId, 'pendiente')}
-                      leftIcon="RotateCcw"
-                      className="min-h-[48px]"
-                    >
-                      Revertir
-                    </Button>
-                    <Button
-                      variant="primary"
-                      size="md"
-                      onClick={() => onUpdateLineStatus(line.lineId, 'listo')}
-                      leftIcon="Check"
-                      className="min-h-[48px] flex-1 sm:flex-initial"
-                    >
-                      Listo
-                    </Button>
-                  </>
+                  <Button
+                    variant="primary"
+                    size="md"
+                    onClick={() => onUpdateLineStatus(line.lineId, 'listo')}
+                    leftIcon="Check"
+                    className="min-h-[48px] flex-1 sm:flex-initial font-bold"
+                  >
+                    Listo
+                  </Button>
                 ) : (
                   <Button
                     variant="secondary"
                     size="md"
                     onClick={() => onUpdateLineStatus(line.lineId, 'preparando')}
                     leftIcon="Flame"
-                    className="min-h-[48px] flex-1 sm:flex-initial"
+                    className="min-h-[48px] flex-1 sm:flex-initial font-bold"
                   >
                     Preparar
                   </Button>
@@ -176,13 +188,55 @@ export const KdsCard: React.FC<KdsCardProps> = ({
         })}
       </div>
 
-      {/* Pie de comanda: Entrega total o forzado de supervisión */}
+      {/* Pie de comanda con botón de 1 toque */}
       <div className="pt-2 border-t border-border flex flex-col sm:flex-row gap-2 justify-between items-center">
         <span className="text-xs text-ink-muted font-bold">
-          {isAllReady ? 'Todos los platos están listos' : 'En proceso en estaciones'}
+          {isAllReady ? 'Todos los platos listos' : isAllPending ? 'Comanda por iniciar' : 'En preparación'}
         </span>
 
-        <div className="flex gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap gap-2 w-full sm:w-auto justify-end">
+          {/* Botón Empezar (pasa toda la orden a preparación) */}
+          {isAllPending && onStartPreparation && (
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => onStartPreparation(order)}
+              leftIcon="Flame"
+              className="min-h-[48px] flex-1 sm:flex-initial font-bold"
+            >
+              Empezar
+            </Button>
+          )}
+
+          {/* Botón Despachar Orden si está lista */}
+          {isAllReady ? (
+            <Button
+              data-testid="kds-one-touch-ready"
+              variant="primary"
+              size="md"
+              onClick={() => onDeliverOrder(order.orderId)}
+              leftIcon="CheckCircle"
+              className="min-h-[48px] w-full sm:w-auto font-black shadow-sm"
+            >
+              Despachar orden
+            </Button>
+          ) : (
+            /* Botón Marcar Todo Listo si está en preparación */
+            onMarkAllReady && (
+              <Button
+                data-testid="kds-one-touch-ready"
+                variant="primary"
+                size="md"
+                onClick={() => onMarkAllReady(order)}
+                leftIcon="CheckCheck"
+                className="min-h-[48px] w-full sm:w-auto font-black"
+              >
+                Marcar Todo Listo
+              </Button>
+            )
+          )}
+
+          {/* Despacho Forzado para supervisores si se traba */}
           {isSupervisor && !isAllReady && onForceComplete && (
             <Button
               variant="ghost"
@@ -191,19 +245,9 @@ export const KdsCard: React.FC<KdsCardProps> = ({
               leftIcon="Zap"
               className="min-h-[48px]"
             >
-              Despacho Total
+              Forzar Despacho
             </Button>
           )}
-
-          <Button
-            variant={isAllReady ? 'primary' : 'secondary'}
-            size="md"
-            onClick={() => onDeliverOrder(order.orderId)}
-            leftIcon="CheckCircle"
-            className="min-h-[48px] w-full sm:w-auto"
-          >
-            {isAllReady ? 'Entregar y Despachar' : 'Despachar Orden'}
-          </Button>
         </div>
       </div>
     </Card>

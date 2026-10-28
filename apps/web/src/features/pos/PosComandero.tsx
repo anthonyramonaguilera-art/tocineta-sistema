@@ -39,6 +39,17 @@ export const PosComandero: React.FC = () => {
     staleTime: 30000
   });
 
+  // Configuración de negocio (mesa opcional)
+  const { data: settingsData } = useQuery<{ success: boolean; settings?: { ask_table_on_order?: number } }>({
+    queryKey: ['businessSettings'],
+    queryFn: async () => {
+      const res = await fetch('/api/business-settings');
+      return res.json();
+    },
+    staleTime: 60000
+  });
+  const askTableOnOrder = Boolean(settingsData?.settings?.ask_table_on_order);
+
   const categories = menuData?.categories || [];
   const products = useMemo(() => {
     return categories.flatMap((c) => c.products.map((p) => ({ ...p, categoryId: c.id })));
@@ -137,7 +148,7 @@ export const PosComandero: React.FC = () => {
         totalSteps={3}
         title={
           posCart.step === 1
-            ? 'Cliente y Canal de Atención'
+            ? 'Tomar pedido'
             : posCart.step === 2
             ? 'Seleccionar Productos del Menú'
             : 'Revisión y Confirmación del Pedido'
@@ -154,7 +165,7 @@ export const PosComandero: React.FC = () => {
             ? handleStep2Next
             : undefined
         }
-        nextLabel={posCart.step === 1 ? 'Ir al Menú' : 'Revisar Pedido'}
+        nextLabel={posCart.step === 1 ? 'Siguiente' : 'Revisar Pedido'}
         nextDisabled={
           (posCart.step === 1 && posCart.customerName.trim().length < 3) ||
           (posCart.step === 2 && posCart.cart.length === 0)
@@ -205,6 +216,15 @@ export const PosComandero: React.FC = () => {
               setDeliveryTierCents={posCart.setDeliveryTierCents}
               motorizadoId={posCart.motorizadoId}
               setMotorizadoId={posCart.setMotorizadoId}
+              askTableOnOrder={askTableOnOrder}
+              canPay={canPay}
+              onQuickPay={() => {
+                if (posCart.cart.length > 0) {
+                  posCart.setStep(3);
+                } else {
+                  window.location.hash = '#cashier';
+                }
+              }}
             />
           </div>
         )}
@@ -249,6 +269,7 @@ export const PosComandero: React.FC = () => {
             canPay={canPay}
             isSubmitting={posCart.isSubmitting}
             onBackToCatalog={() => posCart.setStep(2)}
+            askTableOnOrder={askTableOnOrder}
           />
         )}
       </WizardLayout>

@@ -1,32 +1,182 @@
 [
-  { "id": "B01", "titulo": "Íconos impresos como texto", "fase": "P1-A", "estado": "green" },
-  { "id": "B02", "titulo": "Cabecera: título truncado", "fase": "P1-B", "estado": "green" },
-  { "id": "B03", "titulo": "Contraste ilegible", "fase": "P1-B", "estado": "green" },
-  { "id": "B04", "titulo": "Personal y Carta con 'Cargando…' infinito", "fase": "P1-B", "estado": "green" },
-  { "id": "B05", "titulo": "Tomar pedido: textos, scroll, mesa opcional, cobro arriba", "fase": "P3", "estado": "red" },
-  { "id": "B06", "titulo": "'Mesa Mesa 1'", "fase": "P1-B", "estado": "green" },
-  { "id": "B07", "titulo": "Vuelto: $0.00, sin vuelto mixto, sin monto a entregar", "fase": "P2-C", "estado": "green" },
-  { "id": "B08", "titulo": "Cobro Express: ventana pequeña en PC / fondo que se mueve en móvil", "fase": "P2-C", "estado": "green" },
-  { "id": "B09", "titulo": "Caja y Cierre en $0.00 (contratos rotos)", "fase": "P2-B + P2-C", "estado": "green" },
-  { "id": "B10", "titulo": "Ventas del día: Anular/Recibo/pestañas cortadas", "fase": "P1-A + P2-C", "estado": "green" },
-  { "id": "B11", "titulo": "KDS: ilegible y demasiados toques", "fase": "P3", "estado": "red" },
-  { "id": "B12", "titulo": "Cifras distintas entre Caja/Panel/Finanzas/Inicio", "fase": "P2-B + P2-C", "estado": "green" },
-  { "id": "B13", "titulo": "Tercera sede '(Alias)'", "fase": "P2-A", "estado": "green" },
-  { "id": "B14", "titulo": "Inventario rápido no deja agregar insumos", "fase": "P4-A + P4-B", "estado": "red" },
-  { "id": "B15", "titulo": "Sub-receta: 500 y falta explicar 'rendimiento del batch'", "fase": "P4-A + P4-B", "estado": "red" },
-  { "id": "B16", "titulo": "No se pueden crear recetas desde cero", "fase": "P4-A + P4-B", "estado": "red" },
-  { "id": "B17", "titulo": "Merma: '($NaN)' y 500 por insumo", "fase": "P4-A + P4-B", "estado": "red" },
-  { "id": "B18", "titulo": "Compras: casillas sin pedagogía y sin foto de factura", "fase": "P4-A + P4-B", "estado": "red" },
-  { "id": "B19", "titulo": "Asistente: 1 solo insumo/proveedor, recetas inoperantes, 'Finalizar' sin efecto, sin tutorial", "fase": "P4-A + P4-C", "estado": "red" },
-  { "id": "B20", "titulo": "Cotizador de eventos sin platos", "fase": "P4-C", "estado": "red" },
-  { "id": "B21", "titulo": "'Treinta' en la interfaz", "fase": "P1-B", "estado": "green" },
-  { "id": "B22", "titulo": "P&L: margen negativo en verde; datos basura de pruebas", "fase": "P2-B + P6-A + P6-B", "estado": "red" },
-  { "id": "B23", "titulo": "Sin alerta de pedido nuevo (sonido/vibración/borde)", "fase": "P3", "estado": "red" },
-  { "id": "B24", "titulo": "Anulación por LIKE", "fase": "P4-A", "estado": "red" },
-  { "id": "B25", "titulo": "'Siguiente' deshabilitado sin motivo; contenido tapado por el pie", "fase": "P1-B", "estado": "green" },
-  { "id": "B26", "titulo": "Emoji residual (📸, ⚙)", "fase": "P1-A", "estado": "green" },
-  { "id": "B27", "titulo": "Stock negativo sin alerta clara (Salchicha −4)", "fase": "P6-B", "estado": "red" },
-  { "id": "B28", "titulo": "Turno por sede en vez de jornada global", "fase": "P2-A", "estado": "green" },
-  { "id": "B29", "titulo": "Merma duplicada como gasto", "fase": "P4-A", "estado": "red" },
-  { "id": "B30", "titulo": "MenuAdminView.tsx de 1.496 líneas", "fase": "P7", "estado": "red" }
+  {
+    "id": "B01",
+    "titulo": "Íconos impresos como texto",
+    "fase": "P1-A",
+    "estado": "green"
+  },
+  {
+    "id": "B02",
+    "titulo": "Cabecera: título truncado",
+    "fase": "P1-B",
+    "estado": "green"
+  },
+  {
+    "id": "B03",
+    "titulo": "Contraste ilegible",
+    "fase": "P1-B",
+    "estado": "green"
+  },
+  {
+    "id": "B04",
+    "titulo": "Personal y Carta con 'Cargando…' infinito",
+    "fase": "P1-B",
+    "estado": "green"
+  },
+  {
+    "id": "B05",
+    "titulo": "Tomar pedido: textos, scroll, mesa opcional, cobro arriba",
+    "fase": "P3",
+    "estado": "green"
+  },
+  {
+    "id": "B06",
+    "titulo": "'Mesa Mesa 1'",
+    "fase": "P1-B",
+    "estado": "green"
+  },
+  {
+    "id": "B07",
+    "titulo": "Vuelto: $0.00, sin vuelto mixto, sin monto a entregar",
+    "fase": "P2-C",
+    "estado": "green"
+  },
+  {
+    "id": "B08",
+    "titulo": "Cobro Express: ventana pequeña en PC / fondo que se mueve en móvil",
+    "fase": "P2-C",
+    "estado": "green"
+  },
+  {
+    "id": "B09",
+    "titulo": "Caja y Cierre en $0.00 (contratos rotos)",
+    "fase": "P2-B + P2-C",
+    "estado": "green"
+  },
+  {
+    "id": "B10",
+    "titulo": "Ventas del día: Anular/Recibo/pestañas cortadas",
+    "fase": "P1-A + P2-C",
+    "estado": "green"
+  },
+  {
+    "id": "B11",
+    "titulo": "KDS: ilegible y demasiados toques",
+    "fase": "P3",
+    "estado": "green"
+  },
+  {
+    "id": "B12",
+    "titulo": "Cifras distintas entre Caja/Panel/Finanzas/Inicio",
+    "fase": "P2-B + P2-C",
+    "estado": "green"
+  },
+  {
+    "id": "B13",
+    "titulo": "Tercera sede '(Alias)'",
+    "fase": "P2-A",
+    "estado": "green"
+  },
+  {
+    "id": "B14",
+    "titulo": "Inventario rápido no deja agregar insumos",
+    "fase": "P4-A + P4-B",
+    "estado": "red"
+  },
+  {
+    "id": "B15",
+    "titulo": "Sub-receta: 500 y falta explicar 'rendimiento del batch'",
+    "fase": "P4-A + P4-B",
+    "estado": "red"
+  },
+  {
+    "id": "B16",
+    "titulo": "No se pueden crear recetas desde cero",
+    "fase": "P4-A + P4-B",
+    "estado": "red"
+  },
+  {
+    "id": "B17",
+    "titulo": "Merma: '($NaN)' y 500 por insumo",
+    "fase": "P4-A + P4-B",
+    "estado": "red"
+  },
+  {
+    "id": "B18",
+    "titulo": "Compras: casillas sin pedagogía y sin foto de factura",
+    "fase": "P4-A + P4-B",
+    "estado": "red"
+  },
+  {
+    "id": "B19",
+    "titulo": "Asistente: 1 solo insumo/proveedor, recetas inoperantes, 'Finalizar' sin efecto, sin tutorial",
+    "fase": "P4-A + P4-C",
+    "estado": "red"
+  },
+  {
+    "id": "B20",
+    "titulo": "Cotizador de eventos sin platos",
+    "fase": "P4-C",
+    "estado": "red"
+  },
+  {
+    "id": "B21",
+    "titulo": "'Treinta' en la interfaz",
+    "fase": "P1-B",
+    "estado": "green"
+  },
+  {
+    "id": "B22",
+    "titulo": "P&L: margen negativo en verde; datos basura de pruebas",
+    "fase": "P2-B + P6-A + P6-B",
+    "estado": "red"
+  },
+  {
+    "id": "B23",
+    "titulo": "Sin alerta de pedido nuevo (sonido/vibración/borde)",
+    "fase": "P3",
+    "estado": "green"
+  },
+  {
+    "id": "B24",
+    "titulo": "Anulación por LIKE",
+    "fase": "P4-A",
+    "estado": "red"
+  },
+  {
+    "id": "B25",
+    "titulo": "'Siguiente' deshabilitado sin motivo; contenido tapado por el pie",
+    "fase": "P1-B",
+    "estado": "green"
+  },
+  {
+    "id": "B26",
+    "titulo": "Emoji residual (📸, ⚙)",
+    "fase": "P1-A",
+    "estado": "green"
+  },
+  {
+    "id": "B27",
+    "titulo": "Stock negativo sin alerta clara (Salchicha −4)",
+    "fase": "P6-B",
+    "estado": "red"
+  },
+  {
+    "id": "B28",
+    "titulo": "Turno por sede en vez de jornada global",
+    "fase": "P2-A",
+    "estado": "green"
+  },
+  {
+    "id": "B29",
+    "titulo": "Merma duplicada como gasto",
+    "fase": "P4-A",
+    "estado": "red"
+  },
+  {
+    "id": "B30",
+    "titulo": "MenuAdminView.tsx de 1.496 líneas",
+    "fase": "P7",
+    "estado": "red"
+  }
 ]

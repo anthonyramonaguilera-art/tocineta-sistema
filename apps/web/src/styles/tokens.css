@@ -40,7 +40,7 @@ html:not(.dark),
   --color-success-ink: #FFFFFF;
   --color-success-subtle: #DCFCE7;
 
-  --color-warning: #B45309;       /* Ámbar de alto contraste: 4.6:1 (AA) */
+  --color-warning: #92400E;       /* Ámbar de alto contraste: 4.6:1 (AA) */
   --color-warning-ink: #FFFFFF;
   --color-warning-subtle: #FEF3C7;
 
@@ -108,4 +108,20 @@ html.dark,
   --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.4);
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.6);
+}
+
+@keyframes kds-border-flash {
+  0%, 100% { border-color: var(--color-primary); box-shadow: 0 0 0 2px var(--color-primary); }
+  50% { border-color: transparent; box-shadow: none; }
+}
+
+.kds-card-flash {
+  animation: kds-border-flash 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kds-card-flash {
+    animation: none;
+    border-color: var(--color-primary);
+  }
 }

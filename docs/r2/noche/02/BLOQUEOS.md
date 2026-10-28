@@ -5,3 +5,4 @@
 - **Total de bloqueos resueltos:** 0
 
 *(Sin bloqueos activos al cierre de Fase 0)*
+

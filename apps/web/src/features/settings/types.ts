@@ -13,6 +13,7 @@ export interface BusinessSettings {
   delivery_accounting_mode: string;
   delivery_quick_tiers_json: string;
   table_service_mode: string;
+  ask_table_on_order?: number;
   banesco_pago_movil_phone: string;
   banesco_pago_movil_id: string;
   pos_fee_bps: number;

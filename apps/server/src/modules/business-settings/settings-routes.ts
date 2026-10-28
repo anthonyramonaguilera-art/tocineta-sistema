@@ -28,7 +28,9 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         blindClosureEnabled: Boolean(settings.blind_closure_enabled),
         partnersModuleEnabled: Boolean(settings.partners_module_enabled),
         eventsQuoteEnabled: Boolean(settings.events_quote_enabled),
-        onboardingCompleted: Boolean(settings.onboarding_completed)
+        onboardingCompleted: Boolean(settings.onboarding_completed),
+        askTableOnOrder: Boolean(settings.ask_table_on_order),
+        ask_table_on_order: settings.ask_table_on_order ?? 0
       };
 
       return reply.send({
@@ -71,6 +73,7 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
       const newQuotes = b.events_quote_enabled !== undefined ? (b.events_quote_enabled ? 1 : 0) : current.events_quote_enabled;
       const newOnboarding = b.onboarding_completed !== undefined ? (b.onboarding_completed ? 1 : 0) : current.onboarding_completed;
       const newBlind = b.blind_closure_enabled !== undefined ? (b.blind_closure_enabled ? 1 : 0) : (b.blindClosureEnabled !== undefined ? (b.blindClosureEnabled ? 1 : 0) : current.blind_closure_enabled);
+      const newAskTable = b.ask_table_on_order !== undefined ? (b.ask_table_on_order ? 1 : 0) : (b.askTableOnOrder !== undefined ? (b.askTableOnOrder ? 1 : 0) : current.ask_table_on_order);
 
       rawDb.prepare(`
         UPDATE business_settings
@@ -93,6 +96,7 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
             events_quote_enabled = ?,
             onboarding_completed = ?,
             blind_closure_enabled = ?,
+            ask_table_on_order = ?,
             updated_at_ms = ?
         WHERE id = 'default'
       `).run(
@@ -115,6 +119,7 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         newQuotes,
         newOnboarding,
         newBlind,
+        newAskTable,
         now
       );
 
@@ -141,7 +146,9 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
           blindClosureEnabled: Boolean(updated.blind_closure_enabled),
           partnersModuleEnabled: Boolean(updated.partners_module_enabled),
           eventsQuoteEnabled: Boolean(updated.events_quote_enabled),
-          onboardingCompleted: Boolean(updated.onboarding_completed)
+          onboardingCompleted: Boolean(updated.onboarding_completed),
+          askTableOnOrder: Boolean(updated.ask_table_on_order),
+          ask_table_on_order: updated.ask_table_on_order ?? 0
         }
       });
     } catch (err: any) {

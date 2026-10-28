@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, Field, Input, Icon } from '../../ui/index.js';
 import { useQuery } from '@tanstack/react-query';
+import { formatTableLabel } from '../../lib/format.js';
 
 interface Step1CustomerChannelProps {
   customerName: string;
@@ -22,11 +23,15 @@ interface Step1CustomerChannelProps {
   setDeliveryTierCents: (tier: number) => void;
   motorizadoId: string;
   setMotorizadoId: (id: string) => void;
+  askTableOnOrder?: boolean;
+  canPay?: boolean;
+  onQuickPay?: () => void;
 }
 
 const TABLES = [
+  'Barra / Sin mesa',
   'Mesa 1', 'Mesa 2', 'Mesa 3', 'Mesa 4', 'Mesa 5', 'Mesa 6',
-  'Mesa 7', 'Mesa 8', 'Mesa 9', 'Mesa 10', 'Mesa 11', 'Barra Food Truck'
+  'Mesa 7', 'Mesa 8', 'Mesa 9', 'Mesa 10', 'Mesa 11'
 ];
 
 const DELIVERY_TIERS = [
@@ -55,16 +60,15 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
   deliveryTierCents,
   setDeliveryTierCents,
   motorizadoId,
-  setMotorizadoId
+  setMotorizadoId,
+  askTableOnOrder = false,
+  canPay = false,
+  onQuickPay
 }) => {
   // Consultar clientes previos para autocompletado
   const { data: customersData } = useQuery<{ customers: Array<{ name: string; phone?: string; address?: string }> }>({
     queryKey: ['posCustomers'],
     queryFn: async () => {
-      try {
-        const res = await fetch('/api/profitability/customers');
-        if (res.ok) return res.json();
-      } catch {}
       return { customers: [] };
     },
     staleTime: 60000
@@ -83,14 +87,10 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
     refetchInterval: 10000
   });
 
-  // Consultar repartidores / motorizados disponibles
+  // Consultar repartidores disponibles
   const { data: staffData } = useQuery<{ staff: Array<{ id: string; name: string; role: string }> }>({
     queryKey: ['posStaffRiders'],
     queryFn: async () => {
-      try {
-        const res = await fetch('/api/staff');
-        if (res.ok) return res.json();
-      } catch {}
       return { staff: [] };
     },
     staleTime: 60000
@@ -108,9 +108,9 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
   useEffect(() => {
     const query = customerName.trim().toLowerCase();
     if (query.length >= 2 && customersData?.customers) {
-      const matches = customersData.customers.filter((c) =>
-        c.name.toLowerCase().includes(query)
-      ).slice(0, 5);
+      const matches = customersData.customers
+        .filter((c) => c.name.toLowerCase().includes(query))
+        .slice(0, 5);
       setFilteredSuggestions(matches);
     } else {
       setFilteredSuggestions([]);
@@ -125,15 +125,30 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
   };
 
   return (
-    <div className="space-y-6 max-w-2xl mx-auto">
-      {/* 1. Nombre y Apellido del Cliente (Obligatorio) */}
-      <Card variant="surface" className="p-4 sm:p-5 border-2 border-border space-y-3">
+    <div className="space-y-3 max-w-2xl mx-auto">
+      {/* Barra de Acceso Rápido / Cobro Directo para Cajera */}
+      {canPay && onQuickPay && (
+        <div className="flex items-center justify-between bg-surface-alt px-3 py-2 rounded-xl border border-border">
+          <span className="text-xs font-bold text-ink-muted">Caja y Cobro Directo</span>
+          <button
+            type="button"
+            onClick={onQuickPay}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-ink text-xs font-black min-h-[44px] cursor-pointer hover:brightness-95 transition-all shadow-xs"
+          >
+            <Icon name="DollarSign" size={16} />
+            <span>Cobrar</span>
+          </button>
+        </div>
+      )}
+
+      {/* 1. Nombre del Cliente */}
+      <Card variant="surface" className="p-3 sm:p-4 border border-border space-y-2">
         <div className="flex items-center justify-between">
-          <label className="text-sm font-black text-ink uppercase tracking-tight flex items-center gap-1.5">
+          <label className="text-xs font-black text-ink uppercase tracking-tight flex items-center gap-1">
             <span>Cliente</span>
             <span className="text-danger">*</span>
           </label>
-          <span className="text-xs text-ink-muted">Obligatorio (mínimo 3 letras)</span>
+          <span className="text-[11px] text-ink-muted">Mínimo 3 letras</span>
         </div>
 
         <div className="relative">
@@ -143,13 +158,12 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
               setCustomerName(e.target.value);
               setShowSuggestions(true);
             }}
-            placeholder="Nombre y Apellido del cliente"
-            leftIcon={<Icon name="User" size={18} />}
+            placeholder="Nombre y Apellido"
+            leftIcon={<Icon name="User" size={16} />}
             error={Boolean(customerNameError)}
             autoFocus
           />
 
-          {/* Sugerencias de Autocompletado */}
           {showSuggestions && filteredSuggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-1 bg-surface border border-border rounded-xl shadow-xl z-20 overflow-hidden">
               {filteredSuggestions.map((c, i) => (
@@ -157,7 +171,7 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
                   key={i}
                   type="button"
                   onClick={() => handleSelectCustomer(c)}
-                  className="w-full text-left p-3 text-xs hover:bg-surface-alt border-b border-border last:border-0 flex items-center justify-between transition-colors"
+                  className="w-full text-left p-2.5 text-xs hover:bg-surface-alt border-b border-border last:border-0 flex items-center justify-between transition-colors cursor-pointer"
                 >
                   <span className="font-bold text-ink">{c.name}</span>
                   {c.phone && <span className="text-ink-muted font-mono">{c.phone}</span>}
@@ -168,107 +182,101 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
         </div>
 
         {customerNameError && (
-          <p className="text-xs font-bold text-danger flex items-center gap-1 mt-1">
+          <p className="text-xs font-bold text-danger flex items-center gap-1">
             <Icon name="AlertCircle" size={14} />
             {customerNameError}
           </p>
         )}
       </Card>
 
-      {/* 2. Tres Tarjetas Grandes de Canal de Atención */}
-      <div>
-        <label className="text-xs font-black text-ink-muted uppercase tracking-wider block mb-3 px-1">
+      {/* 2. Canal de Atención: Una sola fila de 3 chips */}
+      <div className="space-y-1.5">
+        <label className="text-[11px] font-black text-ink-muted uppercase tracking-wider block px-0.5">
           Canal de Atención
         </label>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Comer Aquí */}
+        <div className="grid grid-cols-3 gap-2">
+          {/* Comer aquí */}
           <button
             type="button"
-            onClick={() => setFulfillmentType('salon')}
-            className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 min-h-[110px] transition-all cursor-pointer ${
+            onClick={() => {
+              setFulfillmentType('salon');
+              if (askTableOnOrder && !tableNumber) {
+                setTableNumber('Barra / Sin mesa');
+              }
+            }}
+            className={`min-h-[48px] px-2 py-2 rounded-xl border flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               fulfillmentType === 'salon'
-                ? 'bg-primary/20 border-primary text-ink shadow-md scale-[1.02]'
-                : 'bg-surface border-border text-ink-muted hover:border-border/80 hover:text-ink'
+                ? 'bg-primary text-primary-ink border-primary font-black shadow-xs'
+                : 'bg-surface text-ink border-border hover:bg-surface-alt font-bold'
             }`}
           >
-            <Icon name="Utensils" size={26} className={fulfillmentType === 'salon' ? 'text-ink' : 'text-ink-muted'} />
-            <span className="font-black text-sm text-ink">Comer aquí</span>
-            <span className="text-[11px] text-ink-muted">Servicio en mesa o barra</span>
+            <Icon name="Utensils" size={16} />
+            <span className="text-xs leading-none">Comer aquí</span>
           </button>
 
           {/* Para Llevar */}
           <button
             type="button"
             onClick={() => setFulfillmentType('para_llevar')}
-            className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 min-h-[110px] transition-all cursor-pointer ${
+            className={`min-h-[48px] px-2 py-2 rounded-xl border flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               fulfillmentType === 'para_llevar'
-                ? 'bg-primary/20 border-primary text-ink shadow-md scale-[1.02]'
-                : 'bg-surface border-border text-ink-muted hover:border-border/80 hover:text-ink'
+                ? 'bg-primary text-primary-ink border-primary font-black shadow-xs'
+                : 'bg-surface text-ink border-border hover:bg-surface-alt font-bold'
             }`}
           >
-            <Icon name="ShoppingBag" size={26} className={fulfillmentType === 'para_llevar' ? 'text-ink' : 'text-ink-muted'} />
-            <span className="font-black text-sm text-ink">Para llevar</span>
-            <span className="text-[11px] text-ink-muted">Retiro por mostrador</span>
+            <Icon name="ShoppingBag" size={16} />
+            <span className="text-xs leading-none">Para Llevar</span>
           </button>
 
           {/* Delivery */}
           <button
             type="button"
             onClick={() => setFulfillmentType('delivery')}
-            className={`p-4 rounded-2xl border-2 flex flex-col items-center justify-center gap-2 min-h-[110px] transition-all cursor-pointer ${
+            className={`min-h-[48px] px-2 py-2 rounded-xl border flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
               fulfillmentType === 'delivery'
-                ? 'bg-primary/20 border-primary text-ink shadow-md scale-[1.02]'
-                : 'bg-surface border-border text-ink-muted hover:border-border/80 hover:text-ink'
+                ? 'bg-primary text-primary-ink border-primary font-black shadow-xs'
+                : 'bg-surface text-ink border-border hover:bg-surface-alt font-bold'
             }`}
           >
-            <Icon name="Bike" size={26} className={fulfillmentType === 'delivery' ? 'text-ink' : 'text-ink-muted'} />
-            <span className="font-black text-sm text-ink">Delivery</span>
-            <span className="text-[11px] text-ink-muted">Envío a domicilio</span>
+            <Icon name="Bike" size={16} />
+            <span className="text-xs leading-none">Delivery</span>
           </button>
         </div>
       </div>
 
-      {/* 3. Panel contextual según canal seleccionado */}
+      {/* 3. Panel contextual */}
 
-      {/* Caso A: Comer aquí -> Mapa Táctil de Mesas */}
-      {fulfillmentType === 'salon' && (
-        <Card variant="alt" className="p-4 sm:p-5 space-y-3">
+      {/* Caso A: Comer aquí -> Selector de Mesa SOLO si ask_table_on_order está ACTIVO */}
+      {fulfillmentType === 'salon' && askTableOnOrder && (
+        <Card variant="alt" className="p-3 sm:p-4 space-y-2.5">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-black text-ink uppercase tracking-wider">
-              Seleccionar Mesa o Ubicación
+              Mesa o Barra
             </h3>
-            <div className="flex items-center gap-3 text-[11px]">
-              <span className="flex items-center gap-1 text-ink-muted">
-                <span className="w-2.5 h-2.5 rounded-full bg-surface border border-border" />
-                Libre
-              </span>
-              <span className="flex items-center gap-1 text-ink-muted">
-                <span className="w-2.5 h-2.5 rounded-full bg-danger/80" />
-                Ocupada
-              </span>
-            </div>
+            <span className="text-[11px] text-ink-muted">Primera opción: Barra</span>
           </div>
 
           <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             {TABLES.map((t) => {
               const isSelected = tableNumber === t;
               const isOccupied = occupiedTables.has(t);
+              const label = formatTableLabel(t);
               return (
                 <button
                   key={t}
                   type="button"
                   onClick={() => setTableNumber(t)}
-                  className={`min-h-[48px] p-2.5 rounded-xl border text-xs font-black transition-all flex flex-col items-center justify-center relative cursor-pointer ${
+                  className={`min-h-[48px] p-2 rounded-xl border text-xs font-black transition-all flex flex-col items-center justify-center relative cursor-pointer ${
                     isSelected
-                      ? 'bg-primary text-primary-ink border-primary shadow-sm scale-102'
+                      ? 'bg-primary text-primary-ink border-primary shadow-xs'
                       : isOccupied
-                      ? 'bg-danger/10 text-danger border-danger/30 hover:bg-danger/20'
+                      ? 'bg-danger-subtle text-danger border-danger/40 hover:bg-danger-subtle/80'
                       : 'bg-surface text-ink border-border hover:bg-surface-alt'
                   }`}
                 >
-                  <span>{t}</span>
+                  <span className="truncate max-w-full text-center">{label}</span>
                   {isOccupied && !isSelected && (
-                    <span className="text-[9px] font-bold opacity-80 uppercase">Ocupada</span>
+                    <span className="text-[9px] font-black uppercase text-danger">Ocupada</span>
                   )}
                 </button>
               );
@@ -279,12 +287,12 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
 
       {/* Caso B: Delivery -> Formulario de Envío */}
       {fulfillmentType === 'delivery' && (
-        <Card variant="alt" className="p-4 sm:p-5 space-y-4">
+        <Card variant="alt" className="p-3 sm:p-4 space-y-3">
           <h3 className="text-xs font-black text-ink uppercase tracking-wider">
-            Detalles de Entrega a Domicilio
+            Detalles de Envío
           </h3>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
             <Field label="Teléfono del Cliente" required>
               <Input
                 type="tel"
@@ -307,11 +315,11 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
             </Field>
           </div>
 
-          <Field label="Dirección Exacta de Entrega" required>
+          <Field label="Dirección Exacta" required>
             <Input
               value={deliveryAddress}
               onChange={(e) => setDeliveryAddress(e.target.value)}
-              placeholder="Calle, carrera, casa o edificio / piso"
+              placeholder="Calle, casa, edificio, piso"
               leftIcon={<Icon name="MapPin" size={16} />}
             />
           </Field>
@@ -320,14 +328,13 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
             <Input
               value={deliveryReference}
               onChange={(e) => setDeliveryReference(e.target.value)}
-              placeholder="Ej: Frente al colegio, portón negro..."
+              placeholder="Ej: Portón negro, frente a plaza..."
             />
           </Field>
 
-          {/* Tarifa de Zona */}
           <div>
-            <label className="text-xs font-bold text-ink-muted uppercase block mb-1.5">
-              Tarifa de Delivery (Zona)
+            <label className="text-[11px] font-bold text-ink-muted uppercase block mb-1">
+              Tarifa de Delivery
             </label>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {DELIVERY_TIERS.map((tier) => (
@@ -335,9 +342,9 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
                   key={tier.cents}
                   type="button"
                   onClick={() => setDeliveryTierCents(tier.cents)}
-                  className={`p-2 rounded-xl border text-center transition-all cursor-pointer ${
+                  className={`p-2 rounded-xl border text-center transition-all cursor-pointer min-h-[48px] flex flex-col items-center justify-center ${
                     deliveryTierCents === tier.cents
-                      ? 'bg-primary text-primary-ink border-primary font-black shadow-sm'
+                      ? 'bg-primary text-primary-ink border-primary font-black shadow-xs'
                       : 'bg-surface text-ink border-border hover:bg-surface-alt font-medium'
                   }`}
                 >
@@ -348,7 +355,6 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
             </div>
           </div>
 
-          {/* Repartidor / Motorizado Asignado */}
           <Field label="Repartidor Asignado">
             <select
               value={motorizadoId}

@@ -38,6 +38,7 @@ export const BusinessSettingsView: React.FC = () => {
   const [igtfEnabled, setIgtfEnabled] = useState(Boolean(settings?.igtf_enabled));
   const [partnersEnabled, setPartnersEnabled] = useState(Boolean(settings?.partners_module_enabled));
   const [eventsQuoteEnabled, setEventsQuoteEnabled] = useState(Boolean(settings?.events_quote_enabled ?? 1));
+  const [askTableOnOrder, setAskTableOnOrder] = useState(Boolean(settings?.ask_table_on_order));
 
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isManualsOpen, setIsManualsOpen] = useState(false);
@@ -58,6 +59,7 @@ export const BusinessSettingsView: React.FC = () => {
       setIgtfEnabled(Boolean(settings.igtf_enabled));
       setPartnersEnabled(Boolean(settings.partners_module_enabled));
       setEventsQuoteEnabled(Boolean(settings.events_quote_enabled));
+      setAskTableOnOrder(Boolean(settings.ask_table_on_order));
     }
   }, [settings]);
 
@@ -86,7 +88,7 @@ export const BusinessSettingsView: React.FC = () => {
       rate_change_hour: rateChangeHour, ticket_header_message: ticketHeader.trim(),
       ticket_footer_message: ticketFooter.trim(), iva_enabled: ivaEnabled,
       igtf_enabled: igtfEnabled, partners_module_enabled: partnersEnabled,
-      events_quote_enabled: eventsQuoteEnabled
+      events_quote_enabled: eventsQuoteEnabled, ask_table_on_order: askTableOnOrder ? 1 : 0
     });
   };
 
@@ -306,12 +308,7 @@ export const BusinessSettingsView: React.FC = () => {
                 <span className="font-extrabold text-ink block">Módulo IVA (16%)</span>
                 <span className="text-[11px] text-ink-muted">Apagado por defecto para comida rápida.</span>
               </div>
-              <input
-                type="checkbox"
-                checked={ivaEnabled}
-                onChange={(e) => setIvaEnabled(e.target.checked)}
-                className="w-5 h-5 rounded cursor-pointer accent-primary"
-              />
+              <input type="checkbox" checked={ivaEnabled} onChange={(e) => setIvaEnabled(e.target.checked)} className="w-5 h-5 rounded cursor-pointer accent-primary" />
             </div>
 
             {/* IGTF */}
@@ -320,12 +317,7 @@ export const BusinessSettingsView: React.FC = () => {
                 <span className="font-extrabold text-ink block">Módulo IGTF (3%)</span>
                 <span className="text-[11px] text-ink-muted">Apagado por defecto.</span>
               </div>
-              <input
-                type="checkbox"
-                checked={igtfEnabled}
-                onChange={(e) => setIgtfEnabled(e.target.checked)}
-                className="w-5 h-5 rounded cursor-pointer accent-primary"
-              />
+              <input type="checkbox" checked={igtfEnabled} onChange={(e) => setIgtfEnabled(e.target.checked)} className="w-5 h-5 rounded cursor-pointer accent-primary" />
             </div>
 
             {/* Socios */}
@@ -334,12 +326,7 @@ export const BusinessSettingsView: React.FC = () => {
                 <span className="font-extrabold text-ink block">Módulo de Socios</span>
                 <span className="text-[11px] text-ink-muted">Aportes y reparto por porcentaje.</span>
               </div>
-              <input
-                type="checkbox"
-                checked={partnersEnabled}
-                onChange={(e) => setPartnersEnabled(e.target.checked)}
-                className="w-5 h-5 rounded cursor-pointer accent-primary"
-              />
+              <input type="checkbox" checked={partnersEnabled} onChange={(e) => setPartnersEnabled(e.target.checked)} className="w-5 h-5 rounded cursor-pointer accent-primary" />
             </div>
 
             {/* Cotizador */}
@@ -348,12 +335,16 @@ export const BusinessSettingsView: React.FC = () => {
                 <span className="font-extrabold text-ink block">Cotizador de Eventos</span>
                 <span className="text-[11px] text-ink-muted">Presupuestos y simulador de compras.</span>
               </div>
-              <input
-                type="checkbox"
-                checked={eventsQuoteEnabled}
-                onChange={(e) => setEventsQuoteEnabled(e.target.checked)}
-                className="w-5 h-5 rounded cursor-pointer accent-primary"
-              />
+              <input type="checkbox" checked={eventsQuoteEnabled} onChange={(e) => setEventsQuoteEnabled(e.target.checked)} className="w-5 h-5 rounded cursor-pointer accent-primary" />
+            </div>
+
+            {/* Solicitar mesa al tomar pedido */}
+            <div className="p-3.5 rounded-xl bg-surface-alt/50 border border-border flex items-center justify-between sm:col-span-2">
+              <div>
+                <span className="font-extrabold text-ink block">Solicitar mesa al tomar pedido</span>
+                <span className="text-[11px] text-ink-muted">Habilita selector de mesa para servicio en salón ("Comer aquí").</span>
+              </div>
+              <input type="checkbox" checked={askTableOnOrder} onChange={(e) => setAskTableOnOrder(e.target.checked)} className="w-5 h-5 rounded cursor-pointer accent-primary" />
             </div>
           </div>
         </Card>

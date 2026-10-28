@@ -95,7 +95,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
 
           <div className="flex flex-col items-end gap-1.5 ml-auto">
             {disabledNext && nextDisabledReason && (
-              <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded-lg text-right animate-pulse">
+              <span className="text-[11px] font-bold text-warning border border-warning/30 bg-warning-subtle px-2.5 py-0.5 rounded-lg text-right font-black">
                 {nextDisabledReason}
               </span>
             )}

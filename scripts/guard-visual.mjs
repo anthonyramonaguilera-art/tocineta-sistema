@@ -71,7 +71,7 @@ async function startServerIfNeeded() {
   });
 
   // Esperar a que el servidor esté listo
-  for (let i = 0; i < 40; i++) {
+  for (let i = 0; i < 120; i++) {
     await new Promise((r) => setTimeout(r, 500));
     if (await isServerRunning()) {
       console.log('[GUARD:VISUAL] Servidor de pruebas conectado exitosamente.');
@@ -79,7 +79,7 @@ async function startServerIfNeeded() {
     }
   }
 
-  throw new Error('No se pudo conectar al servidor de pruebas en 20 segundos.');
+  throw new Error('No se pudo conectar al servidor de pruebas en 60 segundos.');
 }
 
 async function main() {
@@ -261,7 +261,7 @@ async function main() {
                   viewport: vp.name,
                   role: role.key,
                   route,
-                  detail: `${axeResults.violations[0].nodes.length} elemento(s) con contraste inferior a WCAG AA`
+                  detail: `${axeResults.violations[0].nodes.length} elemento(s): ` + axeResults.violations[0].nodes.map(n => n.target.join(' ') + ' -> ' + n.html.slice(0, 80)).join('; ')
                 });
               }
             } catch {}

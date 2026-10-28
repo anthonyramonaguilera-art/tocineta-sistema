@@ -54,3 +54,4 @@
 
 ## 5. Riesgos
 - **Riesgo:** Ninguno residual en P1-B. Los cambios aplicados se circunscriben a clases de diseño CSS, tokens de alto contraste y ajustes de desborde responsive.
+

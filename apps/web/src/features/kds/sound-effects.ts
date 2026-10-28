@@ -32,6 +32,21 @@ class KdsSoundSynthesizer {
     return this.ctx;
   }
 
+  public isSuspended(): boolean {
+    return this.ctx ? this.ctx.state === 'suspended' : false;
+  }
+
+  public async unlock(): Promise<boolean> {
+    const ctx = this.initContext();
+    if (!ctx) return false;
+    if (ctx.state === 'suspended') {
+      try {
+        await ctx.resume();
+      } catch {}
+    }
+    return ctx.state === 'running';
+  }
+
   public isEnabled(): boolean {
     return this.soundEnabled;
   }

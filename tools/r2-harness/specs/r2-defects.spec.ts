@@ -428,8 +428,32 @@ test.describe('Ronda 2 — 30 Defectos en ROJO (P0-B Harness)', () => {
     await navigateAs(page, 'plancha', '/#kds');
     await page.waitForTimeout(1000);
 
-    const vibrateCalled = await page.evaluate(() => (window as any).__vibrateCalled);
-    expect(vibrateCalled, 'navigator.vibrate debe ser invocado ante llegada de nueva orden').toBe(true);
+    const rawDb = getHarnessDb();
+    const now = Date.now();
+    const orderId = `ord_test_b23_${now}`;
+    rawDb.prepare(`
+      INSERT INTO orders (
+        id, order_number, location_id, jornada_id, cash_session_id, customer_name, fulfillment_type, table_number,
+        total_to_collect_usd_cents, net_food_sales_usd_cents, rate_micro_bs, payment_status, fulfillment_status,
+        station_status_hot_dogs, created_at_ms, updated_at_ms, created_by_user_id
+      ) VALUES (?, 623, 'loc_alta_vista', 'jor_r2_scenario', 'cs_r2_scenario', 'Cliente Alerta B23', 'para_llevar', 'Mostrador', 500, 500, 500000000, 'pagado', 'en_preparacion', 'pendiente', ?, ?, 'usr_test_cajera')
+    `).run(orderId, now, now);
+    rawDb.prepare(`
+      INSERT INTO order_lines (
+        id, order_id, product_id, quantity, unit_price_usd_cents,
+        prorated_unit_price_usd_cents, subtotal_usd_cents, station, status, created_at_ms
+      ) VALUES (?, ?, 'prod_brazil_dog', 1, 500, 500, 500, 'hot_dogs', 'pendiente', ?)
+    `).run(`line_${orderId}`, orderId, now);
+    rawDb.close();
+
+    const refreshBtn = page.locator('button:has-text("Actualizar")');
+    if (await refreshBtn.isVisible()) {
+      await refreshBtn.click();
+    }
+
+    await expect.poll(async () => {
+      return await page.evaluate(() => (window as any).__vibrateCalled);
+    }, { timeout: 10000 }).toBe(true);
   });
 
   test('[B24] Anular orden #1 no modifica movimientos de órdenes #10 ni #11 (reversa exacta por ID, no LIKE)', async () => {

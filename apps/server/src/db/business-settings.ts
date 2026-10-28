@@ -30,6 +30,7 @@ export interface BusinessSettingsRecord {
   partners_module_enabled: number;
   events_quote_enabled: number;
   onboarding_completed: number;
+  ask_table_on_order: number;
   is_demo_mode?: number;
   updated_at_ms: number;
 }
@@ -64,6 +65,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettingsRecord = {
   partners_module_enabled: 0,
   events_quote_enabled: 1,
   onboarding_completed: 1,
+  ask_table_on_order: 0,
   is_demo_mode: 0,
   updated_at_ms: Date.now()
 };
@@ -133,6 +135,7 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
       partners_module_enabled: existing.partners_module_enabled ?? DEFAULT_BUSINESS_SETTINGS.partners_module_enabled,
       events_quote_enabled: existing.events_quote_enabled ?? DEFAULT_BUSINESS_SETTINGS.events_quote_enabled,
       onboarding_completed: existing.onboarding_completed ?? DEFAULT_BUSINESS_SETTINGS.onboarding_completed,
+      ask_table_on_order: existing.ask_table_on_order ?? DEFAULT_BUSINESS_SETTINGS.ask_table_on_order,
       is_demo_mode: existing.is_demo_mode ?? 0,
       updated_at_ms: existing.updated_at_ms || Date.now()
     };

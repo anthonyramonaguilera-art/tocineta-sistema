@@ -23,3 +23,4 @@
   - `#owner`: 8 violaciones de contraste -> Asignados a **Fase P6-B**.
   - `#quotes`: 8 errores de consola -> Asignados a **Fase P4-C**.
   - Errores de consola (HTTP 403 Forbidden) en roles `cajera`, `mesero` y `plancha` al visitar `#menu-admin` y `#staff`: Comportamiento de seguridad esperado del backend Fastify al bloquear rutas administrativas para roles no autorizados.
+
