@@ -175,7 +175,7 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
       <div className="bg-tocineta-card border border-amber-500/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
         <div className="flex items-center justify-between border-b border-tocineta-border pb-3">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🛠️</span>
+            <Wrench className="w-6 h-6 text-amber-400 shrink-0" />
             <div>
               <h3 className="font-black text-sm text-white uppercase tracking-tight">
                 Iniciar Asistencia Técnica Remota
@@ -204,7 +204,10 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
         {fallbackRequired ? (
           <div className="space-y-3 py-2 animate-in fade-in">
             <div className="p-3 bg-amber-500/15 border border-amber-500/40 rounded-2xl text-amber-200 text-xs font-semibold">
-              <p className="font-bold">⚠️ Quick Assist no se inició automáticamente.</p>
+              <p className="font-bold flex items-center gap-1.5">
+                <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+                Quick Assist no se inició automáticamente.
+              </p>
               <p className="text-[11px] mt-1 text-amber-300/80">Seleccione una de las alternativas autorizadas por Soporte Técnico:</p>
             </div>
             <div className="space-y-2">

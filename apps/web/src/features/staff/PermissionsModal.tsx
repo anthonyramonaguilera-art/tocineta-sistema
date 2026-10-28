@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Modal } from '../../ui/Modal.js';
 import { Button } from '../../ui/Button.js';
-import { Icon } from '../../ui/Icon.js';
+import { Icon, type IconName } from '../../ui/Icon.js';
 import type { StaffUser } from './types.js';
 
 interface PermissionsModalProps {
@@ -11,7 +11,7 @@ interface PermissionsModalProps {
   onSave: (userId: string, permissions: string[]) => Promise<void>;
 }
 
-const AVAILABLE_PERMISSIONS = [
+const AVAILABLE_PERMISSIONS: Array<{ key: string; label: string; iconName: IconName; desc: string }> = [
   {
     key: 'CASHIER_PAY',
     label: 'Cobrar en Caja',

@@ -12,4 +12,6 @@ export * from './EmptyState.js';
 export * from './Toast.js';
 export * from './Money.js';
 export * from './NumberPad.js';
+export * from './icons.js';
 export * from './Icon.js';
+

@@ -1,11 +1,12 @@
 import React from 'react';
+import { Icon, type IconName } from './Icon.js';
 
 export type BadgeVariant = 'primary' | 'success' | 'danger' | 'warning' | 'neutral' | 'brand';
 
 export interface BadgeProps {
   variant?: BadgeVariant;
   children: React.ReactNode;
-  icon?: React.ReactNode;
+  icon?: IconName | React.ReactElement;
   size?: 'sm' | 'md';
   className?: string;
 }
@@ -31,12 +32,22 @@ export const Badge: React.FC<BadgeProps> = ({
     brand: 'bg-brand-red text-brand-red-ink font-bold border border-transparent'
   };
 
+  const renderIcon = (iconProp?: IconName | React.ReactElement) => {
+    if (!iconProp) return null;
+    if (typeof iconProp === 'string') {
+      return <Icon name={iconProp} size={size === 'sm' ? 12 : 14} />;
+    }
+    return iconProp;
+  };
+
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full select-none ${sizeClasses[size]} ${variantClasses[variant]} ${className}`.trim()}
     >
-      {icon}
+      {renderIcon(icon)}
       <span>{children}</span>
     </span>
   );
 };
+
+export default Badge;

@@ -120,7 +120,7 @@ export const SystemHealthDashboard: React.FC = () => {
             <div className="flex items-center gap-2">
               <span className="w-2.5 h-2.5 rounded-full bg-tocineta-green animate-ping" />
               <span className="text-xs font-bold text-tocineta-green tracking-wider uppercase">
-                🟢 Sistema Conectado al Food Truck
+                Sistema Conectado al Food Truck
               </span>
             </div>
             <h2 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
@@ -203,8 +203,9 @@ export const SystemHealthDashboard: React.FC = () => {
           }}
         >
           <div className="p-3 bg-[#0B0D11] rounded-lg border border-tocineta-border text-xs space-y-1.5 mb-2">
-            <span className="text-[11px] font-bold text-tocineta-yellow uppercase block">
-              📸 Snapshot de Migración Automático
+            <span className="text-[11px] font-bold text-tocineta-yellow uppercase flex items-center gap-1.5">
+              <Camera className="w-3.5 h-3.5" />
+              Snapshot de Migración Automático
             </span>
             <p className="text-tocineta-muted text-[11px] leading-relaxed">
               Antes de aplicar cada migración, se genera una copia física íntegra con <code className="text-white">better-sqlite3 .backup()</code> en <code className="text-white">./data/snapshots/</code>.

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Clock } from 'lucide-react';
+import { Icon } from '../ui/Icon.js';
 
 interface HeaderProps {
   localTimeCaracas?: string;
@@ -13,7 +14,7 @@ export const Header: React.FC<HeaderProps> = ({ localTimeCaracas, isOnline }) =>
         {/* Marca y Logotipo */}
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-tocineta-yellow flex items-center justify-center font-black text-black text-xl shadow-[0_0_15px_rgba(255,230,0,0.3)]">
-            🥓
+            <Icon name="Flame" size={22} className="text-black" />
           </div>
           <div>
             <div className="flex items-center gap-2">

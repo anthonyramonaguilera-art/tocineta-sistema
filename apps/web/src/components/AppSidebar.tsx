@@ -1,11 +1,11 @@
 import React from 'react';
 import type { TabType } from '../App.js';
-import { Icon, Badge } from '../ui/index.js';
+import { Icon, Badge, type IconName } from '../ui/index.js';
 
 interface MenuItem {
   tab: TabType;
   label: string;
-  icon: any;
+  icon: IconName;
   mode: 'basico' | 'pro';
   isImplemented: boolean;
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Icon } from '../../ui/Icon.js';
 
 interface AttentionPrintJob {
   id: string;
@@ -53,8 +54,8 @@ export const PrintAttentionModal: React.FC<PrintAttentionModalProps> = ({ onOpen
       <div className="bg-[#12141A] border-2 border-red-500 rounded-3xl p-6 max-w-lg w-full space-y-5 shadow-2xl shadow-red-950/50">
         
         <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-red-500/20 text-red-500 flex items-center justify-center text-2xl font-black shrink-0 animate-pulse">
-            🖨️
+          <div className="w-12 h-12 rounded-2xl bg-red-500/20 text-red-500 flex items-center justify-center shrink-0 animate-pulse">
+            <Icon name="Printer" size={24} />
           </div>
           <div>
             <span className="text-[10px] uppercase font-black tracking-widest text-red-400 block">
@@ -104,7 +105,7 @@ export const PrintAttentionModal: React.FC<PrintAttentionModalProps> = ({ onOpen
             onClick={() => handleResolve('retry_now')}
             className="min-h-[48px] rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold text-xs transition-all shadow-md active:scale-95 flex items-center justify-center gap-2"
           >
-            <span>🔄</span> No, reintentar ahora
+            <Icon name="RefreshCw" size={14} /> No, reintentar ahora
           </button>
         </div>
 
@@ -115,7 +116,7 @@ export const PrintAttentionModal: React.FC<PrintAttentionModalProps> = ({ onOpen
               onClick={() => onOpenTicketPreview(currentJob.id)}
               className="w-full min-h-[44px] rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 text-xs font-semibold text-tocineta-muted hover:text-white transition-all flex items-center justify-center gap-2"
             >
-              <span>👁️</span> Ver Vista Previa del Ticket en Pantalla
+              <Icon name="Eye" size={14} /> Ver Vista Previa del Ticket en Pantalla
             </button>
           </div>
         )}

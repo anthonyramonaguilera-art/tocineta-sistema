@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Icon } from '../../ui/Icon.js';
 
 interface AuthorizeModalProps {
   isOpen: boolean;
@@ -95,8 +96,9 @@ export const AuthorizeModal: React.FC<AuthorizeModalProps> = ({
 
         {/* Mensaje de advertencia */}
         <div className="p-4 bg-amber-500/10 border-b border-amber-500/30 text-amber-300 text-xs space-y-1">
-          <p className="font-bold flex items-center gap-1">
-            <span>⚠️</span> Envío Inmediato a Cocina con Deuda Abierta
+          <p className="font-bold flex items-center gap-1.5">
+            <Icon name="AlertTriangle" size={16} className="text-amber-400" />
+            <span>Envío Inmediato a Cocina con Deuda Abierta</span>
           </p>
           <p className="text-amber-300/80">
             Requiere PIN de Admin o Supervisor. El pedido pasará a "En Preparación" pero la deuda quedará pendiente en Caja.
@@ -171,7 +173,7 @@ export const AuthorizeModal: React.FC<AuthorizeModalProps> = ({
             className="w-full min-h-[52px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-sm disabled:opacity-40 disabled:pointer-events-none hover:bg-tocineta-yellow-hover active:scale-95 transition-all flex items-center justify-center gap-2 shadow-xl"
           >
             {isSubmitting ? (
-              <span className="animate-spin">⏳</span>
+              <Icon name="RefreshCw" size={18} className="animate-spin" />
             ) : (
               <span>✓ Confirmar Autorización</span>
             )}

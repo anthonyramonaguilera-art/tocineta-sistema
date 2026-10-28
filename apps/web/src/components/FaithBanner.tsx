@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from 'react';
 
 export const FAITH_MESSAGES = [
-  '✨ Dios es amor · En Sus manos está este negocio',
-  '🙏 Cristo te ama · Cocinamos con amor y damos gloria a Dios',
-  '🙌 Dios es bueno en todo tiempo · Bendecidos para servirte',
-  '💛 Todo lo puedo en Cristo que me fortalece (Filipenses 4:13)',
-  '👑 A Dios sea toda la honra y toda la gloria'
+  'Dios es amor · En Sus manos está este negocio',
+  'Cristo te ama · Cocinamos con amor y damos gloria a Dios',
+  'Dios es bueno en todo tiempo · Bendecidos para servirte',
+  'Todo lo puedo en Cristo que me fortalece (Filipenses 4:13)',
+  'A Dios sea toda la honra y toda la gloria'
 ];
 
 export const FaithBanner: React.FC = () => {

@@ -1,12 +1,15 @@
 import React from 'react';
+import { Icon, type IconName } from './Icon.js';
+
+export type InputIconProp = IconName | React.ReactElement;
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   hasError?: boolean;
   error?: boolean;
-  iconStart?: React.ReactNode;
-  leftIcon?: React.ReactNode;
-  iconEnd?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  iconStart?: InputIconProp;
+  leftIcon?: InputIconProp;
+  iconEnd?: InputIconProp;
+  rightIcon?: InputIconProp;
 }
 
 export const Input = React.forwardRef<HTMLInputElement, InputProps>(({
@@ -21,8 +24,17 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(({
   ...props
 }, ref) => {
   const isError = hasError || error;
-  const start = iconStart || leftIcon;
-  const end = iconEnd || rightIcon;
+
+  const renderIcon = (iconProp?: InputIconProp) => {
+    if (!iconProp) return null;
+    if (typeof iconProp === 'string') {
+      return <Icon name={iconProp} size={18} />;
+    }
+    return iconProp;
+  };
+
+  const start = renderIcon(iconStart || leftIcon);
+  const end = renderIcon(iconEnd || rightIcon);
 
   const baseClasses = 'w-full min-h-[48px] px-3.5 py-2.5 rounded-xl border text-sm text-ink bg-surface placeholder:text-ink-muted transition-colors disabled:bg-surface-alt disabled:cursor-not-allowed outline-none font-medium';
 

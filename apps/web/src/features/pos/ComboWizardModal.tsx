@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import type { PosProduct } from '../../types/menu.js';
 import type { CartItem, ComboChildLine, CustomizationModifier } from './types.js';
 import { CustomizationModal } from './CustomizationModal.js';
+import { Icon } from '../../ui/Icon.js';
 import { generateUuidV7 } from '@tocineta/shared';
 
 interface ComboWizardModalProps {
@@ -153,7 +154,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
           <div className="px-6 py-4 bg-tocineta-bg border-b border-tocineta-border flex items-center justify-between">
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-xl">✨</span>
+                <Icon name="Sparkles" size={20} className="text-tocineta-yellow" />
                 <h2 className="text-lg font-black text-tocineta-text">{combo.name}</h2>
                 <span className="text-sm px-2.5 py-0.5 rounded-full bg-tocineta-yellow text-tocineta-bg font-mono font-black">
                   ${(combo.priceUsdCents / 100).toFixed(2)}
@@ -288,7 +289,8 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                     onClick={() => setCustomizingStep(1)}
                     className="min-h-[48px] px-4 rounded-xl bg-tocineta-card border border-tocineta-yellow/60 text-tocineta-yellow hover:bg-tocineta-yellow hover:text-tocineta-bg font-bold text-xs transition-all flex items-center justify-center gap-1.5 shrink-0"
                   >
-                    <span>⚙️ Personalizar Ingredientes</span>
+                    <Icon name="Sliders" size={14} />
+                    <span>Personalizar Ingredientes</span>
                   </button>
                 </div>
               </div>
@@ -361,7 +363,8 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                     onClick={() => setCustomizingStep(2)}
                     className="min-h-[48px] px-4 rounded-xl bg-tocineta-card border border-tocineta-yellow/60 text-tocineta-yellow hover:bg-tocineta-yellow hover:text-tocineta-bg font-bold text-xs transition-all flex items-center justify-center gap-1.5 shrink-0"
                   >
-                    <span>⚙️ Personalizar Ingredientes</span>
+                    <Icon name="Sliders" size={14} />
+                    <span>Personalizar Ingredientes</span>
                   </button>
                 </div>
               </div>
@@ -407,7 +410,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                   </div>
                 ) : (
                   <div className="p-5 bg-tocineta-bg border border-tocineta-border rounded-2xl text-center space-y-2">
-                    <span className="text-4xl block">🥤</span>
+                    <Icon name="Coffee" size={36} className="mx-auto text-tocineta-yellow" />
                     <h4 className="text-base font-bold text-white">1 Malta Lata 250 ml</h4>
                     <p className="text-xs text-tocineta-muted">Bebida oficial fría incluida en este combo</p>
                     <span className="inline-block text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">

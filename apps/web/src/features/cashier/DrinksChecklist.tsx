@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Icon } from '../../ui/Icon.js';
 import type { CashierOrderLine } from './types.js';
 
 interface DrinksChecklistProps {
@@ -38,7 +39,7 @@ export const DrinksChecklist: React.FC<DrinksChecklistProps> = ({ lines }) => {
     <div className="bg-blue-500/10 border-2 border-blue-500/30 rounded-3xl p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <span className="text-2xl">🧊</span>
+          <Icon name="Coffee" size={24} className="text-blue-400" />
           <div>
             <h4 className="text-sm font-black text-white">Despacho de Bebidas Frías (Nevera Caja)</h4>
             <p className="text-[11px] text-blue-200/80">

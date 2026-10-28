@@ -1,4 +1,5 @@
 import React, { useState, useMemo } from 'react';
+import { Icon } from '../../ui/Icon.js';
 import type { PosProduct } from '../../types/menu.js';
 import type { CustomizationModifier } from './types.js';
 
@@ -284,7 +285,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
         <div className="px-6 py-4 bg-tocineta-bg border-b border-tocineta-border flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2">
-              <span className="text-xl">🍔</span>
+              <Icon name="Utensils" size={20} className="text-tocineta-yellow" />
               <h2 className="text-lg font-black text-tocineta-text">{product.name}</h2>
               <span className="text-xs px-2.5 py-0.5 rounded-full bg-tocineta-border text-tocineta-yellow font-mono font-bold">
                 ${(product.priceUsdCents / 100).toFixed(2)}
@@ -309,7 +310,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
           {/* BOTONES RÁPIDOS GLOBALES (Mínimo 48px de alto táctil) */}
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted block mb-2">
-              ⚡ Acciones Rápidas de 1 Toque:
+              Acciones Rápidas de 1 Toque:
             </span>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               <button
@@ -317,28 +318,28 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                 onClick={handleQuickSinPan}
                 className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 hover:bg-amber-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
               >
-                🥬 Sin Pan / Envuelta en Lechuga
+                Sin Pan / Envuelta en Lechuga
               </button>
               <button
                 type="button"
                 onClick={handleQuickPocaSalsa}
                 className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-blue-500/15 border border-blue-500/40 text-blue-300 hover:bg-blue-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
               >
-                🥫 Poca Salsa
+                Poca Salsa
               </button>
               <button
                 type="button"
                 onClick={handleQuickSinSalsas}
                 className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-red-500/15 border border-red-500/40 text-red-300 hover:bg-red-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
               >
-                🚫 Sin Salsas
+                Sin Salsas
               </button>
               <button
                 type="button"
                 onClick={handleQuickReset}
                 className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-tocineta-border/60 border border-tocineta-border text-tocineta-muted hover:text-white active:scale-95 transition-all text-center flex items-center justify-center"
               >
-                🔄 Normalizar Todo
+                Normalizar Todo
               </button>
             </div>
           </div>
@@ -346,7 +347,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
           {/* INGREDIENTES BASE (INCLUIDO EL PAN) */}
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted block mb-2">
-              🥖 Ingredientes Base del Plato:
+              Ingredientes Base del Plato:
             </span>
             <div className="space-y-2">
               {baseIngredients.map(ing => {
@@ -405,7 +406,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
-                  🥗 Barra Libre ($0.00 Venta):
+                  Barra Libre ($0.00 Venta):
                 </span>
                 <span className="text-[10px] text-tocineta-muted">Incluidos sin costo</span>
               </div>
@@ -437,7 +438,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
             <div>
               <div className="flex items-center justify-between mb-2">
                 <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-yellow">
-                  🥓 Extras Pagados:
+                  Extras Pagados:
                 </span>
                 <span className="text-[10px] text-tocineta-muted">Se suman al precio del plato</span>
               </div>
@@ -487,7 +488,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
           {/* INSTRUCCIÓN PERSONALIZADA */}
           <div>
             <span className="text-[11px] font-bold uppercase tracking-wider text-tocineta-muted block mb-1.5">
-              📝 Nota Adicional para Cocina:
+              Nota Adicional para Cocina:
             </span>
             <input
               type="text"

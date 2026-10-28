@@ -28,6 +28,13 @@
     "detail": "Título de cabecera truncado o con elipsis forzada"
   },
   {
+    "type": "COLOR_CONTRAST",
+    "viewport": "movil-360x800",
+    "role": "admin",
+    "route": "#kds",
+    "detail": "5 elemento(s) con contraste inferior a WCAG AA"
+  },
+  {
     "type": "HEADER_TRUNCATED",
     "viewport": "movil-360x800",
     "role": "admin",
@@ -35,6 +42,13 @@
     "detail": "Título de cabecera truncado o con elipsis forzada"
   },
   {
+    "type": "COLOR_CONTRAST",
+    "viewport": "movil-360x800",
+    "role": "admin",
+    "route": "#cashier",
+    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
+  },
+  {
     "type": "HORIZONTAL_OVERFLOW",
     "viewport": "movil-360x800",
     "role": "admin",
@@ -89,13 +103,6 @@
     "role": "admin",
     "route": "#owner",
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "admin",
-    "route": "#menu-admin",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡"
   },
   {
     "type": "HEADER_TRUNCATED",
@@ -119,13 +126,6 @@
     "detail": "Página desborda horizontalmente: scrollWidth=427px > innerWidth=360px"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "admin",
-    "route": "#staff",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡"
-  },
-  {
     "type": "HEADER_TRUNCATED",
     "viewport": "movil-360x800",
     "role": "admin",
@@ -138,13 +138,6 @@
     "role": "admin",
     "route": "#staff",
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "admin",
-    "route": "#health",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡 | 🟢 Sistema Conectado al Food Truck | 📸 Snapshot de Migración Automático"
   },
   {
     "type": "HEADER_TRUNCATED",
@@ -182,6 +175,20 @@
     "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
   },
   {
+    "type": "COLOR_CONTRAST",
+    "viewport": "movil-360x800",
+    "role": "cajera",
+    "route": "#kds",
+    "detail": "5 elemento(s) con contraste inferior a WCAG AA"
+  },
+  {
+    "type": "COLOR_CONTRAST",
+    "viewport": "movil-360x800",
+    "role": "cajera",
+    "route": "#cashier",
+    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
+  },
+  {
     "type": "HORIZONTAL_OVERFLOW",
     "viewport": "movil-360x800",
     "role": "cajera",
@@ -217,13 +224,6 @@
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "cajera",
-    "route": "#menu-admin",
-    "detail": "Se detectaron emojis crudos en el DOM: ⚙️"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "movil-360x800",
     "role": "cajera",
@@ -245,13 +245,6 @@
     "detail": "Página desborda horizontalmente: scrollWidth=427px > innerWidth=360px"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "cajera",
-    "route": "#staff",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "movil-360x800",
     "role": "cajera",
@@ -264,13 +257,6 @@
     "role": "cajera",
     "route": "#staff",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "cajera",
-    "route": "#health",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡 | 🟢 Sistema Conectado al Food Truck | 📸 Snapshot de Migración Automático"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -294,6 +280,13 @@
     "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
   },
   {
+    "type": "COLOR_CONTRAST",
+    "viewport": "movil-360x800",
+    "role": "mesero",
+    "route": "#kds",
+    "detail": "5 elemento(s) con contraste inferior a WCAG AA"
+  },
+  {
     "type": "HORIZONTAL_OVERFLOW",
     "viewport": "movil-360x800",
     "role": "mesero",
@@ -329,13 +322,6 @@
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "mesero",
-    "route": "#menu-admin",
-    "detail": "Se detectaron emojis crudos en el DOM: ⚙️"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "movil-360x800",
     "role": "mesero",
@@ -357,13 +343,6 @@
     "detail": "Página desborda horizontalmente: scrollWidth=427px > innerWidth=360px"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "mesero",
-    "route": "#staff",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "movil-360x800",
     "role": "mesero",
@@ -376,13 +355,6 @@
     "role": "mesero",
     "route": "#staff",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "mesero",
-    "route": "#health",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡 | 🟢 Sistema Conectado al Food Truck | 📸 Snapshot de Migración Automático"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -404,6 +376,13 @@
     "role": "plancha",
     "route": "#pos",
     "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "type": "COLOR_CONTRAST",
+    "viewport": "movil-360x800",
+    "role": "plancha",
+    "route": "#kds",
+    "detail": "5 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "HORIZONTAL_OVERFLOW",
@@ -441,13 +420,6 @@
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "plancha",
-    "route": "#menu-admin",
-    "detail": "Se detectaron emojis crudos en el DOM: ⚙️"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "movil-360x800",
     "role": "plancha",
@@ -469,13 +441,6 @@
     "detail": "Página desborda horizontalmente: scrollWidth=427px > innerWidth=360px"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "plancha",
-    "route": "#staff",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "movil-360x800",
     "role": "plancha",
@@ -488,13 +453,6 @@
     "role": "plancha",
     "route": "#staff",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "EMOJI_DETECTED",
-    "viewport": "movil-360x800",
-    "role": "plancha",
-    "route": "#health",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡 | 🟢 Sistema Conectado al Food Truck | 📸 Snapshot de Migración Automático"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -516,6 +474,20 @@
     "role": "admin",
     "route": "#pos",
     "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "type": "COLOR_CONTRAST",
+    "viewport": "escritorio-1280x800",
+    "role": "admin",
+    "route": "#kds",
+    "detail": "5 elemento(s) con contraste inferior a WCAG AA"
+  },
+  {
+    "type": "COLOR_CONTRAST",
+    "viewport": "escritorio-1280x800",
+    "role": "admin",
+    "route": "#cashier",
+    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -546,25 +518,11 @@
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "admin",
-    "route": "#menu-admin",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "escritorio-1280x800",
     "role": "admin",
     "route": "#menu-admin",
-    "detail": "332 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "admin",
-    "route": "#staff",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡"
+    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -572,13 +530,6 @@
     "role": "admin",
     "route": "#staff",
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
-  },
-  {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "admin",
-    "route": "#health",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡 | 🟢 Sistema Conectado al Food Truck | 📸 Snapshot de Migración Automático"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -600,6 +551,20 @@
     "role": "cajera",
     "route": "#pos",
     "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "type": "COLOR_CONTRAST",
+    "viewport": "escritorio-1280x800",
+    "role": "cajera",
+    "route": "#kds",
+    "detail": "5 elemento(s) con contraste inferior a WCAG AA"
+  },
+  {
+    "type": "COLOR_CONTRAST",
+    "viewport": "escritorio-1280x800",
+    "role": "cajera",
+    "route": "#cashier",
+    "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -630,13 +595,6 @@
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "cajera",
-    "route": "#menu-admin",
-    "detail": "Se detectaron emojis crudos en el DOM: ⚙️"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "escritorio-1280x800",
     "role": "cajera",
@@ -651,13 +609,6 @@
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "cajera",
-    "route": "#staff",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "escritorio-1280x800",
     "role": "cajera",
@@ -670,13 +621,6 @@
     "role": "cajera",
     "route": "#staff",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "cajera",
-    "route": "#health",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡 | 🟢 Sistema Conectado al Food Truck | 📸 Snapshot de Migración Automático"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -698,6 +642,13 @@
     "role": "mesero",
     "route": "#pos",
     "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "type": "COLOR_CONTRAST",
+    "viewport": "escritorio-1280x800",
+    "role": "mesero",
+    "route": "#kds",
+    "detail": "5 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -728,13 +679,6 @@
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "mesero",
-    "route": "#menu-admin",
-    "detail": "Se detectaron emojis crudos en el DOM: ⚙️"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "escritorio-1280x800",
     "role": "mesero",
@@ -749,13 +693,6 @@
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "mesero",
-    "route": "#staff",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "escritorio-1280x800",
     "role": "mesero",
@@ -768,13 +705,6 @@
     "role": "mesero",
     "route": "#staff",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "mesero",
-    "route": "#health",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡 | 🟢 Sistema Conectado al Food Truck | 📸 Snapshot de Migración Automático"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -796,6 +726,13 @@
     "role": "plancha",
     "route": "#pos",
     "detail": "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  },
+  {
+    "type": "COLOR_CONTRAST",
+    "viewport": "escritorio-1280x800",
+    "role": "plancha",
+    "route": "#kds",
+    "detail": "5 elemento(s) con contraste inferior a WCAG AA"
   },
   {
     "type": "COLOR_CONTRAST",
@@ -826,13 +763,6 @@
     "detail": "1 elemento(s) con contraste inferior a WCAG AA"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "plancha",
-    "route": "#menu-admin",
-    "detail": "Se detectaron emojis crudos en el DOM: ⚙️"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "escritorio-1280x800",
     "role": "plancha",
@@ -847,13 +777,6 @@
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
   },
   {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "plancha",
-    "route": "#staff",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡"
-  },
-  {
     "type": "COLOR_CONTRAST",
     "viewport": "escritorio-1280x800",
     "role": "plancha",
@@ -866,13 +789,6 @@
     "role": "plancha",
     "route": "#staff",
     "detail": "Failed to load resource: the server responded with a status of 403 (Forbidden)"
-  },
-  {
-    "type": "EMOJI_DETECTED",
-    "viewport": "escritorio-1280x800",
-    "role": "plancha",
-    "route": "#health",
-    "detail": "Se detectaron emojis crudos en el DOM: 💡 | 🟢 Sistema Conectado al Food Truck | 📸 Snapshot de Migración Automático"
   },
   {
     "type": "COLOR_CONTRAST",

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import { Receipt, Printer, ShieldCheck, FileEdit } from 'lucide-react';
+import { Icon } from '../../ui/Icon.js';
 
 interface ProductItem {
   id: string;
@@ -487,7 +488,7 @@ export const DeferredPaperView: React.FC = () => {
             disabled={submitMutation.isPending}
             className="w-full py-3.5 bg-tocineta-yellow text-tocineta-bg font-black rounded-xl text-sm hover:bg-yellow-400 active:scale-[0.99] transition-all shadow-lg flex items-center justify-center gap-2"
           >
-            <span>📝</span>
+            <Icon name="FileText" size={16} />
             <span>
               {submitMutation.isPending ? 'Registrando en Auditoría...' : 'GUARDAR Y AUDITAR COMANDA DE PAPEL'}
             </span>
@@ -498,7 +499,7 @@ export const DeferredPaperView: React.FC = () => {
         <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-md flex flex-col">
           <div className="flex items-center justify-between border-b border-tocineta-border pb-3 mb-4">
             <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
-              <span>🗂️</span>
+              <Icon name="Folder" size={16} />
               <span>Comandas de Papel Transcritas</span>
             </h3>
             <span className="text-xs bg-tocineta-bg border border-tocineta-border px-2 py-0.5 rounded font-mono text-tocineta-yellow">

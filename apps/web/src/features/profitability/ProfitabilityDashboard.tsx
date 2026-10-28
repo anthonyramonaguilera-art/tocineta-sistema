@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Card, Icon, Badge } from '../../ui/index.js';
+import { Card, Icon, Badge, type IconName } from '../../ui/index.js';
 import { InventoryView } from './InventoryView.js';
 import { PurchasesView } from './PurchasesView.js';
 import { RecipesView } from './RecipesView.js';
@@ -80,7 +80,7 @@ export const ProfitabilityDashboard: React.FC = () => {
     enabled: activeTab === 'net-profit'
   });
 
-  const TAB_ITEMS: Array<{ id: ProfitSubTab; label: string; icon: any }> = [
+  const TAB_ITEMS: Array<{ id: ProfitSubTab; label: string; icon: IconName }> = [
     { id: 'inventory', label: 'Inventario', icon: 'Package' },
     { id: 'purchases', label: 'Compras', icon: 'Truck' },
     { id: 'recipes', label: 'Recetas & Costos', icon: 'Utensils' },

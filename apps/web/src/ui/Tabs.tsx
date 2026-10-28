@@ -1,10 +1,11 @@
 import React from 'react';
+import { Icon, type IconName } from './Icon.js';
 
 export interface TabItem {
   id: string;
   label: string;
   count?: number;
-  icon?: React.ReactNode;
+  icon?: IconName | React.ReactElement;
 }
 
 export interface TabsProps {
@@ -27,6 +28,14 @@ export const Tabs: React.FC<TabsProps> = ({
   const tabList = items || tabs || [];
   const currentActiveId = activeId || activeTab || '';
 
+  const renderIcon = (iconProp?: IconName | React.ReactElement) => {
+    if (!iconProp) return null;
+    if (typeof iconProp === 'string') {
+      return <Icon name={iconProp} size={16} />;
+    }
+    return iconProp;
+  };
+
   return (
     <div className={`overflow-x-auto scrollbar-none border-b border-border ${className}`.trim()}>
       <div className="flex gap-2 min-w-max px-1">
@@ -43,7 +52,7 @@ export const Tabs: React.FC<TabsProps> = ({
                   : 'border-transparent text-ink-muted hover:text-ink hover:border-border'
               }`}
             >
-              {item.icon}
+              {renderIcon(item.icon)}
               <span>{item.label}</span>
               {typeof item.count === 'number' && (
                 <span
@@ -63,3 +72,5 @@ export const Tabs: React.FC<TabsProps> = ({
     </div>
   );
 };
+
+export default Tabs;

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext.js';
+import { Icon, type IconName } from '../../ui/Icon.js';
 
 interface ApplyCouponModalProps {
   isOpen: boolean;
@@ -102,11 +103,11 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
     }
   };
 
-  const popularCoupons = [
-    { code: 'PARATI10', label: 'PARATI10', desc: '10% de Descuento en Comida', icon: '🏷️' },
-    { code: 'BIENVENIDA1', label: 'BIENVENIDA1', desc: '$1.00 OFF en la Orden', icon: '💵' },
-    { code: 'CAFEGRATIS', label: 'CAFEGRATIS', desc: '1x Café de Cortesía ($0.00)', icon: '☕' },
-    { code: 'SNACKSGRATIS', label: 'SNACKSGRATIS', desc: '1x Doritos Dog Snacks ($0.00)', icon: '🌭' }
+  const popularCoupons: Array<{ code: string; label: string; desc: string; icon: IconName }> = [
+    { code: 'PARATI10', label: 'PARATI10', desc: '10% de Descuento en Comida', icon: 'Tag' },
+    { code: 'BIENVENIDA1', label: 'BIENVENIDA1', desc: '$1.00 OFF en la Orden', icon: 'DollarSign' },
+    { code: 'CAFEGRATIS', label: 'CAFEGRATIS', desc: '1x Café de Cortesía ($0.00)', icon: 'Coffee' },
+    { code: 'SNACKSGRATIS', label: 'SNACKSGRATIS', desc: '1x Doritos Dog Snacks ($0.00)', icon: 'Utensils' }
   ];
 
   const hasActiveCoupon = Boolean(currentCouponId) || currentDiscountCents > 0 || hasCourtesyLine;
@@ -118,7 +119,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
         {/* Cabecera */}
         <div className="flex items-center justify-between border-b border-tocineta-border pb-3">
           <div className="flex items-center gap-2">
-            <span className="text-2xl">🎁</span>
+            <Icon name="Gift" size={24} className="text-tocineta-yellow" />
             <div>
               <h3 className="font-black text-base text-white">
                 Cupones para ti • Orden #{orderNumber}
@@ -140,7 +141,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
         {/* Notificaciones */}
         {errorMsg && (
           <div className="p-3 rounded-2xl bg-red-500/15 border border-red-500/40 text-red-300 text-xs font-bold flex items-center gap-2">
-            <span>⚠️</span>
+            <Icon name="AlertTriangle" size={16} className="text-red-400 shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
@@ -215,7 +216,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
                 }}
                 className="p-3 rounded-2xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow text-left transition-all active:scale-95 flex items-center gap-3 disabled:opacity-50"
               >
-                <span className="text-2xl">{c.icon}</span>
+                <Icon name={c.icon} size={24} className="text-tocineta-yellow shrink-0" />
                 <div>
                   <span className="font-mono font-black text-xs text-tocineta-yellow block">
                     {c.label}

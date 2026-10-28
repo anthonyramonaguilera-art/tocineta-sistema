@@ -216,14 +216,14 @@ export const FinancesDashboardView: React.FC = () => {
 
       {/* 4. Sub-Pestañas de Navegación */}
       <div className="border-b border-border flex items-center gap-1 overflow-x-auto pb-1">
-        {[
+        {([
           { key: 'pnl', label: 'Utilidad (P&L)', icon: 'TrendingUp' },
           { key: 'cashflow', label: 'Flujo de Caja', icon: 'Layers' },
           { key: 'expenses', label: 'Gastos', icon: 'Receipt' },
           { key: 'receivables', label: 'Por Cobrar', icon: 'UserCheck' },
           { key: 'payables', label: 'Por Pagar', icon: 'Truck' },
           { key: 'closures', label: 'Cierre Mensual', icon: 'Lock' }
-        ].map((tab) => (
+        ] as const).map((tab) => (
           <button
             key={tab.key}
             type="button"

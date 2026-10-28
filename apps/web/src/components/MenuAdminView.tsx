@@ -13,6 +13,7 @@ import {
   Calculator,
   Package
 } from 'lucide-react';
+import { Icon } from '../ui/Icon.js';
 
 export const MenuAdminView: React.FC = () => {
   const { token } = useAuth();
@@ -467,7 +468,7 @@ export const MenuAdminView: React.FC = () => {
   if (isLoading || !adminMenu) {
     return (
       <div className="py-20 text-center text-tocineta-yellow">
-        <span className="text-3xl animate-spin inline-block">⚙️</span>
+        <Icon name="Settings" size={32} className="animate-spin inline-block" />
         <p className="mt-3 text-sm font-semibold">Cargando Gestor de Menú y Catálogo Admin...</p>
       </div>
     );
@@ -937,7 +938,7 @@ export const MenuAdminView: React.FC = () => {
                         <td className="p-3 font-mono">
                           {didIncrease ? (
                             <span className="px-2 py-0.5 rounded-md bg-red-500/20 text-red-400 border border-red-500/30 text-[10px] font-black inline-flex items-center gap-1">
-                              ⬆️ Subió +{diffPct.toFixed(1)}%
+                              <Icon name="TrendingUp" size={12} className="inline mr-1" /> Subió +{diffPct.toFixed(1)}%
                             </span>
                           ) : (
                             <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 text-[10px] font-bold">
@@ -966,7 +967,7 @@ export const MenuAdminView: React.FC = () => {
           {/* Formulario Crear Cupón */}
           <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-md">
             <h3 className="text-sm font-bold text-white mb-3 flex items-center gap-2">
-              <span>🎟️</span>
+              <Icon name="Ticket" size={16} />
               <span>Crear Nuevo Cupón ("Cupones Para Ti")</span>
             </h3>
 
@@ -993,8 +994,8 @@ export const MenuAdminView: React.FC = () => {
                   onChange={e => setCouponType(e.target.value as any)}
                   className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
                 >
-                  <option value="DISCOUNT">🏷️ Descuento ($ o %)</option>
-                  <option value="COURTESY_ITEM">🎁 Regalo / Cortesía</option>
+                  <option value="DISCOUNT">Descuento ($ o %)</option>
+                  <option value="COURTESY_ITEM">Regalo / Cortesía</option>
                 </select>
               </div>
 
@@ -1089,7 +1090,7 @@ export const MenuAdminView: React.FC = () => {
                             {c.code}
                           </span>
                           <span className="text-[10px] px-2 py-0.5 rounded-md bg-tocineta-border text-tocineta-muted uppercase font-bold">
-                            {c.coupon_type === 'COURTESY_ITEM' ? '🎁 Regalo / Cortesía' : '🏷️ Descuento ($ o %)'}
+                            {c.coupon_type === 'COURTESY_ITEM' ? 'Regalo / Cortesía' : 'Descuento ($ o %)'}
                           </span>
                         </div>
                         <p className="text-xs text-tocineta-muted mt-1">{c.description || 'Sin descripción'}</p>
@@ -1126,7 +1127,7 @@ export const MenuAdminView: React.FC = () => {
                           className="p-1.5 rounded-lg text-xs font-bold text-tocineta-muted hover:text-red-400 hover:bg-red-500/10 transition-all flex items-center gap-1"
                           title="Eliminar cupón"
                         >
-                          🗑️
+                          <Icon name="Trash2" size={16} />
                         </button>
                       </div>
                     </div>
@@ -1143,7 +1144,7 @@ export const MenuAdminView: React.FC = () => {
       {activeTab === 'bcv' && (
         <div className="max-w-md mx-auto bg-tocineta-card border border-tocineta-border rounded-2xl p-6 shadow-xl space-y-4">
           <div className="text-center">
-            <span className="text-3xl">💵</span>
+            <Icon name="Banknote" size={32} className="mx-auto text-tocineta-yellow" />
             <h3 className="text-lg font-extrabold text-white mt-1">Tasa Oficial BCV del Food Truck</h3>
             <p className="text-xs text-tocineta-muted mt-0.5">
               Tasa vigente: <strong className="text-tocineta-yellow font-mono">{adminMenu.formattedRate} Bs/$</strong>
@@ -1202,7 +1203,7 @@ export const MenuAdminView: React.FC = () => {
               disabled={isSyncingBcv}
               className="w-full min-h-[46px] rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow/50 text-white font-bold text-xs transition-all flex items-center justify-center gap-2"
             >
-              <span>🔄</span>
+              <Icon name="RefreshCw" size={16} className={isSyncingBcv ? 'animate-spin' : ''} />
               <span>{isSyncingBcv ? 'Sincronizando con BCV oficial...' : 'Sincronizar BCV por Internet'}</span>
             </button>
           </div>

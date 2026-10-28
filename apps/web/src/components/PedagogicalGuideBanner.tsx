@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Icon } from '../ui/Icon.js';
 
 export interface PedagogicalGuideBannerProps {
   title: string;
@@ -51,7 +52,7 @@ export const PedagogicalGuideBanner: React.FC<PedagogicalGuideBannerProps> = ({
           className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg bg-amber-500/10 text-amber-300 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"
           title="Ver guía explicativa"
         >
-          <span>💡</span> Ver guía rápida
+          <Icon name="Lightbulb" size={14} /> Ver guía rápida
         </button>
       </div>
     );
@@ -65,8 +66,8 @@ export const PedagogicalGuideBanner: React.FC<PedagogicalGuideBannerProps> = ({
     >
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="text-2xl select-none" aria-hidden="true">
-            💡
+          <div className="select-none" aria-hidden="true">
+            <Icon name="Lightbulb" size={24} className="text-amber-400" />
           </div>
           <div>
             <h4 className="text-sm font-bold text-amber-200 tracking-wide">

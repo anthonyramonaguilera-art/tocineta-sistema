@@ -1,7 +1,10 @@
 import React from 'react';
+import { Icon, type IconName } from './Icon.js';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
+
+export type ButtonIconProp = IconName | React.ReactElement;
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -9,10 +12,10 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   fullWidth?: boolean;
   isLoading?: boolean;
   loading?: boolean;
-  iconStart?: React.ReactNode;
-  leftIcon?: React.ReactNode;
-  iconEnd?: React.ReactNode;
-  rightIcon?: React.ReactNode;
+  iconStart?: ButtonIconProp;
+  leftIcon?: ButtonIconProp;
+  iconEnd?: ButtonIconProp;
+  rightIcon?: ButtonIconProp;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
@@ -31,8 +34,23 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
   ...props
 }, ref) => {
   const isSpinning = isLoading || loading;
-  const start = iconStart || leftIcon;
-  const end = iconEnd || rightIcon;
+
+  const iconSizeMap: Record<ButtonSize, number> = {
+    sm: 14,
+    md: 18,
+    lg: 20
+  };
+
+  const renderIcon = (iconProp?: ButtonIconProp) => {
+    if (!iconProp) return null;
+    if (typeof iconProp === 'string') {
+      return <Icon name={iconProp} size={iconSizeMap[size]} />;
+    }
+    return iconProp;
+  };
+
+  const start = renderIcon(iconStart || leftIcon);
+  const end = renderIcon(iconEnd || rightIcon);
 
   const baseClasses = 'inline-flex items-center justify-center gap-2 rounded-xl transition-all select-none text-center cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 active:scale-[0.98]';
 
@@ -63,7 +81,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(({
       ) : (
         start
       )}
-      <span>{children}</span>
+      {children && <span>{children}</span>}
       {!isSpinning && end}
     </button>
   );

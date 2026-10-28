@@ -1,9 +1,10 @@
 import React from 'react';
+import { Icon, type IconName } from './Icon.js';
 
 export interface ChipItem {
   id: string;
   label: string;
-  icon?: React.ReactNode;
+  icon?: IconName | React.ReactElement;
   badge?: string | number;
 }
 
@@ -33,6 +34,14 @@ export const Chips: React.FC<ChipsProps> = ({
   const chipList = items || options || [];
   const currentSelectedId = selectedId || value;
 
+  const renderIcon = (iconProp?: IconName | React.ReactElement) => {
+    if (!iconProp) return null;
+    if (typeof iconProp === 'string') {
+      return <Icon name={iconProp} size={16} />;
+    }
+    return iconProp;
+  };
+
   return (
     <div className={`overflow-x-auto scrollbar-none py-1.5 ${className}`.trim()}>
       <div className="flex items-center gap-2 min-w-max px-0.5">
@@ -58,7 +67,7 @@ export const Chips: React.FC<ChipsProps> = ({
                   : 'bg-surface text-ink border-border hover:bg-surface-alt active:bg-surface-alt'
               }`}
             >
-              {item.icon}
+              {renderIcon(item.icon)}
               <span>{item.label}</span>
               {item.badge !== undefined && (
                 <span

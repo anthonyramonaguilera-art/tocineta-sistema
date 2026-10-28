@@ -270,7 +270,7 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
 
           setStatusNotification({
             type: 'warning',
-            message: '⚠️ Wi-Fi desconectado. Pedido guardado en cola offline. Se transmitirá automáticamente al reconectar.'
+            message: 'Wi-Fi desconectado. Pedido guardado en cola offline. Se transmitirá automáticamente al reconectar.'
           });
           clearCart();
           return { success: true };

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Icon } from '../../ui/Icon.js';
 
 interface TicketPreviewModalProps {
   jobId: string;
@@ -59,7 +60,7 @@ export const TicketPreviewModal: React.FC<TicketPreviewModalProps> = ({ jobId, o
         {/* HEADER MODAL */}
         <div className="p-4 border-b border-tocineta-border flex items-center justify-between bg-black/40">
           <div className="flex items-center gap-2">
-            <span className="text-xl">🧾</span>
+            <Icon name="Receipt" size={20} />
             <div>
               <h3 className="text-sm font-black text-white">Vista Previa de Ticket Térmico</h3>
               <p className="text-[10px] text-tocineta-muted">Representación idéntica al cabezal 58mm</p>
@@ -145,7 +146,7 @@ export const TicketPreviewModal: React.FC<TicketPreviewModalProps> = ({ jobId, o
                 onClick={() => setShowReprintForm(true)}
                 className="flex-1 min-h-[44px] rounded-xl bg-tocineta-yellow text-tocineta-bg font-black text-xs hover:bg-tocineta-yellow-hover active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
               >
-                <span>🖨️</span> Solicitar Reimpresión
+                <Icon name="Printer" size={16} /> Solicitar Reimpresión
               </button>
               <button
                 type="button"
