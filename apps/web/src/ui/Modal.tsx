@@ -8,7 +8,7 @@ export interface ModalProps {
   description?: React.ReactNode;
   children: React.ReactNode;
   footer?: React.ReactNode;
-  maxWidth?: 'sm' | 'md' | 'lg' | 'xl';
+  maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'express';
   showCloseButton?: boolean;
 }
 
@@ -24,11 +24,23 @@ export const Modal: React.FC<ModalProps> = ({
 }) => {
   useEffect(() => {
     if (!isOpen) return;
+
+    // Bloqueo de scroll del fondo (evita que el fondo se mueva al hacer scroll en móvil)
+    const originalOverflow = document.body.style.overflow;
+    const originalTouchAction = document.body.style.touchAction;
+    document.body.style.overflow = 'hidden';
+    document.body.style.touchAction = 'none';
+
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      document.body.style.touchAction = originalTouchAction;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
   }, [isOpen, onClose]);
 
   if (!isOpen) return null;
@@ -37,14 +49,15 @@ export const Modal: React.FC<ModalProps> = ({
     sm: 'sm:max-w-sm',
     md: 'sm:max-w-md',
     lg: 'sm:max-w-lg',
-    xl: 'sm:max-w-xl'
+    xl: 'sm:max-w-xl',
+    express: 'sm:max-w-[560px]'
   };
 
   return (
     <div
       role="dialog"
       aria-modal="true"
-      className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center"
+      className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center sm:items-center overscroll-contain"
     >
       {/* Backdrop */}
       <div
@@ -55,7 +68,7 @@ export const Modal: React.FC<ModalProps> = ({
 
       {/* Modal / BottomSheet Container */}
       <div
-        className={`relative z-10 w-full bg-surface text-ink rounded-t-2xl sm:rounded-2xl border border-border shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] ${maxWidthClasses[maxWidth]} overflow-hidden animate-in fade-in slide-in-from-bottom duration-200`}
+        className={`relative z-10 w-full bg-surface text-ink rounded-t-2xl sm:rounded-2xl border border-border shadow-2xl flex flex-col max-h-[90vh] sm:max-h-[85vh] ${maxWidthClasses[maxWidth]} overflow-hidden animate-in fade-in slide-in-from-bottom duration-200 overscroll-contain`}
       >
         {/* Mobile drag handle indicator */}
         <div className="w-12 h-1.5 bg-border rounded-full mx-auto mt-2.5 sm:hidden" />

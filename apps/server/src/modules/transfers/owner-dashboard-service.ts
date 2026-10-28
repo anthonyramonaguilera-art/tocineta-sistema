@@ -41,6 +41,8 @@ export interface LowStockAlert {
 
 export interface OwnerDashboardData {
   generatedAtMs: number;
+  isJornadaOpen?: boolean;
+  jornadaOpenedAtMs?: number | null;
   salesByLocation: LocationSalesSummary[];
   cashByLocation: LocationCashSummary[];
   lowStockAlerts: LowStockAlert[];
@@ -199,8 +201,14 @@ export function getOwnerDashboardData(rawDb: Database.Database): OwnerDashboardD
     ordersByLocation[o.location_id] = (ordersByLocation[o.location_id] || 0) + 1;
   }
 
+  const openJornada = rawDb.prepare(`
+    SELECT opened_at_ms FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1
+  `).get() as { opened_at_ms: number } | undefined;
+
   return {
     generatedAtMs: now,
+    isJornadaOpen: Boolean(openJornada),
+    jornadaOpenedAtMs: openJornada?.opened_at_ms || null,
     salesByLocation,
     cashByLocation,
     lowStockAlerts,

@@ -83,7 +83,11 @@ export type CashSaleItem = z.infer<typeof CashSaleItemSchema>;
 export const CashSalesResponseSchema = z.object({
   success: z.boolean(),
   sales: z.array(CashSaleItemSchema),
-  nextCursor: z.string().nullable().optional()
+  nextCursor: z.string().nullable().optional(),
+  totalCollectedUsdCents: z.number().int().optional(),
+  totalOrders: z.number().int().optional(),
+  byMethod: z.array(z.any()).optional(),
+  bySede: z.array(z.any()).optional()
 });
 export type CashSalesResponse = z.infer<typeof CashSalesResponseSchema>;
 

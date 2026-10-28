@@ -23,7 +23,7 @@ export const FinancesDashboardView: React.FC = () => {
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<FinanceSubTab>('pnl');
-  const [selectedLocation, setSelectedLocation] = useState<string>('loc_alta_vista');
+  const [selectedLocation, setSelectedLocation] = useState<string>('ALL');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('30d');
 
   // Modales
@@ -103,13 +103,14 @@ export const FinancesDashboardView: React.FC = () => {
 
         <div className="flex flex-wrap items-center gap-2">
           {/* Selector de Sede */}
-          <div className="w-36">
+          <div className="w-44">
             <Select
               value={selectedLocation}
               onChange={(e) => setSelectedLocation(e.target.value)}
               options={[
-                { value: 'loc_alta_vista', label: 'Alta Vista' },
-                { value: 'loc_los_olivos', label: 'Los Olivos' }
+                { value: 'ALL', label: 'Todas las sedes' },
+                { value: 'loc_los_olivos', label: 'Sede A: Los Olivos' },
+                { value: 'loc_alta_vista', label: 'Sede B: Alta Vista' }
               ]}
             />
           </div>

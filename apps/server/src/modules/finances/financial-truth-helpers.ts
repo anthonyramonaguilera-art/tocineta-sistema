@@ -35,15 +35,8 @@ export function calculateDeduplicatedWaste(
   toMs: number,
   targetLocId: string | null
 ): WasteSummary {
-  const wasteConditions: string[] = [];
-  const wasteParams: any[] = [];
-  if (jornadaId) {
-    wasteConditions.push('jornada_id = ?');
-    wasteParams.push(jornadaId);
-  } else {
-    wasteConditions.push('created_at_ms >= ? AND created_at_ms <= ?');
-    wasteParams.push(fromMs, toMs);
-  }
+  const wasteConditions: string[] = ['created_at_ms >= ? AND created_at_ms <= ?'];
+  const wasteParams: any[] = [fromMs, toMs];
   if (targetLocId) {
     wasteConditions.push('(location_id = ? OR (location_id IS NULL AND ? = ?))');
     wasteParams.push(targetLocId, targetLocId, 'loc_alta_vista');

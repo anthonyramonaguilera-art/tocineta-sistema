@@ -121,8 +121,20 @@ export const OwnerDashboardView: React.FC = () => {
           </h2>
         </div>
 
-        {/* Indicador por dispositivo */}
-        <div className="flex items-center gap-2">
+        {/* Indicador por dispositivo y estado de jornada */}
+        <div className="flex items-center gap-2 flex-wrap">
+          {dashboard?.isJornadaOpen && dashboard?.jornadaOpenedAtMs ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-primary/10 border border-primary/30 text-ink">
+              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+              <span>Jornada abierta desde {new Date(dashboard.jornadaOpenedAtMs).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' })}</span>
+            </div>
+          ) : (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-surface-alt border border-border text-ink-muted">
+              <span className="w-2 h-2 rounded-full bg-border" />
+              <span>Jornada cerrada</span>
+            </div>
+          )}
+
           <div
             className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold border transition-colors ${
               isOnline
@@ -222,7 +234,7 @@ export const OwnerDashboardView: React.FC = () => {
               <div className="flex items-center justify-between">
                 <span className="font-black text-xs text-ink">{c.locationName}</span>
                 <Badge variant={c.hasOpenSession ? 'success' : 'neutral'} size="sm">
-                  {c.hasOpenSession ? 'Turno Abierto' : 'Sin Turno'}
+                  {c.hasOpenSession ? 'Caja activa' : 'Caja cerrada'}
                 </Badge>
               </div>
 

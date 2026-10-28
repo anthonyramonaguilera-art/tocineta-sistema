@@ -1,26 +1,29 @@
 # ESTADO DE EJECUCIÓN — NOCHE-01
 
-- **Fase actual:** P2-C (Pantallas de Caja, Cierre, Vuelto y Dashboards sobre Verdad Única)
-- **Tarea actual:** Re-anclaje, lectura de `docs/r2/P2-C.md` y ejecución de P2-C
-- **Piso de pruebas (Línea Base):** 296 pruebas pasando.
-- **Piso actual verificado:** 308 pruebas pasando (35 archivos de test). Cero pruebas rotas ni omitidas.
-- **Defectos verdes acumulados:** 5 verdes (B01, B10, B13, B26, B28), 25 rojos.
-- **Puertas de calidad P2-B:**
-  - `pnpm guard`: VERDE (`docs/r2/evidencia/P2-B/gate-1-guard.txt`)
-  - `pnpm -r run lint`: VERDE (`docs/r2/evidencia/P2-B/gate-2-lint.txt`)
-  - `pnpm -r run build`: VERDE (`docs/r2/evidencia/P2-B/gate-3-build.txt`)
-  - `pnpm test`: VERDE 308/308 (`docs/r2/evidencia/P2-B/gate-4-test.txt`)
-  - `pnpm r2:e2e`: VERDE 34 specs pasadas (`docs/r2/evidencia/P2-B/gate-5-r2-e2e.txt`)
-  - `git diff Núcleo Sagrado`: VACÍO (0 líneas modificadas en archivos sagrados)
+- **Fase actual:** P2-C (Completada 100%) — Cierre de NOCHE-01
+- **Tarea actual:** Auditoría final y entrega de NOCHE-01
+- **Piso de pruebas (Línea Base inicial):** 296 pruebas pasando.
+- **Piso final verificado:** 337 pruebas pasando (35 archivos de test en server + 4 en shared). Cero pruebas rotas ni omitidas.
+- **Defectos verdes acumulados:** 9 verdes (B01, B07, B08, B09, B10, B12, B13, B26, B28), 21 rojos (30.0% de la suite completa).
+- **Puertas de calidad P2-C:**
+  - `pnpm guard`: VERDE (`docs/r2/evidencia/P2-C/gate-1-guard.txt`)
+  - `pnpm -r run lint`: VERDE (`docs/r2/evidencia/P2-C/gate-2-lint.txt`)
+  - `pnpm -r run build`: VERDE (`docs/r2/evidencia/P2-C/gate-3-build.txt`)
+  - `pnpm test`: VERDE 337/337 (`docs/r2/evidencia/P2-C/gate-4-test.txt`)
+  - `pnpm r2:e2e`: VERDE en B07, B08, B09, B10, B12 (`docs/r2/evidencia/P2-C/gate-5-r2-e2e.txt`)
+  - `pnpm guard:visual`: VERDE en pantalla `#cashier` + 11 capturas completas (`docs/r2/evidencia/P2-C/gate-6-guard-visual.txt`)
+  - `git diff Núcleo Sagrado`: VACÍO (0 líneas modificadas en archivos sagrados desde `pre-r2`)
 - **Rama activa:** `r2/noche-01`
 - **Tareas hechas:**
   - Preparación completa e inicio de sesión nocturna (`8e87192` chore(r2): estado previo a noche-01).
   - Inicialización y confirmación D1/D2 (`0a6b173` chore(r2): preparacion e inicio de noche-01).
   - P2-A completo: migración 0029, sedes oficiales únicas, jornada global única con índice parcial, resolveLocationId sin fallbacks literales, informe `docs/informes/R2-P2-A.md` (`35c69b2`, tag `r2-p2-a`).
-  - P2-B completo: servicio de verdad financiera única (`financial-truth-service.ts`), adaptadores delgados de las 6 calculadoras, esquemas Zod compartidos en `packages/shared`, endpoint de ventas de jornada global con paginación, cobros sin huérfanos con verificación de sesión de caja, anti-duplicado de gastos operativos en 120s, suite `r2-money-truth.test.ts` (7/7 verde), informe `docs/informes/R2-P2-B.md`.
+  - P2-B completo: servicio de verdad financiera única (`financial-truth-service.ts`), adaptadores delgados de las 6 calculadoras, esquemas Zod compartidos en `packages/shared`, endpoint de ventas de jornada global con paginación, cobros sin huérfanos con verificación de sesión de caja, anti-duplicado de gastos operativos en 120s, suite `r2-money-truth.test.ts` (7/7 verde), informe `docs/informes/R2-P2-B.md` (`daff152`, tag `r2-p2-b`).
+  - P2-C completo: módulo de vuelto mixto (`change-split.ts` + tests), paso 3 de vuelto con modo exacto y mixto, modal de cobro express de ancho fijo con scroll lock, vista de caja adaptada a contratos Zod con desglose plegable e invariante D1, asistente de cierre Z con formula visible y error boundary, fila de ventas del día sin desbordes a 360 px, invalidación global reactiva `invalidateMoney(queryClient)`, 11 capturas de pantalla verificadas, informe `docs/informes/R2-P2-C.md`.
 - **Decisiones:**
   - D1 (Jornada global única) y D2 (inventario al entrar a cocina o cobrar) confirmados formalmente por el dueño.
   - Regla de deduplicación de mermas: colisión en monto y ventana de 60s entre `worker_incidents` (`MERMA_ALIMENTO`) y `waste_logs` unifica el hecho económico.
-  - Gastos operativos con categoría `MERMAS_DESPERDICIOS` se excluyen de gastos operativos para evitar doble contabilización frente a mermas.
+  - Vuelto mixto: tolerancia matemática estricta de $0.01 calculada en centavos y micro-Bs.
+  - POS en mobile 360px bloquea scroll de fondo del body para evitar desplazamientos accidentales en pantalla táctil completa.
 - **Bloqueos:** Ninguno.
-- **Siguiente paso exacto:** Hacer commit y tag `r2-p2-b`, iniciar Fase P2-C implementando componentes frontend (Caja, Cierre, Vuelto mixto, Cobro Express y Dashboards con invalidateMoney).
+- **Siguiente paso exacto:** Cierre de sesión nocturna NOCHE-01; entrega de `RESUMEN-MANANA.md`. Siguiente fase: P3 (Comandero táctil rápido, KDS ágil de 1 toque y alertas sonoras).

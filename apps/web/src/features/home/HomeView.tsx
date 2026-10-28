@@ -29,7 +29,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
       } catch {}
       return { success: false };
     },
-    refetchInterval: 15000
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true
   });
 
   // Consultar listado de órdenes del día para métricas complementarias
@@ -47,7 +48,8 @@ export const HomeView: React.FC<HomeViewProps> = ({
       } catch {}
       return { success: false, orders: [] };
     },
-    refetchInterval: 15000
+    refetchInterval: 5000,
+    refetchOnWindowFocus: true
   });
 
   const orders = ordersRes?.orders || [];

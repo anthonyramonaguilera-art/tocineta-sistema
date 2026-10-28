@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Badge, Modal, Input, Field, Select, EmptyState, Icon } from '../../ui/index.js';
 import { getPaymentMethodHumanLabel } from './payment-labels.js';
 import { formatTableLabel } from '../../lib/format.js';
+import { invalidateMoney } from '../finances/queryKeys.js';
 
 interface PaidSale {
   orderId: string;
@@ -25,6 +27,8 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
   onRefresh,
   userRole: _userRole = 'cajera'
 }) => {
+  const queryClient = useQueryClient();
+
   // Modal de Reimpresión
   const [reprintingId, setReprintingId] = useState<string | null>(null);
   const [reprintSuccess, setReprintSuccess] = useState<string | null>(null);
@@ -85,6 +89,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
 
       setVoidingSale(null);
       setVoidPin('');
+      await invalidateMoney(queryClient);
       onRefresh();
     } catch (err: any) {
       setVoidError(err.message || 'Error al anular la venta');
@@ -121,6 +126,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
       setShowExpenseModal(false);
       setExpenseAmountUsd('');
       setExpenseDesc('');
+      await invalidateMoney(queryClient);
       onRefresh();
     } catch (err: any) {
       setExpenseMsg(err.message || 'Error al registrar salida de caja');
@@ -189,7 +195,16 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
                     </span>
                   </div>
 
-                  <div className="flex gap-2">
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleReprint(s.orderId)}
+                      loading={reprintingId === s.orderId}
+                      leftIcon="Receipt"
+                    >
+                      Recibo
+                    </Button>
                     <Button
                       variant="ghost"
                       size="sm"
@@ -286,8 +301,11 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
                 {voidError}
               </div>
             )}
+            <p className="text-sm font-bold text-ink">
+              ¿Seguro que deseas anular la venta #{voidingSale.orderNumber} ({voidingSale.customerName || 'Mostrador'}) por ${(voidingSale.totalUsdCents / 100).toFixed(2)} USD?
+            </p>
             <p className="text-xs text-ink-muted">
-              Se anulará el cobro de ${(voidingSale.totalUsdCents / 100).toFixed(2)} USD y se registrará la devolución en el libro contable. Esta acción es irreversible y requiere autorización.
+              Esta acción devolverá los fondos a la gaveta de caja, actualizará la contabilidad de la jornada y requiere PIN de autorización.
             </p>
 
             <Field label="Motivo de anulación" required>

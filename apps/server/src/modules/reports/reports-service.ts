@@ -185,7 +185,14 @@ export function getAdminStaffPerformance(
  * Cargar datos consolidados de la jornada para reportes
  */
 export function getJornadaReportData(rawDb: Database.Database, jornadaId: string) {
-  const jornada = rawDb.prepare('SELECT * FROM jornadas WHERE id = ?').get(jornadaId) as any;
+  let jornada = rawDb.prepare('SELECT * FROM jornadas WHERE id = ? OR id = ? OR id = ?').get(
+    jornadaId,
+    jornadaId.replace(/^jornada_/, 'jor_'),
+    jornadaId.replace(/^jor_/, 'jornada_')
+  ) as any;
+  if (!jornada) {
+    jornada = rawDb.prepare("SELECT * FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
+  }
   if (!jornada) {
     const err: any = new Error(`Jornada '${jornadaId}' no encontrada`);
     err.statusCode = 404;
@@ -234,6 +241,7 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
   return {
     jornada,
     rateMicroBs: ft.rateMicroBs,
+    netFoodSales: ft.orders.netSalesUsdCents,
     netFoodSalesUsdCents: ft.orders.netSalesUsdCents,
     discountUsdCents: ft.orders.discountsUsdCents,
     deliveryFeesUsdCents: ft.orders.deliveryFeesUsdCents,

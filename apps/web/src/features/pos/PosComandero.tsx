@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import type { PosMenuResponse, PosProduct } from '../../types/menu.js';
 import { usePosCart } from './usePosCart.js';
@@ -13,10 +13,21 @@ import { WizardLayout, Toast, ToastContainer, Modal } from '../../ui/index.js';
 import { canUserProcessPayments, usdToBsCents } from '@tocineta/shared';
 import { clearOutbox } from './outbox.js';
 import { formatTableLabel } from '../../lib/format.js';
+import { invalidateMoney } from '../finances/queryKeys.js';
 
 export const PosComandero: React.FC = () => {
   const { token, user } = useAuth();
+  const queryClient = useQueryClient();
   const canPay = canUserProcessPayments(user);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }
+  }, []);
 
   // Consulta de Menú Operativo
   const { data: menuData, isLoading: loadingMenu } = useQuery<PosMenuResponse>({
@@ -283,6 +294,7 @@ export const PosComandero: React.FC = () => {
           isOpen={Boolean(expressCheckoutOrder)}
           onClose={() => setExpressCheckoutOrder(null)}
           title={`Cobro Express — Orden #${expressCheckoutOrder.order_number}`}
+          maxWidth="express"
         >
           <div className="space-y-4">
             <div className="p-3 bg-surface-alt rounded-xl border border-border flex items-center justify-between">
@@ -306,6 +318,7 @@ export const PosComandero: React.FC = () => {
               rateMicroBs={rateMicroBs}
               onPaymentSuccess={() => {
                 setExpressCheckoutOrder(null);
+                invalidateMoney(queryClient);
                 posCart.setStatusNotification({
                   type: 'success',
                   message: `✓ Orden #${expressCheckoutOrder.order_number} cobrada con éxito`

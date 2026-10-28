@@ -25,10 +25,10 @@ export const ProfitAndLossTab: React.FC<ProfitAndLossTabProps> = ({ pnlData, isL
             <span className="text-xs font-black text-ink-muted uppercase tracking-wider block">
               Estado de Resultados (P&L)
             </span>
-            <div className="text-4xl font-black text-ink tracking-tight">
+            <div className={`text-4xl font-black tracking-tight ${summary.netProfitUsdCents < 0 ? 'text-danger' : 'text-ink'}`}>
               ${(summary.netProfitUsdCents / 100).toFixed(2)}
             </div>
-            <span className="text-xs font-bold text-success">
+            <span className={`text-xs font-bold ${summary.netProfitMarginPercentage < 0 || summary.netProfitUsdCents < 0 ? 'text-danger' : 'text-ink-muted'}`}>
               Margen Neto: {summary.netProfitMarginPercentage}%
             </span>
           </div>

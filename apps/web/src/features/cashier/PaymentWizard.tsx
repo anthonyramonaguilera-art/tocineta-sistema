@@ -1,9 +1,12 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import type { CashierOrder, CashierTender, CashierPaymentMethod } from './types.js';
 import { usdToBsCents, generateUuidV7 } from '@tocineta/shared';
-import { Button, Card, Badge, Input, WizardLayout, Icon } from '../../ui/index.js';
+import { Card, Badge, WizardLayout, Icon } from '../../ui/index.js';
 import { PaymentWizardStep2 } from './PaymentWizardStep2.js';
+import { PaymentWizardStep3 } from './PaymentWizardStep3.js';
 import { formatTableLabel } from '../../lib/format.js';
+import { invalidateMoney } from '../finances/queryKeys.js';
 
 export interface PaymentWizardProps {
   order: CashierOrder;
@@ -20,6 +23,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
   onCancel,
   userRole: _userRole = 'cajera'
 }) => {
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<1 | 2 | 3>(1);
 
   // Pagos acumulados
@@ -29,11 +33,11 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
   const [referenceInput, setReferenceInput] = useState<string>('');
 
   // Vuelto mixto y sobrepago
-  const [changeGivenUsdInput, setChangeGivenUsdInput] = useState<string>('');
-  const [changeBsMethod] = useState<'cash_bs' | 'pago_movil'>('cash_bs');
-  const [changeBsReference] = useState<string>('');
+  const [givenUsdCents, setGivenUsdCents] = useState<number>(0);
+  const [givenBsCents, setGivenBsCents] = useState<number>(0);
+  const [changeBsMethod, setChangeBsMethod] = useState<string>('cash_bs');
+  const [changeBsReference, setChangeBsReference] = useState<string>('');
   const [overpaymentDisposition, setOverpaymentDisposition] = useState<'tip_in' | 'adjustment'>('tip_in');
-  const [overpaymentReason] = useState<string>('');
 
   // Estados de validación y backend
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
@@ -49,9 +53,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
       ? (order.rate_micro_bs as number)
       : 40_000_000;
 
-  const totalUsdCents = Math.round(
-    order.total_to_collect_usd_cents ?? (order as any).total_usd_cents ?? (order as any).totalCents ?? 0
-  );
+  const totalUsdCents = order.total_to_collect_usd_cents || 0;
   const totalBsCents = totalUsdCents > 0 ? usdToBsCents(totalUsdCents, safeRate) : 0;
 
   const { totalPaidUsdEquivalentCents } = useMemo(() => {
@@ -70,23 +72,15 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
   const totalChangeUsdCents = Math.max(0, totalPaidUsdEquivalentCents - totalUsdCents);
   const totalChangeBsCents = totalChangeUsdCents > 0 ? usdToBsCents(totalChangeUsdCents, safeRate) : 0;
 
-  // Desglose de vuelto entregado
-  const { changeGivenUsdCents, changeGivenBsCents } = useMemo(() => {
-    const givenUsd = Math.min(totalChangeUsdCents, Math.round(parseFloat(changeGivenUsdInput || '0') * 100));
-    const remUsd = Math.max(0, totalChangeUsdCents - givenUsd);
-    const givenBs = remUsd > 0 ? usdToBsCents(remUsd, safeRate) : 0;
-    return { changeGivenUsdCents: givenUsd, changeGivenBsCents: givenBs };
-  }, [totalChangeUsdCents, changeGivenUsdInput, safeRate]);
-
-  const changeDeliveredUsdCents = changeGivenUsdCents;
-  const changeDeliveredBsEquivalentUsdCents = changeGivenBsCents > 0 ? Math.round((changeGivenBsCents * 1_000_000) / safeRate) : 0;
-  const unreturnedSurplusUsdCents = Math.max(0, totalChangeUsdCents - changeDeliveredUsdCents - changeDeliveredBsEquivalentUsdCents);
-
   useEffect(() => {
-    if (totalChangeUsdCents > 0 && !changeGivenUsdInput) {
-      setChangeGivenUsdInput((totalChangeUsdCents / 100).toFixed(2));
+    if (totalChangeUsdCents > 0 && givenUsdCents === 0 && givenBsCents === 0) {
+      setGivenUsdCents(totalChangeUsdCents);
+      setGivenBsCents(0);
     }
-  }, [totalChangeUsdCents]);
+  }, [totalChangeUsdCents, givenUsdCents, givenBsCents]);
+
+  const changeDeliveredBsEquivalentUsdCents = givenBsCents > 0 ? Math.round((givenBsCents * 1_000_000) / safeRate) : 0;
+  const unreturnedSurplusUsdCents = Math.max(0, totalChangeUsdCents - givenUsdCents - changeDeliveredBsEquivalentUsdCents);
 
   const handleAddTender = (customAmountCents?: number, customMethod?: CashierPaymentMethod) => {
     const method = customMethod || selectedMethod;
@@ -113,7 +107,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
 
     const usdEquivalentCents = isUsdMethod
       ? amountCents
-      : Math.round((amountCents * 1_000_000) / rateMicroBs);
+      : Math.round((amountCents * 1_000_000) / safeRate);
 
     setTenders(prev => [
       ...prev,
@@ -144,8 +138,8 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
 
     const changePayload = totalChangeUsdCents > 0 ? {
       method: changeBsMethod,
-      changeUsdCents: changeGivenUsdCents,
-      changeBsCents: changeGivenBsCents,
+      changeUsdCents: givenUsdCents,
+      changeBsCents: givenBsCents,
       referenceCode: changeBsReference.trim() || undefined
     } : undefined;
 
@@ -158,7 +152,6 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
 
     if (unreturnedSurplusUsdCents > 1) {
       body.overpaymentDisposition = overpaymentDisposition;
-      body.overpaymentReason = overpaymentReason.trim() || undefined;
     }
 
     try {
@@ -183,6 +176,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
         throw new Error(data.error || 'Error al procesar cobro');
       }
 
+      await invalidateMoney(queryClient);
       onPaymentSuccess();
     } catch (err: any) {
       setErrorMessage(err?.message || 'Error de comunicación con el servidor');
@@ -256,7 +250,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
             </div>
           )}
 
-          {/* PASO 2: MÉTODOS DE PAGO CON NUMBERPAD Y BILLETES RÁPIDOS */}
+          {/* PASO 2: MÉTODOS DE PAGO */}
           {step === 2 && (
             <PaymentWizardStep2
               selectedMethod={selectedMethod}
@@ -278,83 +272,31 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
 
           {/* PASO 3: VUELTO Y CIERRE */}
           {step === 3 && (
-            <div className="space-y-4 text-center">
-              <Card variant="alt" className="p-6 space-y-4">
-                <span className="text-xs font-bold uppercase tracking-wider text-ink-muted block">Vuelto a entregar al cliente</span>
-                <div className="space-y-1">
-                  <div className="text-4xl sm:text-5xl font-black text-primary font-mono tracking-tight">
-                    ${(totalChangeUsdCents / 100).toFixed(2)}
-                  </div>
-                  <div className="text-lg sm:text-xl font-bold text-ink-muted font-mono">
-                    {(totalChangeBsCents / 100).toFixed(2)} Bs
-                  </div>
-                </div>
-
-                {totalChangeUsdCents > 0 && (
-                  <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setChangeGivenUsdInput((totalChangeUsdCents / 100).toFixed(2))}
-                    >
-                      Entregar todo el vuelto en USD
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => setChangeGivenUsdInput('0.00')}
-                    >
-                      Entregar todo el vuelto en Bolívares
-                    </Button>
-                  </div>
-                )}
-              </Card>
-
-              {/* Manejo de propina / excedente */}
-              {unreturnedSurplusUsdCents > 1 && (
-                <Card variant="surface" className="p-4 text-left space-y-2">
-                  <span className="text-xs font-bold text-warning uppercase">Excedente sin devolver (${(unreturnedSurplusUsdCents / 100).toFixed(2)})</span>
-                  <div className="flex gap-2">
-                    <Button
-                      variant={overpaymentDisposition === 'tip_in' ? 'primary' : 'secondary'}
-                      size="sm"
-                      onClick={() => setOverpaymentDisposition('tip_in')}
-                    >
-                      Registrar como Propina
-                    </Button>
-                    <Button
-                      variant={overpaymentDisposition === 'adjustment' ? 'primary' : 'secondary'}
-                      size="sm"
-                      onClick={() => setOverpaymentDisposition('adjustment')}
-                    >
-                      Ajuste de Caja
-                    </Button>
-                  </div>
-                </Card>
-              )}
-
-              {/* Alerta de supervisor PIN ante fraude */}
-              {supervisorPinRequired && (
-                <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl space-y-2 text-left">
-                  <span className="text-xs font-bold text-danger">Se requiere PIN de supervisor para autorizar referencia duplicada:</span>
-                  <Input
-                    type="password"
-                    placeholder="PIN supervisor..."
-                    value={supervisorPin}
-                    onChange={e => setSupervisorPin(e.target.value)}
-                    maxLength={6}
-                  />
-                </div>
-              )}
-
-              {/* Motivo visible si finalizar está inhabilitado */}
-              {finalizeDisabledReason && (
-                <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl text-xs font-bold text-danger text-center flex items-center justify-center gap-1.5">
-                  <Icon name="AlertTriangle" className="w-4 h-4 shrink-0 text-danger" />
-                  <span>{finalizeDisabledReason}</span>
-                </div>
-              )}
-            </div>
+            <PaymentWizardStep3
+              totalUsdCents={totalUsdCents}
+              totalBsCents={totalBsCents}
+              tenders={tenders}
+              rateMicroBs={safeRate}
+              totalChangeUsdCents={totalChangeUsdCents}
+              totalChangeBsCents={totalChangeBsCents}
+              changeGivenUsdCents={givenUsdCents}
+              changeGivenBsCents={givenBsCents}
+              onChangeSplit={(usd, bs) => {
+                setGivenUsdCents(usd);
+                setGivenBsCents(bs);
+              }}
+              changeBsMethod={changeBsMethod}
+              onChangeBsMethod={setChangeBsMethod}
+              changeBsReference={changeBsReference}
+              onChangeBsReference={setChangeBsReference}
+              unreturnedSurplusUsdCents={unreturnedSurplusUsdCents}
+              overpaymentDisposition={overpaymentDisposition}
+              onChangeOverpaymentDisposition={setOverpaymentDisposition}
+              supervisorPinRequired={supervisorPinRequired}
+              supervisorPin={supervisorPin}
+              onChangeSupervisorPin={setSupervisorPin}
+              finalizeDisabledReason={finalizeDisabledReason}
+            />
           )}
         </div>
       </WizardLayout>

@@ -1,4 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { invalidateMoney } from './queryKeys.js';
 
 export function useFinancesQueries(selectedLocation: string, startDateMs: number, selectedCustomerForStatement: string | null, userId: string) {
   const queryClient = useQueryClient();
@@ -105,7 +106,7 @@ export function useFinancesQueries(selectedLocation: string, startDateMs: number
       });
       if (!res.ok) throw new Error('Error al guardar gasto');
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['finances'] })
+    onSuccess: () => invalidateMoney(queryClient)
   });
 
   const saveReceivableMutation = useMutation({
@@ -117,7 +118,7 @@ export function useFinancesQueries(selectedLocation: string, startDateMs: number
       });
       if (!res.ok) throw new Error('Error al crear cuenta por cobrar');
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['finances'] })
+    onSuccess: () => invalidateMoney(queryClient)
   });
 
   const saveReceivablePaymentMutation = useMutation({
@@ -129,7 +130,7 @@ export function useFinancesQueries(selectedLocation: string, startDateMs: number
       });
       if (!res.ok) throw new Error('Error al procesar abono');
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['finances'] })
+    onSuccess: () => invalidateMoney(queryClient)
   });
 
   const savePayablePaymentMutation = useMutation({
@@ -141,7 +142,7 @@ export function useFinancesQueries(selectedLocation: string, startDateMs: number
       });
       if (!res.ok) throw new Error('Error al procesar pago al proveedor');
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['finances'] })
+    onSuccess: () => invalidateMoney(queryClient)
   });
 
   const createClosureMutation = useMutation({
@@ -153,7 +154,7 @@ export function useFinancesQueries(selectedLocation: string, startDateMs: number
       });
       if (!res.ok) throw new Error('Error al crear cierre mensual');
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['finances', 'closures'] })
+    onSuccess: () => invalidateMoney(queryClient)
   });
 
   return {

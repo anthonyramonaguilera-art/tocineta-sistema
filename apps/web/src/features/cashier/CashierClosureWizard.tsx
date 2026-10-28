@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Badge, Input, Field, WizardLayout, Icon } from '../../ui/index.js';
 import { getPaymentMethodHumanLabel } from './payment-labels.js';
+import { invalidateMoney } from '../finances/queryKeys.js';
 
 interface CashierClosureWizardProps {
   onClosureCompleted: () => void;
@@ -12,6 +13,7 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   onClosureCompleted,
   userRole: _userRole = 'cajera'
 }) => {
+  const queryClient = useQueryClient();
   const [step, setStep] = useState<1 | 2 | 3>(1);
   const [countedCashUsd, setCountedCashUsd] = useState<string>('');
   const [countedCashBs, setCountedCashBs] = useState<string>('');
@@ -34,14 +36,37 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   const isBlindClosure = Boolean(settingsData?.settings?.blindClosureEnabled);
 
   // Consultar resumen del día
-  const { data: summaryData } = useQuery({
+  const {
+    data: summaryData,
+    isError: isErrorSummary,
+    refetch: refetchSummary
+  } = useQuery({
     queryKey: ['z-report-summary'],
     queryFn: async () => {
       const res = await fetch('/api/reports/z-report/summary');
-      if (!res.ok) return null;
+      if (!res.ok) {
+        throw new Error('Error al consultar resumen contable');
+      }
       return res.json();
     }
   });
+
+  if (isErrorSummary) {
+    return (
+      <Card variant="alt" className="p-8 text-center space-y-4 border-danger/40 max-w-lg mx-auto my-8">
+        <div className="w-14 h-14 mx-auto rounded-full bg-danger/10 flex items-center justify-center text-danger">
+          <Icon name="AlertTriangle" className="w-7 h-7 text-danger" />
+        </div>
+        <h3 className="text-xl font-black text-ink uppercase">Error al Cargar Cierre Z</h3>
+        <p className="text-xs text-ink-muted">
+          No se pudieron obtener las cifras contables del servidor. Verifica la conexión o reintenta.
+        </p>
+        <Button variant="primary" size="md" onClick={() => refetchSummary()} leftIcon="RotateCw">
+          Reintentar
+        </Button>
+      </Card>
+    );
+  }
 
   const summary = summaryData?.summary || {
     jornadaId: 'jornada_activa',
@@ -49,7 +74,8 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
     grossSalesUsdCents: 0,
     expectedCashUsdCents: 0,
     expectedCashBsCents: 0,
-    byMethod: [] as Array<{ method: string; count: number; totalUsdCents: number }>
+    byMethod: [] as Array<{ method: string; count: number; totalUsdCents: number }>,
+    bySede: [] as Array<{ locationId: string; locationName?: string; ordersCount: number; netSalesUsdCents: number }>
   };
 
   const expectedUsdCents = summary.expectedCashUsdCents || 0;
@@ -85,6 +111,7 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
 
       setClosureResult(data);
       setStep(3);
+      await invalidateMoney(queryClient);
       onClosureCompleted();
     } catch (err: any) {
       setErrorMessage(err.message || 'Fallo de conexión al procesar Cierre Z');
@@ -140,6 +167,14 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
                 )}
               </div>
 
+              {/* Fórmula visible de cálculo */}
+              <div className="p-3 bg-surface-alt rounded-xl border border-border text-xs text-ink-muted flex items-center gap-2">
+                <Icon name="Info" className="w-4 h-4 text-primary shrink-0" />
+                <span>
+                  <strong>Fórmula de efectivo esperado:</strong> Apertura + cobros en efectivo − vueltos − gastos en efectivo
+                </span>
+              </div>
+
               {isBlindClosure ? (
                 <Card variant="alt" className="p-6 text-center space-y-2 border-warning/40">
                   <div className="w-12 h-12 mx-auto rounded-full bg-warning/10 flex items-center justify-center text-warning">
@@ -181,15 +216,28 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
                   <p className="text-xs text-ink-muted py-2">No hay transacciones registradas aún en este turno.</p>
                 )}
               </Card>
+
+              {/* Desglose por sede si existe */}
+              {summary.bySede && summary.bySede.length > 0 && (
+                <Card variant="surface" className="p-4 space-y-2 border-border">
+                  <span className="text-xs font-bold uppercase tracking-wider text-ink-muted block">Ventas por sede</span>
+                  {summary.bySede.map((s: any, idx: number) => (
+                    <div key={idx} className="flex justify-between items-center text-sm py-1 border-b border-border/40 last:border-0">
+                      <span className="text-ink font-medium">{s.locationName || s.locationId} ({s.ordersCount} órdenes)</span>
+                      <span className="font-mono font-bold text-ink">${(s.netSalesUsdCents / 100).toFixed(2)}</span>
+                    </div>
+                  ))}
+                </Card>
+              )}
             </div>
           )}
 
           {/* PASO 2: CONTEO FÍSICO */}
           {step === 2 && (
             <div className="space-y-4">
-              <p className="text-xs text-ink-muted">
-                Ingresa el dinero en efectivo contado en la gaveta. El sistema calculará automáticamente cualquier diferencia.
-              </p>
+              <div className="p-3 bg-surface-alt rounded-xl border border-border text-xs text-ink-muted">
+                <strong>Fórmula de cuadre:</strong> Apertura + cobros en efectivo − vueltos − gastos en efectivo
+              </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="Efectivo Físico USD ($)" required>
@@ -205,11 +253,11 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
                   {!isBlindClosure && countedCashUsd && (
                     <div className="mt-1.5 text-xs font-mono font-bold">
                       {diffUsdCents === 0 ? (
-                        <span className="text-success">Exacto (Sin diferencia)</span>
+                        <span className="text-success font-bold">Exacto (Cuadra exacto)</span>
                       ) : diffUsdCents > 0 ? (
-                        <span className="text-success">Sobrante: +${(diffUsdCents / 100).toFixed(2)}</span>
+                        <span className="text-success font-bold">+Sobra: ${(diffUsdCents / 100).toFixed(2)}</span>
                       ) : (
-                        <span className="text-danger">Faltante: -${(Math.abs(diffUsdCents) / 100).toFixed(2)}</span>
+                        <span className="text-danger font-bold">-Falta: ${(Math.abs(diffUsdCents) / 100).toFixed(2)}</span>
                       )}
                     </div>
                   )}
@@ -228,11 +276,11 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
                   {!isBlindClosure && countedCashBs && (
                     <div className="mt-1.5 text-xs font-mono font-bold">
                       {diffBsCents === 0 ? (
-                        <span className="text-success">Exacto (Sin diferencia)</span>
+                        <span className="text-success font-bold">Exacto (Cuadra exacto)</span>
                       ) : diffBsCents > 0 ? (
-                        <span className="text-success">Sobrante: +{(diffBsCents / 100).toFixed(2)} Bs</span>
+                        <span className="text-success font-bold">+Sobra: {(diffBsCents / 100).toFixed(2)} Bs</span>
                       ) : (
-                        <span className="text-danger">Faltante: -{(Math.abs(diffBsCents) / 100).toFixed(2)} Bs</span>
+                        <span className="text-danger font-bold">-Falta: {(Math.abs(diffBsCents) / 100).toFixed(2)} Bs</span>
                       )}
                     </div>
                   )}
@@ -260,41 +308,41 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
             </div>
           )}
 
-          {/* PASO 3: CONFIRMACIÓN Y EXPORTACIÓN */}
+          {/* PASO 3: CONFIRMACIÓN Y RESULTADO */}
           {step === 3 && (
-            <div className="space-y-5 text-center">
-              <Card variant="alt" className="p-6 space-y-3 border-success/40">
-                <div className="w-14 h-14 mx-auto rounded-full bg-success/10 flex items-center justify-center text-success">
-                  <Icon name="CheckCircle" className="w-8 h-8 text-success" />
-                </div>
-                <h3 className="text-xl font-black text-ink uppercase tracking-tight">Cierre Z Ejecutado con Éxito</h3>
-                <p className="text-xs text-ink-muted">
-                  La jornada fue cerrada e inscrita en el libro inmutable de auditoría.
-                </p>
-                {closureResult?.auditHash && (
-                  <div className="p-2.5 bg-surface border border-border rounded-xl text-[11px] font-mono text-ink-muted break-all">
-                    <span className="font-bold text-ink">Firma Criptográfica SHA-256:</span><br />
-                    {closureResult.auditHash}
-                  </div>
-                )}
-              </Card>
+            <div className="space-y-4 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-success/20 flex items-center justify-center text-success">
+                <Icon name="CheckCircle2" className="w-8 h-8 text-success" />
+              </div>
 
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button
-                  variant="primary"
-                  size="md"
-                  onClick={() => handleExport('pdf')}
-                  leftIcon="FileText"
-                >
-                  Descargar Reporte PDF
+              <div>
+                <h3 className="text-xl font-black text-ink uppercase">Cierre Z Registrado con Éxito</h3>
+                <p className="text-xs text-ink-muted">
+                  La jornada ha sido formalmente clausurada y sellada criptográficamente en el servidor.
+                </p>
+              </div>
+
+              {closureResult?.closure && (
+                <Card variant="alt" className="p-4 text-left space-y-2 font-mono text-xs border-border">
+                  <div className="flex justify-between">
+                    <span className="text-ink-muted">Secuencia Z:</span>
+                    <span className="font-bold text-ink">#{closureResult.closure.zSequenceNumber || '1'}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-ink-muted">Hash SHA-256:</span>
+                    <span className="text-[10px] text-ink truncate max-w-[200px]">
+                      {closureResult.closure.hashChainHex || '00000000'}
+                    </span>
+                  </div>
+                </Card>
+              )}
+
+              <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
+                <Button variant="secondary" size="md" onClick={() => handleExport('pdf')} leftIcon="FileText">
+                  Descargar Informe PDF
                 </Button>
-                <Button
-                  variant="secondary"
-                  size="md"
-                  onClick={() => handleExport('excel')}
-                  leftIcon="FileSpreadsheet"
-                >
-                  Exportar a Excel
+                <Button variant="secondary" size="md" onClick={() => handleExport('excel')} leftIcon="FileSpreadsheet">
+                  Exportar Excel
                 </Button>
               </div>
             </div>
