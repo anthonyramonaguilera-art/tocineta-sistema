@@ -95,7 +95,7 @@ export const ReceivableModal: React.FC<ReceivableModalProps> = ({
           </div>
         )}
 
-        {/* Monto Grande estilo Treinta */}
+        {/* Monto Grande */}
         <div>
           <label className="block text-xs font-bold text-ink-muted uppercase tracking-wider mb-1">
             Monto a Cobrar (USD $)

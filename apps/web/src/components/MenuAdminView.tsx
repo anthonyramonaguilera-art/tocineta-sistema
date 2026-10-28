@@ -14,6 +14,7 @@ import {
   Package
 } from 'lucide-react';
 import { Icon } from '../ui/Icon.js';
+import { LoadBoundary } from '../ui/LoadBoundary.js';
 
 export const MenuAdminView: React.FC = () => {
   const { token } = useAuth();
@@ -30,7 +31,7 @@ export const MenuAdminView: React.FC = () => {
   const { data: suppliesData } = useQuery<{ supplies: any[] }>({
     queryKey: ['profitabilitySupplies'],
     queryFn: async () => {
-      const res = await fetch('/api/profitability/supplies');
+      const res = await fetch('/api/fase3/supplies');
       if (!res.ok) return { supplies: [] };
       return res.json();
     }
@@ -86,8 +87,8 @@ export const MenuAdminView: React.FC = () => {
   const [showAllCoupons, setShowAllCoupons] = useState<boolean>(false);
   const [isSyncingBcv, setIsSyncingBcv] = useState<boolean>(false);
 
-  const { data: adminMenu, isLoading } = useQuery<AdminMenuResponse>({
-    queryKey: ['adminMenu'],
+  const { data: adminMenu, isLoading, isError, error, refetch } = useQuery<AdminMenuResponse>({
+    queryKey: ['adminMenu', token],
     queryFn: async () => {
       const res = await fetch('/api/menu/admin', {
         headers: { authorization: `Bearer ${token}` }
@@ -95,7 +96,8 @@ export const MenuAdminView: React.FC = () => {
       if (!res.ok) throw new Error('Error al consultar catálogo de administración');
       return res.json();
     },
-    enabled: Boolean(token)
+    enabled: Boolean(token),
+    retry: 1
   });
 
   // Mutación: Toggle Disponibilidad Producto (Agotado/Disponible)
@@ -465,12 +467,20 @@ export const MenuAdminView: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  if (isLoading || !adminMenu) {
+  if (isLoading || isError || !adminMenu) {
     return (
-      <div className="py-20 text-center text-tocineta-yellow">
-        <Icon name="Settings" size={32} className="animate-spin inline-block" />
-        <p className="mt-3 text-sm font-semibold">Cargando Gestor de Menú y Catálogo Admin...</p>
-      </div>
+      <LoadBoundary
+        isLoading={isLoading}
+        isError={isError}
+        error={error}
+        isEmpty={!isLoading && !isError && !adminMenu}
+        loadingMessage="Cargando Gestor de Menú y Catálogo Admin..."
+        emptyMessage="Catálogo de administración no disponible"
+        timeoutMs={3500}
+        onRetry={() => refetch()}
+      >
+        <div />
+      </LoadBoundary>
     );
   }
 
@@ -492,14 +502,14 @@ export const MenuAdminView: React.FC = () => {
       {/* -------------------------------------------------------------------- */}
       {/* 1. SECCIÓN CATEGORÍAS DE LA CARTA                                    */}
       {/* -------------------------------------------------------------------- */}
-      <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-sm">
+      <div className="bg-surface border border-border rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 shadow-xs">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-tocineta-yellow/10 border border-tocineta-yellow/30 text-tocineta-yellow flex items-center justify-center">
-            <ClipboardList className="w-5 h-5 text-tocineta-yellow" />
+          <div className="w-10 h-10 rounded-xl bg-surface-alt border border-border text-ink flex items-center justify-center">
+            <ClipboardList className="w-5 h-5 text-primary" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-white">Categorías y Organización de la Carta</h3>
-            <p className="text-xs text-tocineta-muted">
+            <h3 className="text-sm font-black text-ink">Categorías y Organización de la Carta</h3>
+            <p className="text-xs text-ink-muted">
               {adminMenu.categories.length} categorías activas en el menú del Food Truck.
             </p>
           </div>
@@ -508,7 +518,7 @@ export const MenuAdminView: React.FC = () => {
         <button
           type="button"
           onClick={() => setIsCategoryModalOpen(true)}
-          className="px-4 py-2 rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-tocineta-yellow text-xs font-bold text-white hover:text-tocineta-yellow transition-all flex items-center gap-1.5 shadow-sm"
+          className="px-4 py-2 rounded-xl bg-surface-alt border border-border hover:border-primary text-xs font-bold text-ink transition-all flex items-center gap-1.5 shadow-xs cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Nueva Categoría</span>
@@ -518,13 +528,13 @@ export const MenuAdminView: React.FC = () => {
       {/* -------------------------------------------------------------------- */}
       {/* 2. PESTAÑAS DEL PANEL ADMIN                                          */}
       {/* -------------------------------------------------------------------- */}
-      <div className="flex items-center gap-2 border-b border-tocineta-border pb-3 overflow-x-auto">
+      <div className="flex items-center gap-2 border-b border-border pb-3 overflow-x-auto">
         <button
           onClick={() => setActiveTab('products')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === 'products'
-              ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
-              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+              ? 'bg-primary text-primary-ink shadow-xs'
+              : 'bg-surface border border-border text-ink-muted hover:text-ink'
           }`}
         >
           <Utensils className="w-4 h-4" />
@@ -534,8 +544,8 @@ export const MenuAdminView: React.FC = () => {
           onClick={() => setActiveTab('pricing-calculator')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === 'pricing-calculator'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-surface border border-border text-ink-muted hover:text-ink'
           }`}
         >
           <Calculator className="w-4 h-4" />
@@ -545,8 +555,8 @@ export const MenuAdminView: React.FC = () => {
           onClick={() => setActiveTab('supplies-costs')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === 'supplies-costs'
-              ? 'bg-blue-600 text-white shadow-sm'
-              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+              ? 'bg-blue-600 text-white shadow-xs'
+              : 'bg-surface border border-border text-ink-muted hover:text-ink'
           }`}
         >
           <Package className="w-4 h-4" />
@@ -556,8 +566,8 @@ export const MenuAdminView: React.FC = () => {
           onClick={() => setActiveTab('coupons')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === 'coupons'
-              ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
-              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+              ? 'bg-primary text-primary-ink shadow-xs'
+              : 'bg-surface border border-border text-ink-muted hover:text-ink'
           }`}
         >
           <Ticket className="w-4 h-4" />
@@ -567,8 +577,8 @@ export const MenuAdminView: React.FC = () => {
           onClick={() => setActiveTab('bcv')}
           className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 cursor-pointer ${
             activeTab === 'bcv'
-              ? 'bg-tocineta-yellow text-tocineta-bg shadow-sm'
-              : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+              ? 'bg-primary text-primary-ink shadow-xs'
+              : 'bg-surface border border-border text-ink-muted hover:text-ink'
           }`}
         >
           <Banknote className="w-4 h-4" />
@@ -586,10 +596,10 @@ export const MenuAdminView: React.FC = () => {
             <div className="flex items-center gap-1.5 overflow-x-auto w-full sm:w-auto pb-1">
               <button
                 onClick={() => setSelectedCategory('all')}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 ${
+                className={`px-3 py-1.5 rounded-lg text-xs font-bold shrink-0 cursor-pointer ${
                   selectedCategory === 'all'
-                    ? 'bg-tocineta-yellow text-tocineta-bg'
-                    : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted'
+                    ? 'bg-primary text-primary-ink'
+                    : 'bg-surface border border-border text-ink-muted hover:text-ink'
                 }`}
               >
                 Todos
@@ -647,14 +657,14 @@ export const MenuAdminView: React.FC = () => {
 
                     <div className="flex items-start justify-between gap-2">
                       <div>
-                        <h4 className="font-bold text-white text-base leading-snug">{p.name}</h4>
-                        <span className="text-[10px] text-tocineta-muted uppercase font-semibold">
+                        <h4 className="font-bold text-ink text-base leading-snug">{p.name}</h4>
+                        <span className="text-[10px] text-ink-muted uppercase font-semibold">
                           Estación: {p.station}
                         </span>
                       </div>
                       <button
                         onClick={() => openEditModal(p)}
-                        className="text-xs bg-tocineta-border hover:bg-tocineta-border-light text-white px-2 py-1 rounded-md cursor-pointer"
+                        className="text-xs bg-surface-alt hover:bg-surface border border-border text-ink px-2 py-1 rounded-md cursor-pointer"
                       >
                         Editar
                       </button>
@@ -662,17 +672,17 @@ export const MenuAdminView: React.FC = () => {
 
                     <div className="mt-3 flex items-center justify-between text-xs">
                       <div>
-                        <span className="text-tocineta-muted block text-[10px]">Precio Venta:</span>
-                        <span className="font-extrabold text-tocineta-yellow text-base font-mono">
+                        <span className="text-ink-muted block text-[10px]">Precio Venta:</span>
+                        <span className="font-black text-ink text-base font-mono">
                           ${(p.price_usd_cents / 100).toFixed(2)}
                         </span>
-                        <span className="text-[10px] text-tocineta-muted font-mono block">
+                        <span className="text-[10px] text-ink-muted font-mono block">
                           {(p.priceBsCents / 100).toFixed(2)} Bs
                         </span>
                       </div>
                       <div className="text-right">
-                        <span className="text-tocineta-muted block text-[10px]">Costo Receta:</span>
-                        <span className="font-bold text-white font-mono">
+                        <span className="text-ink-muted block text-[10px]">Costo Receta:</span>
+                        <span className="font-bold text-ink font-mono">
                           ${costUsd.toFixed(2)}
                         </span>
                       </div>
@@ -1215,34 +1225,34 @@ export const MenuAdminView: React.FC = () => {
       {/* -------------------------------------------------------------------- */}
       {isCreatingProduct && (
         <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-tocineta-border">
-              <h3 className="text-base font-extrabold text-white">
+          <div className="bg-surface border border-border rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <h3 className="text-base font-extrabold text-ink">
                 {editingProduct ? `Editar: ${editingProduct.name}` : 'Crear Nuevo Producto'}
               </h3>
-              <button onClick={closeProductModal} className="text-tocineta-muted hover:text-white text-lg">
+              <button onClick={closeProductModal} className="text-ink-muted hover:text-ink text-lg cursor-pointer">
                 ✕
               </button>
             </div>
 
             <div className="space-y-4 my-4">
               <div>
-                <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">Nombre:</label>
+                <label className="text-xs text-ink-muted uppercase font-bold block mb-1">Nombre:</label>
                 <input
                   type="text"
                   value={formName}
                   onChange={e => setFormName(e.target.value)}
-                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                  className="w-full bg-surface-alt border border-border rounded-xl px-3 py-2 text-xs text-ink"
                 />
               </div>
 
               {!editingProduct && (
                 <div>
-                  <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">Categoría:</label>
+                  <label className="text-xs text-ink-muted uppercase font-bold block mb-1">Categoría:</label>
                   <select
                     value={formCategoryId}
                     onChange={e => setFormCategoryId(e.target.value)}
-                    className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                    className="w-full bg-surface-alt border border-border rounded-xl px-3 py-2 text-xs text-ink"
                   >
                     {adminMenu.categories.map(c => (
                       <option key={c.id} value={c.id}>
@@ -1255,7 +1265,7 @@ export const MenuAdminView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">
+                  <label className="text-xs text-ink-muted uppercase font-bold block mb-1">
                     Precio Venta ($):
                   </label>
                   <input
@@ -1263,17 +1273,17 @@ export const MenuAdminView: React.FC = () => {
                     step="0.01"
                     value={formPriceUsd}
                     onChange={e => setFormPriceUsd(e.target.value)}
-                    className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white font-mono"
+                    className="w-full bg-surface-alt border border-border rounded-xl px-3 py-2 text-xs text-ink font-mono"
                   />
                   {formPriceUsd && (
-                    <span className="text-[10px] text-tocineta-yellow font-mono mt-1 block">
+                    <span className="text-[10px] text-ink font-bold font-mono mt-1 block">
                       ≈ {(parseFloat(formPriceUsd) * (adminMenu.rateMicroBs / 1000000)).toFixed(2)} Bs
                     </span>
                   )}
                 </div>
 
                 <div>
-                  <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">
+                  <label className="text-xs text-ink-muted uppercase font-bold block mb-1">
                     Costo Estimado ($):
                   </label>
                   <input
@@ -1281,17 +1291,17 @@ export const MenuAdminView: React.FC = () => {
                     step="0.01"
                     value={formCostUsd}
                     onChange={e => setFormCostUsd(e.target.value)}
-                    className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white font-mono"
+                    className="w-full bg-surface-alt border border-border rounded-xl px-3 py-2 text-xs text-ink font-mono"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">Estación:</label>
+                <label className="text-xs text-ink-muted uppercase font-bold block mb-1">Estación:</label>
                 <select
                   value={formStation}
                   onChange={e => setFormStation(e.target.value as any)}
-                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                  className="w-full bg-surface-alt border border-border rounded-xl px-3 py-2 text-xs text-ink"
                 >
                   <option value="hot_dogs">Hot Dogs</option>
                   <option value="hamburguesas">Hamburguesas</option>
@@ -1300,12 +1310,12 @@ export const MenuAdminView: React.FC = () => {
               </div>
 
               <div>
-                <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">Descripción:</label>
+                <label className="text-xs text-ink-muted uppercase font-bold block mb-1">Descripción:</label>
                 <textarea
                   rows={2}
                   value={formDescription}
                   onChange={e => setFormDescription(e.target.value)}
-                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white resize-none"
+                  className="w-full bg-surface-alt border border-border rounded-xl px-3 py-2 text-xs text-ink resize-none"
                 />
               </div>
 
@@ -1410,14 +1420,14 @@ export const MenuAdminView: React.FC = () => {
             <div className="flex gap-2 pt-3 border-t border-tocineta-border">
               <button
                 onClick={closeProductModal}
-                className="flex-1 py-2.5 rounded-xl border border-tocineta-border text-xs font-bold text-tocineta-muted hover:text-white hover:bg-tocineta-bg"
+                className="flex-1 py-2.5 rounded-xl border border-border text-xs font-bold text-ink-muted hover:text-ink hover:bg-surface-alt cursor-pointer"
               >
                 Cancelar
               </button>
               <button
                 onClick={() => saveProductMutation.mutate()}
                 disabled={saveProductMutation.isPending || !formName || !formPriceUsd}
-                className="flex-1 py-2.5 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-extrabold uppercase hover:bg-tocineta-yellow/90 disabled:opacity-50 shadow-md"
+                className="flex-1 py-2.5 rounded-xl bg-primary text-primary-ink text-xs font-extrabold uppercase hover:opacity-90 disabled:opacity-50 shadow-md cursor-pointer"
               >
                 {saveProductMutation.isPending ? 'Guardando...' : 'Guardar Producto'}
               </button>
@@ -1429,13 +1439,13 @@ export const MenuAdminView: React.FC = () => {
       {/* MODAL NUEVA CATEGORÍA */}
       {isCategoryModalOpen && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-            <div className="flex items-center justify-between pb-3 border-b border-tocineta-border">
-              <h3 className="text-base font-bold text-white">Nueva Categoría</h3>
+          <div className="bg-surface border border-border rounded-2xl p-6 max-w-sm w-full shadow-2xl">
+            <div className="flex items-center justify-between pb-3 border-b border-border">
+              <h3 className="text-base font-bold text-ink">Nueva Categoría</h3>
               <button
                 type="button"
                 onClick={() => setIsCategoryModalOpen(false)}
-                className="text-tocineta-muted hover:text-white"
+                className="text-ink-muted hover:text-ink cursor-pointer"
               >
                 ✕
               </button>
@@ -1443,7 +1453,7 @@ export const MenuAdminView: React.FC = () => {
 
             <div className="space-y-3 my-4">
               <div>
-                <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">
+                <label className="text-xs text-ink-muted uppercase font-bold block mb-1">
                   Nombre de la categoría:
                 </label>
                 <input
@@ -1451,19 +1461,19 @@ export const MenuAdminView: React.FC = () => {
                   placeholder="ej. Postres, Ensaladas..."
                   value={newCatName}
                   onChange={e => setNewCatName(e.target.value)}
-                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                  className="w-full bg-surface-alt border border-border rounded-xl px-3 py-2 text-xs text-ink"
                   autoFocus
                 />
               </div>
 
               <div>
-                <label className="text-xs text-tocineta-muted uppercase font-bold block mb-1">
+                <label className="text-xs text-ink-muted uppercase font-bold block mb-1">
                   Estación de Preparación:
                 </label>
                 <select
                   value={newCatStation}
                   onChange={e => setNewCatStation(e.target.value as Station)}
-                  className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white"
+                  className="w-full bg-surface-alt border border-border rounded-xl px-3 py-2 text-xs text-ink"
                 >
                   <option value="hot_dogs">Hot Dogs</option>
                   <option value="hamburguesas">Hamburguesas</option>
@@ -1472,11 +1482,11 @@ export const MenuAdminView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex gap-2 pt-3 border-t border-tocineta-border">
+            <div className="flex gap-2 pt-3 border-t border-border">
               <button
                 type="button"
                 onClick={() => setIsCategoryModalOpen(false)}
-                className="flex-1 py-2 rounded-xl border border-tocineta-border text-xs font-bold text-tocineta-muted hover:text-white"
+                className="flex-1 py-2 rounded-xl border border-border text-xs font-bold text-ink-muted hover:text-ink cursor-pointer"
               >
                 Cancelar
               </button>
@@ -1484,7 +1494,7 @@ export const MenuAdminView: React.FC = () => {
                 type="button"
                 onClick={() => createCategoryMutation.mutate()}
                 disabled={!newCatName.trim() || createCategoryMutation.isPending}
-                className="flex-1 py-2 rounded-xl bg-tocineta-yellow text-tocineta-bg text-xs font-bold hover:bg-tocineta-yellow/90 disabled:opacity-50"
+                className="flex-1 py-2 rounded-xl bg-primary text-primary-ink text-xs font-bold hover:opacity-90 disabled:opacity-50 cursor-pointer"
               >
                 {createCategoryMutation.isPending ? 'Creando...' : 'Crear Categoría'}
               </button>

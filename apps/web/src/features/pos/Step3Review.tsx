@@ -1,6 +1,7 @@
 import React from 'react';
 import type { CartItem } from './types.js';
 import { Card, Button, Input, Money, Icon, Badge } from '../../ui/index.js';
+import { formatTableLabel } from '../../lib/format.js';
 
 interface Step3ReviewProps {
   cart: CartItem[];
@@ -57,7 +58,7 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
           <div className="flex items-center gap-2">
             <h3 className="font-black text-sm text-ink">{customerName}</h3>
             <Badge variant="primary">
-              {fulfillmentType === 'salon' ? tableNumber : fulfillmentType === 'para_llevar' ? 'Para Llevar' : 'Delivery'}
+              {fulfillmentType === 'salon' ? formatTableLabel(tableNumber) : fulfillmentType === 'para_llevar' ? 'Para Llevar' : 'Delivery'}
             </Badge>
             {fulfillmentType === 'delivery' && deliverySede && (
               <span className="text-[10px] text-ink-muted font-bold">({deliverySede})</span>

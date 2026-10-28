@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { CashierOrder, CashierOrderLine } from './types.js';
 import { Card, Button, Badge, EmptyState, Modal, Input, Field } from '../../ui/index.js';
 import { PaymentWizard } from './PaymentWizard.js';
+import { formatTableLabel } from '../../lib/format.js';
 
 interface CashierOrdersTabProps {
   orders: CashierOrder[];
@@ -105,7 +106,7 @@ export const CashierOrdersTab: React.FC<CashierOrdersTabProps> = ({
                   <div>
                     <div className="flex items-center gap-2">
                       <span className="text-base font-black text-ink">#{o.order_number}</span>
-                      <Badge variant="primary">{o.table_number ? `Mesa ${o.table_number}` : o.fulfillment_type}</Badge>
+                      <Badge variant="primary">{o.table_number ? formatTableLabel(o.table_number) : o.fulfillment_type}</Badge>
                       <Badge variant="neutral">{itemsCount} platos</Badge>
                     </div>
                     <p className="text-xs font-bold text-ink-muted mt-0.5">

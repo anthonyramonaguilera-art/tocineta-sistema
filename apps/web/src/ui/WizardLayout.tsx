@@ -14,6 +14,7 @@ export interface WizardLayoutProps {
   backLabel?: string;
   isNextDisabled?: boolean;
   nextDisabled?: boolean;
+  nextDisabledReason?: string;
   isNextLoading?: boolean;
   nextLoading?: boolean;
   canGoBack?: boolean;
@@ -34,6 +35,7 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
   backLabel = 'Atrás',
   isNextDisabled = false,
   nextDisabled = false,
+  nextDisabledReason,
   isNextLoading = false,
   nextLoading = false,
   canGoBack = true,
@@ -77,13 +79,13 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
         </div>
       </header>
 
-      {/* Main Content Area */}
-      <main className="flex-1 max-w-2xl w-full mx-auto p-4 pb-28">
+      {/* Main Content Area con padding inferior calculado para pie + safe-area */}
+      <main className="flex-1 max-w-2xl w-full mx-auto p-4 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
         {children}
       </main>
 
-      {/* Fixed Sticky Footer */}
-      <footer className="fixed bottom-0 left-0 right-0 z-20 bg-surface/95 backdrop-blur-md border-t border-border p-3.5 shadow-lg">
+      {/* Footer Sticky (no fixed para evitar solapar contenido sin espacio) */}
+      <footer className="sticky bottom-0 left-0 right-0 z-20 bg-surface/95 backdrop-blur-md border-t border-border p-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           {footerExtra && (
             <div className="flex-1 min-w-0">
@@ -91,30 +93,38 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
             </div>
           )}
 
-          <div className="flex items-center gap-2.5 ml-auto">
-            {canGoBack && onBack && (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={onBack}
-                iconStart={<ArrowLeft className="w-5 h-5" />}
-              >
-                {backLabel}
-              </Button>
+          <div className="flex flex-col items-end gap-1.5 ml-auto">
+            {disabledNext && nextDisabledReason && (
+              <span className="text-[11px] font-bold text-amber-800 dark:text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2.5 py-0.5 rounded-lg text-right animate-pulse">
+                {nextDisabledReason}
+              </span>
             )}
 
-            {onNext && (
-              <Button
-                type="button"
-                variant="primary"
-                onClick={onNext}
-                disabled={disabledNext}
-                isLoading={loadingNext}
-                iconEnd={<ArrowRight className="w-5 h-5" />}
-              >
-                {nextLabel}
-              </Button>
-            )}
+            <div className="flex items-center gap-2.5">
+              {canGoBack && onBack && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={onBack}
+                  iconStart={<ArrowLeft className="w-5 h-5" />}
+                >
+                  {backLabel}
+                </Button>
+              )}
+
+              {onNext && (
+                <Button
+                  type="button"
+                  variant="primary"
+                  onClick={onNext}
+                  disabled={disabledNext}
+                  isLoading={loadingNext}
+                  iconEnd={<ArrowRight className="w-5 h-5" />}
+                >
+                  {nextLabel}
+                </Button>
+              )}
+            </div>
           </div>
         </div>
       </footer>

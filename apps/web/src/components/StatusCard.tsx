@@ -12,20 +12,20 @@ interface StatusCardProps {
 
 export const StatusCard: React.FC<StatusCardProps> = ({ title, icon, badge, children }) => {
   const badgeClasses = {
-    success: 'bg-tocineta-green/10 text-tocineta-green border-tocineta-green/20',
-    warning: 'bg-tocineta-amber/10 text-tocineta-amber border-tocineta-amber/20',
-    info: 'bg-blue-500/10 text-blue-400 border-blue-500/20',
-    yellow: 'bg-tocineta-yellow/10 text-tocineta-yellow border-tocineta-yellow/30'
+    success: 'bg-success-subtle text-success border-success/30',
+    warning: 'bg-warning-subtle text-warning border-warning/30',
+    info: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30',
+    yellow: 'bg-primary text-primary-ink border-border font-black'
   };
 
   return (
-    <div className="bg-tocineta-card border border-tocineta-border rounded-xl p-5 hover:border-tocineta-border-light transition-colors shadow-lg">
-      <div className="flex items-center justify-between pb-3 mb-3 border-b border-tocineta-border/60">
+    <div className="bg-surface border border-border rounded-2xl p-5 transition-colors shadow-xs">
+      <div className="flex items-center justify-between pb-3 mb-3 border-b border-border">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 rounded-lg bg-[#0B0D11] border border-tocineta-border text-tocineta-yellow">
+          <div className="p-2 rounded-xl bg-surface-alt border border-border text-ink">
             {icon}
           </div>
-          <h2 className="font-bold text-sm text-white tracking-wide uppercase">
+          <h2 className="font-black text-sm text-ink tracking-wide uppercase">
             {title}
           </h2>
         </div>
@@ -50,11 +50,19 @@ interface MetricRowProps {
 
 export const MetricRow: React.FC<MetricRowProps> = ({ label, value, highlight }) => {
   return (
-    <div className="flex items-center justify-between text-xs py-1 border-b border-white/[0.04] last:border-b-0">
-      <span className="text-tocineta-muted">{label}</span>
-      <span className={`font-mono font-medium ${highlight ? 'text-tocineta-yellow font-bold' : 'text-white'}`}>
+    <div className="flex items-center justify-between text-xs py-1.5 border-b border-border/60 last:border-b-0">
+      <span className="text-ink-muted">{label}</span>
+      <span
+        className={`font-mono text-xs ${
+          highlight
+            ? 'font-black bg-primary text-primary-ink px-1.5 py-0.5 rounded-md'
+            : 'font-bold text-ink'
+        }`}
+      >
         {value}
       </span>
     </div>
   );
 };
+
+export default StatusCard;

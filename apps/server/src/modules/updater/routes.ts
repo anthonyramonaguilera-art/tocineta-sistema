@@ -5,7 +5,7 @@ import {
   getCurrentSystemVersion,
   applySignedUpdatePackage,
   isSalesHours,
-  VARONS_MEDIA_OFFICIAL_PUBLIC_KEY
+  OFFICIAL_UPDATE_PUBLIC_KEY
 } from './updater-service.js';
 import { verifyManifestSignature } from './signer.js';
 
@@ -93,7 +93,7 @@ export const updaterRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    const publicKey = body.publicKeyPem || VARONS_MEDIA_OFFICIAL_PUBLIC_KEY;
+    const publicKey = body.publicKeyPem || OFFICIAL_UPDATE_PUBLIC_KEY;
     const isValid = verifyManifestSignature(body.manifestJson, body.signatureBase64, publicKey);
 
     return reply.status(200).send({

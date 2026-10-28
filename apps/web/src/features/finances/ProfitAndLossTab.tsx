@@ -18,7 +18,7 @@ export const ProfitAndLossTab: React.FC<ProfitAndLossTabProps> = ({ pnlData, isL
 
   return (
     <div className="space-y-6">
-      {/* 1. Tarjeta Principal de Utilidad Real (Treinta Style) */}
+      {/* 1. Tarjeta Principal de Utilidad Real */}
       <div className="p-6 bg-surface rounded-3xl border border-border shadow-xs space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div>

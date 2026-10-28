@@ -11,9 +11,9 @@ import * as path from 'node:path';
  */
 export const DEFAULT_AGE_RECIPIENTS = [
   // Destinatario 1: Administración
-  process.env.AGE_RECIPIENT_ADMIN || process.env.AGE_RECIPIENT_OLINELCYS || 'age1q5q9c7am7xx9e4flj0j8ugyfqejpyp5dc8qsvqpnv7uamg4wkcuqye3f0r',
+  process.env.AGE_RECIPIENT_ADMIN || 'age1q5q9c7am7xx9e4flj0j8ugyfqejpyp5dc8qsvqpnv7uamg4wkcuqye3f0r',
   // Destinatario 2: Custodio Seguro
-  process.env.AGE_RECIPIENT_SECURE || process.env.AGE_RECIPIENT_VARONS || 'age15asuchr5fv6fvqhpxm7zedh0n54p7sukdzn5zjp4auqaju8h5cfslg5ne7'
+  process.env.AGE_RECIPIENT_SECURE || 'age15asuchr5fv6fvqhpxm7zedh0n54p7sukdzn5zjp4auqaju8h5cfslg5ne7'
 ];
 
 /**

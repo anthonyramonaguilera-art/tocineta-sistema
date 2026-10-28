@@ -9,9 +9,10 @@ import { Step3Review } from './Step3Review.js';
 import { CustomizationModal } from './CustomizationModal.js';
 import { ComboWizardModal } from './ComboWizardModal.js';
 import { MultiMethodCalculator } from '../cashier/MultiMethodCalculator.js';
-import { WizardLayout, Toast, Modal } from '../../ui/index.js';
+import { WizardLayout, Toast, ToastContainer, Modal } from '../../ui/index.js';
 import { canUserProcessPayments, usdToBsCents } from '@tocineta/shared';
 import { clearOutbox } from './outbox.js';
+import { formatTableLabel } from '../../lib/format.js';
 
 export const PosComandero: React.FC = () => {
   const { token, user } = useAuth();
@@ -110,13 +111,13 @@ export const PosComandero: React.FC = () => {
     <div className="w-full">
       {/* Notificación de Estado / Outbox */}
       {posCart.statusNotification && (
-        <div className="fixed top-16 right-4 z-50 max-w-md animate-in slide-in-from-top duration-200">
+        <ToastContainer>
           <Toast
             type={posCart.statusNotification.type}
             message={posCart.statusNotification.message}
             onClose={() => posCart.setStatusNotification(null)}
           />
-        </div>
+        </ToastContainer>
       )}
 
       {/* Asistente Guiado de 3 Pasos */}
@@ -143,7 +144,17 @@ export const PosComandero: React.FC = () => {
             : undefined
         }
         nextLabel={posCart.step === 1 ? 'Ir al Menú' : 'Revisar Pedido'}
-        nextDisabled={posCart.step === 2 && posCart.cart.length === 0}
+        nextDisabled={
+          (posCart.step === 1 && posCart.customerName.trim().length < 3) ||
+          (posCart.step === 2 && posCart.cart.length === 0)
+        }
+        nextDisabledReason={
+          posCart.step === 1 && posCart.customerName.trim().length < 3
+            ? 'Falta: nombre del cliente, mínimo 3 letras'
+            : posCart.step === 2 && posCart.cart.length === 0
+            ? 'Falta: agrega al menos 1 producto al pedido'
+            : undefined
+        }
         footerExtra={
           posCart.step === 2 && totalItemsCount > 0 ? (
             <div className="flex items-center gap-2.5">
@@ -277,7 +288,10 @@ export const PosComandero: React.FC = () => {
             <div className="p-3 bg-surface-alt rounded-xl border border-border flex items-center justify-between">
               <div>
                 <span className="text-xs text-ink-muted block uppercase font-bold">Cliente</span>
-                <span className="text-sm font-black text-ink">{expressCheckoutOrder.customer_name}</span>
+                <span className="text-sm font-black text-ink">
+                  {expressCheckoutOrder.customer_name}
+                  {expressCheckoutOrder.table_number && ` • ${formatTableLabel(expressCheckoutOrder.table_number)}`}
+                </span>
               </div>
               <div className="text-right">
                 <span className="text-xs text-ink-muted block uppercase font-bold">Total</span>

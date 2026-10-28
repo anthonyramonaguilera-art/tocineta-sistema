@@ -121,7 +121,7 @@ export const ExpenseModal: React.FC<ExpenseModalProps> = ({
           </div>
         )}
 
-        {/* Monto Grande estilo Treinta */}
+        {/* Monto Grande */}
         <div>
           <label className="block text-xs font-bold text-ink-muted uppercase tracking-wider mb-1">
             Monto del Gasto (USD $)

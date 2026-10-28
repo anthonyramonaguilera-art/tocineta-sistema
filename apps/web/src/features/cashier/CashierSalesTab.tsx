@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Button, Badge, Modal, Input, Field, Select, EmptyState, Icon } from '../../ui/index.js';
 import { getPaymentMethodHumanLabel } from './payment-labels.js';
+import { formatTableLabel } from '../../lib/format.js';
 
 interface PaidSale {
   orderId: string;
@@ -174,7 +175,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
                     <span className="text-xs text-ink-muted font-mono">{timeStr}</span>
                   </div>
                   <p className="text-xs font-bold text-ink-muted mt-0.5">
-                    Cliente: {s.customerName || 'Mostrador'} {s.tableNumber ? `• Mesa ${s.tableNumber}` : ''}
+                    Cliente: {s.customerName || 'Mostrador'} {s.tableNumber ? `• ${formatTableLabel(s.tableNumber)}` : ''}
                   </p>
                 </div>
 

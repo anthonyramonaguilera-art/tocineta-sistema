@@ -3,6 +3,7 @@ import path from 'node:path';
 
 const ROOT_DIR = process.cwd();
 const WEB_SRC = path.join(ROOT_DIR, 'apps', 'web', 'src');
+const SERVER_SRC = path.join(ROOT_DIR, 'apps', 'server', 'src');
 
 const EMOJI_REGEX = /[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}\u{1F1E0}-\u{1F1FF}]/u;
 const HEX_REGEX = /#[0-9a-fA-F]{3,8}\b/i;
@@ -144,6 +145,36 @@ scanDir(WEB_SRC, file => {
     }
   });
 });
+
+// 3. Check for forbidden words in apps/web/src and apps/server/src according to AGENTS.md
+const FORBIDDEN_WORDS_REGEX = /\b(Olinelcys|Anthony|Carlos|Andrea|Miguel|Jos[eé]|Valery|Treinta|Sonr[ií]e|God Mode|Modo Dios|Varons)\b/i;
+
+for (const srcDir of [WEB_SRC, SERVER_SRC]) {
+  scanDir(srcDir, file => {
+    const rel = path.relative(ROOT_DIR, file).replace(/\\/g, '/');
+    // Exclude applied migration files
+    if (rel.includes('apps/server/src/db/migrations/')) return;
+    // Exclude legacy migration cleanup script
+    if (rel.endsWith('apps/server/src/modules/auth/seed-users.ts')) return;
+
+    // Check filename
+    const baseName = path.basename(file);
+    if (FORBIDDEN_WORDS_REGEX.test(baseName)) {
+      report(file, 1, `Nombre de archivo contiene palabra prohibida: "${baseName}".`);
+    }
+
+    if (!file.endsWith('.ts') && !file.endsWith('.tsx') && !file.endsWith('.json') && !file.endsWith('.html') && !file.endsWith('.css')) return;
+
+    const content = fs.readFileSync(file, 'utf8');
+    const lines = content.split('\n');
+    lines.forEach((l, idx) => {
+      const match = l.match(FORBIDDEN_WORDS_REGEX);
+      if (match) {
+        report(file, idx + 1, `Uso de marca o nombre prohibido según AGENTS.md: "${match[0]}".`);
+      }
+    });
+  });
+}
 
 if (errorCount > 0) {
   console.error(`\n✖ UI-GUARD FALLÓ con ${errorCount} violaciones.`);

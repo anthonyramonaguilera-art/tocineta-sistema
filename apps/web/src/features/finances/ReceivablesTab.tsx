@@ -53,7 +53,7 @@ export const ReceivablesTab: React.FC<ReceivablesTabProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Banner de Saldo estilo Treinta */}
+      {/* Banner de Saldo */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-surface rounded-2xl border border-border shadow-xs">
         <div>
           <span className="text-xs font-bold text-ink-muted uppercase tracking-wider block">

@@ -3,6 +3,7 @@ import type { CashierOrder, CashierTender, CashierPaymentMethod } from './types.
 import { usdToBsCents, generateUuidV7 } from '@tocineta/shared';
 import { Button, Card, Badge, Input, WizardLayout, Icon } from '../../ui/index.js';
 import { PaymentWizardStep2 } from './PaymentWizardStep2.js';
+import { formatTableLabel } from '../../lib/format.js';
 
 export interface PaymentWizardProps {
   order: CashierOrder;
@@ -232,7 +233,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
                     <span className="text-xs text-ink-muted uppercase tracking-wider block font-bold">Orden #{order.order_number}</span>
                     <h3 className="text-lg font-black text-ink">{order.customer_name || 'Cliente de Mostrador'}</h3>
                   </div>
-                  <Badge variant="primary">{order.table_number ? `Mesa ${order.table_number}` : order.fulfillment_type}</Badge>
+                  <Badge variant="primary">{order.table_number ? formatTableLabel(order.table_number) : order.fulfillment_type}</Badge>
                 </div>
                 <div className="pt-2 border-t border-border flex items-baseline justify-between">
                   <span className="text-sm font-bold text-ink-muted">Total a Cobrar:</span>

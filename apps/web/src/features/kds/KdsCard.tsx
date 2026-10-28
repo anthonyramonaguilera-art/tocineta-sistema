@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import type { KdsOrder, KdsLineItem } from './KdsView.js';
 import { Card, Button, Badge, Icon } from '../../ui/index.js';
+import { formatTableLabel } from '../../lib/format.js';
 
 interface KdsCardProps {
   order: KdsOrder;
@@ -50,7 +51,7 @@ export const KdsCard: React.FC<KdsCardProps> = ({
         <div>
           <div className="flex items-center gap-2">
             <span className="text-xl font-black text-ink">#{order.orderNumber}</span>
-            <Badge variant="primary">{order.tableNumber ? `Mesa ${order.tableNumber}` : order.fulfillmentType}</Badge>
+            <Badge variant="primary">{order.tableNumber ? formatTableLabel(order.tableNumber) : order.fulfillmentType}</Badge>
             {order.isRefire && (
               <Badge variant="danger">REPOSICIÓN URGENTE</Badge>
             )}

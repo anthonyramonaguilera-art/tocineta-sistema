@@ -19,7 +19,7 @@ const MENU_ITEMS: MenuItem[] = [
   { tab: 'profitability', label: 'Inventario Rápido', icon: 'Package', mode: 'basico', isImplemented: true },
 
   // MODO PRO
-  { tab: 'finances', label: 'Finanzas (Treinta)', icon: 'CircleDollarSign', mode: 'pro', isImplemented: true },
+  { tab: 'finances', label: 'Finanzas', icon: 'CircleDollarSign', mode: 'pro', isImplemented: true },
   { tab: 'owner', label: 'Panel Dueña', icon: 'TrendingUp', mode: 'pro', isImplemented: true },
   { tab: 'menu-admin', label: 'Carta y Precios', icon: 'Utensils', mode: 'pro', isImplemented: true },
   { tab: 'staff', label: 'Personal y Permisos', icon: 'Users', mode: 'pro', isImplemented: true },
@@ -31,13 +31,15 @@ const MENU_ITEMS: MenuItem[] = [
   { tab: 'settings', label: 'Configuración Negocio', icon: 'Settings', mode: 'pro', isImplemented: true }
 ];
 
-interface AppSidebarProps {
+export interface AppSidebarProps {
   isOpen: boolean;
   onClose: () => void;
   currentTab: TabType;
   onSelectTab: (tab: TabType) => void;
   allowedTabs: TabType[];
   uiMode: 'basico' | 'pro';
+  onToggleUiMode: (mode: 'basico' | 'pro') => void;
+  isAdmin?: boolean;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
   activeSede: 'sede_a' | 'sede_b';
@@ -55,6 +57,8 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   onSelectTab,
   allowedTabs,
   uiMode,
+  onToggleUiMode,
+  isAdmin = false,
   theme,
   onToggleTheme,
   activeSede,
@@ -82,9 +86,9 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
         onClick={onClose}
       />
 
-      {/* Contenedor del Cajón */}
+      {/* Contenedor del Cajón Lateral */}
       <div className="relative w-72 max-w-[85vw] bg-surface border-r border-border h-full flex flex-col shadow-2xl z-10 animate-in slide-in-from-left duration-200">
-        {/* Cabecera del Cajón */}
+        {/* Cabecera del Cajón: Logo Oficial y Usuario */}
         <div className="p-4 border-b border-border flex items-center justify-between">
           <div className="flex items-center gap-2">
             <img src="/brand/carita.png" alt="Logo" className="w-8 h-8 object-contain" />
@@ -100,12 +104,42 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-lg bg-surface-alt flex items-center justify-center text-ink-muted hover:text-ink"
+            className="w-8 h-8 rounded-lg bg-surface-alt flex items-center justify-center text-ink-muted hover:text-ink cursor-pointer"
             aria-label="Cerrar menú"
           >
             <Icon name="X" size={18} />
           </button>
         </div>
+
+        {/* Conmutador Modo Básico / Modo Pro (Solo Admin/Supervisor en el Menú Lateral) */}
+        {isAdmin && (
+          <div className="px-3 pt-3">
+            <div className="p-1 bg-surface-alt rounded-xl border border-border flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => onToggleUiMode('basico')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  uiMode === 'basico'
+                    ? 'bg-primary text-primary-ink shadow-xs'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+              >
+                Básico
+              </button>
+              <button
+                type="button"
+                onClick={() => onToggleUiMode('pro')}
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all cursor-pointer ${
+                  uiMode === 'pro'
+                    ? 'bg-primary text-primary-ink shadow-xs'
+                    : 'text-ink-muted hover:text-ink'
+                }`}
+              >
+                Modo Pro
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Lista de Módulos */}
         <div className="flex-1 overflow-y-auto p-3 space-y-1">
@@ -123,7 +157,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
                   onSelectTab(item.tab);
                   onClose();
                 }}
-                className={`w-full min-h-[46px] px-3 rounded-xl flex items-center justify-between gap-3 text-xs font-bold transition-all ${
+                className={`w-full min-h-[46px] px-3 rounded-xl flex items-center justify-between gap-3 text-xs font-bold transition-all cursor-pointer ${
                   isActive
                     ? 'bg-primary text-primary-ink shadow-sm'
                     : 'text-ink hover:bg-surface-alt'
@@ -143,12 +177,12 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 
         {/* Pie del Menú Lateral */}
         <div className="p-3 border-t border-border bg-surface-alt/50 space-y-2">
-          {/* Fila: Tema y Sede */}
+          {/* Fila: Tema y Sede Operativa */}
           <div className="grid grid-cols-2 gap-1.5">
             <button
               type="button"
               onClick={onToggleTheme}
-              className="min-h-[40px] px-2 rounded-xl bg-surface border border-border flex items-center justify-center gap-1.5 text-xs font-bold text-ink hover:bg-surface-alt transition-colors"
+              className="min-h-[40px] px-2 rounded-xl bg-surface border border-border flex items-center justify-center gap-1.5 text-xs font-bold text-ink hover:bg-surface-alt transition-colors cursor-pointer"
             >
               <Icon name={theme === 'dark' ? 'Sun' : 'Moon'} size={15} />
               <span>{theme === 'dark' ? 'Claro' : 'Oscuro'}</span>
@@ -157,7 +191,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
             <button
               type="button"
               onClick={onToggleSede}
-              className="min-h-[40px] px-2 rounded-xl bg-surface border border-border flex items-center justify-center gap-1.5 text-[11px] font-bold text-ink hover:bg-surface-alt transition-colors"
+              className="min-h-[40px] px-2 rounded-xl bg-surface border border-border flex items-center justify-center gap-1.5 text-[11px] font-bold text-ink hover:bg-surface-alt transition-colors cursor-pointer"
               title="Cambiar sede operativa activa"
             >
               <Icon name="MapPin" size={14} className="text-primary" />
@@ -172,7 +206,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               onInstallClick();
               onClose();
             }}
-            className="w-full min-h-[40px] px-3 rounded-xl bg-surface border border-border flex items-center justify-center gap-2 text-xs font-bold text-ink hover:bg-surface-alt transition-colors"
+            className="w-full min-h-[40px] px-3 rounded-xl bg-surface border border-border flex items-center justify-center gap-2 text-xs font-bold text-ink hover:bg-surface-alt transition-colors cursor-pointer"
           >
             <Icon name="Smartphone" size={15} />
             <span>Instalar Aplicación</span>
@@ -185,7 +219,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
               onLogout();
               onClose();
             }}
-            className="w-full min-h-[42px] px-3 rounded-xl bg-danger/10 border border-danger/20 flex items-center justify-center gap-2 text-xs font-bold text-danger hover:bg-danger/20 transition-colors"
+            className="w-full min-h-[42px] px-3 rounded-xl bg-danger/10 border border-danger/20 flex items-center justify-center gap-2 text-xs font-bold text-danger hover:bg-danger/20 transition-colors cursor-pointer"
           >
             <Icon name="LogOut" size={15} />
             <span>Cerrar Sesión</span>

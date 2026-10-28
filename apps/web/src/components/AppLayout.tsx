@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { canUserProcessPayments } from '@tocineta/shared';
 import { useAuth } from '../context/AuthContext.js';
 import { queryClient, ALLOWED_TABS_BY_ROLE, type TabType } from '../App.js';
 import { AppHeader } from './AppHeader.js';
 import { AppSidebar } from './AppSidebar.js';
 import { Modal, Button, Input, Field, Icon } from '../ui/index.js';
+
+/**
+ * TOCINETA — Layout principal con cabecera oficial y navegación por roles
+ */
 
 interface AppLayoutProps {
   currentTab: TabType;
@@ -14,22 +17,22 @@ interface AppLayoutProps {
   children: React.ReactNode;
 }
 
-const TAB_TITLES: Record<TabType, string> = {
+export const VIEW_TITLES: Record<TabType, string> = {
   home: 'Inicio',
-  pos: 'Tomar Pedido',
-  cashier: 'Caja y Cierre',
-  kds: 'Plancha y Cocina',
-  profitability: 'Inventario Rápido',
-  'menu-admin': 'Carta y Precios',
-  staff: 'Personal y Permisos',
-  health: 'Salud y Hardware',
-  emergency: 'Talonario de Contingencia',
-  'qr-menu': 'Menú Digital QR',
-  owner: 'Panel de la Dueña',
-  finances: 'Finanzas (Treinta)',
-  quotes: 'Cotizador de Eventos',
-  partners: 'Gestión de Socios',
-  settings: 'Configuración del Negocio'
+  pos: 'Tomar pedido',
+  cashier: 'Caja',
+  kds: 'Cocina',
+  profitability: 'Inventario',
+  'menu-admin': 'Carta',
+  staff: 'Personal',
+  health: 'Salud',
+  emergency: 'Contingencia',
+  'qr-menu': 'Menú QR',
+  owner: 'Panel dueña',
+  finances: 'Finanzas',
+  quotes: 'Cotizador',
+  partners: 'Socios',
+  settings: 'Ajustes'
 };
 
 export const AppLayout: React.FC<AppLayoutProps> = ({
@@ -44,6 +47,18 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [bcvModalMsg, setBcvModalMsg] = useState<string | null>(null);
   const [isSavingBcv, setIsSavingBcv] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isOnline, setIsOnline] = useState<boolean>(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
+
+  useEffect(() => {
+    const handleOnline = () => setIsOnline(true);
+    const handleOffline = () => setIsOnline(false);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+    return () => {
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 
   // 1. Tema Claro por defecto ('light') con persistencia por dispositivo
   const [theme, setTheme] = useState<'light' | 'dark'>(() => {
@@ -208,31 +223,21 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   const isAdmin = user?.role === 'admin' || user?.role === 'supervisor';
 
-  const { data: settingsData } = useQuery<{ isDemoMode?: boolean }>({
-    queryKey: ['businessSettings'],
-    queryFn: async () => {
-      const res = await fetch('/api/profitability/settings');
-      return res.json();
-    },
-    staleTime: 10000
-  });
+
 
   return (
     <div className="min-h-screen bg-surface-alt flex flex-col font-sans select-none transition-colors">
-      {/* Cabecera Oficial 56px */}
+      {/* Cabecera Oficial 56px (Estrictamente 4 elementos) */}
       <AppHeader
-        businessName="TOCINETA"
-        title={TAB_TITLES[currentTab] || 'Comandero'}
+        title={VIEW_TITLES[currentTab] || 'Inicio'}
         isAdmin={isAdmin}
-        isDemoMode={Boolean(settingsData?.isDemoMode)}
-        uiMode={uiMode}
-        onToggleUiMode={handleToggleUiMode}
         formattedRate={formattedRate}
         onOpenBcvModal={handleOpenBcvModal}
         onOpenMenu={() => setIsDrawerOpen(true)}
+        isOnline={isOnline}
       />
 
-      {/* Menú Lateral Desplegable */}
+      {/* Menú Lateral Desplegable (Incluye Logo, Sede y Básico/Pro) */}
       <AppSidebar
         isOpen={isDrawerOpen}
         onClose={() => setIsDrawerOpen(false)}
@@ -240,12 +245,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         onSelectTab={onTabChange}
         allowedTabs={allowedTabs}
         uiMode={uiMode}
+        onToggleUiMode={handleToggleUiMode}
+        isAdmin={isAdmin}
         theme={theme}
         onToggleTheme={handleToggleTheme}
         activeSede={activeSede}
         onToggleSede={handleToggleSede}
         onInstallClick={() => {
-          // Navegar a la pantalla de acceso e instalación
           window.location.hash = '#acceso';
         }}
         onLogout={handleLogout}

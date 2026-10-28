@@ -47,7 +47,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
 
   return (
     <div className="space-y-4">
-      {/* Barra Superior estilo Treinta */}
+      {/* Barra Superior de Métricas */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 bg-surface rounded-2xl border border-border shadow-xs">
         <div>
           <span className="text-xs font-bold text-ink-muted uppercase tracking-wider block">

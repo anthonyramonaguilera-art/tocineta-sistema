@@ -4,10 +4,10 @@
       "C:\\Program Files\\nodejs\\node.exe",
       "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\playwright\\cli.js",
       "test",
+      "-g",
+      "\\[B02\\]|\\[B03\\]|\\[B04\\]|\\[B06\\]|\\[B21\\]|\\[B25\\]",
       "-c",
-      "playwright.r2.config.ts",
-      "tools/r2-harness/specs/p1-a-captures.spec.ts",
-      "--project=movil-360x800"
+      "playwright.r2.config.ts"
     ],
     "configFile": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\playwright.r2.config.ts",
     "rootDir": "C:/Users/Shell/Documents/Varonsmedia/clientes/tocinetasonrie/SISTEMA/tools/r2-harness/specs",
@@ -92,6 +92,40 @@
         "dependencies": [],
         "ignoreSnapshots": false,
         "__projectId": "movil-360x800"
+      },
+      {
+        "grep": {},
+        "grepInvert": null,
+        "outputDir": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 1
+        },
+        "name": "escritorio-1280x800",
+        "testDir": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs",
+        "snapshotDir": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs",
+        "testIgnore": [],
+        "testMatch": "**/*.@(spec|test).?(c|m)[jt]s?(x)",
+        "timeout": 30000,
+        "use": {
+          "baseURL": "http://127.0.0.1:3100",
+          "trace": "on",
+          "video": "on",
+          "screenshot": "on",
+          "locale": "es-VE",
+          "timezoneId": "America/Caracas",
+          "browserName": "chromium",
+          "viewport": {
+            "width": 1280,
+            "height": 800
+          },
+          "hasTouch": false,
+          "isMobile": false
+        },
+        "dependencies": [],
+        "ignoreSnapshots": false,
+        "__projectId": "escritorio-1280x800"
       }
     ],
     "quiet": false,
@@ -139,20 +173,20 @@
   },
   "suites": [
     {
-      "title": "p1-a-captures.spec.ts",
-      "file": "p1-a-captures.spec.ts",
+      "title": "r2-defects.spec.ts",
+      "file": "r2-defects.spec.ts",
       "column": 0,
       "line": 0,
       "specs": [],
       "suites": [
         {
-          "title": "P1-A Capturas Visuales a 360px",
-          "file": "p1-a-captures.spec.ts",
-          "line": 8,
+          "title": "Ronda 2 — 30 Defectos en ROJO (P0-B Harness)",
+          "file": "r2-defects.spec.ts",
+          "line": 15,
           "column": 6,
           "specs": [
             {
-              "title": "01 KDS 360px",
+              "title": "[B02] En viewport móvil 360x800 el título de la cabecera no se trunca ni desborda",
               "ok": true,
               "tags": [],
               "tests": [
@@ -167,28 +201,28 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4069,
+                      "duration": 2566,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T00:02:27.501Z",
+                      "startTime": "2026-10-28T00:58:27.198Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Capturas-Visuales-a-360px-01-KDS-360px-movil-360x800\\test-finished-1.png"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-bd9e2-ra-no-se-trunca-ni-desborda-movil-360x800\\test-finished-1.png"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Capturas-Visuales-a-360px-01-KDS-360px-movil-360x800\\video.webm"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-bd9e2-ra-no-se-trunca-ni-desborda-movil-360x800\\video.webm"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Capturas-Visuales-a-360px-01-KDS-360px-movil-360x800\\trace.zip"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-bd9e2-ra-no-se-trunca-ni-desborda-movil-360x800\\trace.zip"
                         }
                       ]
                     }
@@ -196,13 +230,13 @@
                   "status": "expected"
                 }
               ],
-              "id": "814564f58d76324f7be3-6689a5222ea144961535",
-              "file": "p1-a-captures.spec.ts",
-              "line": 15,
+              "id": "63668c65b43239daec34-74f8d58409df75b5e361",
+              "file": "r2-defects.spec.ts",
+              "line": 43,
               "column": 3
             },
             {
-              "title": "02 Caja Cobro 360px",
+              "title": "[B03] Contraste suficiente WCAG AA en modo claro y oscuro",
               "ok": true,
               "tags": [],
               "tests": [
@@ -217,28 +251,33 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3489,
+                      "duration": 4829,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T00:02:32.128Z",
+                      "startTime": "2026-10-28T00:58:30.159Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-e1edc-a-360px-02-Caja-Cobro-360px-movil-360x800\\test-finished-1.png"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-0af30-G-AA-en-modo-claro-y-oscuro-movil-360x800\\test-finished-1.png"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-e1edc-a-360px-02-Caja-Cobro-360px-movil-360x800\\video.webm"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-0af30-G-AA-en-modo-claro-y-oscuro-movil-360x800\\video.webm"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-0af30-G-AA-en-modo-claro-y-oscuro-movil-360x800\\video-1.webm"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-e1edc-a-360px-02-Caja-Cobro-360px-movil-360x800\\trace.zip"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-0af30-G-AA-en-modo-claro-y-oscuro-movil-360x800\\trace.zip"
                         }
                       ]
                     }
@@ -246,164 +285,14 @@
                   "status": "expected"
                 }
               ],
-              "id": "814564f58d76324f7be3-7d7509d5d06622bd34e4",
-              "file": "p1-a-captures.spec.ts",
-              "line": 22,
-              "column": 3
-            },
-            {
-              "title": "03 Caja Ventas del dia 360px",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "movil-360x800",
-                  "projectName": "movil-360x800",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 3363,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-10-28T00:02:35.823Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-66680-3-Caja-Ventas-del-dia-360px-movil-360x800\\test-finished-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-66680-3-Caja-Ventas-del-dia-360px-movil-360x800\\video.webm"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-66680-3-Caja-Ventas-del-dia-360px-movil-360x800\\trace.zip"
-                        }
-                      ]
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "814564f58d76324f7be3-52bace166274898a7179",
-              "file": "p1-a-captures.spec.ts",
-              "line": 34,
-              "column": 3
-            },
-            {
-              "title": "04 Caja Cierre 360px",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "movil-360x800",
-                  "projectName": "movil-360x800",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 3175,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-10-28T00:02:39.396Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-b5c3f--360px-04-Caja-Cierre-360px-movil-360x800\\test-finished-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-b5c3f--360px-04-Caja-Cierre-360px-movil-360x800\\video.webm"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-b5c3f--360px-04-Caja-Cierre-360px-movil-360x800\\trace.zip"
-                        }
-                      ]
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "814564f58d76324f7be3-e4fbcd51abda27f1a4bd",
-              "file": "p1-a-captures.spec.ts",
-              "line": 46,
-              "column": 3
-            },
-            {
-              "title": "05 Inventario 360px",
-              "ok": true,
-              "tags": [],
-              "tests": [
-                {
-                  "timeout": 30000,
-                  "annotations": [],
-                  "expectedStatus": "passed",
-                  "projectId": "movil-360x800",
-                  "projectName": "movil-360x800",
-                  "results": [
-                    {
-                      "workerIndex": 0,
-                      "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 3387,
-                      "errors": [],
-                      "stdout": [],
-                      "stderr": [],
-                      "retry": 0,
-                      "startTime": "2026-10-28T00:02:42.784Z",
-                      "annotations": [],
-                      "attachments": [
-                        {
-                          "name": "screenshot",
-                          "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-6c16a-a-360px-05-Inventario-360px-movil-360x800\\test-finished-1.png"
-                        },
-                        {
-                          "name": "video",
-                          "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-6c16a-a-360px-05-Inventario-360px-movil-360x800\\video.webm"
-                        },
-                        {
-                          "name": "trace",
-                          "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-6c16a-a-360px-05-Inventario-360px-movil-360x800\\trace.zip"
-                        }
-                      ]
-                    }
-                  ],
-                  "status": "expected"
-                }
-              ],
-              "id": "814564f58d76324f7be3-59d3084cf91fd730fda8",
-              "file": "p1-a-captures.spec.ts",
+              "id": "63668c65b43239daec34-0217e73ca1909ef6c272",
+              "file": "r2-defects.spec.ts",
               "line": 58,
               "column": 3
             },
             {
-              "title": "06 Finanzas 360px",
-              "ok": true,
+              "title": "[B04] Personal y Carta no muestran \"Cargando…\" infinito pasados 8 segundos",
+              "ok": false,
               "tags": [],
               "tests": [
                 {
@@ -416,43 +305,72 @@
                     {
                       "workerIndex": 0,
                       "parallelIndex": 0,
-                      "status": "passed",
-                      "duration": 2556,
-                      "errors": [],
+                      "status": "failed",
+                      "duration": 4803,
+                      "error": {
+                        "message": "Error: La vista de carta queda atrapada en \"Cargando…\" infinito sin estado de error ni reintento\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: La vista de carta queda atrapada en \"Cargando…\" infinito sin estado de error ni reintento\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:83:150",
+                        "location": {
+                          "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                          "column": 150,
+                          "line": 83
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 81 |\u001b[39m     \u001b[36mconst\u001b[39m isInfiniteLoading \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m loadingText\u001b[33m.\u001b[39mcount() \u001b[33m>\u001b[39m \u001b[35m0\u001b[39m \u001b[33m&&\u001b[39m \u001b[36mawait\u001b[39m loadingText\u001b[33m.\u001b[39mfirst()\u001b[33m.\u001b[39misVisible()\u001b[33m.\u001b[39m\u001b[36mcatch\u001b[39m(() \u001b[33m=>\u001b[39m \u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 83 |\u001b[39m     expect(isShowingErrorOrRetry \u001b[33m&&\u001b[39m \u001b[33m!\u001b[39misInfiniteLoading\u001b[33m,\u001b[39m \u001b[32m'La vista de carta queda atrapada en \"Cargando…\" infinito sin estado de error ni reintento'\u001b[39m)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                                                                                                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 84 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 85 |\u001b[39m\n \u001b[90m 86 |\u001b[39m   test(\u001b[32m'[B05] Tomar pedido permite flujo rápido sin mesa obligatoria y cobro accesible sin scroll excesivo'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                            "column": 150,
+                            "line": 83
+                          },
+                          "message": "Error: La vista de carta queda atrapada en \"Cargando…\" infinito sin estado de error ni reintento\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  81 |     const isInfiniteLoading = await loadingText.count() > 0 && await loadingText.first().isVisible().catch(() => false);\n  82 |\n> 83 |     expect(isShowingErrorOrRetry && !isInfiniteLoading, 'La vista de carta queda atrapada en \"Cargando…\" infinito sin estado de error ni reintento').toBe(true);\n     |                                                                                                                                                      ^\n  84 |   });\n  85 |\n  86 |   test('[B05] Tomar pedido permite flujo rápido sin mesa obligatoria y cobro accesible sin scroll excesivo', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:83:150"
+                        }
+                      ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T00:02:46.325Z",
+                      "startTime": "2026-10-28T00:58:35.675Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-4b787-s-a-360px-06-Finanzas-360px-movil-360x800\\test-finished-1.png"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-fe0ba-infinito-pasados-8-segundos-movil-360x800\\test-failed-1.png"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-4b787-s-a-360px-06-Finanzas-360px-movil-360x800\\video.webm"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-fe0ba-infinito-pasados-8-segundos-movil-360x800\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-fe0ba-infinito-pasados-8-segundos-movil-360x800\\error-context.md"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-4b787-s-a-360px-06-Finanzas-360px-movil-360x800\\trace.zip"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-fe0ba-infinito-pasados-8-segundos-movil-360x800\\trace.zip"
                         }
-                      ]
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                        "column": 150,
+                        "line": 83
+                      }
                     }
                   ],
-                  "status": "expected"
+                  "status": "unexpected"
                 }
               ],
-              "id": "814564f58d76324f7be3-7c9e6c5cfdc704c4e09e",
-              "file": "p1-a-captures.spec.ts",
-              "line": 70,
+              "id": "63668c65b43239daec34-fe63206c9a2316d0da01",
+              "file": "r2-defects.spec.ts",
+              "line": 73,
               "column": 3
             },
             {
-              "title": "07 Sidebar Menu 360px",
+              "title": "[B06] No existe en la interfaz el texto redundante \"Mesa Mesa\"",
               "ok": true,
               "tags": [],
               "tests": [
@@ -464,31 +382,31 @@
                   "projectName": "movil-360x800",
                   "results": [
                     {
-                      "workerIndex": 0,
+                      "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3552,
+                      "duration": 2573,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T00:02:49.031Z",
+                      "startTime": "2026-10-28T00:58:42.047Z",
                       "annotations": [],
                       "attachments": [
                         {
                           "name": "screenshot",
                           "contentType": "image/png",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-b0c43-360px-07-Sidebar-Menu-360px-movil-360x800\\test-finished-1.png"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-60f78-texto-redundante-Mesa-Mesa--movil-360x800\\test-finished-1.png"
                         },
                         {
                           "name": "video",
                           "contentType": "video/webm",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-b0c43-360px-07-Sidebar-Menu-360px-movil-360x800\\video.webm"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-60f78-texto-redundante-Mesa-Mesa--movil-360x800\\video.webm"
                         },
                         {
                           "name": "trace",
                           "contentType": "application/zip",
-                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\p1-a-captures-P1-A-Captura-b0c43-360px-07-Sidebar-Menu-360px-movil-360x800\\trace.zip"
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-60f78-texto-redundante-Mesa-Mesa--movil-360x800\\trace.zip"
                         }
                       ]
                     }
@@ -496,9 +414,443 @@
                   "status": "expected"
                 }
               ],
-              "id": "814564f58d76324f7be3-2479cb171c419f0e55ca",
-              "file": "p1-a-captures.spec.ts",
-              "line": 77,
+              "id": "63668c65b43239daec34-a27ce0ec81916bb078f6",
+              "file": "r2-defects.spec.ts",
+              "line": 104,
+              "column": 3
+            },
+            {
+              "title": "[B21] Ninguna vista de la interfaz contiene la palabra \"Treinta\"",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "movil-360x800",
+                  "projectName": "movil-360x800",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1957,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T00:58:45.214Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-c4a84-ontiene-la-palabra-Treinta--movil-360x800\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-c4a84-ontiene-la-palabra-Treinta--movil-360x800\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-c4a84-ontiene-la-palabra-Treinta--movil-360x800\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "63668c65b43239daec34-82844fead0cc4bfd53eb",
+              "file": "r2-defects.spec.ts",
+              "line": 399,
+              "column": 3
+            },
+            {
+              "title": "[B25] Botón \"Siguiente\" en asistentes no se deshabilita sin validación visible y contenido no queda tapado por el pie",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "movil-360x800",
+                  "projectName": "movil-360x800",
+                  "results": [
+                    {
+                      "workerIndex": 1,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1926,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T00:58:47.296Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b5e04--no-queda-tapado-por-el-pie-movil-360x800\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b5e04--no-queda-tapado-por-el-pie-movil-360x800\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b5e04--no-queda-tapado-por-el-pie-movil-360x800\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "63668c65b43239daec34-a3b35d051dd10725ac52",
+              "file": "r2-defects.spec.ts",
+              "line": 460,
+              "column": 3
+            },
+            {
+              "title": "[B02] En viewport móvil 360x800 el título de la cabecera no se trunca ni desborda",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "escritorio-1280x800",
+                  "projectName": "escritorio-1280x800",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 2397,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T00:58:50.694Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-bd9e2-ra-no-se-trunca-ni-desborda-escritorio-1280x800\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-bd9e2-ra-no-se-trunca-ni-desborda-escritorio-1280x800\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-bd9e2-ra-no-se-trunca-ni-desborda-escritorio-1280x800\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "63668c65b43239daec34-ef11acfc13b6702c61bf",
+              "file": "r2-defects.spec.ts",
+              "line": 43,
+              "column": 3
+            },
+            {
+              "title": "[B03] Contraste suficiente WCAG AA en modo claro y oscuro",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "escritorio-1280x800",
+                  "projectName": "escritorio-1280x800",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 5643,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T00:58:53.410Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-0af30-G-AA-en-modo-claro-y-oscuro-escritorio-1280x800\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-0af30-G-AA-en-modo-claro-y-oscuro-escritorio-1280x800\\video-1.webm"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-0af30-G-AA-en-modo-claro-y-oscuro-escritorio-1280x800\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-0af30-G-AA-en-modo-claro-y-oscuro-escritorio-1280x800\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "63668c65b43239daec34-16ae74f497c202cc6bbf",
+              "file": "r2-defects.spec.ts",
+              "line": 58,
+              "column": 3
+            },
+            {
+              "title": "[B04] Personal y Carta no muestran \"Cargando…\" infinito pasados 8 segundos",
+              "ok": false,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "escritorio-1280x800",
+                  "projectName": "escritorio-1280x800",
+                  "results": [
+                    {
+                      "workerIndex": 2,
+                      "parallelIndex": 0,
+                      "status": "failed",
+                      "duration": 5004,
+                      "error": {
+                        "message": "Error: La vista de carta queda atrapada en \"Cargando…\" infinito sin estado de error ni reintento\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
+                        "stack": "Error: La vista de carta queda atrapada en \"Cargando…\" infinito sin estado de error ni reintento\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:83:150",
+                        "location": {
+                          "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                          "column": 150,
+                          "line": 83
+                        },
+                        "snippet": "\u001b[0m \u001b[90m 81 |\u001b[39m     \u001b[36mconst\u001b[39m isInfiniteLoading \u001b[33m=\u001b[39m \u001b[36mawait\u001b[39m loadingText\u001b[33m.\u001b[39mcount() \u001b[33m>\u001b[39m \u001b[35m0\u001b[39m \u001b[33m&&\u001b[39m \u001b[36mawait\u001b[39m loadingText\u001b[33m.\u001b[39mfirst()\u001b[33m.\u001b[39misVisible()\u001b[33m.\u001b[39m\u001b[36mcatch\u001b[39m(() \u001b[33m=>\u001b[39m \u001b[36mfalse\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m 82 |\u001b[39m\n\u001b[31m\u001b[1m>\u001b[22m\u001b[39m\u001b[90m 83 |\u001b[39m     expect(isShowingErrorOrRetry \u001b[33m&&\u001b[39m \u001b[33m!\u001b[39misInfiniteLoading\u001b[33m,\u001b[39m \u001b[32m'La vista de carta queda atrapada en \"Cargando…\" infinito sin estado de error ni reintento'\u001b[39m)\u001b[33m.\u001b[39mtoBe(\u001b[36mtrue\u001b[39m)\u001b[33m;\u001b[39m\n \u001b[90m    |\u001b[39m                                                                                                                                                      \u001b[31m\u001b[1m^\u001b[22m\u001b[39m\n \u001b[90m 84 |\u001b[39m   })\u001b[33m;\u001b[39m\n \u001b[90m 85 |\u001b[39m\n \u001b[90m 86 |\u001b[39m   test(\u001b[32m'[B05] Tomar pedido permite flujo rápido sin mesa obligatoria y cobro accesible sin scroll excesivo'\u001b[39m\u001b[33m,\u001b[39m \u001b[36masync\u001b[39m ({ page }) \u001b[33m=>\u001b[39m {\u001b[0m"
+                      },
+                      "errors": [
+                        {
+                          "location": {
+                            "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                            "column": 150,
+                            "line": 83
+                          },
+                          "message": "Error: La vista de carta queda atrapada en \"Cargando…\" infinito sin estado de error ni reintento\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n\n  81 |     const isInfiniteLoading = await loadingText.count() > 0 && await loadingText.first().isVisible().catch(() => false);\n  82 |\n> 83 |     expect(isShowingErrorOrRetry && !isInfiniteLoading, 'La vista de carta queda atrapada en \"Cargando…\" infinito sin estado de error ni reintento').toBe(true);\n     |                                                                                                                                                      ^\n  84 |   });\n  85 |\n  86 |   test('[B05] Tomar pedido permite flujo rápido sin mesa obligatoria y cobro accesible sin scroll excesivo', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:83:150"
+                        }
+                      ],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T00:58:59.683Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-fe0ba-infinito-pasados-8-segundos-escritorio-1280x800\\test-failed-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-fe0ba-infinito-pasados-8-segundos-escritorio-1280x800\\video.webm"
+                        },
+                        {
+                          "name": "error-context",
+                          "contentType": "text/markdown",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-fe0ba-infinito-pasados-8-segundos-escritorio-1280x800\\error-context.md"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-fe0ba-infinito-pasados-8-segundos-escritorio-1280x800\\trace.zip"
+                        }
+                      ],
+                      "errorLocation": {
+                        "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
+                        "column": 150,
+                        "line": 83
+                      }
+                    }
+                  ],
+                  "status": "unexpected"
+                }
+              ],
+              "id": "63668c65b43239daec34-e04b72399d3439599ccd",
+              "file": "r2-defects.spec.ts",
+              "line": 73,
+              "column": 3
+            },
+            {
+              "title": "[B06] No existe en la interfaz el texto redundante \"Mesa Mesa\"",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "escritorio-1280x800",
+                  "projectName": "escritorio-1280x800",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 3092,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T00:59:06.144Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-60f78-texto-redundante-Mesa-Mesa--escritorio-1280x800\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-60f78-texto-redundante-Mesa-Mesa--escritorio-1280x800\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-60f78-texto-redundante-Mesa-Mesa--escritorio-1280x800\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "63668c65b43239daec34-15adf17e1eb98a62b76e",
+              "file": "r2-defects.spec.ts",
+              "line": 104,
+              "column": 3
+            },
+            {
+              "title": "[B21] Ninguna vista de la interfaz contiene la palabra \"Treinta\"",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "escritorio-1280x800",
+                  "projectName": "escritorio-1280x800",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1914,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T00:59:09.647Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-c4a84-ontiene-la-palabra-Treinta--escritorio-1280x800\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-c4a84-ontiene-la-palabra-Treinta--escritorio-1280x800\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-c4a84-ontiene-la-palabra-Treinta--escritorio-1280x800\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "63668c65b43239daec34-d25f6be00424e7c707af",
+              "file": "r2-defects.spec.ts",
+              "line": 399,
+              "column": 3
+            },
+            {
+              "title": "[B25] Botón \"Siguiente\" en asistentes no se deshabilita sin validación visible y contenido no queda tapado por el pie",
+              "ok": true,
+              "tags": [],
+              "tests": [
+                {
+                  "timeout": 30000,
+                  "annotations": [],
+                  "expectedStatus": "passed",
+                  "projectId": "escritorio-1280x800",
+                  "projectName": "escritorio-1280x800",
+                  "results": [
+                    {
+                      "workerIndex": 3,
+                      "parallelIndex": 0,
+                      "status": "passed",
+                      "duration": 1863,
+                      "errors": [],
+                      "stdout": [],
+                      "stderr": [],
+                      "retry": 0,
+                      "startTime": "2026-10-28T00:59:11.734Z",
+                      "annotations": [],
+                      "attachments": [
+                        {
+                          "name": "screenshot",
+                          "contentType": "image/png",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b5e04--no-queda-tapado-por-el-pie-escritorio-1280x800\\test-finished-1.png"
+                        },
+                        {
+                          "name": "video",
+                          "contentType": "video/webm",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b5e04--no-queda-tapado-por-el-pie-escritorio-1280x800\\video.webm"
+                        },
+                        {
+                          "name": "trace",
+                          "contentType": "application/zip",
+                          "path": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\docs\\r2\\evidencia\\artifacts\\r2-defects-Ronda-2-—-30-De-b5e04--no-queda-tapado-por-el-pie-escritorio-1280x800\\trace.zip"
+                        }
+                      ]
+                    }
+                  ],
+                  "status": "expected"
+                }
+              ],
+              "id": "63668c65b43239daec34-00db882176b6d0df8a87",
+              "file": "r2-defects.spec.ts",
+              "line": 460,
               "column": 3
             }
           ]
@@ -508,11 +860,11 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-28T00:02:18.724Z",
-    "duration": 34940.807,
-    "expected": 7,
+    "startTime": "2026-10-28T00:58:17.778Z",
+    "duration": 56515.770000000004,
+    "expected": 10,
     "skipped": 0,
-    "unexpected": 0,
+    "unexpected": 2,
     "flaky": 0
   }
 }

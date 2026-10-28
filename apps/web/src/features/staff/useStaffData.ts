@@ -13,35 +13,39 @@ export function useStaffData() {
 
   // 1. Lista de personal
   const staffQuery = useQuery<StaffUser[]>({
-    queryKey: ['staffList'],
+    queryKey: ['staffList', token],
     queryFn: async () => {
       const res = await fetch('/api/admin/users', { headers });
       if (!res.ok) throw new Error('Error al cargar la lista de personal');
       const data = await res.json();
       return data.users || data.staff || [];
-    }
+    },
+    enabled: Boolean(token),
+    retry: 1
   });
 
   // 2. Configuración de nómina
   const payrollSettingsQuery = useQuery<PayrollSettings>({
-    queryKey: ['payrollSettings'],
+    queryKey: ['payrollSettings', token],
     queryFn: async () => {
       const res = await fetch('/api/staff/payroll/settings', { headers });
       if (!res.ok) throw new Error('Error al cargar ajustes de nómina');
       const data = await res.json();
       return data.settings;
-    }
+    },
+    enabled: Boolean(token)
   });
 
   // 3. Pool de propinas abierto
   const tipPoolQuery = useQuery<TipPool>({
-    queryKey: ['tipPoolOpen'],
+    queryKey: ['tipPoolOpen', token],
     queryFn: async () => {
       const res = await fetch('/api/staff/tips/pool?locationId=loc_alta_vista', { headers });
       if (!res.ok) throw new Error('Error al cargar pool de propinas');
       const data = await res.json();
       return data.pool;
-    }
+    },
+    enabled: Boolean(token)
   });
 
   // Mutaciones
@@ -191,6 +195,9 @@ export function useStaffData() {
   return {
     staffList: staffQuery.data || [],
     isLoadingStaff: staffQuery.isLoading,
+    isErrorStaff: staffQuery.isError,
+    errorStaff: staffQuery.error,
+    refetchStaff: staffQuery.refetch,
     payrollSettings: payrollSettingsQuery.data,
     tipPool: tipPoolQuery.data,
     createEmployeeMutation,

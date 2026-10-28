@@ -57,8 +57,8 @@ export const SystemHealthDashboard: React.FC = () => {
   if (isLoading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-3">
-        <RefreshCw className="w-8 h-8 text-tocineta-yellow animate-spin" />
-        <p className="text-sm font-semibold text-tocineta-muted">
+        <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+        <p className="text-sm font-semibold text-ink-muted">
           Conectando al sistema local del Food Truck...
         </p>
       </div>
@@ -67,17 +67,17 @@ export const SystemHealthDashboard: React.FC = () => {
 
   if (error || !data) {
     return (
-      <div className="max-w-2xl mx-auto my-12 p-6 bg-tocineta-card border border-tocineta-red/40 rounded-xl text-center space-y-4">
-        <AlertTriangle className="w-12 h-12 text-tocineta-red mx-auto" />
-        <h2 className="text-lg font-bold text-white uppercase">
+      <div className="max-w-2xl mx-auto my-12 p-6 bg-surface border border-danger/40 rounded-2xl text-center space-y-4 shadow-xs">
+        <AlertTriangle className="w-12 h-12 text-danger mx-auto" />
+        <h2 className="text-lg font-black text-ink uppercase">
           Error de Conexión con el Sistema Local
         </h2>
-        <p className="text-sm text-tocineta-muted">
+        <p className="text-sm text-ink-muted">
           {(error as Error)?.message || 'No se pudo obtener el estado del sistema.'}
         </p>
         <button
           onClick={() => refetch()}
-          className="inline-flex items-center gap-2 bg-tocineta-yellow text-black font-bold px-4 py-2 rounded-lg text-xs uppercase hover:bg-tocineta-yellow-hover transition-colors"
+          className="inline-flex items-center gap-2 bg-primary text-primary-ink font-bold px-4 py-2 rounded-xl text-xs uppercase hover:opacity-90 transition-opacity cursor-pointer"
         >
           <RefreshCw className="w-4 h-4" />
           Reintentar Conexión
@@ -104,30 +104,30 @@ export const SystemHealthDashboard: React.FC = () => {
         <div
           className={`p-3 rounded-xl border text-xs font-bold flex items-center justify-between ${
             backupStatus.type === 'success'
-              ? 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300'
-              : 'bg-red-500/20 border-red-500/50 text-red-300'
+              ? 'bg-success-subtle border-success/30 text-success'
+              : 'bg-danger-subtle border-danger/30 text-danger'
           }`}
         >
           <span>{backupStatus.text}</span>
-          <button onClick={() => setBackupStatus(null)} className="text-sm font-black ml-2 hover:text-white">✕</button>
+          <button onClick={() => setBackupStatus(null)} className="text-sm font-black ml-2 hover:opacity-80">✕</button>
         </div>
       )}
 
       {/* Banner Principal de Estado de Producción */}
-      <div className="bg-gradient-to-r from-tocineta-card via-[#1A1F2B] to-tocineta-card border border-tocineta-border rounded-2xl p-6 relative overflow-hidden shadow-2xl">
+      <div className="bg-surface border border-border rounded-2xl p-6 shadow-xs">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="w-2.5 h-2.5 rounded-full bg-tocineta-green animate-ping" />
-              <span className="text-xs font-bold text-tocineta-green tracking-wider uppercase">
+              <span className="w-2.5 h-2.5 rounded-full bg-success animate-ping" />
+              <span className="text-xs font-bold text-success tracking-wider uppercase">
                 Sistema Conectado al Food Truck
               </span>
             </div>
-            <h2 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-              <Printer className="w-6 h-6 text-tocineta-yellow" />
+            <h2 className="text-2xl font-black text-ink uppercase tracking-tight flex items-center gap-2">
+              <Printer className="w-6 h-6 text-primary" />
               <span>Impresoras y Respaldos</span>
             </h2>
-            <p className="text-xs text-tocineta-muted max-w-xl">
+            <p className="text-xs text-ink-muted max-w-xl">
               Estado de impresoras térmicas, copias de seguridad de las ventas y base de datos local blindada.
             </p>
           </div>
@@ -136,7 +136,7 @@ export const SystemHealthDashboard: React.FC = () => {
             <button
               onClick={handleExportEncrypted}
               disabled={isExporting}
-              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-black font-black px-4 py-2.5 rounded-xl text-xs uppercase transition-all shadow disabled:opacity-50 cursor-pointer"
+              className="inline-flex items-center gap-2 bg-primary text-primary-ink font-black px-4 py-2.5 rounded-xl text-xs uppercase transition-all shadow-xs disabled:opacity-50 cursor-pointer hover:opacity-90"
             >
               <ShieldCheck className="w-4 h-4" />
               <span>{isExporting ? 'Cifrando...' : 'Exportar Respaldo Cifrado'}</span>
@@ -144,9 +144,9 @@ export const SystemHealthDashboard: React.FC = () => {
             <button
               onClick={() => refetch()}
               disabled={isFetching}
-              className="inline-flex items-center gap-2 bg-[#0B0D11] border border-tocineta-border hover:border-tocineta-yellow text-white font-bold px-4 py-2.5 rounded-xl text-xs uppercase transition-all shadow"
+              className="inline-flex items-center gap-2 bg-surface-alt border border-border hover:border-primary text-ink font-bold px-4 py-2.5 rounded-xl text-xs uppercase transition-all shadow-xs cursor-pointer"
             >
-              <RefreshCw className={`w-3.5 h-3.5 text-tocineta-yellow ${isFetching ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-3.5 h-3.5 text-primary ${isFetching ? 'animate-spin' : ''}`} />
               <span>{isFetching ? 'Actualizando...' : 'Refrescar'}</span>
             </button>
           </div>
@@ -202,13 +202,13 @@ export const SystemHealthDashboard: React.FC = () => {
             variant: 'yellow'
           }}
         >
-          <div className="p-3 bg-[#0B0D11] rounded-lg border border-tocineta-border text-xs space-y-1.5 mb-2">
-            <span className="text-[11px] font-bold text-tocineta-yellow uppercase flex items-center gap-1.5">
-              <Camera className="w-3.5 h-3.5" />
+          <div className="p-3 bg-surface-alt rounded-xl border border-border text-xs space-y-1.5 mb-2">
+            <span className="text-[11px] font-black text-ink uppercase flex items-center gap-1.5">
+              <Camera className="w-3.5 h-3.5 text-primary" />
               Snapshot de Migración Automático
             </span>
-            <p className="text-tocineta-muted text-[11px] leading-relaxed">
-              Antes de aplicar cada migración, se genera una copia física íntegra con <code className="text-white">better-sqlite3 .backup()</code> en <code className="text-white">./data/snapshots/</code>.
+            <p className="text-ink-muted text-[11px] leading-relaxed">
+              Antes de aplicar cada migración, se genera una copia física íntegra con <code className="text-ink font-mono font-bold">better-sqlite3 .backup()</code> en <code className="text-ink font-mono font-bold">./data/snapshots/</code>.
             </p>
           </div>
 
@@ -244,13 +244,13 @@ export const SystemHealthDashboard: React.FC = () => {
           }}
         >
           <div className="space-y-1.5 pb-2">
-            <div className="flex justify-between text-xs text-tocineta-muted">
+            <div className="flex justify-between text-xs text-ink-muted">
               <span>Espacio Libre en SSD:</span>
-              <span className="font-mono text-white font-bold">{system.disk.freeFormatted} / {system.disk.totalFormatted}</span>
+              <span className="font-mono text-ink font-bold">{system.disk.freeFormatted} / {system.disk.totalFormatted}</span>
             </div>
-            <div className="w-full h-2 bg-[#0B0D11] rounded-full overflow-hidden border border-tocineta-border">
+            <div className="w-full h-2 bg-surface-alt rounded-full overflow-hidden border border-border">
               <div
-                className="h-full bg-tocineta-yellow transition-all duration-500"
+                className="h-full bg-primary transition-all duration-500"
                 style={{ width: `${Math.max(5, 100 - system.disk.percentFree)}%` }}
               />
             </div>

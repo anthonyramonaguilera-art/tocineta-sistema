@@ -220,7 +220,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
           onClick={() => onNavigate('finances')}
           leftIcon={<Icon name="CircleDollarSign" size={15} />}
         >
-          Finanzas (Treinta)
+          Finanzas
         </Button>
         <Button
           variant="secondary"

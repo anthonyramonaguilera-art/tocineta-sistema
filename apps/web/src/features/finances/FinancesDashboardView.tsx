@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
-import { Button, Badge, Icon, Select } from '../../ui/index.js';
+import { Button, Icon, Select } from '../../ui/index.js';
 import { useFinancesQueries } from './useFinancesQueries.js';
 import { OwnerNumbersConfigModal } from './OwnerNumbersConfigModal.js';
 import { ExpenseModal } from './ExpenseModal.js';
@@ -95,9 +95,6 @@ export const FinancesDashboardView: React.FC = () => {
             <span className="font-black text-xl tracking-tight text-ink uppercase">
               Finanzas TOCINETA
             </span>
-            <Badge variant="neutral" className="text-[10px] font-bold">
-              ESTILO TREINTA
-            </Badge>
           </div>
           <p className="text-xs text-ink-muted">
             Panel financiero integral: ventas, gastos, cobranza, pagos a proveedores y rentabilidad neta real.
@@ -175,7 +172,7 @@ export const FinancesDashboardView: React.FC = () => {
         </div>
       </div>
 
-      {/* 3. Acciones Grandes Treinta (1 Toque) */}
+      {/* 3. Acciones Rápidas (1 Toque) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Button
           variant="primary"

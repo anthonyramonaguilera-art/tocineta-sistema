@@ -5,6 +5,7 @@ import { Button } from '../../ui/Button.js';
 import { Card } from '../../ui/Card.js';
 import { Badge } from '../../ui/Badge.js';
 import { Icon } from '../../ui/Icon.js';
+import { LoadBoundary } from '../../ui/LoadBoundary.js';
 import { useStaffData } from './useStaffData.js';
 import { EmployeeModal } from './EmployeeModal.js';
 import { PermissionsModal } from './PermissionsModal.js';
@@ -19,6 +20,9 @@ export const StaffManagementView: React.FC = () => {
   const {
     staffList,
     isLoadingStaff,
+    isErrorStaff,
+    errorStaff,
+    refetchStaff,
     payrollSettings,
     tipPool,
     createEmployeeMutation,
@@ -86,7 +90,7 @@ export const StaffManagementView: React.FC = () => {
           <Icon name="Users" size={18} />
           <span>Personal y Permisos</span>
           <Badge variant="neutral" className="text-xs">
-            {staffList.length}
+            {isLoadingStaff ? '...' : staffList.length}
           </Badge>
         </button>
 
@@ -137,9 +141,17 @@ export const StaffManagementView: React.FC = () => {
             </Button>
           </div>
 
-          {isLoadingStaff ? (
-            <div className="py-12 text-center text-ink-muted font-bold">Cargando personal...</div>
-          ) : (
+          <LoadBoundary
+            isLoading={isLoadingStaff}
+            isError={isErrorStaff}
+            error={errorStaff}
+            isEmpty={staffList.length === 0}
+            loadingMessage="Cargando personal..."
+            emptyMessage="No hay empleados registrados"
+            emptyDescription="Presiona 'Nuevo Empleado' para agregar miembros al equipo TOCINETA."
+            emptyIcon="Users"
+            onRetry={() => refetchStaff()}
+          >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {staffList.map((worker) => {
                 const isOnlineSelf = activeUser?.id === worker.id;
@@ -224,7 +236,7 @@ export const StaffManagementView: React.FC = () => {
                 );
               })}
             </div>
-          )}
+          </LoadBoundary>
         </div>
       )}
 

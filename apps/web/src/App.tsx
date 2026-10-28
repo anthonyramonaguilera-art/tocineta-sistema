@@ -7,6 +7,7 @@ import { AuthScreen } from './components/AuthScreen.js';
 import { AppLayout } from './components/AppLayout.js';
 import { PosView } from './components/PosView.js';
 import { ViewErrorBoundary } from './components/ViewErrorBoundary.js';
+import { Icon, Button, useLoadState } from './ui/index.js';
 
 // Vistas Lazy
 const CashierView = React.lazy(() => import('./features/cashier/CashierView.js').then(m => ({ default: m.CashierView })));
@@ -47,14 +48,39 @@ export const DEFAULT_TAB_BY_ROLE: Record<string, TabType> = {
 
 export { canUserProcessPayments };
 
-const ViewLoadingFallback: React.FC = () => (
-  <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
-    <RefreshCw className="w-7 h-7 text-primary animate-spin" />
-    <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
-      Cargando módulo...
-    </span>
-  </div>
-);
+const ViewLoadingFallback: React.FC = () => {
+  const { isError, errorMessage } = useLoadState({
+    isLoading: true,
+    timeoutMs: 8000
+  });
+
+  if (isError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3 text-center p-6 bg-surface border border-danger/40 rounded-2xl max-w-md mx-auto my-12 shadow-sm">
+        <Icon name="AlertTriangle" size={32} className="text-danger" />
+        <h3 className="text-sm font-black text-ink">Error al cargar módulo</h3>
+        <p className="text-xs text-ink-muted">{errorMessage}</p>
+        <Button
+          variant="secondary"
+          size="sm"
+          onClick={() => window.location.reload()}
+          leftIcon={<Icon name="RotateCcw" size={14} />}
+        >
+          Reintentar recarga
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex flex-col items-center justify-center min-h-[50vh] gap-3">
+      <RefreshCw className="w-7 h-7 text-primary animate-spin" />
+      <span className="text-xs font-semibold text-ink-muted uppercase tracking-wider">
+        Cargando módulo...
+      </span>
+    </div>
+  );
+};
 
 export const queryClient = new QueryClient({
   defaultOptions: {
@@ -97,9 +123,15 @@ const MainNavigator: React.FC = () => {
     const handleHashChange = () => {
       const hashStr = window.location.hash || window.location.pathname;
       setRouteHash(hashStr);
-      const cleanTab = hashStr.replace(/^[#/]+/, '') as TabType;
-      if (['home', 'pos', 'cashier', 'kds', 'profitability', 'menu-admin', 'staff', 'health', 'emergency', 'qr-menu', 'owner', 'finances', 'quotes', 'partners', 'settings'].includes(cleanTab)) {
-        setCurrentTab(cleanTab);
+      const cleanTab = hashStr.replace(/^[#/]+/, '') as TabType | 'setup-wizard';
+      if (cleanTab === 'setup-wizard') {
+        setCurrentTab('profitability');
+        try {
+          localStorage.setItem('tocineta_profit_subtab', 'wizard');
+          window.dispatchEvent(new CustomEvent('switch-profitability-subtab', { detail: 'wizard' }));
+        } catch {}
+      } else if (['home', 'pos', 'cashier', 'kds', 'profitability', 'menu-admin', 'staff', 'health', 'emergency', 'qr-menu', 'owner', 'finances', 'quotes', 'partners', 'settings'].includes(cleanTab)) {
+        setCurrentTab(cleanTab as TabType);
       }
     };
     window.addEventListener('hashchange', handleHashChange);

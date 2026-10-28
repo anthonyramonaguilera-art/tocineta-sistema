@@ -15,7 +15,6 @@ import { publishDomainEvent } from '../events/event-bus.js';
 export const OFFICIAL_UPDATE_PUBLIC_KEY = `-----BEGIN PUBLIC KEY-----
 MCowBQYDK2VwAyEACLinq5i8QkWFX+SDHSroZSGO8aCh+H4V6A5QZZWzA6M=
 -----END PUBLIC KEY-----`;
-export const VARONS_MEDIA_OFFICIAL_PUBLIC_KEY = OFFICIAL_UPDATE_PUBLIC_KEY;
 
 export interface ApplyUpdateOptions {
   publicKeyPem?: string;
@@ -86,7 +85,7 @@ export async function applySignedUpdatePackage(
   const now = Date.now();
   const currentDate = options.currentDate || new Date(now);
   const currentVersion = getCurrentSystemVersion(rawDb);
-  const publicKeyToUse = options.publicKeyPem || process.env.VARONS_MEDIA_UPDATE_PUBLIC_KEY || VARONS_MEDIA_OFFICIAL_PUBLIC_KEY;
+  const publicKeyToUse = options.publicKeyPem || process.env.UPDATE_PUBLIC_KEY || OFFICIAL_UPDATE_PUBLIC_KEY;
 
   // 1. REGLA DE PROTECCIÓN DE HORARIO DE VENTA (16:00 a 02:00 Caracas)
   if (isSalesHours(currentDate)) {
