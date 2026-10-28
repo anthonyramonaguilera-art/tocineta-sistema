@@ -13,6 +13,7 @@
 import type Database from 'better-sqlite3';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
+import { getFinancialTruth } from '../finances/financial-truth-service.js';
 
 export interface WorkerPerformanceMetrics {
   userId: string;
@@ -191,69 +192,8 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
     throw err;
   }
 
-  const rateRow = rawDb.prepare('SELECT rate_micro_bs FROM exchange_rates WHERE is_current = 1 LIMIT 1').get() as any;
-  const rateMicroBs = rateRow?.rate_micro_bs || 40_000_000;
-
-  // Totales de ventas y descuentos
-  const foodSalesRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(credit_usd_cents), 0) - COALESCE(SUM(debit_usd_cents), 0) as net_food_sales
-    FROM ledger_entries
-    WHERE jornada_id = ? AND account_bucket = 'FOOD_SALES'
-  `).get(jornadaId) as { net_food_sales: number };
-
-  const discountRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(debit_usd_cents), 0) as total_discounts
-    FROM ledger_entries
-    WHERE jornada_id = ? AND account_bucket = 'DISCOUNT_EXPENSE'
-  `).get(jornadaId) as { total_discounts: number };
-
-  const deliveryRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(credit_usd_cents), 0) - COALESCE(SUM(debit_usd_cents), 0) as total_delivery_fees
-    FROM ledger_entries
-    WHERE jornada_id = ? AND account_bucket = 'MOTORIZADO_FUND'
-  `).get(jornadaId) as { total_delivery_fees: number };
-
-  // Medios de pago
-  const paymentRows = rawDb.prepare(`
-    SELECT p.method, p.amount_cents, p.usd_equivalent_cents
-    FROM payments p
-    JOIN orders o ON p.order_id = o.id
-    WHERE o.jornada_id = ?
-  `).all(jornadaId) as Array<{ method: string; amount_cents: number; usd_equivalent_cents: number }>;
-
-  let cashUsdCents = 0;
-  let cashBsCents = 0;
-  let pagoMovilBsCents = 0;
-  let ubiiGrossBsCents = 0;
-  let binanceUsdCents = 0;
-  let zelleUsdCents = 0;
-
-  for (const p of paymentRows) {
-    const m = p.method.toUpperCase();
-    if (m === 'CASH_USD' || m === 'EFECTIVO_USD') cashUsdCents += p.amount_cents;
-    else if (m === 'CASH_BS' || m === 'EFECTIVO_BS') cashBsCents += p.amount_cents;
-    else if (m === 'PAGO_MOVIL') pagoMovilBsCents += p.amount_cents;
-    else if (m === 'UBII' || m === 'PUNTO_DE_VENTA') ubiiGrossBsCents += p.amount_cents;
-    else if (m === 'BINANCE') binanceUsdCents += p.amount_cents;
-    else if (m === 'ZELLE') zelleUsdCents += p.amount_cents;
-  }
-
-  const ubiiFeeBsCents = Math.round((ubiiGrossBsCents * 75) / 10000); // 0.75%
-  const ubiiNetBsCents = ubiiGrossBsCents - ubiiFeeBsCents;
-
-  const expensesRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(debit_usd_cents), 0) as total_expenses
-    FROM ledger_entries
-    WHERE jornada_id = ? AND account_bucket = 'OPERATING_EXPENSE'
-  `).get(jornadaId) as { total_expenses: number };
-
-  const mermasRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(estimated_loss_usd_cents), 0) as total_mermas
-    FROM worker_incidents
-    WHERE jornada_id = ?
-  `).get(jornadaId) as { total_mermas: number };
-
-  const ordersCountRow = rawDb.prepare('SELECT count(*) as count FROM orders WHERE jornada_id = ?').get(jornadaId) as { count: number };
+  // Delegación a la verdad única financiera
+  const ft = getFinancialTruth(rawDb, { jornadaId });
 
   // Hash de auditoría de cierre o actual
   let auditHeadHash = jornada.audit_head_hash;
@@ -280,27 +220,60 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
     ORDER BY wi.created_at_ms ASC
   `).all(jornadaId) as any[];
 
+  const ubiiMethod = ft.collectedByMethod.find(m => m.method === 'UBII');
+  const ubiiGrossBsCents = ubiiMethod?.grossBsCents || 0;
+  const ubiiFeeBsCents = Math.round((ubiiGrossBsCents * 75) / 10000); // 0.75%
+  const ubiiNetBsCents = ubiiGrossBsCents - ubiiFeeBsCents;
+
+  const cashUsdMethod = ft.collectedByMethod.find(m => m.method === 'EFECTIVO_USD');
+  const cashBsMethod = ft.collectedByMethod.find(m => m.method === 'EFECTIVO_BS');
+  const pagoMovilMethod = ft.collectedByMethod.find(m => m.method === 'PAGO_MOVIL');
+  const binanceMethod = ft.collectedByMethod.find(m => m.method === 'BINANCE');
+  const zelleMethod = ft.collectedByMethod.find(m => m.method === 'ZELLE');
+
   return {
     jornada,
-    rateMicroBs,
-    netFoodSalesUsdCents: foodSalesRow.net_food_sales,
-    discountUsdCents: discountRow.total_discounts,
-    deliveryFeesUsdCents: deliveryRow.total_delivery_fees,
-    totalCollectedUsdCents: foodSalesRow.net_food_sales + deliveryRow.total_delivery_fees,
-    cashUsdCents,
-    cashBsCents,
-    pagoMovilBsCents,
+    rateMicroBs: ft.rateMicroBs,
+    netFoodSalesUsdCents: ft.orders.netSalesUsdCents,
+    discountUsdCents: ft.orders.discountsUsdCents,
+    deliveryFeesUsdCents: ft.orders.deliveryFeesUsdCents,
+    totalCollectedUsdCents: ft.orders.netSalesUsdCents + ft.orders.deliveryFeesUsdCents,
+    cashUsdCents: cashUsdMethod?.grossUsdCents || 0,
+    cashBsCents: cashBsMethod?.grossBsCents || 0,
+    pagoMovilBsCents: pagoMovilMethod?.grossBsCents || 0,
     ubiiGrossBsCents,
     ubiiFeeBsCents,
     ubiiNetBsCents,
-    binanceUsdCents,
-    zelleUsdCents,
-    expensesUsdCents: expensesRow.total_expenses,
-    mermasUsdCents: mermasRow.total_mermas,
-    ordersCount: ordersCountRow.count,
+    binanceUsdCents: binanceMethod?.grossUsdCents || 0,
+    zelleUsdCents: zelleMethod?.grossUsdCents || 0,
+    expensesUsdCents: ft.operatingExpensesUsdCents,
+    mermasUsdCents: ft.waste.totalUsdCents,
+    ordersCount: ft.orders.totalCount,
     auditHeadHash,
     ledgerEntries,
-    incidents
+    incidents,
+    // Claves R2 requeridas por CashierClosureWizard y contratos Zod compartidos
+    expectedCashUsdCents: ft.expectedCash.netCashUsdCents,
+    expectedCashBsCents: ft.expectedCash.netCashBsCents,
+    totalOrders: ft.orders.totalCount,
+    byMethod: ft.collectedByMethod.map(m => ({
+      method: m.method,
+      count: m.count,
+      totalUsdCents: m.grossUsdCents,
+      totalBsCents: m.grossBsCents,
+      changeUsdCents: m.changeDeliveredUsdCents,
+      changeBsCents: m.changeDeliveredBsCents,
+      netUsdCents: m.netUsdCents,
+      netBsCents: m.netBsCents
+    })),
+    bySede: ft.bySede.map(s => ({
+      locationId: s.locationId,
+      locationName: s.locationName,
+      totalOrders: s.totalOrders,
+      netSalesUsdCents: s.netSalesUsdCents,
+      expectedCashUsdCents: s.expectedCashUsdCents,
+      expectedCashBsCents: s.expectedCashBsCents
+    }))
   };
 }
 

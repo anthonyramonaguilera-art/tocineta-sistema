@@ -162,23 +162,9 @@ export function registerWasteLog(rawDb: Database.Database, input: RegisterWasteI
       now
     );
 
-    // Registrar gasto operativo de merma para descontar de la utilidad neta
-    const currentJornada = rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
-    if (currentJornada) {
-      rawDb.prepare(`
-        INSERT INTO operating_expenses (
-          id, location_id, jornada_id, category, amount_usd_cents, amount_bs_cents, description, authorized_by_user_id, created_at_ms
-        ) VALUES (?, ?, ?, 'MERMAS_DESPERDICIOS', ?, 0, ?, ?, ?)
-      `).run(
-        `exp_${generateUuidV7()}`,
-        input.locationId,
-        currentJornada.id,
-        finalCostCents,
-        `Merma: ${itemName} (${input.quantity} ${finalUnit}) - ${input.reason}`,
-        input.reportedByUserId,
-        now
-      );
-    }
+    // Nota R2: Ya no se inserta en operating_expenses como 'MERMAS_DESPERDICIOS'
+    // para evitar el doble conteo de mermas (P2-B). Las pérdidas se contabilizan
+    // directamente desde waste_logs a través de financial-truth-service.
   });
 
   tx();

@@ -199,12 +199,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3664,
+                      "duration": 4334,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:27:54.278Z",
+                      "startTime": "2026-10-28T04:45:35.526Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -249,12 +249,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4360,
+                      "duration": 3520,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:27:59.169Z",
+                      "startTime": "2026-10-28T04:45:40.798Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -299,12 +299,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3763,
+                      "duration": 4345,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:03.796Z",
+                      "startTime": "2026-10-28T04:45:44.482Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -349,12 +349,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3243,
+                      "duration": 3298,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:07.721Z",
+                      "startTime": "2026-10-28T04:45:48.998Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -399,12 +399,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3306,
+                      "duration": 3150,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:11.258Z",
+                      "startTime": "2026-10-28T04:45:52.435Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -449,12 +449,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2356,
+                      "duration": 2429,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:14.699Z",
+                      "startTime": "2026-10-28T04:45:55.707Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -499,12 +499,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3964,
+                      "duration": 3617,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:17.154Z",
+                      "startTime": "2026-10-28T04:45:58.243Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -549,12 +549,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3158,
+                      "duration": 3430,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:06.189Z",
+                      "startTime": "2026-10-28T04:47:47.442Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -599,12 +599,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3144,
+                      "duration": 3077,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:10.123Z",
+                      "startTime": "2026-10-28T04:47:51.437Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -649,12 +649,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3508,
+                      "duration": 3556,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:13.387Z",
+                      "startTime": "2026-10-28T04:47:54.685Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -699,12 +699,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3343,
+                      "duration": 3071,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:17.042Z",
+                      "startTime": "2026-10-28T04:47:58.380Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -749,12 +749,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3209,
+                      "duration": 3171,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:20.497Z",
+                      "startTime": "2026-10-28T04:48:01.578Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -799,12 +799,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2417,
+                      "duration": 2437,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:23.807Z",
+                      "startTime": "2026-10-28T04:48:04.842Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -849,12 +849,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 3774,
+                      "duration": 3702,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:26.314Z",
+                      "startTime": "2026-10-28T04:48:07.377Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -916,12 +916,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4119,
+                      "duration": 4895,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:22.028Z",
+                      "startTime": "2026-10-28T04:46:02.826Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -966,12 +966,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1968,
+                      "duration": 1862,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:26.706Z",
+                      "startTime": "2026-10-28T04:46:08.356Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1016,12 +1016,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 4297,
+                      "duration": 4123,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:28.842Z",
+                      "startTime": "2026-10-28T04:46:10.382Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1071,12 +1071,12 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5127,
+                      "duration": 5077,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:33.975Z",
+                      "startTime": "2026-10-28T04:46:15.003Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1121,7 +1121,7 @@
                       "workerIndex": 0,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2180,
+                      "duration": 2285,
                       "error": {
                         "message": "Error: No se encontró botón de cobro directo\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: No se encontró botón de cobro directo\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:100:62",
@@ -1145,7 +1145,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:39.299Z",
+                      "startTime": "2026-10-28T04:46:20.384Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1200,12 +1200,12 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2557,
+                      "duration": 2351,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:43.816Z",
+                      "startTime": "2026-10-28T04:46:25.217Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1250,7 +1250,7 @@
                       "workerIndex": 1,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1886,
+                      "duration": 1931,
                       "error": {
                         "message": "Error: Falta componente de vuelto real con desglose a entregar\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: Falta componente de vuelto real con desglose a entregar\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:139:88",
@@ -1274,7 +1274,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:47.248Z",
+                      "startTime": "2026-10-28T04:46:28.211Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1329,7 +1329,7 @@
                       "workerIndex": 2,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2374,
+                      "duration": 2393,
                       "error": {
                         "message": "Error: El fondo de la pantalla se desplaza en móvil al abrir modal\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: El fondo de la pantalla se desplaza en móvil al abrir modal\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:150:89",
@@ -1353,7 +1353,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:51.161Z",
+                      "startTime": "2026-10-28T04:46:32.238Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1408,7 +1408,7 @@
                       "workerIndex": 3,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2670,
+                      "duration": 2687,
                       "error": {
                         "message": "Error: La lista de ventas de caja muestra $0.00 en vez de los $11.90 cobrados debido a incompatibilidad de contratos camelCase/snake_case\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: La lista de ventas de caja muestra $0.00 en vez de los $11.90 cobrados debido a incompatibilidad de contratos camelCase/snake_case\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:181:157",
@@ -1432,7 +1432,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:28:55.816Z",
+                      "startTime": "2026-10-28T04:46:36.944Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1487,7 +1487,7 @@
                       "workerIndex": 4,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2248,
+                      "duration": 2424,
                       "error": {
                         "message": "Error: No se encontró renglón de ventas con botones de acción\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: No se encontró renglón de ventas con botones de acción\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:213:79",
@@ -1511,7 +1511,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:00.493Z",
+                      "startTime": "2026-10-28T04:46:41.747Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1566,7 +1566,7 @@
                       "workerIndex": 5,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2600,
+                      "duration": 3302,
                       "error": {
                         "message": "Error: KDS no ofrece botón para completar o avanzar la comanda completa en 1 solo toque sin micro-gestión por plato\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: KDS no ofrece botón para completar o avanzar la comanda completa en 1 solo toque sin micro-gestión por plato\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:225:137",
@@ -1590,7 +1590,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:04.716Z",
+                      "startTime": "2026-10-28T04:46:46.441Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1645,7 +1645,7 @@
                       "workerIndex": 6,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 692,
+                      "duration": 853,
                       "error": {
                         "message": "Error: Ventas netas en Cierre Z ($0.00) no coinciden con cobros reales ($11.90)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1190\u001b[39m\nReceived: \u001b[31m0\u001b[39m",
                         "stack": "Error: Ventas netas en Cierre Z ($0.00) no coinciden con cobros reales ($11.90)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1190\u001b[39m\nReceived: \u001b[31m0\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:256:156",
@@ -1669,7 +1669,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:09.302Z",
+                      "startTime": "2026-10-28T04:46:52.165Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1724,12 +1724,12 @@
                       "workerIndex": 7,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1049,
+                      "duration": 576,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:11.763Z",
+                      "startTime": "2026-10-28T04:46:54.951Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1774,7 +1774,7 @@
                       "workerIndex": 7,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1962,
+                      "duration": 1877,
                       "error": {
                         "message": "Error: El formulario de insumo rápido en el asistente carece de botón para agregar o guardar insumos\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: El formulario de insumo rápido en el asistente carece de botón para agregar o guardar insumos\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:278:135",
@@ -1798,7 +1798,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:13.124Z",
+                      "startTime": "2026-10-28T04:46:55.932Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1853,7 +1853,7 @@
                       "workerIndex": 8,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 753,
+                      "duration": 833,
                       "error": {
                         "message": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-bu\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m",
                         "stack": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-bu\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:311:80",
@@ -1877,7 +1877,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:16.822Z",
+                      "startTime": "2026-10-28T04:46:59.731Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -1932,7 +1932,7 @@
                       "workerIndex": 9,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2266,
+                      "duration": 2742,
                       "error": {
                         "message": "Error: No existe botón para crear una receta nueva desde cero\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: No existe botón para crear una receta nueva desde cero\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:321:78",
@@ -1956,7 +1956,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:19.577Z",
+                      "startTime": "2026-10-28T04:47:02.272Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2011,7 +2011,7 @@
                       "workerIndex": 10,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 743,
+                      "duration": 708,
                       "error": {
                         "message": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-cg\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m",
                         "stack": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-cg\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:355:74",
@@ -2034,12 +2034,12 @@
                       ],
                       "stdout": [
                         {
-                          "text": "[B17 SERVER ERROR CAPTURED] {\n  id: \u001b[32m'serr_1793158164784_s2mexof'\u001b[39m,\n  request_id: \u001b[32m'req-cg'\u001b[39m,\n  method: \u001b[32m'POST'\u001b[39m,\n  url: \u001b[32m'/api/fase3/waste'\u001b[39m,\n  status: \u001b[33m500\u001b[39m,\n  code: \u001b[32m'INTERNAL'\u001b[39m,\n  message: \u001b[32m\"Producto 'null' no encontrado\"\u001b[39m,\n  stack: \u001b[32m\"Error: Producto 'null' no encontrado\\n\"\u001b[39m +\n    \u001b[32m'    at <anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:125:24)\\n'\u001b[39m +\n    \u001b[32m'    at sqliteTransaction (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\better-sqlite3@13.0.3\\\\node_modules\\\\better-sqlite3\\\\lib\\\\methods\\\\transaction.js:65:24)\\n'\u001b[39m +\n    \u001b[32m'    at registerWasteLog (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:184:3)\\n'\u001b[39m +\n    \u001b[32m'    at Object.<anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\fase3-routes.ts:448:17)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallbackInner (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:190:24)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallback (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:155:5)\\n'\u001b[39m +\n    \u001b[32m'    at next (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:236:9)\\n'\u001b[39m +\n    \u001b[32m'    at handleResolve (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:253:7)\\n'\u001b[39m +\n    \u001b[32m'    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)'\u001b[39m,\n  body_json: \u001b[32m'{\"locationId\":\"loc_alta_vista\",\"supplyId\":\"sup_salchicha\",\"productId\":null,\"quantity\":2,\"unitCostUsdCents\":40,\"reason\":\"MERMA_VENCIMIENTO\",\"notes\":\"Test B17\"}'\u001b[39m,\n  user_id: \u001b[32m'usr_test_admin'\u001b[39m,\n  created_at_ms: \u001b[33m1793158164784\u001b[39m\n}\n"
+                          "text": "[B17 SERVER ERROR CAPTURED] {\n  id: \u001b[32m'serr_1793162827723_quilxzm'\u001b[39m,\n  request_id: \u001b[32m'req-cg'\u001b[39m,\n  method: \u001b[32m'POST'\u001b[39m,\n  url: \u001b[32m'/api/fase3/waste'\u001b[39m,\n  status: \u001b[33m500\u001b[39m,\n  code: \u001b[32m'INTERNAL'\u001b[39m,\n  message: \u001b[32m\"Producto 'null' no encontrado\"\u001b[39m,\n  stack: \u001b[32m\"Error: Producto 'null' no encontrado\\n\"\u001b[39m +\n    \u001b[32m'    at <anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:125:24)\\n'\u001b[39m +\n    \u001b[32m'    at sqliteTransaction (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\better-sqlite3@13.0.3\\\\node_modules\\\\better-sqlite3\\\\lib\\\\methods\\\\transaction.js:65:24)\\n'\u001b[39m +\n    \u001b[32m'    at registerWasteLog (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:170:3)\\n'\u001b[39m +\n    \u001b[32m'    at Object.<anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\fase3-routes.ts:448:17)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallbackInner (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:190:24)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallback (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:155:5)\\n'\u001b[39m +\n    \u001b[32m'    at next (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:236:9)\\n'\u001b[39m +\n    \u001b[32m'    at handleResolve (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:253:7)\\n'\u001b[39m +\n    \u001b[32m'    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)'\u001b[39m,\n  body_json: \u001b[32m'{\"locationId\":\"loc_alta_vista\",\"supplyId\":\"sup_salchicha\",\"productId\":null,\"quantity\":2,\"unitCostUsdCents\":40,\"reason\":\"MERMA_VENCIMIENTO\",\"notes\":\"Test B17\"}'\u001b[39m,\n  user_id: \u001b[32m'usr_test_admin'\u001b[39m,\n  created_at_ms: \u001b[33m1793162827723\u001b[39m\n}\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:23.810Z",
+                      "startTime": "2026-10-28T04:47:06.988Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2094,7 +2094,7 @@
                       "workerIndex": 11,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2411,
+                      "duration": 2721,
                       "error": {
                         "message": "Error: No se pudo abrir modal de compras\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: No se pudo abrir modal de compras\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:370:58",
@@ -2118,7 +2118,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:26.728Z",
+                      "startTime": "2026-10-28T04:47:09.584Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2173,7 +2173,7 @@
                       "workerIndex": 12,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2209,
+                      "duration": 2393,
                       "error": {
                         "message": "Error: El asistente solo permite 1 insumo en state en vez de una lista de insumos\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: El asistente solo permite 1 insumo en state en vez de una lista de insumos\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:379:122",
@@ -2197,7 +2197,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:31.608Z",
+                      "startTime": "2026-10-28T04:47:14.259Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2252,7 +2252,7 @@
                       "workerIndex": 13,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2913,
+                      "duration": 2895,
                       "error": {
                         "message": "Error: El selector de platos del cotizador está vacío\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m2\u001b[39m\nReceived:   \u001b[31m1\u001b[39m",
                         "stack": "Error: El selector de platos del cotizador está vacío\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m2\u001b[39m\nReceived:   \u001b[31m1\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:393:71",
@@ -2276,7 +2276,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:35.972Z",
+                      "startTime": "2026-10-28T04:47:18.527Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2331,12 +2331,12 @@
                       "workerIndex": 14,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2190,
+                      "duration": 2215,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:41.082Z",
+                      "startTime": "2026-10-28T04:47:23.586Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2381,7 +2381,7 @@
                       "workerIndex": 14,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1935,
+                      "duration": 1932,
                       "error": {
                         "message": "Error: El margen neto está fijo con clase text-success (verde) independientemente de la utilidad\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m",
                         "stack": "Error: El margen neto está fijo con clase text-success (verde) independientemente de la utilidad\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:416:112",
@@ -2405,7 +2405,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:43.746Z",
+                      "startTime": "2026-10-28T04:47:26.205Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2460,7 +2460,7 @@
                       "workerIndex": 15,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2496,
+                      "duration": 2434,
                       "error": {
                         "message": "Error: navigator.vibrate debe ser invocado ante llegada de nueva orden\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: navigator.vibrate debe ser invocado ante llegada de nueva orden\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:432:94",
@@ -2484,7 +2484,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:48.024Z",
+                      "startTime": "2026-10-28T04:47:29.883Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2539,7 +2539,7 @@
                       "workerIndex": 16,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 52,
+                      "duration": 33,
                       "error": {
                         "message": "Error: La anulación por LIKE '%1%' coincidió indebidamente con: ORD-1, ORD-10, ORD-11\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m3\u001b[39m",
                         "stack": "Error: La anulación por LIKE '%1%' coincidió indebidamente con: ORD-1, ORD-10, ORD-11\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:457:136",
@@ -2563,7 +2563,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:53.065Z",
+                      "startTime": "2026-10-28T04:47:34.672Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2608,12 +2608,12 @@
                       "workerIndex": 17,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2369,
+                      "duration": 2351,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:54.520Z",
+                      "startTime": "2026-10-28T04:47:36.101Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2658,12 +2658,12 @@
                       "workerIndex": 17,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1921,
+                      "duration": 1757,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:57.299Z",
+                      "startTime": "2026-10-28T04:47:38.911Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2708,7 +2708,7 @@
                       "workerIndex": 17,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2159,
+                      "duration": 1838,
                       "error": {
                         "message": "Error: Falta alerta visual destacada para stock negativo (−4)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: Falta alerta visual destacada para stock negativo (−4)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:497:81",
@@ -2732,7 +2732,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:29:59.433Z",
+                      "startTime": "2026-10-28T04:47:40.793Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2787,12 +2787,12 @@
                       "workerIndex": 18,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 30,
+                      "duration": 57,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:03.274Z",
+                      "startTime": "2026-10-28T04:47:44.516Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2827,10 +2827,10 @@
                       "workerIndex": 18,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 18,
+                      "duration": 40,
                       "error": {
-                        "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m9\u001b[39m\nReceived: \u001b[31m10\u001b[39m",
-                        "stack": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m9\u001b[39m\nReceived: \u001b[31m10\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:538:90",
+                        "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m11\u001b[39m\nReceived: \u001b[31m12\u001b[39m",
+                        "stack": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m11\u001b[39m\nReceived: \u001b[31m12\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:538:90",
                         "location": {
                           "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
                           "column": 90,
@@ -2845,13 +2845,13 @@
                             "column": 90,
                             "line": 538
                           },
-                          "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m9\u001b[39m\nReceived: \u001b[31m10\u001b[39m\n\n  536 |     rawDb.close();\n  537 |\n> 538 |     expect(countAfter, 'La merma se duplicó como gasto operativo en operating_expenses').toBe(countBefore);\n      |                                                                                          ^\n  539 |   });\n  540 |\n  541 |   test('[B30] MenuAdminView.tsx respeta el límite estricto de gobernanza de 400 líneas', () => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:538:90"
+                          "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m11\u001b[39m\nReceived: \u001b[31m12\u001b[39m\n\n  536 |     rawDb.close();\n  537 |\n> 538 |     expect(countAfter, 'La merma se duplicó como gasto operativo en operating_expenses').toBe(countBefore);\n      |                                                                                          ^\n  539 |   });\n  540 |\n  541 |   test('[B30] MenuAdminView.tsx respeta el límite estricto de gobernanza de 400 líneas', () => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:538:90"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:03.417Z",
+                      "startTime": "2026-10-28T04:47:44.721Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2896,7 +2896,7 @@
                       "workerIndex": 19,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 27,
+                      "duration": 20,
                       "error": {
                         "message": "Error: MenuAdminView.tsx tiene 1516 líneas, superando el límite estricto de 400 líneas\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m400\u001b[39m\nReceived:    \u001b[31m1516\u001b[39m",
                         "stack": "Error: MenuAdminView.tsx tiene 1516 líneas, superando el límite estricto de 400 líneas\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m400\u001b[39m\nReceived:    \u001b[31m1516\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:547:114",
@@ -2920,7 +2920,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:04.941Z",
+                      "startTime": "2026-10-28T04:47:46.201Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -2965,12 +2965,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5164,
+                      "duration": 6862,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:30.817Z",
+                      "startTime": "2026-10-28T04:48:11.582Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3015,12 +3015,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1865,
+                      "duration": 1857,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:36.661Z",
+                      "startTime": "2026-10-28T04:48:18.868Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3065,12 +3065,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5174,
+                      "duration": 5040,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:38.631Z",
+                      "startTime": "2026-10-28T04:48:20.841Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3120,12 +3120,12 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 5130,
+                      "duration": 4866,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:44.603Z",
+                      "startTime": "2026-10-28T04:48:26.615Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3170,7 +3170,7 @@
                       "workerIndex": 20,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2141,
+                      "duration": 2271,
                       "error": {
                         "message": "Error: No se encontró botón de cobro directo\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: No se encontró botón de cobro directo\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:100:62",
@@ -3194,7 +3194,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:49.876Z",
+                      "startTime": "2026-10-28T04:48:31.575Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3249,12 +3249,12 @@
                       "workerIndex": 21,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2706,
+                      "duration": 2443,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:54.236Z",
+                      "startTime": "2026-10-28T04:48:36.309Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3299,7 +3299,7 @@
                       "workerIndex": 21,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 1945,
+                      "duration": 2311,
                       "error": {
                         "message": "Error: Falta componente de vuelto real con desglose a entregar\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: Falta componente de vuelto real con desglose a entregar\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:139:88",
@@ -3323,7 +3323,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:30:57.630Z",
+                      "startTime": "2026-10-28T04:48:39.286Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3378,7 +3378,7 @@
                       "workerIndex": 22,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2456,
+                      "duration": 2479,
                       "error": {
                         "message": "Error: El fondo de la pantalla se desplaza en móvil al abrir modal\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: El fondo de la pantalla se desplaza en móvil al abrir modal\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:150:89",
@@ -3402,7 +3402,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:01.706Z",
+                      "startTime": "2026-10-28T04:48:43.266Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3457,7 +3457,7 @@
                       "workerIndex": 23,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2807,
+                      "duration": 2928,
                       "error": {
                         "message": "Error: La lista de ventas de caja muestra $0.00 en vez de los $11.90 cobrados debido a incompatibilidad de contratos camelCase/snake_case\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: La lista de ventas de caja muestra $0.00 en vez de los $11.90 cobrados debido a incompatibilidad de contratos camelCase/snake_case\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:181:157",
@@ -3481,7 +3481,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:06.336Z",
+                      "startTime": "2026-10-28T04:48:48.070Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3536,7 +3536,7 @@
                       "workerIndex": 24,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2292,
+                      "duration": 2199,
                       "error": {
                         "message": "Error: No se encontró renglón de ventas con botones de acción\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: No se encontró renglón de ventas con botones de acción\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:213:79",
@@ -3560,7 +3560,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:11.142Z",
+                      "startTime": "2026-10-28T04:48:53.380Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3615,7 +3615,7 @@
                       "workerIndex": 25,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 3974,
+                      "duration": 3058,
                       "error": {
                         "message": "Error: KDS no ofrece botón para completar o avanzar la comanda completa en 1 solo toque sin micro-gestión por plato\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: KDS no ofrece botón para completar o avanzar la comanda completa en 1 solo toque sin micro-gestión por plato\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:225:137",
@@ -3639,7 +3639,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:15.456Z",
+                      "startTime": "2026-10-28T04:48:57.615Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3694,7 +3694,7 @@
                       "workerIndex": 26,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 765,
+                      "duration": 790,
                       "error": {
                         "message": "Error: Ventas netas en Cierre Z ($0.00) no coinciden con cobros reales ($11.90)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1190\u001b[39m\nReceived: \u001b[31m0\u001b[39m",
                         "stack": "Error: Ventas netas en Cierre Z ($0.00) no coinciden con cobros reales ($11.90)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1190\u001b[39m\nReceived: \u001b[31m0\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:256:156",
@@ -3718,7 +3718,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:21.588Z",
+                      "startTime": "2026-10-28T04:49:02.696Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3773,12 +3773,12 @@
                       "workerIndex": 27,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 697,
+                      "duration": 714,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:24.337Z",
+                      "startTime": "2026-10-28T04:49:05.420Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3823,7 +3823,7 @@
                       "workerIndex": 27,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2044,
+                      "duration": 2316,
                       "error": {
                         "message": "Error: El formulario de insumo rápido en el asistente carece de botón para agregar o guardar insumos\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: El formulario de insumo rápido en el asistente carece de botón para agregar o guardar insumos\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:278:135",
@@ -3847,7 +3847,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:25.387Z",
+                      "startTime": "2026-10-28T04:49:06.440Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3902,10 +3902,10 @@
                       "workerIndex": 28,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 731,
+                      "duration": 776,
                       "error": {
-                        "message": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-tx\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m",
-                        "stack": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-tx\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:311:80",
+                        "message": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-ty\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m",
+                        "stack": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-ty\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:311:80",
                         "location": {
                           "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
                           "column": 80,
@@ -3920,13 +3920,13 @@
                             "column": 80,
                             "line": 311
                           },
-                          "message": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-tx\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n\n  309 |     }\n  310 |\n> 311 |     expect(status, `POST /api/fase3/sub-recipes falló con ${status}: ${body}`).toBeLessThan(400);\n      |                                                                                ^\n  312 |   });\n  313 |\n  314 |   test('[B16] Creación de recetas desde cero permite vincular insumos y guardar modo de receta', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:311:80"
+                          "message": "Error: POST /api/fase3/sub-recipes falló con 422: {\"success\":false,\"error\":\"El campo 'supply_id' es obligatorio\",\"code\":\"FIELD_REQUIRED\",\"message\":\"El campo 'supply_id' es obligatorio\",\"requestId\":\"req-ty\",\"field\":\"supply_id\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m422\u001b[39m\n\n  309 |     }\n  310 |\n> 311 |     expect(status, `POST /api/fase3/sub-recipes falló con ${status}: ${body}`).toBeLessThan(400);\n      |                                                                                ^\n  312 |   });\n  313 |\n  314 |   test('[B16] Creación de recetas desde cero permite vincular insumos y guardar modo de receta', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:311:80"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:29.183Z",
+                      "startTime": "2026-10-28T04:49:10.417Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -3981,7 +3981,7 @@
                       "workerIndex": 29,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2845,
+                      "duration": 2789,
                       "error": {
                         "message": "Error: No existe botón para crear una receta nueva desde cero\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: No existe botón para crear una receta nueva desde cero\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:321:78",
@@ -4005,7 +4005,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:31.903Z",
+                      "startTime": "2026-10-28T04:49:12.893Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4060,10 +4060,10 @@
                       "workerIndex": 30,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 699,
+                      "duration": 763,
                       "error": {
-                        "message": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-uj\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m",
-                        "stack": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-uj\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:355:74",
+                        "message": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-uk\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m",
+                        "stack": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-uk\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:355:74",
                         "location": {
                           "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
                           "column": 74,
@@ -4078,17 +4078,17 @@
                             "column": 74,
                             "line": 355
                           },
-                          "message": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-uj\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n\n  353 |     }\n  354 |\n> 355 |     expect(status, `POST /api/fase3/waste falló con ${status}: ${body}`).toBeLessThan(400);\n      |                                                                          ^\n  356 |   });\n  357 |\n  358 |   test('[B18] Registro de compras incluye guía pedagógica y foto de factura', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:355:74"
+                          "message": "Error: POST /api/fase3/waste falló con 500: {\"success\":false,\"error\":\"Error interno del servidor\",\"code\":\"INTERNAL\",\"message\":\"Error interno del servidor\",\"requestId\":\"req-uk\"}\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: < \u001b[32m400\u001b[39m\nReceived:   \u001b[31m500\u001b[39m\n\n  353 |     }\n  354 |\n> 355 |     expect(status, `POST /api/fase3/waste falló con ${status}: ${body}`).toBeLessThan(400);\n      |                                                                          ^\n  356 |   });\n  357 |\n  358 |   test('[B18] Registro de compras incluye guía pedagógica y foto de factura', async ({ page }) => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:355:74"
                         }
                       ],
                       "stdout": [
                         {
-                          "text": "[B17 SERVER ERROR CAPTURED] {\n  id: \u001b[32m'serr_1793158297723_ydbfio0'\u001b[39m,\n  request_id: \u001b[32m'req-uj'\u001b[39m,\n  method: \u001b[32m'POST'\u001b[39m,\n  url: \u001b[32m'/api/fase3/waste'\u001b[39m,\n  status: \u001b[33m500\u001b[39m,\n  code: \u001b[32m'INTERNAL'\u001b[39m,\n  message: \u001b[32m\"Producto 'null' no encontrado\"\u001b[39m,\n  stack: \u001b[32m\"Error: Producto 'null' no encontrado\\n\"\u001b[39m +\n    \u001b[32m'    at <anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:125:24)\\n'\u001b[39m +\n    \u001b[32m'    at sqliteTransaction (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\better-sqlite3@13.0.3\\\\node_modules\\\\better-sqlite3\\\\lib\\\\methods\\\\transaction.js:65:24)\\n'\u001b[39m +\n    \u001b[32m'    at registerWasteLog (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:184:3)\\n'\u001b[39m +\n    \u001b[32m'    at Object.<anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\fase3-routes.ts:448:17)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallbackInner (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:190:24)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallback (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:155:5)\\n'\u001b[39m +\n    \u001b[32m'    at next (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:236:9)\\n'\u001b[39m +\n    \u001b[32m'    at handleResolve (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:253:7)\\n'\u001b[39m +\n    \u001b[32m'    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)'\u001b[39m,\n  body_json: \u001b[32m'{\"locationId\":\"loc_alta_vista\",\"supplyId\":\"sup_salchicha\",\"productId\":null,\"quantity\":2,\"unitCostUsdCents\":40,\"reason\":\"MERMA_VENCIMIENTO\",\"notes\":\"Test B17\"}'\u001b[39m,\n  user_id: \u001b[32m'usr_test_admin'\u001b[39m,\n  created_at_ms: \u001b[33m1793158297723\u001b[39m\n}\n"
+                          "text": "[B17 SERVER ERROR CAPTURED] {\n  id: \u001b[32m'serr_1793162958505_wsk8ixl'\u001b[39m,\n  request_id: \u001b[32m'req-uk'\u001b[39m,\n  method: \u001b[32m'POST'\u001b[39m,\n  url: \u001b[32m'/api/fase3/waste'\u001b[39m,\n  status: \u001b[33m500\u001b[39m,\n  code: \u001b[32m'INTERNAL'\u001b[39m,\n  message: \u001b[32m\"Producto 'null' no encontrado\"\u001b[39m,\n  stack: \u001b[32m\"Error: Producto 'null' no encontrado\\n\"\u001b[39m +\n    \u001b[32m'    at <anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:125:24)\\n'\u001b[39m +\n    \u001b[32m'    at sqliteTransaction (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\better-sqlite3@13.0.3\\\\node_modules\\\\better-sqlite3\\\\lib\\\\methods\\\\transaction.js:65:24)\\n'\u001b[39m +\n    \u001b[32m'    at registerWasteLog (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\waste-service.ts:170:3)\\n'\u001b[39m +\n    \u001b[32m'    at Object.<anonymous> (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\apps\\\\server\\\\src\\\\modules\\\\profitability\\\\fase3-routes.ts:448:17)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallbackInner (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:190:24)\\n'\u001b[39m +\n    \u001b[32m'    at preHandlerCallback (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\handle-request.js:155:5)\\n'\u001b[39m +\n    \u001b[32m'    at next (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:236:9)\\n'\u001b[39m +\n    \u001b[32m'    at handleResolve (C:\\\\Users\\\\Shell\\\\Documents\\\\Varonsmedia\\\\clientes\\\\tocinetasonrie\\\\SISTEMA\\\\node_modules\\\\.pnpm\\\\fastify@5.12.7\\\\node_modules\\\\fastify\\\\lib\\\\hooks.js:253:7)\\n'\u001b[39m +\n    \u001b[32m'    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)'\u001b[39m,\n  body_json: \u001b[32m'{\"locationId\":\"loc_alta_vista\",\"supplyId\":\"sup_salchicha\",\"productId\":null,\"quantity\":2,\"unitCostUsdCents\":40,\"reason\":\"MERMA_VENCIMIENTO\",\"notes\":\"Test B17\"}'\u001b[39m,\n  user_id: \u001b[32m'usr_test_admin'\u001b[39m,\n  created_at_ms: \u001b[33m1793162958505\u001b[39m\n}\n"
                         }
                       ],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:37.044Z",
+                      "startTime": "2026-10-28T04:49:17.793Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4143,7 +4143,7 @@
                       "workerIndex": 31,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2663,
+                      "duration": 3012,
                       "error": {
                         "message": "Error: No se pudo abrir modal de compras\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: No se pudo abrir modal de compras\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:370:58",
@@ -4167,7 +4167,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:39.585Z",
+                      "startTime": "2026-10-28T04:49:20.569Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4222,7 +4222,7 @@
                       "workerIndex": 32,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2294,
+                      "duration": 2356,
                       "error": {
                         "message": "Error: El asistente solo permite 1 insumo en state en vez de una lista de insumos\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: El asistente solo permite 1 insumo en state en vez de una lista de insumos\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:379:122",
@@ -4246,7 +4246,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:44.200Z",
+                      "startTime": "2026-10-28T04:49:26.289Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4301,7 +4301,7 @@
                       "workerIndex": 33,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 3048,
+                      "duration": 2972,
                       "error": {
                         "message": "Error: El selector de platos del cotizador está vacío\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m2\u001b[39m\nReceived:   \u001b[31m1\u001b[39m",
                         "stack": "Error: El selector de platos del cotizador está vacío\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeGreaterThan\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: > \u001b[32m2\u001b[39m\nReceived:   \u001b[31m1\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:393:71",
@@ -4325,7 +4325,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:48.778Z",
+                      "startTime": "2026-10-28T04:49:30.688Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4380,12 +4380,12 @@
                       "workerIndex": 34,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2276,
+                      "duration": 2360,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:53.979Z",
+                      "startTime": "2026-10-28T04:49:35.738Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4430,7 +4430,7 @@
                       "workerIndex": 34,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2149,
+                      "duration": 1983,
                       "error": {
                         "message": "Error: El margen neto está fijo con clase text-success (verde) independientemente de la utilidad\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m",
                         "stack": "Error: El margen neto está fijo con clase text-success (verde) independientemente de la utilidad\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m0\u001b[39m\nReceived: \u001b[31m1\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:416:112",
@@ -4454,7 +4454,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:31:56.728Z",
+                      "startTime": "2026-10-28T04:49:38.481Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4509,7 +4509,7 @@
                       "workerIndex": 35,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2632,
+                      "duration": 3265,
                       "error": {
                         "message": "Error: navigator.vibrate debe ser invocado ante llegada de nueva orden\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: navigator.vibrate debe ser invocado ante llegada de nueva orden\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:432:94",
@@ -4533,7 +4533,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:32:01.107Z",
+                      "startTime": "2026-10-28T04:49:42.482Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4588,7 +4588,7 @@
                       "workerIndex": 36,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 31,
+                      "duration": 35,
                       "error": {
                         "message": "Error: La anulación por LIKE '%1%' coincidió indebidamente con: ORD-1, ORD-10, ORD-11\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m3\u001b[39m",
                         "stack": "Error: La anulación por LIKE '%1%' coincidió indebidamente con: ORD-1, ORD-10, ORD-11\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m1\u001b[39m\nReceived: \u001b[31m3\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:457:136",
@@ -4612,7 +4612,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:32:06.341Z",
+                      "startTime": "2026-10-28T04:49:48.361Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4657,12 +4657,12 @@
                       "workerIndex": 37,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 2473,
+                      "duration": 2458,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:32:07.751Z",
+                      "startTime": "2026-10-28T04:49:49.825Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4707,12 +4707,12 @@
                       "workerIndex": 37,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 1880,
+                      "duration": 1899,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:32:10.618Z",
+                      "startTime": "2026-10-28T04:49:52.670Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4757,7 +4757,7 @@
                       "workerIndex": 37,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 2052,
+                      "duration": 2588,
                       "error": {
                         "message": "Error: Falta alerta visual destacada para stock negativo (−4)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m",
                         "stack": "Error: Falta alerta visual destacada para stock negativo (−4)\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32mtrue\u001b[39m\nReceived: \u001b[31mfalse\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:497:81",
@@ -4781,7 +4781,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:32:12.676Z",
+                      "startTime": "2026-10-28T04:49:54.749Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4836,12 +4836,12 @@
                       "workerIndex": 38,
                       "parallelIndex": 0,
                       "status": "passed",
-                      "duration": 42,
+                      "duration": 41,
                       "errors": [],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:32:16.520Z",
+                      "startTime": "2026-10-28T04:49:59.231Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4876,10 +4876,10 @@
                       "workerIndex": 38,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 35,
+                      "duration": 33,
                       "error": {
-                        "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m10\u001b[39m\nReceived: \u001b[31m11\u001b[39m",
-                        "stack": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m10\u001b[39m\nReceived: \u001b[31m11\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:538:90",
+                        "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m12\u001b[39m\nReceived: \u001b[31m13\u001b[39m",
+                        "stack": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m12\u001b[39m\nReceived: \u001b[31m13\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:538:90",
                         "location": {
                           "file": "C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts",
                           "column": 90,
@@ -4894,13 +4894,13 @@
                             "column": 90,
                             "line": 538
                           },
-                          "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m10\u001b[39m\nReceived: \u001b[31m11\u001b[39m\n\n  536 |     rawDb.close();\n  537 |\n> 538 |     expect(countAfter, 'La merma se duplicó como gasto operativo en operating_expenses').toBe(countBefore);\n      |                                                                                          ^\n  539 |   });\n  540 |\n  541 |   test('[B30] MenuAdminView.tsx respeta el límite estricto de gobernanza de 400 líneas', () => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:538:90"
+                          "message": "Error: La merma se duplicó como gasto operativo en operating_expenses\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBe\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m) // Object.is equality\u001b[22m\n\nExpected: \u001b[32m12\u001b[39m\nReceived: \u001b[31m13\u001b[39m\n\n  536 |     rawDb.close();\n  537 |\n> 538 |     expect(countAfter, 'La merma se duplicó como gasto operativo en operating_expenses').toBe(countBefore);\n      |                                                                                          ^\n  539 |   });\n  540 |\n  541 |   test('[B30] MenuAdminView.tsx respeta el límite estricto de gobernanza de 400 líneas', () => {\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:538:90"
                         }
                       ],
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:32:16.712Z",
+                      "startTime": "2026-10-28T04:49:59.433Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -4945,7 +4945,7 @@
                       "workerIndex": 39,
                       "parallelIndex": 0,
                       "status": "failed",
-                      "duration": 21,
+                      "duration": 23,
                       "error": {
                         "message": "Error: MenuAdminView.tsx tiene 1516 líneas, superando el límite estricto de 400 líneas\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m400\u001b[39m\nReceived:    \u001b[31m1516\u001b[39m",
                         "stack": "Error: MenuAdminView.tsx tiene 1516 líneas, superando el límite estricto de 400 líneas\n\n\u001b[2mexpect(\u001b[22m\u001b[31mreceived\u001b[39m\u001b[2m).\u001b[22mtoBeLessThanOrEqual\u001b[2m(\u001b[22m\u001b[32mexpected\u001b[39m\u001b[2m)\u001b[22m\n\nExpected: <= \u001b[32m400\u001b[39m\nReceived:    \u001b[31m1516\u001b[39m\n    at C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\tools\\r2-harness\\specs\\r2-defects.spec.ts:547:114",
@@ -4969,7 +4969,7 @@
                       "stdout": [],
                       "stderr": [],
                       "retry": 0,
-                      "startTime": "2026-10-28T03:32:18.252Z",
+                      "startTime": "2026-10-28T04:50:00.984Z",
                       "annotations": [],
                       "attachments": [
                         {
@@ -5005,8 +5005,8 @@
   ],
   "errors": [],
   "stats": {
-    "startTime": "2026-10-28T03:27:41.777Z",
-    "duration": 277074.40099999995,
+    "startTime": "2026-10-28T04:45:20.993Z",
+    "duration": 280652.158,
     "expected": 34,
     "skipped": 0,
     "unexpected": 40,

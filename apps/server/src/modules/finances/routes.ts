@@ -85,25 +85,39 @@ export const financesRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.post('/api/finances/expenses', async (request, reply) => {
     const schema = z.object({
-      locationId: z.string(),
+      locationId: z.string().optional(),
       jornadaId: z.string().optional(),
-      category: z.string().min(2),
+      category: z.string().min(1),
       amountUsdCents: z.number().int().positive(),
       amountBsCents: z.number().int().optional(),
       paymentMethod: z.string().optional(),
-      description: z.string().min(2),
+      description: z.string().min(1),
+      clientRequestId: z.string().optional(),
+      confirmDuplicate: z.boolean().optional(),
       receiptPhotoPath: z.string().optional(),
       isRecurring: z.boolean().optional(),
       recurringInterval: z.string().optional(),
       notes: z.string().optional(),
-      authorizedByUserId: z.string()
+      authorizedByUserId: z.string().optional()
     });
     const parsed = schema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ success: false, error: parsed.error.issues[0].message });
     }
-    const data = createExpense(rawDb, parsed.data);
-    return reply.status(201).send({ success: true, data });
+    const user = (request as any).user || { id: 'usr_admin' };
+    try {
+      const data = createExpense(rawDb, {
+        ...parsed.data,
+        authorizedByUserId: parsed.data.authorizedByUserId || user.id
+      });
+      return reply.status(201).send({ success: true, data, expense: data });
+    } catch (err: any) {
+      return reply.status(err.statusCode || 400).send({
+        success: false,
+        code: err.code || 'EXPENSE_FAILED',
+        error: err.message
+      });
+    }
   });
 
   fastify.delete('/api/finances/expenses/:id', async (request, reply) => {

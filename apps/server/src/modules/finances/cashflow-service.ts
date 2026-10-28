@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import { getFinancialTruth } from './financial-truth-service.js';
 
 export interface CashFlowMethodItem {
   method: string;
@@ -89,40 +90,25 @@ export function calculateCashFlow(
     ensureLoc(l.id, l.name);
   }
 
-  // 1. ENTRADAS: Pagos de Pedidos (Ventas)
-  const orderWhere = [
-    "o.fulfillment_status != 'anulado'",
-    'p.created_at_ms >= ?',
-    'p.created_at_ms <= ?'
-  ];
-  const orderParams: any[] = [startDateMs, endDateMs];
-  if (locationId) {
-    orderWhere.push('(o.location_id = ? OR o.location_id IS NULL)');
-    orderParams.push(locationId);
-  }
-
-  const salesPayRows = rawDb.prepare(`
-    SELECT 
-      p.method,
-      COALESCE(SUM(p.usd_equivalent_cents), 0) as total_usd,
-      COUNT(p.id) as count,
-      COALESCE(o.location_id, 'loc_alta_vista') as loc_id
-    FROM payments p
-    JOIN orders o ON p.order_id = o.id
-    WHERE ${orderWhere.join(' AND ')}
-    GROUP BY p.method, o.location_id
-  `).all(...orderParams) as any[];
+  // 1. ENTRADAS: Pagos de Pedidos (Ventas) delegados a la Verdad Financiera
+  const ft = getFinancialTruth(rawDb, {
+    from: startDateMs,
+    to: endDateMs,
+    locationId: locationId || 'ALL'
+  });
 
   let salesInflowsUsdCents = 0;
-  for (const row of salesPayRows) {
-    const m = normalizePaymentMethod(row.method);
-    ensureMethod(m);
-    methodMap[m].inflowsUsdCents += row.total_usd;
-    methodMap[m].inflowTransactionsCount += row.count;
-    salesInflowsUsdCents += row.total_usd;
+  for (const m of ft.collectedByMethod) {
+    const norm = normalizePaymentMethod(m.method);
+    ensureMethod(norm);
+    methodMap[norm].inflowsUsdCents += m.grossUsdCents;
+    methodMap[norm].inflowTransactionsCount += m.count;
+    salesInflowsUsdCents += m.grossUsdCents;
+  }
 
-    ensureLoc(row.loc_id);
-    locMap[row.loc_id].inflows += row.total_usd;
+  for (const s of ft.bySede) {
+    ensureLoc(s.locationId, s.locationName);
+    locMap[s.locationId].inflows += s.netSalesUsdCents;
   }
 
   // 2. ENTRADAS: Abonos de Cuentas por Cobrar (Clientes)
@@ -156,12 +142,12 @@ export function calculateCashFlow(
     locMap[row.loc_id].inflows += row.total_usd;
   }
 
-  // 3. SALIDAS: Gastos Operativos
-  const expWhere = ['oe.created_at_ms >= ?', 'oe.created_at_ms <= ?'];
+  // 3. SALIDAS: Gastos Operativos (excluyendo MERMAS_DESPERDICIOS)
+  const expWhere = ['oe.created_at_ms >= ?', 'oe.created_at_ms <= ?', "oe.category != 'MERMAS_DESPERDICIOS'"];
   const expParams: any[] = [startDateMs, endDateMs];
   if (locationId) {
-    expWhere.push('oe.location_id = ?');
-    expParams.push(locationId);
+    expWhere.push('(oe.location_id = ? OR (oe.location_id IS NULL AND ? = ?))');
+    expParams.push(locationId, locationId, 'loc_alta_vista');
   }
 
   const expRows = rawDb.prepare(`
@@ -169,7 +155,7 @@ export function calculateCashFlow(
       oe.payment_method,
       COALESCE(SUM(oe.amount_usd_cents), 0) as total_usd,
       COUNT(oe.id) as count,
-      oe.location_id as loc_id
+      COALESCE(oe.location_id, 'loc_alta_vista') as loc_id
     FROM operating_expenses oe
     WHERE ${expWhere.join(' AND ')}
     GROUP BY oe.payment_method, oe.location_id

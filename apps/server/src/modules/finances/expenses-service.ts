@@ -9,13 +9,15 @@ export interface ExpenseCategoryItem {
 }
 
 export interface CreateExpenseInput {
-  locationId: string;
+  locationId?: string;
   jornadaId?: string;
   category: string;
   amountUsdCents: number;
   amountBsCents?: number;
   paymentMethod?: string;
   description: string;
+  clientRequestId?: string;
+  confirmDuplicate?: boolean;
   receiptPhotoPath?: string;
   isRecurring?: boolean;
   recurringInterval?: string;
@@ -81,31 +83,76 @@ export function createExpenseCategory(rawDb: Database.Database, name: string): E
   return { id, name: trimmed, isDefault: 0, createdAtMs: now };
 }
 
+export const VALID_EXPENSE_PAYMENT_METHODS = [
+  'EFECTIVO_USD',
+  'EFECTIVO_BS',
+  'PAGO_MOVIL',
+  'PUNTO_DE_VENTA',
+  'TARJETA',
+  'BINANCE',
+  'OTRO'
+] as const;
+
 /**
- * Registrar un nuevo gasto operativo
+ * Registrar un nuevo gasto operativo con regla anti-duplicado (B22, D4)
  */
 export function createExpense(rawDb: Database.Database, input: CreateExpenseInput): ExpenseRecord {
   if (input.amountUsdCents <= 0) {
     throw new Error('El monto del gasto debe ser mayor a cero');
   }
 
-  // Buscar jornada activa para la sede si no se proporciona
-  let targetJornadaId = input.jornadaId;
-  if (!targetJornadaId) {
-    const activeJornada = rawDb.prepare(`
-      SELECT id FROM jornadas
-      WHERE status = 'abierta' AND (location_id = ? OR location_id IS NULL)
-      ORDER BY opened_at_ms DESC LIMIT 1
-    `).get(input.locationId) as { id: string } | undefined;
+  const rawMethod = (input.paymentMethod || 'EFECTIVO_USD').toUpperCase().trim();
+  if (!VALID_EXPENSE_PAYMENT_METHODS.includes(rawMethod as any)) {
+    const err: any = new Error(`Método de pago inválido '${input.paymentMethod}'. Métodos permitidos: ${VALID_EXPENSE_PAYMENT_METHODS.join(', ')}`);
+    err.statusCode = 400;
+    err.code = 'INVALID_PAYMENT_METHOD';
+    throw err;
+  }
+  const paymentMethod = rawMethod;
 
-    if (activeJornada) {
-      targetJornadaId = activeJornada.id;
-    } else {
-      // Tomar la última jornada existente o fallback
-      const lastJornada = rawDb.prepare('SELECT id FROM jornadas ORDER BY opened_at_ms DESC LIMIT 1').get() as { id: string } | undefined;
-      targetJornadaId = lastJornada?.id || 'jornada_global';
+  const upperCategory = input.category.trim().toUpperCase();
+  const trimmedDesc = input.description.trim();
+  const now = Date.now();
+
+  // Regla anti-duplicado (B22): mismo monto + categoría + descripción + usuario en 120s
+  if (!input.confirmDuplicate) {
+    const twoMinutesAgo = now - 120_000;
+    const possibleDuplicate = rawDb.prepare(`
+      SELECT id, amount_usd_cents, category, description, created_at_ms
+      FROM operating_expenses
+      WHERE amount_usd_cents = ?
+        AND category = ?
+        AND description = ?
+        AND authorized_by_user_id = ?
+        AND created_at_ms >= ?
+      ORDER BY created_at_ms DESC
+      LIMIT 1
+    `).get(
+      input.amountUsdCents,
+      upperCategory,
+      trimmedDesc,
+      input.authorizedByUserId,
+      twoMinutesAgo
+    ) as any;
+
+    if (possibleDuplicate) {
+      const err: any = new Error(
+        `POSSIBLE_DUPLICATE: Se detectó un gasto idéntico (${possibleDuplicate.category} por $${(possibleDuplicate.amount_usd_cents / 100).toFixed(2)}) registrado hace menos de 2 minutos. Envíe confirmDuplicate: true para confirmarlo.`
+      );
+      err.statusCode = 409;
+      err.code = 'POSSIBLE_DUPLICATE';
+      throw err;
     }
   }
+
+  // Buscar jornada activa única (Regla D1)
+  let targetJornadaId = input.jornadaId;
+  if (!targetJornadaId) {
+    const activeJornada = rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as { id: string } | undefined;
+    targetJornadaId = activeJornada?.id || 'jornada_global';
+  }
+
+  const locationId = input.locationId || 'loc_alta_vista';
 
   // Obtener tasa BCV actual para calcular Bs si no vino
   const rateRow = rawDb.prepare('SELECT rate_micro_bs FROM exchange_rates WHERE is_current = 1 ORDER BY created_at_ms DESC LIMIT 1').get() as any;
@@ -113,8 +160,6 @@ export function createExpense(rawDb: Database.Database, input: CreateExpenseInpu
   const amountBsCents = input.amountBsCents ?? Math.round((input.amountUsdCents * rateMicroBs) / 1_000_000);
 
   const id = `exp_${generateUuidV7()}`;
-  const now = Date.now();
-  const paymentMethod = input.paymentMethod || 'EFECTIVO_USD';
   const isRecurringInt = input.isRecurring ? 1 : 0;
 
   rawDb.prepare(`
@@ -125,13 +170,13 @@ export function createExpense(rawDb: Database.Database, input: CreateExpenseInpu
     ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
-    input.locationId,
+    locationId,
     targetJornadaId,
-    input.category.trim().toUpperCase(),
+    upperCategory,
     input.amountUsdCents,
     amountBsCents,
     paymentMethod,
-    input.description.trim(),
+    trimmedDesc,
     input.authorizedByUserId,
     input.receiptPhotoPath || null,
     isRecurringInt,
@@ -142,7 +187,7 @@ export function createExpense(rawDb: Database.Database, input: CreateExpenseInpu
 
   return {
     id,
-    locationId: input.locationId,
+    locationId,
     jornadaId: targetJornadaId,
     category: input.category.trim().toUpperCase(),
     amountUsdCents: input.amountUsdCents,

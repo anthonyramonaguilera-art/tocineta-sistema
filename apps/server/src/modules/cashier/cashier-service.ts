@@ -103,6 +103,22 @@ export function openJornada(rawDb: Database.Database, input: OpenJornadaInput) {
     input.notes || null
   );
 
+  // D1: Crear automáticamente la sesión de caja de la persona que abre la jornada
+  const sessionId = `cs_${generateUuidV7()}`;
+  rawDb.prepare(`
+    INSERT INTO cash_sessions (
+      id, jornada_id, user_id, opened_at_ms, status,
+      opening_cash_usd_cents, opening_cash_bs_cents
+    ) VALUES (?, ?, ?, ?, 'abierta', ?, ?)
+  `).run(
+    sessionId,
+    jornadaId,
+    input.openedByUserId,
+    now,
+    input.initialCashUsdCents || 0,
+    input.initialCashBsCents || 0
+  );
+
   appendAuditEvent(rawDb, {
     actorUserId: input.openedByUserId,
     action: 'JORNADA_OPENED',
@@ -387,23 +403,36 @@ export function processOrderPayment(
     }
   }
 
-  // Asegurar jornada y sesión de caja abiertas
-  let jornada = rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta'").get() as any;
+  // Exigir jornada global abierta (Regla D1, P2-B Task 5: JORNADA_CLOSED)
+  const jornada = rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
   if (!jornada) {
-    jornada = openJornada(rawDb, {
-      openedByUserId: input.cashierUserId,
-      initialCashUsdCents: 0,
-      initialCashBsCents: 0
-    });
+    const err: any = new Error('No hay una jornada abierta en el sistema. Debe abrir la jornada del día antes de procesar cobros.');
+    err.statusCode = 400;
+    err.code = 'JORNADA_CLOSED';
+    throw err;
   }
 
-  let session = rawDb.prepare("SELECT id FROM cash_sessions WHERE user_id = ? AND status = 'abierta'").get(input.cashierUserId) as any;
+  // Exigir sesión de caja abierta del usuario que cobra (Regla D1, P2-B Task 5: CASH_SESSION_REQUIRED)
+  let session = rawDb.prepare("SELECT id FROM cash_sessions WHERE user_id = ? AND status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get(input.cashierUserId) as any;
   if (!session) {
-    session = openCashSession(rawDb, {
-      userId: input.cashierUserId,
-      openingCashUsdCents: 0,
-      openingCashBsCents: 0
-    });
+    // Si un mesonero con permiso temporal CASHIER_PAY cobra, utiliza la sesión de caja activa en la estación
+    const userRow = rawDb.prepare('SELECT role, permissions_json FROM users WHERE id = ?').get(input.cashierUserId) as any;
+    let permissions: string[] = [];
+    if (userRow?.permissions_json) {
+      try {
+        permissions = typeof userRow.permissions_json === 'string' ? JSON.parse(userRow.permissions_json) : userRow.permissions_json;
+      } catch {}
+    }
+    if (permissions.includes('CASHIER_PAY') && (userRow?.role === 'mesonero' || userRow?.role === 'mesero')) {
+      session = rawDb.prepare("SELECT id FROM cash_sessions WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
+    }
+  }
+
+  if (!session) {
+    const err: any = new Error('Debe abrir su sesión de caja (arqueo inicial) antes de procesar cobros.');
+    err.statusCode = 400;
+    err.code = 'CASH_SESSION_REQUIRED';
+    throw err;
   }
 
   // --------------------------------------------------------------------------
@@ -670,6 +699,7 @@ export function processOrderPayment(
       UPDATE orders
       SET payment_status = 'pagado',
           fulfillment_status = 'en_preparacion',
+          jornada_id = COALESCE(jornada_id, ?),
           cash_session_id = ?,
           kitchen_passed_at_ms = COALESCE(kitchen_passed_at_ms, ?),
           station_status_hot_dogs = ?,
@@ -677,6 +707,7 @@ export function processOrderPayment(
           updated_at_ms = ?
       WHERE id = ?
     `).run(
+      jornada.id,
       session.id,
       now,
       hasHotDogs ? 'en_preparacion' : 'na',

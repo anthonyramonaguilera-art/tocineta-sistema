@@ -1,5 +1,5 @@
 import type Database from 'better-sqlite3';
-import { calculateProfitAndLoss } from './profit-service.js';
+import { getFinancialTruth } from './financial-truth-service.js';
 
 export interface MetricDefinition {
   key: string;
@@ -65,92 +65,26 @@ export function getOwnerDashboardNumbers(
     } catch {}
   }
 
-  // 2. Calcular P&L de hoy
-  const pnlToday = calculateProfitAndLoss(rawDb, {
-    startDateMs: startOfDay,
-    endDateMs: endOfDay,
-    locationId
+  // 2. Delegar a la Verdad Financiera única
+  const ft = getFinancialTruth(rawDb, {
+    from: startOfDay,
+    to: endOfDay,
+    locationId: locationId || 'ALL'
   });
 
-  // 3. Calcular Efectivo en Caja Hoy (USD + Bs en efectivo)
-  const payWhere = [
-    "o.fulfillment_status != 'anulado'",
-    'p.created_at_ms >= ?',
-    'p.created_at_ms <= ?'
-  ];
-  const payParams: any[] = [startOfDay, endOfDay];
-  if (locationId) {
-    payWhere.push('(o.location_id = ? OR o.location_id IS NULL)');
-    payParams.push(locationId);
-  }
-
-  const cashSalesRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(p.usd_equivalent_cents), 0) as total_cash_sales
-    FROM payments p
-    JOIN orders o ON p.order_id = o.id
-    WHERE ${payWhere.join(' AND ')}
-      AND (p.method LIKE '%EFECTIVO%' OR p.method = 'USD' OR p.method = 'BS')
-  `).get(...payParams) as any;
-
-  // Gastos pagados en efectivo hoy
-  const expWhere = [
-    'created_at_ms >= ?',
-    'created_at_ms <= ?'
-  ];
-  const expParams: any[] = [startOfDay, endOfDay];
-  if (locationId) {
-    expWhere.push('(location_id = ? OR location_id IS NULL)');
-    expParams.push(locationId);
-  }
-
-  const cashExpRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(amount_usd_cents), 0) as total_cash_exp
-    FROM operating_expenses
-    WHERE ${expWhere.join(' AND ')}
-      AND (payment_method LIKE '%EFECTIVO%' OR payment_method = 'USD' OR payment_method = 'BS')
-  `).get(...expParams) as any;
-
-  const cashTodayUsdCents = Math.max(0, (cashSalesRow?.total_cash_sales || 0) - (cashExpRow?.total_cash_exp || 0));
-
-  // 4. Calcular Total por Cobrar
-  const recWhere = ['balance_usd_cents > 0'];
-  const recParams: any[] = [];
-  if (locationId) {
-    recWhere.push('location_id = ?');
-    recParams.push(locationId);
-  }
-  const recRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(balance_usd_cents), 0) as total_rec
-    FROM receivable_accounts
-    WHERE ${recWhere.join(' AND ')}
-  `).get(...recParams) as any;
-  const receivableTotalUsdCents = recRow?.total_rec || 0;
-
-  // 5. Calcular Total por Pagar
-  const payabWhere = ["payment_condition = 'CREDITO'", 'balance_owed_usd_cents > 0'];
-  const payabParams: any[] = [];
-  if (locationId) {
-    payabWhere.push('location_id = ?');
-    payabParams.push(locationId);
-  }
-  const payabRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(balance_owed_usd_cents), 0) as total_payab
-    FROM purchases
-    WHERE ${payabWhere.join(' AND ')}
-  `).get(...payabParams) as any;
-  const payableTotalUsdCents = payabRow?.total_payab || 0;
+  const avgTicket = ft.orders.totalCount > 0 ? Math.round(ft.orders.netSalesUsdCents / ft.orders.totalCount) : 0;
 
   // Mapa de todas las métricas calculadas
   const valuesMap: Record<string, number> = {
-    sales_today: pnlToday.summary.netFoodSalesUsdCents,
-    profit_today: pnlToday.summary.netProfitUsdCents,
-    cash_today: cashTodayUsdCents,
-    receivable_total: receivableTotalUsdCents,
-    payable_total: payableTotalUsdCents,
-    avg_ticket_today: pnlToday.summary.averageTicketUsdCents,
-    orders_today: pnlToday.summary.totalOrders,
-    waste_today: pnlToday.summary.wasteLossUsdCents,
-    expenses_today: pnlToday.summary.operatingExpensesUsdCents
+    sales_today: ft.orders.netSalesUsdCents,
+    profit_today: ft.netProfitUsdCents,
+    cash_today: Math.max(0, ft.expectedCash.netCashUsdCents),
+    receivable_total: ft.receivables.totalUsdCents,
+    payable_total: ft.payables.totalUsdCents,
+    avg_ticket_today: avgTicket,
+    orders_today: ft.orders.totalCount,
+    waste_today: ft.waste.totalUsdCents,
+    expenses_today: ft.operatingExpensesUsdCents
   };
 
   const metrics: MetricValueResult[] = configuredKeys.map(key => {

@@ -5,6 +5,7 @@ import { publishDomainEvent } from '../events/event-bus.js';
 import { buildZReportTicketIR, type ZReportData } from '../printing/templates.js';
 import { getPrinterConfig } from '../printing/worker.js';
 import { createEncryptedBackup } from '../backups/backup-service.js';
+import { getFinancialTruth } from '../finances/financial-truth-service.js';
 
 export interface BlindCountInput {
   cashUsdCents: number;
@@ -115,8 +116,22 @@ export function performBlindCount(
     cashBsOutflow += c.change_bs_cents;
   }
 
-  const expectedCashUsdCents = session.opening_cash_usd_cents + cashUsdInflow - cashUsdOutflow;
-  const expectedCashBsCents = session.opening_cash_bs_cents + cashBsInflow - cashBsOutflow;
+  // Gastos en efectivo pagados durante esta sesión
+  const cashExpensesRow = rawDb.prepare(`
+    SELECT 
+      COALESCE(SUM(CASE WHEN payment_method IN ('EFECTIVO_USD', 'USD') THEN amount_usd_cents ELSE 0 END), 0) as exp_usd,
+      COALESCE(SUM(CASE WHEN payment_method IN ('EFECTIVO_BS', 'BS') THEN amount_bs_cents ELSE 0 END), 0) as exp_bs
+    FROM operating_expenses
+    WHERE jornada_id = ? AND category != 'MERMAS_DESPERDICIOS'
+      AND (authorized_by_user_id = ? OR location_id = ?)
+      AND created_at_ms >= ? AND created_at_ms <= ?
+  `).get(session.jornada_id, session.user_id, session.location_id || 'loc_alta_vista', session.opened_at_ms, session.closed_at_ms || Date.now()) as any;
+
+  const cashExpUsd = cashExpensesRow?.exp_usd || 0;
+  const cashExpBs = cashExpensesRow?.exp_bs || 0;
+
+  const expectedCashUsdCents = session.opening_cash_usd_cents + cashUsdInflow - cashUsdOutflow - cashExpUsd;
+  const expectedCashBsCents = session.opening_cash_bs_cents + cashBsInflow - cashBsOutflow - cashExpBs;
   const expectedUbiiGrossBsCents = ubiiGrossBs;
 
   // Diferencias
@@ -267,96 +282,37 @@ export function closeJornadaZ(
 
   const now = Date.now();
 
-  // Obtener tasa BCV oficial de la jornada
-  const rateRow = rawDb.prepare('SELECT rate_micro_bs FROM exchange_rates WHERE is_current = 1 LIMIT 1').get() as any;
-  const rateMicroBs = rateRow?.rate_micro_bs || 40_000_000;
+  // Delegar cálculo de verdad financiera a servicio central
+  const ft = getFinancialTruth(rawDb, { jornadaId });
+  const rateMicroBs = ft.rateMicroBs;
 
-  // 1. Totalizar Ventas de Alimentos y Fondos desde ledger_entries
-  const foodSalesRow = rawDb.prepare(`
-    SELECT 
-      COALESCE(SUM(credit_usd_cents), 0) as total_food_sales
-    FROM ledger_entries
-    WHERE jornada_id = ? AND account_bucket = 'FOOD_SALES'
-  `).get(jornadaId) as { total_food_sales: number };
-
-  const discountRow = rawDb.prepare(`
-    SELECT 
-      COALESCE(SUM(debit_usd_cents), 0) as total_discounts
-    FROM ledger_entries
-    WHERE jornada_id = ? AND account_bucket = 'DISCOUNT_EXPENSE'
-  `).get(jornadaId) as { total_discounts: number };
-
-  const deliveryRow = rawDb.prepare(`
-    SELECT 
-      COALESCE(SUM(credit_usd_cents), 0) as total_delivery_fees
-    FROM ledger_entries
-    WHERE jornada_id = ? AND account_bucket = 'MOTORIZADO_FUND'
-  `).get(jornadaId) as { total_delivery_fees: number };
-
-  const netSalesUsdCents = foodSalesRow.total_food_sales;
-  const discountUsdCents = discountRow.total_discounts;
-  const grossSalesUsdCents = netSalesUsdCents + discountUsdCents;
-  const deliveryFeesUsdCents = deliveryRow.total_delivery_fees;
+  const netSalesUsdCents = ft.orders.netSalesUsdCents;
+  const discountUsdCents = ft.orders.discountsUsdCents;
+  const grossSalesUsdCents = ft.orders.grossSalesUsdCents;
+  const deliveryFeesUsdCents = ft.orders.deliveryFeesUsdCents;
   const totalCollectedUsdCents = netSalesUsdCents + deliveryFeesUsdCents;
 
-  // 2. Desglose de Medios de Pago desde la tabla payments asociada a órdenes de esta jornada
-  const paymentRows = rawDb.prepare(`
-    SELECT p.method, p.amount_cents, p.usd_equivalent_cents
-    FROM payments p
-    JOIN orders o ON p.order_id = o.id
-    WHERE o.jornada_id = ?
-  `).all(jornadaId) as Array<{
-    method: string;
-    amount_cents: number;
-    usd_equivalent_cents: number;
-  }>;
+  const cashUsdMethod = ft.collectedByMethod.find(m => m.method === 'EFECTIVO_USD');
+  const cashBsMethod = ft.collectedByMethod.find(m => m.method === 'EFECTIVO_BS');
+  const pagoMovilMethod = ft.collectedByMethod.find(m => m.method === 'PAGO_MOVIL');
+  const ubiiMethod = ft.collectedByMethod.find(m => m.method === 'UBII');
+  const binanceMethod = ft.collectedByMethod.find(m => m.method === 'BINANCE');
+  const zelleMethod = ft.collectedByMethod.find(m => m.method === 'ZELLE');
 
-  let cashUsdCents = 0;
-  let cashBsCents = 0;
-  let pagoMovilBsCents = 0;
-  let ubiiGrossBsCents = 0;
-  let binanceUsdCents = 0;
-  let zelleUsdCents = 0;
-
-  for (const p of paymentRows) {
-    const m = p.method.toUpperCase();
-    if (m === 'CASH_USD' || m === 'EFECTIVO_USD') {
-      cashUsdCents += p.amount_cents;
-    } else if (m === 'CASH_BS' || m === 'EFECTIVO_BS') {
-      cashBsCents += p.amount_cents;
-    } else if (m === 'PAGO_MOVIL') {
-      pagoMovilBsCents += p.amount_cents;
-    } else if (m === 'UBII' || m === 'PUNTO_DE_VENTA') {
-      ubiiGrossBsCents += p.amount_cents;
-    } else if (m === 'BINANCE') {
-      binanceUsdCents += p.amount_cents;
-    } else if (m === 'ZELLE') {
-      zelleUsdCents += p.amount_cents;
-    }
-  }
+  const cashUsdCents = cashUsdMethod?.grossUsdCents || 0;
+  const cashBsCents = cashBsMethod?.grossBsCents || 0;
+  const pagoMovilBsCents = pagoMovilMethod?.grossBsCents || 0;
+  const ubiiGrossBsCents = ubiiMethod?.grossBsCents || 0;
+  const binanceUsdCents = binanceMethod?.grossUsdCents || 0;
+  const zelleUsdCents = zelleMethod?.grossUsdCents || 0;
 
   // Comisión Ubii 0.75%
   const ubiiFeeBsCents = Math.round((ubiiGrossBsCents * 75) / 10000);
   const ubiiNetBsCents = ubiiGrossBsCents - ubiiFeeBsCents;
 
-  // 3. Total Gastos y Mermas
-  const expensesRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(debit_usd_cents), 0) as total_expenses
-    FROM ledger_entries
-    WHERE jornada_id = ? AND account_bucket = 'OPERATING_EXPENSE'
-  `).get(jornadaId) as { total_expenses: number };
-
-  const mermasRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(estimated_loss_usd_cents), 0) as total_mermas
-    FROM worker_incidents
-    WHERE jornada_id = ?
-  `).get(jornadaId) as { total_mermas: number };
-
-  const ordersCountRow = rawDb.prepare(`
-    SELECT count(*) as count
-    FROM orders
-    WHERE jornada_id = ?
-  `).get(jornadaId) as { count: number };
+  const expensesUsdCents = ft.operatingExpensesUsdCents;
+  const mermasUsdCents = ft.waste.totalUsdCents;
+  const ordersCount = ft.orders.totalCount;
 
   // 4. Capturar el Hash de Cabeza de la Cadena de Auditoría SHA-256
   const lastAudit = rawDb.prepare(`
@@ -386,9 +342,9 @@ export function closeJornadaZ(
     ubiiNetBsCents,
     binanceUsdCents,
     zelleUsdCents,
-    expensesUsdCents: expensesRow.total_expenses,
-    mermasLossUsdCents: mermasRow.total_mermas,
-    ordersCount: ordersCountRow.count,
+    expensesUsdCents,
+    mermasLossUsdCents: mermasUsdCents,
+    ordersCount,
     auditHeadHash
   };
 

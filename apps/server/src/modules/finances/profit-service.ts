@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import { calculateOrderLineRealCost } from '../profitability/costing.js';
 import { generateMenuEngineeringReport, type MenuEngineeringReport } from '../profitability/menu-engineering.js';
+import { getFinancialTruth } from './financial-truth-service.js';
 
 export interface ProfitAndLossParams {
   startDateMs?: number;
@@ -110,20 +111,33 @@ export function calculateProfitAndLoss(
     WHERE ${orderWhere.join(' AND ')}
   `).all(...orderParams) as any[];
 
-  let grossFoodSalesUsdCents = 0;
-  let discountsUsdCents = 0;
-  let netFoodSalesUsdCents = 0;
-  for (const o of orders) {
-    grossFoodSalesUsdCents += o.gross_food || 0;
-    discountsUsdCents += o.discounts || 0;
-    netFoodSalesUsdCents += o.net_food || 0;
-  }
-  const totalOrders = orders.length;
-  const averageTicketUsdCents = totalOrders > 0 ? Math.round(netFoodSalesUsdCents / totalOrders) : 0;
+  // 1. Delegar Verdad Financiera central
+  const ft = getFinancialTruth(rawDb, {
+    from: startDateMs,
+    to: endDateMs,
+    locationId: locationId || 'ALL'
+  });
 
-  // 2. Costo de Ventas (CMV) calculado por recetas reales consumidas
+  const grossFoodSalesUsdCents = ft.orders.grossSalesUsdCents;
+  const discountsUsdCents = ft.orders.discountsUsdCents;
+  const netFoodSalesUsdCents = ft.orders.netSalesUsdCents;
+  const totalOrders = ft.orders.totalCount;
+  const averageTicketUsdCents = totalOrders > 0 ? Math.round(netFoodSalesUsdCents / totalOrders) : 0;
+  const costOfGoodsSoldUsdCents = ft.cogsTheoretical;
+  const wasteLossUsdCents = ft.waste.totalUsdCents;
+  const operatingExpensesUsdCents = ft.operatingExpensesUsdCents;
+  const netProfitUsdCents = ft.netProfitUsdCents;
+
+  const foodCostPercentage = netFoodSalesUsdCents > 0
+    ? Number(((costOfGoodsSoldUsdCents / netFoodSalesUsdCents) * 100).toFixed(2))
+    : 0;
+
+  const netProfitMarginPercentage = netFoodSalesUsdCents > 0
+    ? Number(((netProfitUsdCents / netFoodSalesUsdCents) * 100).toFixed(2))
+    : 0;
+
+  // 2. Estadísticas de productos para Kasavana & Smith y ranking
   const orderIds = orders.map(o => o.id);
-  let costOfGoodsSoldUsdCents = 0;
   const productStats: Record<string, { name: string; units: number; sales: number; cost: number }> = {};
 
   if (orderIds.length > 0) {
@@ -161,7 +175,6 @@ export function calculateProfitAndLoss(
         });
 
         const lineCost = costRes.baseRecipeCostUsdCents + costRes.extraIngredientsCostUsdCents + costRes.barraLibreCostUsdCents;
-        costOfGoodsSoldUsdCents += lineCost;
 
         if (!productStats[line.product_id]) {
           productStats[line.product_id] = { name: line.product_name, units: 0, sales: 0, cost: 0 };
@@ -172,42 +185,6 @@ export function calculateProfitAndLoss(
       }
     }
   }
-
-  const foodCostPercentage = netFoodSalesUsdCents > 0
-    ? Number(((costOfGoodsSoldUsdCents / netFoodSalesUsdCents) * 100).toFixed(2))
-    : 0;
-
-  // 3. Mermas Operativas del período (waste_logs)
-  const wasteWhere = ['created_at_ms >= ?', 'created_at_ms <= ?'];
-  const wasteParams: any[] = [startDateMs, endDateMs];
-  if (locationId) {
-    wasteWhere.push('(location_id = ? OR location_id IS NULL)');
-    wasteParams.push(locationId);
-  }
-  const wasteRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(cost_usd_cents), 0) as total_waste
-    FROM waste_logs WHERE ${wasteWhere.join(' AND ')}
-  `).get(...wasteParams) as any;
-  const wasteLossUsdCents = wasteRow?.total_waste || 0;
-
-  // 4. Gastos Operativos del período (operating_expenses)
-  const expWhere = ['oe.created_at_ms >= ?', 'oe.created_at_ms <= ?'];
-  const expParams: any[] = [startDateMs, endDateMs];
-  if (locationId) {
-    expWhere.push('(oe.location_id = ? OR oe.location_id IS NULL)');
-    expParams.push(locationId);
-  }
-  const expRow = rawDb.prepare(`
-    SELECT COALESCE(SUM(oe.amount_usd_cents), 0) as total_exp
-    FROM operating_expenses oe WHERE ${expWhere.join(' AND ')}
-  `).get(...expParams) as any;
-  const operatingExpensesUsdCents = expRow?.total_exp || 0;
-
-  // 5. Utilidad = Ventas − CMV − Mermas − Gastos
-  const netProfitUsdCents = netFoodSalesUsdCents - costOfGoodsSoldUsdCents - wasteLossUsdCents - operatingExpensesUsdCents;
-  const netProfitMarginPercentage = netFoodSalesUsdCents > 0
-    ? Number(((netProfitUsdCents / netFoodSalesUsdCents) * 100).toFixed(2))
-    : 0;
 
   // 6. Desgloses: Método, Categoría, Hora, Sede, Ranking
   const payRows = rawDb.prepare(`
