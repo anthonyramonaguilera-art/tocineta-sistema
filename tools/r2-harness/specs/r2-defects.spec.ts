@@ -76,7 +76,7 @@ test.describe('Ronda 2 — 30 Defectos en ROJO (P0-B Harness)', () => {
     await navigateAs(page, 'admin', '/#menu-admin');
     await page.waitForTimeout(4000);
 
-    const isShowingErrorOrRetry = await page.locator('button:has-text("Reintentar"), text=/Error/i').first().isVisible().catch(() => false);
+    const isShowingErrorOrRetry = await page.locator('button:has-text("Reintentar")').or(page.locator('text=/Error/i')).first().isVisible().catch(() => false);
     const loadingText = page.locator('text=/Cargando/i');
     const isInfiniteLoading = await loadingText.count() > 0 && await loadingText.first().isVisible().catch(() => false);
 

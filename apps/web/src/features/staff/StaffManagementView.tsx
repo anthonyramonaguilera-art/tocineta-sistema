@@ -6,6 +6,7 @@ import { Card } from '../../ui/Card.js';
 import { Badge } from '../../ui/Badge.js';
 import { Icon } from '../../ui/Icon.js';
 import { LoadBoundary } from '../../ui/LoadBoundary.js';
+import { useLoadState } from '../../ui/useLoadState.js';
 import { useStaffData } from './useStaffData.js';
 import { EmployeeModal } from './EmployeeModal.js';
 import { PermissionsModal } from './PermissionsModal.js';
@@ -34,6 +35,13 @@ export const StaffManagementView: React.FC = () => {
     addTipMutation,
     closeTipPoolMutation
   } = useStaffData();
+
+  const staffLoadState = useLoadState({
+    isLoading: isLoadingStaff,
+    isError: isErrorStaff,
+    error: errorStaff,
+    timeoutMs: 3500
+  });
 
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [editingPermissionsUser, setEditingPermissionsUser] = useState<StaffUser | null>(null);
@@ -90,7 +98,7 @@ export const StaffManagementView: React.FC = () => {
           <Icon name="Users" size={18} />
           <span>Personal y Permisos</span>
           <Badge variant="neutral" className="text-xs">
-            {isLoadingStaff ? '...' : staffList.length}
+            {staffLoadState.isLoading ? '...' : staffList.length}
           </Badge>
         </button>
 
@@ -142,14 +150,15 @@ export const StaffManagementView: React.FC = () => {
           </div>
 
           <LoadBoundary
-            isLoading={isLoadingStaff}
-            isError={isErrorStaff}
-            error={errorStaff}
+            isLoading={staffLoadState.isLoading}
+            isError={staffLoadState.isError}
+            error={staffLoadState.errorMessage}
             isEmpty={staffList.length === 0}
             loadingMessage="Cargando personal..."
             emptyMessage="No hay empleados registrados"
             emptyDescription="Presiona 'Nuevo Empleado' para agregar miembros al equipo TOCINETA."
             emptyIcon="Users"
+            timeoutMs={3500}
             onRetry={() => refetchStaff()}
           >
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

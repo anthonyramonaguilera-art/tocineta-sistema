@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { Icon } from '../ui/Icon.js';
 import { LoadBoundary } from '../ui/LoadBoundary.js';
+import { useLoadState } from '../ui/useLoadState.js';
 
 export const MenuAdminView: React.FC = () => {
   const { token } = useAuth();
@@ -98,6 +99,13 @@ export const MenuAdminView: React.FC = () => {
     },
     enabled: Boolean(token),
     retry: 1
+  });
+
+  const menuLoadState = useLoadState({
+    isLoading,
+    isError,
+    error,
+    timeoutMs: 3500
   });
 
   // Mutación: Toggle Disponibilidad Producto (Agotado/Disponible)
@@ -467,13 +475,13 @@ export const MenuAdminView: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  if (isLoading || isError || !adminMenu) {
+  if (menuLoadState.isLoading || menuLoadState.isError || !adminMenu) {
     return (
       <LoadBoundary
-        isLoading={isLoading}
-        isError={isError}
-        error={error}
-        isEmpty={!isLoading && !isError && !adminMenu}
+        isLoading={menuLoadState.isLoading}
+        isError={menuLoadState.isError}
+        error={menuLoadState.errorMessage}
+        isEmpty={!menuLoadState.isLoading && !menuLoadState.isError && !adminMenu}
         loadingMessage="Cargando Gestor de Menú y Catálogo Admin..."
         emptyMessage="Catálogo de administración no disponible"
         timeoutMs={3500}
