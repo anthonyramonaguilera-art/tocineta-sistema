@@ -1,0 +1,1697 @@
+﻿pnpm.exe : $ playwright test -c playwright.r2.config.ts
+En C:\Users\Shell\AppData\Roaming\npm\pnpm.ps1: 14 Carácter: 3
++   & "$basedir/node_modules/pnpm/pnpm.exe"   $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ($ playwright te...ht.r2.config.ts:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+Running 74 tests using 1 worker
+
+  ok  1 [movil-360x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:15:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 01 KDS 360px (3.7s)
+  ok  2 [movil-360x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:22:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 02 Caja Cobro 360px (3.2s)
+  ok  3 [movil-360x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:34:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 03 Caja Ventas del dia 360px (3.5s)
+  ok  4 [movil-360x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:46:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 04 Caja Cierre 360px (3.4s)
+  ok  5 [movil-360x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:58:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 05 Inventario 360px (3.2s)
+  ok  6 [movil-360x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:70:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 06 Finanzas 360px (2.4s)
+  ok  7 [movil-360x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:77:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 07 Sidebar Menu 360px (3.9s)
+  ok  8 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:17:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B01] Ning├║n bot├│n, pesta├▒a o chip visible muestra el nombre del ├¡cono como texto literal (4.0s)
+  ok  9 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:43:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B02] En viewport m├│vil 360x800 el t├¡tulo de la cabecera no se trunca ni desborda (2.0s)
+  ok 10 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:58:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B03] Contraste suficiente WCAG AA en modo claro y oscuro (5.5s)
+  ok 11 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:73:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B04] Personal y Carta no muestran "CargandoÔÇª" infinito pasados 8 segundos (8.1s)
+  x  12 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:86:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B05] Tomar pedido permite flujo r├ípido sin mesa obligatoria y cobro accesible sin scroll excesivo (7.8s)
+  ok 13 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:104:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B06] No existe en la interfaz el texto redundante "Mesa Mesa" (2.6s)
+  x  14 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:131:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B07] El modal de vuelto muestra el monto exacto a entregar y soporta vuelto mixto (2.0s)
+  x  15 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:142:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B08] Cobro Express: modal no desborda en PC ni mueve el fondo en m├│vil (2.6s)
+  x  16 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:153:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B09] Caja y Cierre reflejan el monto vendido tras cobrar una orden (contratos consistentes) (2.9s)
+  x  17 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:184:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B10] Ventas del d├¡a no tiene botones de acci├│n cortados ni pesta├▒as truncadas (2.3s)
+  x  18 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:217:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B11] KDS presenta comandas legibles y permite avanzar estado con un solo toque (2.6s)
+  x  19 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:228:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B12] Ventas del d├¡a son id├®nticas entre Caja, Cierre, Panel de Due├▒a y Finanzas (710ms)
+  x  20 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:259:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B13] Selector de sedes lista exactamente las 2 sedes oficiales (804ms)
+  x  21 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:272:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B14] Agregar insumo r├ípido responde 2xx y se a├▒ade al cat├ílogo sin 500 (2.5s)
+  x  22 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:281:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B15] Sub-receta se guarda exitosamente con c├ílculo de rendimiento de batch sin 500 (753ms)
+  x  23 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:314:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B16] Creaci├│n de recetas desde cero permite vincular insumos y guardar modo de receta (2.6s)
+[B17 SERVER ERROR CAPTURED] {
+  id: 'serr_1793154415195_g094kdc',
+  request_id: 'req-ch',
+  method: 'POST',
+  url: '/api/fase3/waste',
+  status: 500,
+  code: 'INTERNAL',
+  message: "Producto 'null' no encontrado",
+  stack: "Error: Producto 'null' no encontrado\n" +
+    '    at <anonymous> (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\profitability\\waste-service.ts:125:24)\n' +
+    '    at sqliteTransaction (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\better-sqlite3@13.0.3\\node_modules\\better-sqlite3\\lib\\methods\\transaction.js:65:24)\n' +
+    '    at registerWasteLog (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\profitability\\waste-service.ts:184:3)\n' +
+    '    at Object.<anonymous> (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\profitability\\fase3-routes.ts:448:17)\n' +
+    '    at preHandlerCallbackInner (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\handle-request.js:190:24)\n' +
+    '    at preHandlerCallback (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\handle-request.js:155:5)\n' +
+    '    at next (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\hooks.js:236:9)\n' +
+    '    at handleResolve (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\hooks.js:253:7)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)',
+  body_json: '{"locationId":"loc_alta_vista","supplyId":"sup_salchicha","productId":null,"quantity":2,"unitCostUsdCents":40,"reason":"MERMA_VENCIMIENTO","notes":"Test B17"}',
+  user_id: 'usr_test_admin',
+  created_at_ms: 1793154415195
+}
+  x  24 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:324:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B17] Registro de merma no muestra "($NaN)" y responde 2xx sin 500 (781ms)
+  x  25 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:358:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B18] Registro de compras incluye gu├¡a pedag├│gica y foto de factura (2.4s)
+  x  26 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:374:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B19] Asistente "Configura tu negocio" admite m├║ltiples insumos/proveedores y bot├│n Finalizar guarda configuraci├│n (2.6s)
+  x  27 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:382:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B20] Cotizador de eventos muestra cat├ílogo de platos de la carta para cotizar (3.2s)
+  ok 28 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:399:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B21] Ninguna vista de la interfaz contiene la palabra "Treinta" (2.2s)
+  x  29 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:409:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B22] P&L no muestra margen neto negativo con estilo de ganancia (text-success) ni datos ficticios (1.9s)
+  x  30 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:419:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B23] KDS ejecuta audio, navigator.vibrate y clase de destello al recibir nuevo pedido (2.9s)
+  x  31 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:435:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B24] Anular orden #1 no modifica movimientos de ├│rdenes #10 ni #11 (reversa exacta por ID, no LIKE) (33ms)
+  ok 32 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:460:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B25] Bot├│n "Siguiente" en asistentes no se deshabilita sin validaci├│n visible y contenido no queda tapado por el pie (2.4s)
+  ok 33 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:475:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B26] Ning├║n bot├│n, pesta├▒a ni t├¡tulo contiene emojis crudos (1.7s)
+  x  34 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:486:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B27] Insumo con stock negativo muestra alerta visual prominente en inventario (2.0s)
+  x  35 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:500:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B28] Base de datos y servidor imponen exactamente una jornada diaria abierta global (55ms)
+  x  36 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:520:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B29] Registro de merma no genera fila duplicada en operating_expenses (34ms)
+  x  37 [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:541:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B30] MenuAdminView.tsx respeta el l├¡mite estricto de gobernanza de 400 l├¡neas (19ms)
+  ok 38 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:15:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 01 KDS 360px (3.1s)
+  ok 39 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:22:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 02 Caja Cobro 360px (3.1s)
+  ok 40 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:34:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 03 Caja Ventas del dia 360px (3.7s)
+  ok 41 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:46:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 04 Caja Cierre 360px (3.1s)
+  ok 42 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:58:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 05 Inventario 360px (3.3s)
+  ok 43 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:70:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 06 Finanzas 360px (2.5s)
+  ok 44 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\p1-a-captures.spec.ts:77:3 ÔÇ║ P1-A Capturas Visuales a 360px ÔÇ║ 07 Sidebar Menu 360px (4.1s)
+  ok 45 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:17:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B01] Ning├║n bot├│n, pesta├▒a o chip visible muestra el nombre del ├¡cono como texto literal (5.3s)
+  ok 46 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:43:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B02] En viewport m├│vil 360x800 el t├¡tulo de la cabecera no se trunca ni desborda (1.9s)
+  ok 47 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:58:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B03] Contraste suficiente WCAG AA en modo claro y oscuro (4.8s)
+  ok 48 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:73:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B04] Personal y Carta no muestran "CargandoÔÇª" infinito pasados 8 segundos (4.9s)
+  x  49 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:86:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B05] Tomar pedido permite flujo r├ípido sin mesa obligatoria y cobro accesible sin scroll excesivo (2.4s)
+  ok 50 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:104:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B06] No existe en la interfaz el texto redundante "Mesa Mesa" (2.9s)
+  x  51 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:131:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B07] El modal de vuelto muestra el monto exacto a entregar y soporta vuelto mixto (2.0s)
+  x  52 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:142:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B08] Cobro Express: modal no desborda en PC ni mueve el fondo en m├│vil (2.5s)
+  x  53 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:153:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B09] Caja y Cierre reflejan el monto vendido tras cobrar una orden (contratos consistentes) (2.9s)
+  x  54 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:184:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B10] Ventas del d├¡a no tiene botones de acci├│n cortados ni pesta├▒as truncadas (2.4s)
+  x  55 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:217:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B11] KDS presenta comandas legibles y permite avanzar estado con un solo toque (2.8s)
+  x  56 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:228:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B12] Ventas del d├¡a son id├®nticas entre Caja, Cierre, Panel de Due├▒a y Finanzas (1.0s)
+  x  57 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:259:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B13] Selector de sedes lista exactamente las 2 sedes oficiales (663ms)
+  x  58 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:272:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B14] Agregar insumo r├ípido responde 2xx y se a├▒ade al cat├ílogo sin 500 (2.4s)
+  x  59 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:281:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B15] Sub-receta se guarda exitosamente con c├ílculo de rendimiento de batch sin 500 (748ms)
+  x  60 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:314:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B16] Creaci├│n de recetas desde cero permite vincular insumos y guardar modo de receta (3.0s)
+[B17 SERVER ERROR CAPTURED] {
+  id: 'serr_1793154549813_9qfub0f',
+  request_id: 'req-ul',
+  method: 'POST',
+  url: '/api/fase3/waste',
+  status: 500,
+  code: 'INTERNAL',
+  message: "Producto 'null' no encontrado",
+  stack: "Error: Producto 'null' no encontrado\n" +
+    '    at <anonymous> (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\profitability\\waste-service.ts:125:24)\n' +
+    '    at sqliteTransaction (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\better-sqlite3@13.0.3\\node_modules\\better-sqlite3\\lib\\methods\\transaction.js:65:24)\n' +
+    '    at registerWasteLog (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\profitability\\waste-service.ts:184:3)\n' +
+    '    at Object.<anonymous> (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\apps\\server\\src\\modules\\profitability\\fase3-routes.ts:448:17)\n' +
+    '    at preHandlerCallbackInner (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\handle-request.js:190:24)\n' +
+    '    at preHandlerCallback (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\handle-request.js:155:5)\n' +
+    '    at next (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\hooks.js:236:9)\n' +
+    '    at handleResolve (C:\\Users\\Shell\\Documents\\Varonsmedia\\clientes\\tocinetasonrie\\SISTEMA\\node_modules\\.pnpm\\fastify@5.12.7\\node_modules\\fastify\\lib\\hooks.js:253:7)\n' +
+    '    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)',
+  body_json: '{"locationId":"loc_alta_vista","supplyId":"sup_salchicha","productId":null,"quantity":2,"unitCostUsdCents":40,"reason":"MERMA_VENCIMIENTO","notes":"Test B17"}',
+  user_id: 'usr_test_admin',
+  created_at_ms: 1793154549813
+}
+  x  61 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:324:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B17] Registro de merma no muestra "($NaN)" y responde 2xx sin 500 (785ms)
+  x  62 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:358:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B18] Registro de compras incluye gu├¡a pedag├│gica y foto de factura (3.4s)
+  x  63 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:374:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B19] Asistente "Configura tu negocio" admite m├║ltiples insumos/proveedores y bot├│n Finalizar guarda configuraci├│n (2.2s)
+  x  64 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:382:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B20] Cotizador de eventos muestra cat├ílogo de platos de la carta para cotizar (3.1s)
+  ok 65 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:399:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B21] Ninguna vista de la interfaz contiene la palabra "Treinta" (2.2s)
+  x  66 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:409:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B22] P&L no muestra margen neto negativo con estilo de ganancia (text-success) ni datos ficticios (2.0s)
+  x  67 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:419:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B23] KDS ejecuta audio, navigator.vibrate y clase de destello al recibir nuevo pedido (2.6s)
+  x  68 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:435:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B24] Anular orden #1 no modifica movimientos de ├│rdenes #10 ni #11 (reversa exacta por ID, no LIKE) (36ms)
+  ok 69 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:460:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B25] Bot├│n "Siguiente" en asistentes no se deshabilita sin validaci├│n visible y contenido no queda tapado por el pie (2.3s)
+  ok 70 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:475:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B26] Ning├║n bot├│n, pesta├▒a ni t├¡tulo contiene emojis crudos (2.0s)
+  x  71 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:486:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B27] Insumo con stock negativo muestra alerta visual prominente en inventario (2.6s)
+  x  72 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:500:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B28] Base de datos y servidor imponen exactamente una jornada diaria abierta global (38ms)
+  x  73 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:520:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B29] Registro de merma no genera fila duplicada en operating_expenses (34ms)
+  x  74 [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:541:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B30] MenuAdminView.tsx respeta el l├¡mite estricto de gobernanza de 400 l├¡neas (20ms)
+
+
+  1) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:86:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B05] Tomar pedido permite flujo r├ípido sin mesa obligatoria y cobro accesible sin scroll excesivo 
+
+    Error: No se encontr├│ bot├│n de cobro directo
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+       98 |       expect(box?.y, 'El bot├│n de cobro debe ser visible en la parte superior/media de la vista').toBeLessThan(500);
+       99 |     } else {
+    > 100 |       expect(false, 'No se encontr├│ bot├│n de cobro directo').toBe(true);
+          |                                                              ^
+      101 |     }
+      102 |   });
+      103 |
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:100:62
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-90be4-cesible-sin-scroll-excesivo-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-90be4-cesible-sin-scroll-excesivo-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-90be4-cesible-sin-scroll-excesivo-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-90be4-cesible-sin-scroll-excesivo-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-90be4-cesible-sin-scroll-excesivo-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  2) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:131:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B07] El modal de vuelto muestra el monto exacto a entregar y soporta vuelto mixto 
+
+    Error: Falta componente de vuelto real con desglose a entregar
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      137 |     const isChangeVisible = await changeAmount.count() > 0 && await changeAmount.first().isVisible().catch(() => false);
+      138 |     
+    > 139 |     expect(isChangeVisible, 'Falta componente de vuelto real con desglose a entregar').toBe(true);
+          |                                                                                        ^
+      140 |   });
+      141 |
+      142 |   test('[B08] Cobro Express: modal no desborda en PC ni mueve el fondo en m├│vil', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:139:88
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-beb8c-egar-y-soporta-vuelto-mixto-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-beb8c-egar-y-soporta-vuelto-mixto-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-beb8c-egar-y-soporta-vuelto-mixto-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-beb8c-egar-y-soporta-vuelto-mixto-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-beb8c-egar-y-soporta-vuelto-mixto-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  3) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:142:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B08] Cobro Express: modal no desborda en PC ni mueve el fondo en m├│vil 
+
+    Error: El fondo de la pantalla se desplaza en m├│vil al abrir modal
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      148 |     // Y en PC el modal debe tener ancho ├│ptimo para touch-desktop (>= 500px)
+      149 |     const isBodyLocked = await page.evaluate(() => document.body.style.overflow === 'hidden');
+    > 150 |     expect(isBodyLocked, 'El fondo de la pantalla se desplaza en m├│vil al abrir modal').toBe(true);
+          |                                                                                         ^
+      151 |   });
+      152 |
+      153 |   test('[B09] Caja y Cierre reflejan el monto vendido tras cobrar una orden (contratos consistentes)', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:150:89
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a879b--ni-mueve-el-fondo-en-m├│vil-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a879b--ni-mueve-el-fondo-en-m├│vil-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a879b--ni-mueve-el-fondo-en-m├│vil-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a879b--ni-mueve-el-fondo-en-m├│vil-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a879b--ni-mueve-el-fondo-en-m├│vil-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  4) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:153:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B09] Caja y Cierre reflejan el monto vendido tras cobrar una orden (contratos consistentes) 
+
+    Error: La lista de ventas de caja muestra $0.00 en vez de los $11.90 cobrados debido a incompatibilidad de contratos camelCase/snake_case
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      179 |     const isVisible = await salesTable.count() > 0 && await salesTable.first().isVisible().catch(() => false);
+      180 |
+    > 181 |     expect(isVisible, 'La lista de ventas de caja muestra $0.00 en vez de los $11.90 cobrados debido a incompatibilidad de contratos camelCase/snake_case').toBe(true);
+          |                                                                                                                                                             ^
+      182 |   });
+      183 |
+      184 |   test('[B10] Ventas del d├¡a no tiene botones de acci├│n cortados ni pesta├▒as truncadas', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:181:157
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-fd5b0-den-contratos-consistentes--movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-fd5b0-den-contratos-consistentes--movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-fd5b0-den-contratos-consistentes--movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-fd5b0-den-contratos-consistentes--movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-fd5b0-den-contratos-consistentes--movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  5) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:184:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B10] Ventas del d├¡a no tiene botones de acci├│n cortados ni pesta├▒as truncadas 
+
+    Error: No se encontr├│ rengl├│n de ventas con botones de acci├│n
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      211 |       expect(isOverflowing, 'Botones de acci├│n de venta desbordan en pantalla de 360px').toBe(false);
+      212 |     } else {
+    > 213 |       expect(false, 'No se encontr├│ rengl├│n de ventas con botones de acci├│n').toBe(true);
+          |                                                                               ^
+      214 |     }
+      215 |   });
+      216 |
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:213:79
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-d6bfe-tados-ni-pesta├▒as-truncadas-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-d6bfe-tados-ni-pesta├▒as-truncadas-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-d6bfe-tados-ni-pesta├▒as-truncadas-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-d6bfe-tados-ni-pesta├▒as-truncadas-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-d6bfe-tados-ni-pesta├▒as-truncadas-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  6) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:217:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B11] KDS presenta comandas legibles y permite avanzar estado con un solo toque 
+
+    Error: KDS no ofrece bot├│n para completar o avanzar la comanda completa en 1 solo toque sin micro-gesti├│n por plato
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      223 |     const hasOneTouch = await oneTouchOrderButton.count() > 0 && await oneTouchOrderButton.first().isVisible().catch(() => false);
+      224 |
+    > 225 |     expect(hasOneTouch, 'KDS no ofrece bot├│n para completar o avanzar la comanda completa en 1 solo toque sin micro-gesti├│n por plato').toBe(true);
+          |                                                                                                                                         ^
+      226 |   });
+      227 |
+      228 |   test('[B12] Ventas del d├¡a son id├®nticas entre Caja, Cierre, Panel de Due├▒a y Finanzas', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:225:137
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-31e50-ar-estado-con-un-solo-toque-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-31e50-ar-estado-con-un-solo-toque-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-31e50-ar-estado-con-un-solo-toque-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-31e50-ar-estado-con-un-solo-toque-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-31e50-ar-estado-con-un-solo-toque-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  7) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:228:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B12] Ventas del d├¡a son id├®nticas entre Caja, Cierre, Panel de Due├▒a y Finanzas 
+
+    Error: Ventas netas en Cierre Z ($0.00) no coinciden con cobros reales ($11.90)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1190
+    Received: 0
+
+      254 |
+      255 |     // Falla hoy porque el reporte Z calcula ventas desde ledger_entries mientras que la caja registra en payments
+    > 256 |     expect(netFoodSales, `Ventas netas en Cierre Z ($${(netFoodSales/100).toFixed(2)}) no coinciden con cobros reales ($${(paymentsSum/100).toFixed(2)})`).toBe(paymentsSum);
+          |                                                                                                                                                            ^
+      257 |   });
+      258 |
+      259 |   test('[B13] Selector de sedes lista exactamente las 2 sedes oficiales', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:256:156
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b22f8-e-Panel-de-Due├▒a-y-Finanzas-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b22f8-e-Panel-de-Due├▒a-y-Finanzas-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b22f8-e-Panel-de-Due├▒a-y-Finanzas-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b22f8-e-Panel-de-Due├▒a-y-Finanzas-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b22f8-e-Panel-de-Due├▒a-y-Finanzas-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  8) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:259:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B13] Selector de sedes lista exactamente las 2 sedes oficiales 
+
+    Error: Se esperaban exactamente 2 sedes oficiales, pero se obtuvieron 3: loc_los_olivos, loc_alta_vista, sede_alta_vista
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 2
+    Received: 3
+
+      266 |     const locs = json.locations || [];
+      267 |
+    > 268 |     expect(locs.length, `Se esperaban exactamente 2 sedes oficiales, pero se obtuvieron ${locs.length}: ${locs.map((l: any) => l.id).join(', ')}`).toBe(2);
+          |                                                                                                                                                    ^
+      269 |     expect(locs.some((l: any) => l.id === 'sede_alta_vista'), 'Aparece la tercera sede sede_alta_vista (Alias)').toBe(false);
+      270 |   });
+      271 |
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:268:148
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8ef4e-mente-las-2-sedes-oficiales-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8ef4e-mente-las-2-sedes-oficiales-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8ef4e-mente-las-2-sedes-oficiales-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8ef4e-mente-las-2-sedes-oficiales-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8ef4e-mente-las-2-sedes-oficiales-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  9) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:272:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B14] Agregar insumo r├ípido responde 2xx y se a├▒ade al cat├ílogo sin 500 
+
+    Error: El formulario de insumo r├ípido en el asistente carece de bot├│n para agregar o guardar insumos
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      276 |     // En el asistente (Paso 1), el usuario llena los campos pero no existe bot├│n para agregar o guardar el insumo
+      277 |     const addBtn = page.locator('button:has-text("A├▒adir Insumo"), button:has-text("Guardar Insumo")');
+    > 278 |     expect(await addBtn.count() > 0, 'El formulario de insumo r├ípido en el asistente carece de bot├│n para agregar o guardar insumos').toBe(true);
+          |                                                                                                                                       ^
+      279 |   });
+      280 |
+      281 |   test('[B15] Sub-receta se guarda exitosamente con c├ílculo de rendimiento de batch sin 500', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:278:135
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-db885-e-a├▒ade-al-cat├ílogo-sin-500-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-db885-e-a├▒ade-al-cat├ílogo-sin-500-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-db885-e-a├▒ade-al-cat├ílogo-sin-500-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-db885-e-a├▒ade-al-cat├ílogo-sin-500-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-db885-e-a├▒ade-al-cat├ílogo-sin-500-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  10) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:281:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B15] Sub-receta se guarda exitosamente con c├ílculo de rendimiento de batch sin 500 
+
+    Error: POST /api/fase3/sub-recipes fall├│ con 422: {"success":false,"error":"El campo 'supply_id' es obligatorio","code":"FIELD_REQUIRED","message":"El campo 'supply_id' es obligatorio","requestId":"req-bv","field":"supply_id"}
+
+    expect(received).toBeLessThan(expected)
+
+    Expected: < 400
+    Received:   422
+
+      309 |     }
+      310 |
+    > 311 |     expect(status, `POST /api/fase3/sub-recipes fall├│ con ${status}: ${body}`).toBeLessThan(400);
+          |                                                                                ^
+      312 |   });
+      313 |
+      314 |   test('[B16] Creaci├│n de recetas desde cero permite vincular insumos y guardar modo de receta', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:311:80
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-9d500-endimiento-de-batch-sin-500-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-9d500-endimiento-de-batch-sin-500-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-9d500-endimiento-de-batch-sin-500-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-9d500-endimiento-de-batch-sin-500-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-9d500-endimiento-de-batch-sin-500-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  11) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:314:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B16] Creaci├│n de recetas desde cero permite vincular insumos y guardar modo de receta 
+
+    Error: No existe bot├│n para crear una receta nueva desde cero
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      319 |     const exists = await newRecipeBtn.count() > 0 && await newRecipeBtn.first().isVisible().catch(() => false);
+      320 |
+    > 321 |     expect(exists, 'No existe bot├│n para crear una receta nueva desde cero').toBe(true);
+          |                                                                              ^
+      322 |   });
+      323 |
+      324 |   test('[B17] Registro de merma no muestra "($NaN)" y responde 2xx sin 500', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:321:78
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a7fc8-os-y-guardar-modo-de-receta-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a7fc8-os-y-guardar-modo-de-receta-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a7fc8-os-y-guardar-modo-de-receta-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a7fc8-os-y-guardar-modo-de-receta-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a7fc8-os-y-guardar-modo-de-receta-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  12) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:324:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B17] Registro de merma no muestra "($NaN)" y responde 2xx sin 500 
+
+    Error: POST /api/fase3/waste fall├│ con 500: {"success":false,"error":"Error interno del servidor","code":"INTERNAL","message":"Error interno del servidor","requestId":"req-ch"}
+
+    expect(received).toBeLessThan(expected)
+
+    Expected: < 400
+    Received:   500
+
+      353 |     }
+      354 |
+    > 355 |     expect(status, `POST /api/fase3/waste fall├│ con ${status}: ${body}`).toBeLessThan(400);
+          |                                                                          ^
+      356 |   });
+      357 |
+      358 |   test('[B18] Registro de compras incluye gu├¡a pedag├│gica y foto de factura', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:355:74
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b301b--NaN-y-responde-2xx-sin-500-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b301b--NaN-y-responde-2xx-sin-500-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b301b--NaN-y-responde-2xx-sin-500-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b301b--NaN-y-responde-2xx-sin-500-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b301b--NaN-y-responde-2xx-sin-500-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  13) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:358:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B18] Registro de compras incluye gu├¡a pedag├│gica y foto de factura 
+
+    Error: No se pudo abrir modal de compras
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      368 |       expect(await invoiceInput.count() > 0, 'Falta campo para subir foto de factura en compras').toBe(true);
+      369 |     } else {
+    > 370 |       expect(false, 'No se pudo abrir modal de compras').toBe(true);
+          |                                                          ^
+      371 |     }
+      372 |   });
+      373 |
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:370:58
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-ab69d-edag├│gica-y-foto-de-factura-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-ab69d-edag├│gica-y-foto-de-factura-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-ab69d-edag├│gica-y-foto-de-factura-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-ab69d-edag├│gica-y-foto-de-factura-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-ab69d-edag├│gica-y-foto-de-factura-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  14) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:374:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B19] Asistente "Configura tu negocio" admite m├║ltiples insumos/proveedores y bot├│n Finalizar guarda configuraci├│n 
+
+    Error: El asistente solo permite 1 insumo en state en vez de una lista de insumos
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      377 |
+      378 |     const addToListBtn = page.locator('button:has-text("Agregar a la lista"), button:has-text("A├▒adir Insumo")');
+    > 379 |     expect(await addToListBtn.count() > 0, 'El asistente solo permite 1 insumo en state en vez de una lista de insumos').toBe(true);
+          |                                                                                                                          ^
+      380 |   });
+      381 |
+      382 |   test('[B20] Cotizador de eventos muestra cat├ílogo de platos de la carta para cotizar', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:379:122
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-e66cd-alizar-guarda-configuraci├│n-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-e66cd-alizar-guarda-configuraci├│n-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-e66cd-alizar-guarda-configuraci├│n-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-e66cd-alizar-guarda-configuraci├│n-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-e66cd-alizar-guarda-configuraci├│n-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  15) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:382:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B20] Cotizador de eventos muestra cat├ílogo de platos de la carta para cotizar 
+
+    Error: El selector de platos del cotizador est├í vac├¡o
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 2
+    Received:   1
+
+      391 |       const prodOptions = page.locator('select option');
+      392 |       const count = await prodOptions.count();
+    > 393 |       expect(count, 'El selector de platos del cotizador est├í vac├¡o').toBeGreaterThan(2);
+          |                                                                       ^
+      394 |     } else {
+      395 |       expect(false, 'No se encontr├│ bot├│n de nueva cotizaci├│n').toBe(true);
+      396 |     }
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:393:71
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-81ff1-os-de-la-carta-para-cotizar-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-81ff1-os-de-la-carta-para-cotizar-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-81ff1-os-de-la-carta-para-cotizar-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-81ff1-os-de-la-carta-para-cotizar-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-81ff1-os-de-la-carta-para-cotizar-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  16) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:409:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B22] P&L no muestra margen neto negativo con estilo de ganancia (text-success) ni datos ficticios 
+
+    Error: El margen neto est├í fijo con clase text-success (verde) independientemente de la utilidad
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: 1
+
+      414 |     const greenMargin = page.locator('span.text-success:has-text("Margen Neto")');
+      415 |     const count = await greenMargin.count();
+    > 416 |     expect(count, 'El margen neto est├í fijo con clase text-success (verde) independientemente de la utilidad').toBe(0);
+          |                                                                                                                ^
+      417 |   });
+      418 |
+      419 |   test('[B23] KDS ejecuta audio, navigator.vibrate y clase de destello al recibir nuevo pedido', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:416:112
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-0a827--success-ni-datos-ficticios-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-0a827--success-ni-datos-ficticios-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-0a827--success-ni-datos-ficticios-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-0a827--success-ni-datos-ficticios-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-0a827--success-ni-datos-ficticios-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  17) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:419:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B23] KDS ejecuta audio, navigator.vibrate y clase de destello al recibir nuevo pedido 
+
+    Error: navigator.vibrate debe ser invocado ante llegada de nueva orden
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      430 |
+      431 |     const vibrateCalled = await page.evaluate(() => (window as any).__vibrateCalled);
+    > 432 |     expect(vibrateCalled, 'navigator.vibrate debe ser invocado ante llegada de nueva orden').toBe(true);
+          |                                                                                              ^
+      433 |   });
+      434 |
+      435 |   test('[B24] Anular orden #1 no modifica movimientos de ├│rdenes #10 ni #11 (reversa exacta por ID, no LIKE)', async () => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:432:94
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8b267-llo-al-recibir-nuevo-pedido-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8b267-llo-al-recibir-nuevo-pedido-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8b267-llo-al-recibir-nuevo-pedido-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8b267-llo-al-recibir-nuevo-pedido-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8b267-llo-al-recibir-nuevo-pedido-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  18) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:435:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B24] Anular orden #1 no modifica movimientos de ├│rdenes #10 ni #11 (reversa exacta por ID, no LIKE) 
+
+    Error: La anulaci├│n por LIKE '%1%' coincidi├│ indebidamente con: ORD-1, ORD-10, ORD-11
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 3
+
+      455 |     rawDb.close();
+      456 |
+    > 457 |     expect(matched.length, `La anulaci├│n por LIKE '%1%' coincidi├│ indebidamente con: ${matched.map(m => m.reference_doc).join(', ')}`).toBe(1);
+          |                                                                                                                                        ^
+      458 |   });
+      459 |
+      460 |   test('[B25] Bot├│n "Siguiente" en asistentes no se deshabilita sin validaci├│n visible y contenido no queda tapado por el pie', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:457:136
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-57d82-ersa-exacta-por-ID-no-LIKE--movil-360x800\error-context.md
+
+    attachment #2: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-57d82-ersa-exacta-por-ID-no-LIKE--movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-57d82-ersa-exacta-por-ID-no-LIKE--movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  19) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:486:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B27] Insumo con stock negativo muestra alerta visual prominente en inventario 
+
+    Error: Falta alerta visual destacada para stock negativo (ÔêÆ4)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      495 |     const isVisible = await alertBadge.count() > 0 && await alertBadge.first().isVisible().catch(() => false);
+      496 |
+    > 497 |     expect(isVisible, 'Falta alerta visual destacada para stock negativo (ÔêÆ4)').toBe(true);
+          |                                                                                 ^
+      498 |   });
+      499 |
+      500 |   test('[B28] Base de datos y servidor imponen exactamente una jornada diaria abierta global', async () => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:497:81
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-96fd3-al-prominente-en-inventario-movil-360x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-96fd3-al-prominente-en-inventario-movil-360x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-96fd3-al-prominente-en-inventario-movil-360x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-96fd3-al-prominente-en-inventario-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-96fd3-al-prominente-en-inventario-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  20) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:500:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B28] Base de datos y servidor imponen exactamente una jornada diaria abierta global 
+
+    Error: El esquema permite m├║ltiples jornadas abiertas simult├íneamente
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      515 |     }
+      516 |
+    > 517 |     expect(threw, 'El esquema permite m├║ltiples jornadas abiertas simult├íneamente').toBe(true);
+          |                                                                                     ^
+      518 |   });
+      519 |
+      520 |   test('[B29] Registro de merma no genera fila duplicada en operating_expenses', async () => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:517:85
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-598e1-rnada-diaria-abierta-global-movil-360x800\error-context.md
+
+    attachment #2: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-598e1-rnada-diaria-abierta-global-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-598e1-rnada-diaria-abierta-global-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  21) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:520:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B29] Registro de merma no genera fila duplicada en operating_expenses 
+
+    Error: La merma se duplic├│ como gasto operativo en operating_expenses
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 7
+    Received: 8
+
+      536 |     rawDb.close();
+      537 |
+    > 538 |     expect(countAfter, 'La merma se duplic├│ como gasto operativo en operating_expenses').toBe(countBefore);
+          |                                                                                          ^
+      539 |   });
+      540 |
+      541 |   test('[B30] MenuAdminView.tsx respeta el l├¡mite estricto de gobernanza de 400 l├¡neas', () => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:538:90
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-04135-icada-en-operating-expenses-movil-360x800\error-context.md
+
+    attachment #2: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-04135-icada-en-operating-expenses-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-04135-icada-en-operating-expenses-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  22) [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:541:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B30] MenuAdminView.tsx respeta el l├¡mite estricto de gobernanza de 400 l├¡neas 
+
+    Error: MenuAdminView.tsx tiene 1516 l├¡neas, superando el l├¡mite estricto de 400 l├¡neas
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 400
+    Received:    1516
+
+      545 |     const lineCount = content.split('\n').length;
+      546 |
+    > 547 |     expect(lineCount, `MenuAdminView.tsx tiene ${lineCount} l├¡neas, superando el l├¡mite estricto de 400 l├¡neas`).toBeLessThanOrEqual(400);
+          |                                                                                                                  ^
+      548 |   });
+      549 |
+      550 | });
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:547:114
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8bf54-de-gobernanza-de-400-l├¡neas-movil-360x800\error-context.md
+
+    attachment #2: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8bf54-de-gobernanza-de-400-l├¡neas-movil-360x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8bf54-de-gobernanza-de-400-l├¡neas-movil-360x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  23) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:86:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B05] Tomar pedido permite flujo r├ípido sin mesa obligatoria y cobro accesible sin scroll excesivo 
+
+    Error: No se encontr├│ bot├│n de cobro directo
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+       98 |       expect(box?.y, 'El bot├│n de cobro debe ser visible en la parte superior/media de la vista').toBeLessThan(500);
+       99 |     } else {
+    > 100 |       expect(false, 'No se encontr├│ bot├│n de cobro directo').toBe(true);
+          |                                                              ^
+      101 |     }
+      102 |   });
+      103 |
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:100:62
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-90be4-cesible-sin-scroll-excesivo-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-90be4-cesible-sin-scroll-excesivo-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-90be4-cesible-sin-scroll-excesivo-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-90be4-cesible-sin-scroll-excesivo-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-90be4-cesible-sin-scroll-excesivo-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  24) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:131:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B07] El modal de vuelto muestra el monto exacto a entregar y soporta vuelto mixto 
+
+    Error: Falta componente de vuelto real con desglose a entregar
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      137 |     const isChangeVisible = await changeAmount.count() > 0 && await changeAmount.first().isVisible().catch(() => false);
+      138 |     
+    > 139 |     expect(isChangeVisible, 'Falta componente de vuelto real con desglose a entregar').toBe(true);
+          |                                                                                        ^
+      140 |   });
+      141 |
+      142 |   test('[B08] Cobro Express: modal no desborda en PC ni mueve el fondo en m├│vil', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:139:88
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-beb8c-egar-y-soporta-vuelto-mixto-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-beb8c-egar-y-soporta-vuelto-mixto-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-beb8c-egar-y-soporta-vuelto-mixto-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-beb8c-egar-y-soporta-vuelto-mixto-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-beb8c-egar-y-soporta-vuelto-mixto-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  25) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:142:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B08] Cobro Express: modal no desborda en PC ni mueve el fondo en m├│vil 
+
+    Error: El fondo de la pantalla se desplaza en m├│vil al abrir modal
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      148 |     // Y en PC el modal debe tener ancho ├│ptimo para touch-desktop (>= 500px)
+      149 |     const isBodyLocked = await page.evaluate(() => document.body.style.overflow === 'hidden');
+    > 150 |     expect(isBodyLocked, 'El fondo de la pantalla se desplaza en m├│vil al abrir modal').toBe(true);
+          |                                                                                         ^
+      151 |   });
+      152 |
+      153 |   test('[B09] Caja y Cierre reflejan el monto vendido tras cobrar una orden (contratos consistentes)', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:150:89
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a879b--ni-mueve-el-fondo-en-m├│vil-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a879b--ni-mueve-el-fondo-en-m├│vil-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a879b--ni-mueve-el-fondo-en-m├│vil-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a879b--ni-mueve-el-fondo-en-m├│vil-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a879b--ni-mueve-el-fondo-en-m├│vil-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  26) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:153:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B09] Caja y Cierre reflejan el monto vendido tras cobrar una orden (contratos consistentes) 
+
+    Error: La lista de ventas de caja muestra $0.00 en vez de los $11.90 cobrados debido a incompatibilidad de contratos camelCase/snake_case
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      179 |     const isVisible = await salesTable.count() > 0 && await salesTable.first().isVisible().catch(() => false);
+      180 |
+    > 181 |     expect(isVisible, 'La lista de ventas de caja muestra $0.00 en vez de los $11.90 cobrados debido a incompatibilidad de contratos camelCase/snake_case').toBe(true);
+          |                                                                                                                                                             ^
+      182 |   });
+      183 |
+      184 |   test('[B10] Ventas del d├¡a no tiene botones de acci├│n cortados ni pesta├▒as truncadas', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:181:157
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-fd5b0-den-contratos-consistentes--escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-fd5b0-den-contratos-consistentes--escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-fd5b0-den-contratos-consistentes--escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-fd5b0-den-contratos-consistentes--escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-fd5b0-den-contratos-consistentes--escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  27) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:184:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B10] Ventas del d├¡a no tiene botones de acci├│n cortados ni pesta├▒as truncadas 
+
+    Error: No se encontr├│ rengl├│n de ventas con botones de acci├│n
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      211 |       expect(isOverflowing, 'Botones de acci├│n de venta desbordan en pantalla de 360px').toBe(false);
+      212 |     } else {
+    > 213 |       expect(false, 'No se encontr├│ rengl├│n de ventas con botones de acci├│n').toBe(true);
+          |                                                                               ^
+      214 |     }
+      215 |   });
+      216 |
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:213:79
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-d6bfe-tados-ni-pesta├▒as-truncadas-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-d6bfe-tados-ni-pesta├▒as-truncadas-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-d6bfe-tados-ni-pesta├▒as-truncadas-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-d6bfe-tados-ni-pesta├▒as-truncadas-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-d6bfe-tados-ni-pesta├▒as-truncadas-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  28) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:217:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B11] KDS presenta comandas legibles y permite avanzar estado con un solo toque 
+
+    Error: KDS no ofrece bot├│n para completar o avanzar la comanda completa en 1 solo toque sin micro-gesti├│n por plato
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      223 |     const hasOneTouch = await oneTouchOrderButton.count() > 0 && await oneTouchOrderButton.first().isVisible().catch(() => false);
+      224 |
+    > 225 |     expect(hasOneTouch, 'KDS no ofrece bot├│n para completar o avanzar la comanda completa en 1 solo toque sin micro-gesti├│n por plato').toBe(true);
+          |                                                                                                                                         ^
+      226 |   });
+      227 |
+      228 |   test('[B12] Ventas del d├¡a son id├®nticas entre Caja, Cierre, Panel de Due├▒a y Finanzas', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:225:137
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-31e50-ar-estado-con-un-solo-toque-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-31e50-ar-estado-con-un-solo-toque-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-31e50-ar-estado-con-un-solo-toque-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-31e50-ar-estado-con-un-solo-toque-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-31e50-ar-estado-con-un-solo-toque-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  29) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:228:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B12] Ventas del d├¡a son id├®nticas entre Caja, Cierre, Panel de Due├▒a y Finanzas 
+
+    Error: Ventas netas en Cierre Z ($0.00) no coinciden con cobros reales ($11.90)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1190
+    Received: 0
+
+      254 |
+      255 |     // Falla hoy porque el reporte Z calcula ventas desde ledger_entries mientras que la caja registra en payments
+    > 256 |     expect(netFoodSales, `Ventas netas en Cierre Z ($${(netFoodSales/100).toFixed(2)}) no coinciden con cobros reales ($${(paymentsSum/100).toFixed(2)})`).toBe(paymentsSum);
+          |                                                                                                                                                            ^
+      257 |   });
+      258 |
+      259 |   test('[B13] Selector de sedes lista exactamente las 2 sedes oficiales', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:256:156
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b22f8-e-Panel-de-Due├▒a-y-Finanzas-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b22f8-e-Panel-de-Due├▒a-y-Finanzas-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b22f8-e-Panel-de-Due├▒a-y-Finanzas-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b22f8-e-Panel-de-Due├▒a-y-Finanzas-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b22f8-e-Panel-de-Due├▒a-y-Finanzas-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  30) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:259:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B13] Selector de sedes lista exactamente las 2 sedes oficiales 
+
+    Error: Se esperaban exactamente 2 sedes oficiales, pero se obtuvieron 3: loc_los_olivos, loc_alta_vista, sede_alta_vista
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 2
+    Received: 3
+
+      266 |     const locs = json.locations || [];
+      267 |
+    > 268 |     expect(locs.length, `Se esperaban exactamente 2 sedes oficiales, pero se obtuvieron ${locs.length}: ${locs.map((l: any) => l.id).join(', ')}`).toBe(2);
+          |                                                                                                                                                    ^
+      269 |     expect(locs.some((l: any) => l.id === 'sede_alta_vista'), 'Aparece la tercera sede sede_alta_vista (Alias)').toBe(false);
+      270 |   });
+      271 |
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:268:148
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8ef4e-mente-las-2-sedes-oficiales-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8ef4e-mente-las-2-sedes-oficiales-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8ef4e-mente-las-2-sedes-oficiales-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8ef4e-mente-las-2-sedes-oficiales-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8ef4e-mente-las-2-sedes-oficiales-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  31) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:272:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B14] Agregar insumo r├ípido responde 2xx y se a├▒ade al cat├ílogo sin 500 
+
+    Error: El formulario de insumo r├ípido en el asistente carece de bot├│n para agregar o guardar insumos
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      276 |     // En el asistente (Paso 1), el usuario llena los campos pero no existe bot├│n para agregar o guardar el insumo
+      277 |     const addBtn = page.locator('button:has-text("A├▒adir Insumo"), button:has-text("Guardar Insumo")');
+    > 278 |     expect(await addBtn.count() > 0, 'El formulario de insumo r├ípido en el asistente carece de bot├│n para agregar o guardar insumos').toBe(true);
+          |                                                                                                                                       ^
+      279 |   });
+      280 |
+      281 |   test('[B15] Sub-receta se guarda exitosamente con c├ílculo de rendimiento de batch sin 500', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:278:135
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-db885-e-a├▒ade-al-cat├ílogo-sin-500-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-db885-e-a├▒ade-al-cat├ílogo-sin-500-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-db885-e-a├▒ade-al-cat├ílogo-sin-500-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-db885-e-a├▒ade-al-cat├ílogo-sin-500-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-db885-e-a├▒ade-al-cat├ílogo-sin-500-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  32) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:281:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B15] Sub-receta se guarda exitosamente con c├ílculo de rendimiento de batch sin 500 
+
+    Error: POST /api/fase3/sub-recipes fall├│ con 422: {"success":false,"error":"El campo 'supply_id' es obligatorio","code":"FIELD_REQUIRED","message":"El campo 'supply_id' es obligatorio","requestId":"req-tz","field":"supply_id"}
+
+    expect(received).toBeLessThan(expected)
+
+    Expected: < 400
+    Received:   422
+
+      309 |     }
+      310 |
+    > 311 |     expect(status, `POST /api/fase3/sub-recipes fall├│ con ${status}: ${body}`).toBeLessThan(400);
+          |                                                                                ^
+      312 |   });
+      313 |
+      314 |   test('[B16] Creaci├│n de recetas desde cero permite vincular insumos y guardar modo de receta', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:311:80
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-9d500-endimiento-de-batch-sin-500-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-9d500-endimiento-de-batch-sin-500-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-9d500-endimiento-de-batch-sin-500-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-9d500-endimiento-de-batch-sin-500-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-9d500-endimiento-de-batch-sin-500-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  33) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:314:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B16] Creaci├│n de recetas desde cero permite vincular insumos y guardar modo de receta 
+
+    Error: No existe bot├│n para crear una receta nueva desde cero
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      319 |     const exists = await newRecipeBtn.count() > 0 && await newRecipeBtn.first().isVisible().catch(() => false);
+      320 |
+    > 321 |     expect(exists, 'No existe bot├│n para crear una receta nueva desde cero').toBe(true);
+          |                                                                              ^
+      322 |   });
+      323 |
+      324 |   test('[B17] Registro de merma no muestra "($NaN)" y responde 2xx sin 500', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:321:78
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a7fc8-os-y-guardar-modo-de-receta-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a7fc8-os-y-guardar-modo-de-receta-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a7fc8-os-y-guardar-modo-de-receta-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a7fc8-os-y-guardar-modo-de-receta-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-a7fc8-os-y-guardar-modo-de-receta-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  34) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:324:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B17] Registro de merma no muestra "($NaN)" y responde 2xx sin 500 
+
+    Error: POST /api/fase3/waste fall├│ con 500: {"success":false,"error":"Error interno del servidor","code":"INTERNAL","message":"Error interno del servidor","requestId":"req-ul"}
+
+    expect(received).toBeLessThan(expected)
+
+    Expected: < 400
+    Received:   500
+
+      353 |     }
+      354 |
+    > 355 |     expect(status, `POST /api/fase3/waste fall├│ con ${status}: ${body}`).toBeLessThan(400);
+          |                                                                          ^
+      356 |   });
+      357 |
+      358 |   test('[B18] Registro de compras incluye gu├¡a pedag├│gica y foto de factura', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:355:74
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b301b--NaN-y-responde-2xx-sin-500-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b301b--NaN-y-responde-2xx-sin-500-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b301b--NaN-y-responde-2xx-sin-500-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b301b--NaN-y-responde-2xx-sin-500-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-b301b--NaN-y-responde-2xx-sin-500-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  35) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:358:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B18] Registro de compras incluye gu├¡a pedag├│gica y foto de factura 
+
+    Error: No se pudo abrir modal de compras
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      368 |       expect(await invoiceInput.count() > 0, 'Falta campo para subir foto de factura en compras').toBe(true);
+      369 |     } else {
+    > 370 |       expect(false, 'No se pudo abrir modal de compras').toBe(true);
+          |                                                          ^
+      371 |     }
+      372 |   });
+      373 |
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:370:58
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-ab69d-edag├│gica-y-foto-de-factura-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-ab69d-edag├│gica-y-foto-de-factura-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-ab69d-edag├│gica-y-foto-de-factura-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-ab69d-edag├│gica-y-foto-de-factura-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-ab69d-edag├│gica-y-foto-de-factura-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  36) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:374:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B19] Asistente "Configura tu negocio" admite m├║ltiples insumos/proveedores y bot├│n Finalizar guarda configuraci├│n 
+
+    Error: El asistente solo permite 1 insumo en state en vez de una lista de insumos
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      377 |
+      378 |     const addToListBtn = page.locator('button:has-text("Agregar a la lista"), button:has-text("A├▒adir Insumo")');
+    > 379 |     expect(await addToListBtn.count() > 0, 'El asistente solo permite 1 insumo en state en vez de una lista de insumos').toBe(true);
+          |                                                                                                                          ^
+      380 |   });
+      381 |
+      382 |   test('[B20] Cotizador de eventos muestra cat├ílogo de platos de la carta para cotizar', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:379:122
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-e66cd-alizar-guarda-configuraci├│n-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-e66cd-alizar-guarda-configuraci├│n-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-e66cd-alizar-guarda-configuraci├│n-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-e66cd-alizar-guarda-configuraci├│n-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-e66cd-alizar-guarda-configuraci├│n-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  37) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:382:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B20] Cotizador de eventos muestra cat├ílogo de platos de la carta para cotizar 
+
+    Error: El selector de platos del cotizador est├í vac├¡o
+
+    expect(received).toBeGreaterThan(expected)
+
+    Expected: > 2
+    Received:   1
+
+      391 |       const prodOptions = page.locator('select option');
+      392 |       const count = await prodOptions.count();
+    > 393 |       expect(count, 'El selector de platos del cotizador est├í vac├¡o').toBeGreaterThan(2);
+          |                                                                       ^
+      394 |     } else {
+      395 |       expect(false, 'No se encontr├│ bot├│n de nueva cotizaci├│n').toBe(true);
+      396 |     }
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:393:71
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-81ff1-os-de-la-carta-para-cotizar-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-81ff1-os-de-la-carta-para-cotizar-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-81ff1-os-de-la-carta-para-cotizar-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-81ff1-os-de-la-carta-para-cotizar-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-81ff1-os-de-la-carta-para-cotizar-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  38) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:409:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B22] P&L no muestra margen neto negativo con estilo de ganancia (text-success) ni datos ficticios 
+
+    Error: El margen neto est├í fijo con clase text-success (verde) independientemente de la utilidad
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 0
+    Received: 1
+
+      414 |     const greenMargin = page.locator('span.text-success:has-text("Margen Neto")');
+      415 |     const count = await greenMargin.count();
+    > 416 |     expect(count, 'El margen neto est├í fijo con clase text-success (verde) independientemente de la utilidad').toBe(0);
+          |                                                                                                                ^
+      417 |   });
+      418 |
+      419 |   test('[B23] KDS ejecuta audio, navigator.vibrate y clase de destello al recibir nuevo pedido', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:416:112
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-0a827--success-ni-datos-ficticios-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-0a827--success-ni-datos-ficticios-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-0a827--success-ni-datos-ficticios-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-0a827--success-ni-datos-ficticios-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-0a827--success-ni-datos-ficticios-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  39) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:419:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B23] KDS ejecuta audio, navigator.vibrate y clase de destello al recibir nuevo pedido 
+
+    Error: navigator.vibrate debe ser invocado ante llegada de nueva orden
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      430 |
+      431 |     const vibrateCalled = await page.evaluate(() => (window as any).__vibrateCalled);
+    > 432 |     expect(vibrateCalled, 'navigator.vibrate debe ser invocado ante llegada de nueva orden').toBe(true);
+          |                                                                                              ^
+      433 |   });
+      434 |
+      435 |   test('[B24] Anular orden #1 no modifica movimientos de ├│rdenes #10 ni #11 (reversa exacta por ID, no LIKE)', async () => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:432:94
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8b267-llo-al-recibir-nuevo-pedido-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8b267-llo-al-recibir-nuevo-pedido-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8b267-llo-al-recibir-nuevo-pedido-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8b267-llo-al-recibir-nuevo-pedido-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8b267-llo-al-recibir-nuevo-pedido-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  40) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:435:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B24] Anular orden #1 no modifica movimientos de ├│rdenes #10 ni #11 (reversa exacta por ID, no LIKE) 
+
+    Error: La anulaci├│n por LIKE '%1%' coincidi├│ indebidamente con: ORD-1, ORD-10, ORD-11
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 1
+    Received: 3
+
+      455 |     rawDb.close();
+      456 |
+    > 457 |     expect(matched.length, `La anulaci├│n por LIKE '%1%' coincidi├│ indebidamente con: ${matched.map(m => m.reference_doc).join(', ')}`).toBe(1);
+          |                                                                                                                                        ^
+      458 |   });
+      459 |
+      460 |   test('[B25] Bot├│n "Siguiente" en asistentes no se deshabilita sin validaci├│n visible y contenido no queda tapado por el pie', async ({ page }) => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:457:136
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-57d82-ersa-exacta-por-ID-no-LIKE--escritorio-1280x800\error-context.md
+
+    attachment #2: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-57d82-ersa-exacta-por-ID-no-LIKE--escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-57d82-ersa-exacta-por-ID-no-LIKE--escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  41) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:486:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B27] Insumo con stock negativo muestra alerta visual prominente en inventario 
+
+    Error: Falta alerta visual destacada para stock negativo (ÔêÆ4)
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      495 |     const isVisible = await alertBadge.count() > 0 && await alertBadge.first().isVisible().catch(() => false);
+      496 |
+    > 497 |     expect(isVisible, 'Falta alerta visual destacada para stock negativo (ÔêÆ4)').toBe(true);
+          |                                                                                 ^
+      498 |   });
+      499 |
+      500 |   test('[B28] Base de datos y servidor imponen exactamente una jornada diaria abierta global', async () => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:497:81
+
+    attachment #1: screenshot (image/png) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-96fd3-al-prominente-en-inventario-escritorio-1280x800\test-failed-1.png
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    attachment #2: video (video/webm) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-96fd3-al-prominente-en-inventario-escritorio-1280x800\video.webm
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-96fd3-al-prominente-en-inventario-escritorio-1280x800\error-context.md
+
+    attachment #4: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-96fd3-al-prominente-en-inventario-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-96fd3-al-prominente-en-inventario-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  42) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:500:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B28] Base de datos y servidor imponen exactamente una jornada diaria abierta global 
+
+    Error: El esquema permite m├║ltiples jornadas abiertas simult├íneamente
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: true
+    Received: false
+
+      515 |     }
+      516 |
+    > 517 |     expect(threw, 'El esquema permite m├║ltiples jornadas abiertas simult├íneamente').toBe(true);
+          |                                                                                     ^
+      518 |   });
+      519 |
+      520 |   test('[B29] Registro de merma no genera fila duplicada en operating_expenses', async () => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:517:85
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-598e1-rnada-diaria-abierta-global-escritorio-1280x800\error-context.md
+
+    attachment #2: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-598e1-rnada-diaria-abierta-global-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-598e1-rnada-diaria-abierta-global-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  43) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:520:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B29] Registro de merma no genera fila duplicada en operating_expenses 
+
+    Error: La merma se duplic├│ como gasto operativo en operating_expenses
+
+    expect(received).toBe(expected) // Object.is equality
+
+    Expected: 8
+    Received: 9
+
+      536 |     rawDb.close();
+      537 |
+    > 538 |     expect(countAfter, 'La merma se duplic├│ como gasto operativo en operating_expenses').toBe(countBefore);
+          |                                                                                          ^
+      539 |   });
+      540 |
+      541 |   test('[B30] MenuAdminView.tsx respeta el l├¡mite estricto de gobernanza de 400 l├¡neas', () => {
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:538:90
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-04135-icada-en-operating-expenses-escritorio-1280x800\error-context.md
+
+    attachment #2: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-04135-icada-en-operating-expenses-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-04135-icada-en-operating-expenses-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  44) [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:541:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B30] MenuAdminView.tsx respeta el l├¡mite estricto de gobernanza de 400 l├¡neas 
+
+    Error: MenuAdminView.tsx tiene 1516 l├¡neas, superando el l├¡mite estricto de 400 l├¡neas
+
+    expect(received).toBeLessThanOrEqual(expected)
+
+    Expected: <= 400
+    Received:    1516
+
+      545 |     const lineCount = content.split('\n').length;
+      546 |
+    > 547 |     expect(lineCount, `MenuAdminView.tsx tiene ${lineCount} l├¡neas, superando el l├¡mite estricto de 400 l├¡neas`).toBeLessThanOrEqual(400);
+          |                                                                                                                  ^
+      548 |   });
+      549 |
+      550 | });
+        at C:\Users\Shell\Documents\Varonsmedia\clientes\tocinetasonrie\SISTEMA\tools\r2-harness\specs\r2-defects.spec.ts:547:114
+
+    Error Context: docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8bf54-de-gobernanza-de-400-l├¡neas-escritorio-1280x800\error-context.md
+
+    attachment #2: trace (application/zip) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+    docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8bf54-de-gobernanza-de-400-l├¡neas-escritorio-1280x800\trace.zip
+    Usage:
+
+        pnpm exec playwright show-trace docs\r2\evidencia\artifacts\r2-defects-Ronda-2-ÔÇö-30-De-8bf54-de-gobernanza-de-400-l├¡neas-escritorio-1280x800\trace.zip
+
+    ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
+
+  44 failed
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:86:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B05] Tomar pedido permite flujo r├ípido sin mesa obligatoria y cobro accesible sin scroll excesivo 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:131:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B07] El modal de vuelto muestra el monto exacto a entregar y soporta vuelto mixto 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:142:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B08] Cobro Express: modal no desborda en PC ni mueve el fondo en m├│vil 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:153:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B09] Caja y Cierre reflejan el monto vendido tras cobrar una orden (contratos consistentes) 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:184:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B10] Ventas del d├¡a no tiene botones de acci├│n cortados ni pesta├▒as truncadas 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:217:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B11] KDS presenta comandas legibles y permite avanzar estado con un solo toque 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:228:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B12] Ventas del d├¡a son id├®nticas entre Caja, Cierre, Panel de Due├▒a y Finanzas 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:259:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B13] Selector de sedes lista exactamente las 2 sedes oficiales 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:272:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B14] Agregar insumo r├ípido responde 2xx y se a├▒ade al cat├ílogo sin 500 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:281:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B15] Sub-receta se guarda exitosamente con c├ílculo de rendimiento de batch sin 500 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:314:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B16] Creaci├│n de recetas desde cero permite vincular insumos y guardar modo de receta 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:324:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B17] Registro de merma no muestra "($NaN)" y responde 2xx sin 500 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:358:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B18] Registro de compras incluye gu├¡a pedag├│gica y foto de factura 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:374:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B19] Asistente "Configura tu negocio" admite m├║ltiples insumos/proveedores y bot├│n Finalizar guarda configuraci├│n 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:382:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B20] Cotizador de eventos muestra cat├ílogo de platos de la carta para cotizar 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:409:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B22] P&L no muestra margen neto negativo con estilo de ganancia (text-success) ni datos ficticios 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:419:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B23] KDS ejecuta audio, navigator.vibrate y clase de destello al recibir nuevo pedido 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:435:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B24] Anular orden #1 no modifica movimientos de ├│rdenes #10 ni #11 (reversa exacta por ID, no LIKE) 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:486:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B27] Insumo con stock negativo muestra alerta visual prominente en inventario 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:500:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B28] Base de datos y servidor imponen exactamente una jornada diaria abierta global 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:520:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B29] Registro de merma no genera fila duplicada en operating_expenses 
+    [movil-360x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:541:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B30] MenuAdminView.tsx respeta el l├¡mite estricto de gobernanza de 400 l├¡neas 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:86:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B05] Tomar pedido permite flujo r├ípido sin mesa obligatoria y cobro accesible sin scroll excesivo 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:131:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B07] El modal de vuelto muestra el monto exacto a entregar y soporta vuelto mixto 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:142:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B08] Cobro Express: modal no desborda en PC ni mueve el fondo en m├│vil 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:153:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B09] Caja y Cierre reflejan el monto vendido tras cobrar una orden (contratos consistentes) 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:184:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B10] Ventas del d├¡a no tiene botones de acci├│n cortados ni pesta├▒as truncadas 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:217:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B11] KDS presenta comandas legibles y permite avanzar estado con un solo toque 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:228:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B12] Ventas del d├¡a son id├®nticas entre Caja, Cierre, Panel de Due├▒a y Finanzas 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:259:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B13] Selector de sedes lista exactamente las 2 sedes oficiales 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:272:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B14] Agregar insumo r├ípido responde 2xx y se a├▒ade al cat├ílogo sin 500 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:281:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B15] Sub-receta se guarda exitosamente con c├ílculo de rendimiento de batch sin 500 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:314:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B16] Creaci├│n de recetas desde cero permite vincular insumos y guardar modo de receta 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:324:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B17] Registro de merma no muestra "($NaN)" y responde 2xx sin 500 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:358:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B18] Registro de compras incluye gu├¡a pedag├│gica y foto de factura 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:374:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B19] Asistente "Configura tu negocio" admite m├║ltiples insumos/proveedores y bot├│n Finalizar guarda configuraci├│n 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:382:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B20] Cotizador de eventos muestra cat├ílogo de platos de la carta para cotizar 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:409:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B22] P&L no muestra margen neto negativo con estilo de ganancia (text-success) ni datos ficticios 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:419:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B23] KDS ejecuta audio, navigator.vibrate y clase de destello al recibir nuevo pedido 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:435:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B24] Anular orden #1 no modifica movimientos de ├│rdenes #10 ni #11 (reversa exacta por ID, no LIKE) 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:486:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B27] Insumo con stock negativo muestra alerta visual prominente en inventario 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:500:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B28] Base de datos y servidor imponen exactamente una jornada diaria abierta global 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:520:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B29] Registro de merma no genera fila duplicada en operating_expenses 
+    [escritorio-1280x800] ÔÇ║ tools\r2-harness\specs\r2-defects.spec.ts:541:3 ÔÇ║ Ronda 2 ÔÇö 30 Defectos en ROJO (P0-B Harness) ÔÇ║ [B30] MenuAdminView.tsx respeta el l├¡mite estricto de gobernanza de 400 l├¡neas 
+  30 passed (5.0m)
+[ELIFECYCLE] Command failed with exit code 1.

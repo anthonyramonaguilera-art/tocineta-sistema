@@ -1,0 +1,43 @@
+﻿pnpm.exe : $ node scripts/guard-visual.mjs
+En C:\Users\Shell\AppData\Roaming\npm\pnpm.ps1: 14 Carácter: 3
++   & "$basedir/node_modules/pnpm/pnpm.exe"   $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ($ node scripts/guard-visual.mjs:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+
+========================================================================================
+­ƒøí´©Å  GUARD VISUAL ÔÇö AUDITOR├ìA PROFUNDA EN CHROMIUM REAL (MODO CLARO Y OSCURO)
+========================================================================================
+
+[GUARD:VISUAL] Iniciando servidor de pruebas en puerto 3100...
+(node:212356) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to 
+security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[GUARD:VISUAL] Servidor de pruebas conectado exitosamente.
+
+­ƒô▒ Probando Viewport: movil-360x800 (360x800)
+  ­ƒæñ Rol: ADMIN
+  ­ƒæñ Rol: CAJERA
+  ­ƒæñ Rol: MESERO
+  ­ƒæñ Rol: PLANCHA
+
+­ƒô▒ Probando Viewport: escritorio-1280x800 (1280x800)
+  ­ƒæñ Rol: ADMIN
+  ­ƒæñ Rol: CAJERA
+  ­ƒæñ Rol: MESERO
+  ­ƒæñ Rol: PLANCHA
+
+========================================================================================
+­ƒôï RESULTADOS DEL GUARD VISUAL ÔÇö 94 VIOLACIONES DETECTADAS
+========================================================================================
+ÔØî SE ENCONTRARON 94 VIOLACIONES VISUALES (Comportamiento esperado en P0-B):
+
+  - COLOR_CONTRAST: 50 ocurrencia(s)
+  - CONSOLE_ERROR: 36 ocurrencia(s)
+  - HORIZONTAL_OVERFLOW: 8 ocurrencia(s)
+
+­ƒôä Reporte detallado guardado en: docs/r2/evidencia/guard-visual-report.json
+========================================================================================
+
+[ELIFECYCLE] Command failed with exit code 1.

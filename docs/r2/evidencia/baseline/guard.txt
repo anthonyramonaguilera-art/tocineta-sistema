@@ -1,0 +1,9 @@
+﻿pnpm.exe : $ node scripts/ui-guard.mjs
+En C:\Users\Shell\AppData\Roaming\npm\pnpm.ps1: 14 Carácter: 3
++   & "$basedir/node_modules/pnpm/pnpm.exe"   $args
++   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: ($ node scripts/ui-guard.mjs:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+--- EJECUTANDO UI-GUARD (Reglas Estrictas de Sistema de Dise├▒o) ---
+Ô£ô UI-GUARD: Todas las reglas sem├ínticas y de gobernanza pasaron con ├®xito.

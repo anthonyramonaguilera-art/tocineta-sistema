@@ -122,8 +122,8 @@ Las fases 3-4 (UI base) y 5-6 (datos) pueden ir en paralelo si se usan ramas sep
 6. Simulacro de jornada completa (P7) en verde y prueba humana de Anthony en teléfono (lista en P7).
 
 ## 8. Preguntas abiertas (solo las que bloquean decisiones)
-1. **D2:** ¿Te sirve "el inventario se descuenta cuando la orden entra a cocina o se cobra, lo que ocurra primero"? Si prefieres "solo al cobrar" (como hoy), se cambia en P4-A.
-2. **Gaveta física:** ¿Hay **una** gaveta de efectivo para todo el negocio o **una por sede**? Supuesto por defecto: una caja por cajera dentro de la jornada global; el Cierre suma todas y muestra el desglose por sede.
+1. **D2 [CONFIRMADO POR EL DUEÑO]:** El inventario se descuenta una sola vez por orden, al primero que ocurra entre "entra a cocina" o "se cobra". (Se implementa en P4-A).
+2. **D1 / Gaveta física [CONFIRMADO POR EL DUEÑO]:** Jornada global única; una caja por cajera dentro de esa jornada; el selector de sede solo filtra reportes. Caja y Cierre muestran la jornada completa con desglose por sede.
 3. **Base real:** el .rar trae la BD de desarrollo. La limpieza de datos basura (P6-A) debe correrse sobre la BD del PC servidor; el agente prepara el comando y lo ejecutas tú.
 
 ## 9. Seguridad del paquete

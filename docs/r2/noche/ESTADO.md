@@ -1,0 +1,21 @@
+# ESTADO DE EJECUCIÓN — NOCHE-01
+
+- **Fase actual:** P2-A (Datos: dos sedes oficiales y jornada global única)
+- **Tarea actual:** Tarea 1: Quitar el alias del código (`OFFICIAL_LOCATIONS` y `ensureOfficialLocations`)
+- **Piso de pruebas (Línea Base):** 296 pruebas pasando (33 archivos de test). Prohibido bajar de 296.
+- **Defectos verdes baseline:** 3 verdes (B01, B10, B26), 27 rojos.
+- **Comandos verificados (coinciden con P0-B):**
+  - `pnpm guard`: `node scripts/ui-guard.mjs` (verde)
+  - `pnpm -r run lint`: `tsc --noEmit` en shared, server, web (verde)
+  - `pnpm -r run build`: compila shared, server y web (verde)
+  - `pnpm test`: vitest en server (296 pruebas verdes)
+  - `pnpm guard:visual`: `node scripts/guard-visual.mjs` (operativo, 94 violaciones detectadas en baseline)
+  - `pnpm r2:e2e`: `playwright test -c playwright.r2.config.ts` (operativo, 30 specs ejecutadas)
+  - `pnpm r2:status`: `node scripts/r2-status.mjs` (operativo)
+- **Rama activa:** `r2/noche-01`
+- **Tareas hechas:**
+  - Preparación completa e inicio de sesión nocturna (`8e87192` chore(r2): estado previo a noche-01).
+- **Decisiones:**
+  - D1 (Jornada global única) y D2 (inventario al entrar a cocina o cobrar) confirmados formalmente por el dueño.
+- **Bloqueos:** Ninguno.
+- **Siguiente paso exacto:** Iniciar Tarea 1 de P2-A confirmando con grep los hechos verificados de `OFFICIAL_LOCATIONS` en `locations-service.ts`.
