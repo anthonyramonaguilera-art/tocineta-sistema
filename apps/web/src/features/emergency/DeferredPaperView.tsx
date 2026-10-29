@@ -196,11 +196,11 @@ export const DeferredPaperView: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Encabezado y Acciones de Contingencia */}
-      <div className="bg-tocineta-card border border-tocineta-border p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-lg">
+      <div className="bg-tocineta-card border border-tocineta-border p-5 rounded-2xl flex flex-wrap items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <Receipt className="w-7 h-7 text-amber-400" />
-            <h1 className="text-xl font-black text-white tracking-wide">
+            <Receipt className="w-7 h-7 text-primary" />
+            <h1 className="text-xl font-black text-ink tracking-wide">
               MODO EMERGENCIA Y CARGA DIFERIDA DE PAPEL
             </h1>
           </div>
@@ -243,7 +243,7 @@ export const DeferredPaperView: React.FC = () => {
           className={`p-4 rounded-xl text-sm font-bold flex items-center justify-between ${
             statusMessage.type === 'success'
               ? 'bg-tocineta-green/20 border border-tocineta-green text-tocineta-green'
-              : 'bg-red-500/20 border border-red-500 text-red-300'
+              : 'bg-red-500/20 border border-red-500 text-danger'
           }`}
         >
           <span>{statusMessage.text}</span>
@@ -273,7 +273,7 @@ export const DeferredPaperView: React.FC = () => {
                 placeholder="Ej. #EMG-001 o 1"
                 value={slipNumber}
                 onChange={(e) => setSlipNumber(e.target.value)}
-                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white font-mono font-bold"
+                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink font-mono font-bold"
               />
             </div>
 
@@ -286,7 +286,7 @@ export const DeferredPaperView: React.FC = () => {
                 type="date"
                 value={realDate}
                 onChange={(e) => setRealDate(e.target.value)}
-                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white"
+                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink"
               />
             </div>
 
@@ -299,7 +299,7 @@ export const DeferredPaperView: React.FC = () => {
                 type="time"
                 value={realTime}
                 onChange={(e) => setRealTime(e.target.value)}
-                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white font-mono"
+                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink font-mono"
               />
             </div>
           </div>
@@ -312,7 +312,7 @@ export const DeferredPaperView: React.FC = () => {
               <select
                 value={fulfillmentType}
                 onChange={(e) => setFulfillmentType(e.target.value as any)}
-                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white"
+                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink"
               >
                 <option value="salon">Salón</option>
                 <option value="para_llevar">Para Llevar</option>
@@ -329,7 +329,7 @@ export const DeferredPaperView: React.FC = () => {
                 placeholder="Mesa 3 / Mesero"
                 value={tableNumber}
                 onChange={(e) => setTableNumber(e.target.value)}
-                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-tocineta-text"
+                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink"
               />
             </div>
 
@@ -342,7 +342,7 @@ export const DeferredPaperView: React.FC = () => {
                 placeholder="Nombre o teléfono"
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white"
+                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink"
               />
             </div>
           </div>
@@ -357,7 +357,7 @@ export const DeferredPaperView: React.FC = () => {
               <select
                 value={selectedProductId}
                 onChange={(e) => setSelectedProductId(e.target.value)}
-                className="flex-1 min-w-[200px] bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white"
+                className="flex-1 min-w-[200px] bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink"
               >
                 <option value="">-- Seleccionar Producto --</option>
                 {products.map((p) => (
@@ -372,13 +372,13 @@ export const DeferredPaperView: React.FC = () => {
                 min="1"
                 value={quantity}
                 onChange={(e) => setQuantity(parseInt(e.target.value, 10) || 1)}
-                className="w-20 bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white text-center font-bold"
+                className="w-20 bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink text-center font-bold"
               />
 
               <button
                 type="button"
                 onClick={handleAddLine}
-                className="px-4 py-2 bg-tocineta-yellow text-tocineta-bg font-extrabold text-xs rounded-xl hover:bg-yellow-400 transition-colors"
+                className="px-4 py-2 bg-primary text-primary-ink font-extrabold text-xs rounded-xl hover:bg-primary-hover transition-colors"
               >
                 + Agregar
               </button>
@@ -390,7 +390,7 @@ export const DeferredPaperView: React.FC = () => {
                 {orderLines.map((line, idx) => (
                   <div key={idx} className="py-2 flex items-center justify-between text-sm">
                     <div>
-                      <span className="font-bold text-white">{line.quantity}x </span>
+                      <span className="font-bold text-ink">{line.quantity}x </span>
                       <span>{line.name}</span>
                     </div>
                     <div className="flex items-center gap-3">
@@ -400,7 +400,7 @@ export const DeferredPaperView: React.FC = () => {
                       <button
                         type="button"
                         onClick={() => handleRemoveLine(idx)}
-                        className="text-red-400 hover:text-red-300 text-xs font-bold"
+                        className="text-danger hover:text-danger text-xs font-bold"
                       >
                         ✕
                       </button>
@@ -431,7 +431,7 @@ export const DeferredPaperView: React.FC = () => {
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value as any)}
-                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white"
+                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink"
               >
                 <option value="cash_usd">Efectivo Dólares (USD)</option>
                 <option value="cash_bs">Efectivo Bolívares (Bs)</option>
@@ -451,7 +451,7 @@ export const DeferredPaperView: React.FC = () => {
                 placeholder={(totalUsdCents / 100).toFixed(2)}
                 value={paidAmountUsd}
                 onChange={(e) => setPaidAmountUsd(e.target.value)}
-                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white font-mono"
+                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink font-mono"
               />
             </div>
 
@@ -464,7 +464,7 @@ export const DeferredPaperView: React.FC = () => {
                 placeholder="Ej. 123456"
                 value={refCode}
                 onChange={(e) => setRefCode(e.target.value)}
-                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white"
+                className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink"
               />
             </div>
           </div>
@@ -478,7 +478,7 @@ export const DeferredPaperView: React.FC = () => {
               placeholder="Detalles sobre modificaciones o instrucciones del cliente"
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-white"
+              className="w-full bg-tocineta-bg border border-tocineta-border focus:border-tocineta-yellow rounded-xl px-3 py-2 text-sm text-ink"
             />
           </div>
 
@@ -486,7 +486,7 @@ export const DeferredPaperView: React.FC = () => {
             type="button"
             onClick={() => submitMutation.mutate()}
             disabled={submitMutation.isPending}
-            className="w-full py-3.5 bg-tocineta-yellow text-tocineta-bg font-black rounded-xl text-sm hover:bg-yellow-400 active:scale-[0.99] transition-all shadow-lg flex items-center justify-center gap-2"
+            className="w-full py-3.5 bg-primary text-primary-ink font-black rounded-xl text-sm hover:bg-primary-hover active:scale-[0.99] transition-all flex items-center justify-center gap-2"
           >
             <Icon name="FileText" size={16} />
             <span>
@@ -498,7 +498,7 @@ export const DeferredPaperView: React.FC = () => {
         {/* Panel Lateral: Comandas Diferidas Ya Cargadas */}
         <div className="bg-tocineta-card border border-tocineta-border rounded-2xl p-5 shadow-md flex flex-col">
           <div className="flex items-center justify-between border-b border-tocineta-border pb-3 mb-4">
-            <h3 className="text-sm font-extrabold text-white flex items-center gap-2">
+            <h3 className="text-sm font-extrabold text-ink flex items-center gap-2">
               <Icon name="Folder" size={16} />
               <span>Comandas de Papel Transcritas</span>
             </h3>
@@ -525,14 +525,14 @@ export const DeferredPaperView: React.FC = () => {
 
                   <div className="text-xs text-tocineta-muted flex items-center justify-between">
                     <span>Ocurrió:</span>
-                    <span className="text-white font-mono">
+                    <span className="text-ink font-mono">
                       {new Date(ord.created_at_ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
 
                   <div className="text-xs text-tocineta-muted flex items-center justify-between">
                     <span>Monto Total:</span>
-                    <span className="font-bold text-white font-mono">
+                    <span className="font-bold text-ink font-mono">
                       ${(ord.total_to_collect_usd_cents / 100).toFixed(2)}
                     </span>
                   </div>

@@ -84,7 +84,26 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'ing_base_pepinillo', name: 'Pepinillo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
       { id: 'ing_base_salsa_ajo', name: 'Salsa de Ajo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 10 },
       { id: 'ing_base_papas_hilo', name: 'Papas Ralladas Hilo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
-      { id: 'ing_base_lechuga', name: 'Lechuga Fresca', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 10 }
+      { id: 'ing_base_lechuga', name: 'Lechuga Fresca', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 10 },
+      // Nuevos ingredientes oficiales de la carta (Fase M2 / Tarea Q10)
+      { id: 'ing_base_queso_americano', name: 'Queso Americano', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 30 },
+      { id: 'ing_base_salsa_americana', name: 'Salsa Americana', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
+      { id: 'ing_base_salsa_chickfila', name: 'Salsa Chickfila', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
+      { id: 'ing_base_bbq_americana', name: 'BBQ Americana', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
+      { id: 'ing_base_nuggets_pollo', name: 'Nuggets de Pollo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 60 },
+      { id: 'ing_base_chorizo_ahumado', name: 'Chorizo Ahumado', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 50 },
+      { id: 'ing_base_calabresa', name: 'Calabresa', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 50 },
+      { id: 'ing_base_smoked_mayo', name: 'Smoked Mayo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
+      { id: 'ing_base_queso_crema', name: 'Queso Crema', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 35 },
+      { id: 'ing_base_roquefort', name: 'Roquefort', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 45 },
+      { id: 'ing_base_miel', name: 'Miel', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 20 },
+      { id: 'ing_base_crocante_mozzarella', name: 'Crocante de Mozzarella', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 40 },
+      { id: 'ing_base_papas_fritas', name: 'Papas Fritas', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 30 },
+      { id: 'ing_base_cebolla_smash', name: 'Cebolla Smash', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
+      { id: 'ing_base_pollo_marinado_grill', name: 'Pollo Marinado Grill', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 80 },
+      { id: 'ing_base_salsa_ajo_perejil', name: 'Salsa Ajo y Perejil', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
+      { id: 'ing_base_lechuga_romana', name: 'Lechuga Romana', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
+      { id: 'ing_base_pollo_crispy', name: 'Pollo Crispy', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 80 }
     ];
 
     const insertIng = rawDb.prepare(`
@@ -111,14 +130,14 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'prod_seattle_dog', category_id: 'cat_hot_dogs', name: 'Seattle Dog', description: 'Pan de perro, salchicha polaca, salsas tradicionales, papitas al hilo, fusión queso crema con mozzarella fundido, tocineta crocante, chutney de tomate, mostaza americana, ketchup', price: 490, cost: 150, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
       // --- HAMBURGUESAS (8 Oficiales) ---
-      { id: 'prod_americana_deluxe', category_id: 'cat_hamburguesas', name: 'Americana Deluxe', description: 'Carne smash, queso cheddar, tocineta, lechuga, tomate, pepinillo', price: 1300, cost: 420, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
-      { id: 'prod_texas_mex', category_id: 'cat_hamburguesas', name: 'Texas Mex', description: 'Carne smash, queso cheddar, jalapeños, doritos, tocineta', price: 690, cost: 230, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
-      { id: 'prod_pechuga_cesar', category_id: 'cat_hamburguesas', name: 'Pechuga Cesar', description: 'Pechuga crispy, queso parmesano, lechuga, salsa de ajo', price: 690, cost: 240, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
-      { id: 'prod_grill', category_id: 'cat_hamburguesas', name: 'Grill', description: 'Carne smash, queso cheddar, tocineta, cebolla caramelizada', price: 690, cost: 235, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
-      { id: 'prod_nuggets_meat', category_id: 'cat_hamburguesas', name: 'Nuggets Meat', description: 'Carne smash, queso cheddar, tocineta', price: 690, cost: 245, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
-      { id: 'prod_miami', category_id: 'cat_hamburguesas', name: 'Miami', description: 'Carne smash, queso cheddar, papitas al hilo, salsa de ajo', price: 690, cost: 230, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
-      { id: 'prod_new_york', category_id: 'cat_hamburguesas', name: 'New York', description: 'Carne smash, queso cheddar, tocineta, cebolla caramelizada, pepinillo', price: 690, cost: 235, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
-      { id: 'prod_mozarrella', category_id: 'cat_hamburguesas', name: 'Mozarrella', description: 'Carne smash, queso mozzarella fundido, tocineta', price: 690, cost: 240, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_americana_deluxe', category_id: 'cat_hamburguesas', name: 'Americana Deluxe', description: 'Cuatro carne prime, pollo crispy, full queso americano, queso americano fundido, tocineta ahumada coronada con pepinillos, cebolla caramelizada, salsa americana y papas fritas', price: 1300, cost: 420, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_texas_mex', category_id: 'cat_hamburguesas', name: 'Texas Mex', description: 'Doble carne prime, lechuga, doble queso americano, doble tocineta ahumada, chickfila, coronada con jalapeños y doritos', price: 690, cost: 230, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_pechuga_cesar', category_id: 'cat_hamburguesas', name: 'Pechuga Cesar', description: 'Doble pechuga crujiente, ensalada cesar, queso americano, coronada con salsa chick fil a y bbq americana', price: 690, cost: 240, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_grill', category_id: 'cat_hamburguesas', name: 'Grill', description: 'Carne prime, pollo marinado con especias grill a la plancha, chorizo ahumado y calabresa, lechuga, queso americano, salsa ajo y perejil', price: 690, cost: 235, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_nuggets_meat', category_id: 'cat_hamburguesas', name: 'Nuggets Meat', description: 'Carne prime y nuggets de pollo, lechuga, tocineta ahumada, queso americano, coronada con queso fundido, bbq americana y chickfila', price: 690, cost: 245, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_miami', category_id: 'cat_hamburguesas', name: 'Miami', description: 'Triple carne prime, cebolla smash, triple queso americano, pepinillos, coronada con smoked mayo', price: 690, cost: 230, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_new_york', category_id: 'cat_hamburguesas', name: 'New York', description: 'Doble carne prime, doble queso americano, tocineta ahumada, lechuga romana, pepinillos, salsa americana y cebolla caramelizada', price: 690, cost: 235, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_mozarrella', category_id: 'cat_hamburguesas', name: 'Mozarrella', description: 'Doble carne prime, lechuga, tocineta ahumada sellada con miel, porción de crocante queso mozzarella, fusión de queso crema con roquefort fundido', price: 690, cost: 240, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
       // --- COMBOS (3 Oficiales) ---
       { id: 'prod_combo_street', category_id: 'cat_combos', name: 'Combo Street', description: '2 Street Dogs + 1 Malta Lata 250 ml', price: 550, cost: 190, station: 'hot_dogs', is_combo: 1, allows_flavors: 0, is_active: 1 },
@@ -212,62 +231,100 @@ export function seedCatalog(rawDb: Database.Database): void {
     insertProdIng.run('pi_seattle_moz', 'prod_seattle_dog', 'ing_base_queso_mozzarella', 4);
     insertProdIng.run('pi_seattle_cebcar', 'prod_seattle_dog', 'ing_bl_cebolla_caramelizada', 5);
 
-    // B. Recetas Oficiales: 8 Hamburguesas (Pan Brioche base, SIN pan de perro ni salsas tradicionales)
-    const burgerList = [
-      'prod_americana_deluxe', 'prod_texas_mex', 'prod_pechuga_cesar', 'prod_grill',
-      'prod_nuggets_meat', 'prod_miami', 'prod_new_york', 'prod_mozarrella'
-    ];
-    for (const bId of burgerList) {
-      insertProdIng.run(`pi_${bId}_pan`, bId, 'ing_base_pan_brioche', 1);
-      if (bId === 'prod_pechuga_cesar') {
-        insertProdIng.run(`pi_${bId}_carne`, bId, 'ing_base_pechuga_crispy', 2);
-      } else {
-        insertProdIng.run(`pi_${bId}_carne`, bId, 'ing_base_carne_smash', 2);
-      }
-    }
+    // B. Recetas Oficiales: 8 Hamburguesas (Pan Brioche base, ingredientes según descripción de afiche)
+    // 1. Americana Deluxe: Cuatro carne prime, pollo crispy, full queso americano, queso americano fundido, tocineta ahumada coronada con pepinillos, cebolla caramelizada, salsa americana y papas fritas
+    insertProdIng.run('pi_amer_pan', 'prod_americana_deluxe', 'ing_base_pan_brioche', 1);
+    insertProdIng.run('pi_amer_carne_1', 'prod_americana_deluxe', 'ing_base_carne_smash', 2);
+    insertProdIng.run('pi_amer_carne_2', 'prod_americana_deluxe', 'ing_base_carne_smash', 3);
+    insertProdIng.run('pi_amer_carne_3', 'prod_americana_deluxe', 'ing_base_carne_smash', 4);
+    insertProdIng.run('pi_amer_carne_4', 'prod_americana_deluxe', 'ing_base_carne_smash', 5);
+    insertProdIng.run('pi_amer_pollo_crispy', 'prod_americana_deluxe', 'ing_base_pollo_crispy', 6);
+    insertProdIng.run('pi_amer_queso_amer_1', 'prod_americana_deluxe', 'ing_base_queso_americano', 7);
+    insertProdIng.run('pi_amer_queso_amer_2', 'prod_americana_deluxe', 'ing_base_queso_americano', 8);
+    insertProdIng.run('pi_amer_tocineta', 'prod_americana_deluxe', 'ing_base_tocineta', 9);
+    insertProdIng.run('pi_amer_pepinillo', 'prod_americana_deluxe', 'ing_base_pepinillo', 10);
+    insertProdIng.run('pi_amer_cebcar', 'prod_americana_deluxe', 'ing_bl_cebolla_caramelizada', 11);
+    insertProdIng.run('pi_amer_salsa_amer', 'prod_americana_deluxe', 'ing_base_salsa_americana', 12);
+    insertProdIng.run('pi_amer_papas_fritas', 'prod_americana_deluxe', 'ing_base_papas_fritas', 13);
 
-    // Específicos por hamburguesa
-    // 1. Americana Deluxe
-    insertProdIng.run('pi_amer_cheddar', 'prod_americana_deluxe', 'ing_base_queso_cheddar', 3);
-    insertProdIng.run('pi_amer_tocineta', 'prod_americana_deluxe', 'ing_base_tocineta', 4);
-    insertProdIng.run('pi_amer_lechuga', 'prod_americana_deluxe', 'ing_base_lechuga', 5);
-    insertProdIng.run('pi_amer_tomate', 'prod_americana_deluxe', 'ing_bl_tomate', 6);
-    insertProdIng.run('pi_amer_pepinillo', 'prod_americana_deluxe', 'ing_base_pepinillo', 7);
+    // 2. Texas Mex: Doble carne prime, lechuga, doble queso americano, doble tocineta ahumada, chickfila, coronada con jalapeños y doritos
+    insertProdIng.run('pi_texas_pan', 'prod_texas_mex', 'ing_base_pan_brioche', 1);
+    insertProdIng.run('pi_texas_carne_1', 'prod_texas_mex', 'ing_base_carne_smash', 2);
+    insertProdIng.run('pi_texas_carne_2', 'prod_texas_mex', 'ing_base_carne_smash', 3);
+    insertProdIng.run('pi_texas_lechuga', 'prod_texas_mex', 'ing_base_lechuga', 4);
+    insertProdIng.run('pi_texas_queso_amer_1', 'prod_texas_mex', 'ing_base_queso_americano', 5);
+    insertProdIng.run('pi_texas_queso_amer_2', 'prod_texas_mex', 'ing_base_queso_americano', 6);
+    insertProdIng.run('pi_texas_tocineta_1', 'prod_texas_mex', 'ing_base_tocineta', 7);
+    insertProdIng.run('pi_texas_tocineta_2', 'prod_texas_mex', 'ing_base_tocineta', 8);
+    insertProdIng.run('pi_texas_chickfila', 'prod_texas_mex', 'ing_base_salsa_chickfila', 9);
+    insertProdIng.run('pi_texas_jalapenos', 'prod_texas_mex', 'ing_base_jalapenos', 10);
+    insertProdIng.run('pi_texas_doritos', 'prod_texas_mex', 'ing_base_doritos', 11);
 
-    // 2. Texas Mex
-    insertProdIng.run('pi_texas_cheddar', 'prod_texas_mex', 'ing_base_queso_cheddar', 3);
-    insertProdIng.run('pi_texas_jalapenos', 'prod_texas_mex', 'ing_base_jalapenos', 4);
-    insertProdIng.run('pi_texas_doritos', 'prod_texas_mex', 'ing_base_doritos', 5);
-    insertProdIng.run('pi_texas_tocineta', 'prod_texas_mex', 'ing_base_tocineta', 6);
+    // 3. Pechuga Cesar: Doble pechuga crujiente, ensalada cesar, queso americano, coronada con salsa chick fil a y bbq americana
+    insertProdIng.run('pi_cesar_pan', 'prod_pechuga_cesar', 'ing_base_pan_brioche', 1);
+    insertProdIng.run('pi_cesar_pechuga_1', 'prod_pechuga_cesar', 'ing_base_pechuga_crispy', 2);
+    insertProdIng.run('pi_cesar_pechuga_2', 'prod_pechuga_cesar', 'ing_base_pechuga_crispy', 3);
+    insertProdIng.run('pi_cesar_lechuga_romana', 'prod_pechuga_cesar', 'ing_base_lechuga_romana', 4);
+    insertProdIng.run('pi_cesar_parmesano', 'prod_pechuga_cesar', 'ing_base_queso_parmesano', 5);
+    insertProdIng.run('pi_cesar_queso_amer', 'prod_pechuga_cesar', 'ing_base_queso_americano', 6);
+    insertProdIng.run('pi_cesar_chickfila', 'prod_pechuga_cesar', 'ing_base_salsa_chickfila', 7);
+    insertProdIng.run('pi_cesar_bbq', 'prod_pechuga_cesar', 'ing_base_bbq_americana', 8);
 
-    // 3. Pechuga Cesar
-    insertProdIng.run('pi_cesar_parmesano', 'prod_pechuga_cesar', 'ing_base_queso_parmesano', 3);
-    insertProdIng.run('pi_cesar_lechuga', 'prod_pechuga_cesar', 'ing_base_lechuga', 4);
-    insertProdIng.run('pi_cesar_ajo', 'prod_pechuga_cesar', 'ing_base_salsa_ajo', 5);
+    // 4. Grill: Carne prime, pollo marinado con especias grill a la plancha, chorizo ahumado y calabresa, lechuga, queso americano, salsa ajo y perejil
+    insertProdIng.run('pi_grill_pan', 'prod_grill', 'ing_base_pan_brioche', 1);
+    insertProdIng.run('pi_grill_carne', 'prod_grill', 'ing_base_carne_smash', 2);
+    insertProdIng.run('pi_grill_pollo_grill', 'prod_grill', 'ing_base_pollo_marinado_grill', 3);
+    insertProdIng.run('pi_grill_chorizo', 'prod_grill', 'ing_base_chorizo_ahumado', 4);
+    insertProdIng.run('pi_grill_calabresa', 'prod_grill', 'ing_base_calabresa', 5);
+    insertProdIng.run('pi_grill_lechuga', 'prod_grill', 'ing_base_lechuga', 6);
+    insertProdIng.run('pi_grill_queso_amer', 'prod_grill', 'ing_base_queso_americano', 7);
+    insertProdIng.run('pi_grill_ajo_perejil', 'prod_grill', 'ing_base_salsa_ajo_perejil', 8);
 
-    // 4. Grill
-    insertProdIng.run('pi_grill_cheddar', 'prod_grill', 'ing_base_queso_cheddar', 3);
-    insertProdIng.run('pi_grill_tocineta', 'prod_grill', 'ing_base_tocineta', 4);
-    insertProdIng.run('pi_grill_cebcar', 'prod_grill', 'ing_bl_cebolla_caramelizada', 5);
+    // 5. Nuggets Meat: Carne prime y nuggets de pollo, lechuga, tocineta ahumada, queso americano, coronada con queso fundido, bbq americana y chickfila
+    insertProdIng.run('pi_nuggets_pan', 'prod_nuggets_meat', 'ing_base_pan_brioche', 1);
+    insertProdIng.run('pi_nuggets_carne', 'prod_nuggets_meat', 'ing_base_carne_smash', 2);
+    insertProdIng.run('pi_nuggets_pollo', 'prod_nuggets_meat', 'ing_base_nuggets_pollo', 3);
+    insertProdIng.run('pi_nuggets_lechuga', 'prod_nuggets_meat', 'ing_base_lechuga', 4);
+    insertProdIng.run('pi_nuggets_tocineta', 'prod_nuggets_meat', 'ing_base_tocineta', 5);
+    insertProdIng.run('pi_nuggets_queso_amer', 'prod_nuggets_meat', 'ing_base_queso_americano', 6);
+    insertProdIng.run('pi_nuggets_queso_cheddar', 'prod_nuggets_meat', 'ing_base_queso_cheddar', 7);
+    insertProdIng.run('pi_nuggets_bbq', 'prod_nuggets_meat', 'ing_base_bbq_americana', 8);
+    insertProdIng.run('pi_nuggets_chickfila', 'prod_nuggets_meat', 'ing_base_salsa_chickfila', 9);
 
-    // 5. Nuggets Meat
-    insertProdIng.run('pi_nuggets_cheddar', 'prod_nuggets_meat', 'ing_base_queso_cheddar', 3);
-    insertProdIng.run('pi_nuggets_tocineta', 'prod_nuggets_meat', 'ing_base_tocineta', 4);
+    // 6. Miami: Triple carne prime, cebolla smash, triple queso americano, pepinillos, coronada con smoked mayo
+    insertProdIng.run('pi_miami_pan', 'prod_miami', 'ing_base_pan_brioche', 1);
+    insertProdIng.run('pi_miami_carne_1', 'prod_miami', 'ing_base_carne_smash', 2);
+    insertProdIng.run('pi_miami_carne_2', 'prod_miami', 'ing_base_carne_smash', 3);
+    insertProdIng.run('pi_miami_carne_3', 'prod_miami', 'ing_base_carne_smash', 4);
+    insertProdIng.run('pi_miami_ceb_smash', 'prod_miami', 'ing_base_cebolla_smash', 5);
+    insertProdIng.run('pi_miami_queso_amer_1', 'prod_miami', 'ing_base_queso_americano', 6);
+    insertProdIng.run('pi_miami_queso_amer_2', 'prod_miami', 'ing_base_queso_americano', 7);
+    insertProdIng.run('pi_miami_queso_amer_3', 'prod_miami', 'ing_base_queso_americano', 8);
+    insertProdIng.run('pi_miami_pepinillo', 'prod_miami', 'ing_base_pepinillo', 9);
+    insertProdIng.run('pi_miami_smoked_mayo', 'prod_miami', 'ing_base_smoked_mayo', 10);
 
-    // 6. Miami
-    insertProdIng.run('pi_miami_cheddar', 'prod_miami', 'ing_base_queso_cheddar', 3);
-    insertProdIng.run('pi_miami_hilo', 'prod_miami', 'ing_base_papas_hilo', 4);
-    insertProdIng.run('pi_miami_ajo', 'prod_miami', 'ing_base_salsa_ajo', 5);
+    // 7. New York: Doble carne prime, doble queso americano, tocineta ahumada, lechuga romana, pepinillos, salsa americana y cebolla caramelizada
+    insertProdIng.run('pi_ny_pan', 'prod_new_york', 'ing_base_pan_brioche', 1);
+    insertProdIng.run('pi_ny_carne_1', 'prod_new_york', 'ing_base_carne_smash', 2);
+    insertProdIng.run('pi_ny_carne_2', 'prod_new_york', 'ing_base_carne_smash', 3);
+    insertProdIng.run('pi_ny_queso_amer_1', 'prod_new_york', 'ing_base_queso_americano', 4);
+    insertProdIng.run('pi_ny_queso_amer_2', 'prod_new_york', 'ing_base_queso_americano', 5);
+    insertProdIng.run('pi_ny_tocineta', 'prod_new_york', 'ing_base_tocineta', 6);
+    insertProdIng.run('pi_ny_lechuga_romana', 'prod_new_york', 'ing_base_lechuga_romana', 7);
+    insertProdIng.run('pi_ny_pepinillo', 'prod_new_york', 'ing_base_pepinillo', 8);
+    insertProdIng.run('pi_ny_salsa_amer', 'prod_new_york', 'ing_base_salsa_americana', 9);
+    insertProdIng.run('pi_ny_cebcar', 'prod_new_york', 'ing_bl_cebolla_caramelizada', 10);
 
-    // 7. New York
-    insertProdIng.run('pi_ny_cheddar', 'prod_new_york', 'ing_base_queso_cheddar', 3);
-    insertProdIng.run('pi_ny_tocineta', 'prod_new_york', 'ing_base_tocineta', 4);
-    insertProdIng.run('pi_ny_cebcar', 'prod_new_york', 'ing_bl_cebolla_caramelizada', 5);
-    insertProdIng.run('pi_ny_pepinillo', 'prod_new_york', 'ing_base_pepinillo', 6);
-
-    // 8. Mozarrella
-    insertProdIng.run('pi_moz_queso', 'prod_mozarrella', 'ing_base_queso_mozzarella', 3);
-    insertProdIng.run('pi_moz_tocineta', 'prod_mozarrella', 'ing_base_tocineta', 4);
+    // 8. Mozarrella: Doble carne prime, lechuga, tocineta ahumada sellada con miel, porción de crocante queso mozzarella, fusión de queso crema con roquefort fundido
+    insertProdIng.run('pi_moz_pan', 'prod_mozarrella', 'ing_base_pan_brioche', 1);
+    insertProdIng.run('pi_moz_carne_1', 'prod_mozarrella', 'ing_base_carne_smash', 2);
+    insertProdIng.run('pi_moz_carne_2', 'prod_mozarrella', 'ing_base_carne_smash', 3);
+    insertProdIng.run('pi_moz_lechuga', 'prod_mozarrella', 'ing_base_lechuga', 4);
+    insertProdIng.run('pi_moz_tocineta', 'prod_mozarrella', 'ing_base_tocineta', 5);
+    insertProdIng.run('pi_moz_miel', 'prod_mozarrella', 'ing_base_miel', 6);
+    insertProdIng.run('pi_moz_crocante_moz', 'prod_mozarrella', 'ing_base_crocante_mozzarella', 7);
+    insertProdIng.run('pi_moz_queso_crema', 'prod_mozarrella', 'ing_base_queso_crema', 8);
+    insertProdIng.run('pi_moz_roquefort', 'prod_mozarrella', 'ing_base_roquefort', 9);
 
     // ------------------------------------------------------------------------
     // 6. Sabores Oficiales Pepsi para Refresco 1 Lt

@@ -7,11 +7,13 @@ import { invalidateMoney } from '../finances/queryKeys.js';
 interface CashierClosureWizardProps {
   onClosureCompleted: () => void;
   userRole?: string;
+  token?: string | null;
 }
 
 export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   onClosureCompleted,
-  userRole: _userRole = 'cajera'
+  userRole: _userRole = 'cajera',
+  token
 }) => {
   const queryClient = useQueryClient();
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -95,7 +97,10 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
       const jornadaId = summary.jornadaId || 'jornada_activa';
       const res = await fetch(`/api/jornadas/${jornadaId}/close`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({
           pin: closingPin.trim(),
           countedCashUsdCents: countedUsdCents,

@@ -12,7 +12,7 @@ import { Tabs, Button, Card, Badge, Icon } from '../../ui/index.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
 
 export const CashierView: React.FC = () => {
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const queryClient = useQueryClient();
   const { isBlocked, takeControl } = useMultiTabCashierGuard();
 
@@ -279,6 +279,7 @@ export const CashierView: React.FC = () => {
         <CashierClosureWizard
           onClosureCompleted={handleRefreshAll}
           userRole={user?.role}
+          token={token}
         />
       )}
 

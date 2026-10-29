@@ -15,9 +15,10 @@ interface IngredientRow {
 interface RecipeEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
-  recipe: any;
+  recipe?: any;
   supplies: any[];
   subRecipes: any[];
+  recipes?: any[];
 }
 
 export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
@@ -25,9 +26,14 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
   onClose,
   recipe,
   supplies,
-  subRecipes
+  subRecipes,
+  recipes = []
 }) => {
   const queryClient = useQueryClient();
+  const isCreation = !recipe;
+  const [selectedProductId, setSelectedProductId] = useState<string>(
+    recipe?.productId || (recipes.length > 0 ? recipes[0]?.productId || '' : '')
+  );
   const [recipeMode, setRecipeMode] = useState<'UNITS' | 'GRAMMAGE' | 'FINISHED_PRODUCT'>('UNITS');
   const [targetMarginPercent, setTargetMarginPercent] = useState('65');
   const [ingredients, setIngredients] = useState<IngredientRow[]>([]);
@@ -36,18 +42,48 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
 
   useEffect(() => {
     if (recipe) {
+      setSelectedProductId(recipe.productId);
       setRecipeMode(recipe.recipeMode || 'UNITS');
       setTargetMarginPercent(((recipe.targetMarginBps || 6500) / 100).toString());
       setIngredients(recipe.items || recipe.ingredients || []);
       setModifiers(recipe.modifiers || []);
       setErrorMsg(null);
+    } else if (recipes.length > 0) {
+      const sorted = [...recipes].sort((a, b) => {
+        const aHas = a.items && a.items.length > 0 ? 1 : 0;
+        const bHas = b.items && b.items.length > 0 ? 1 : 0;
+        return aHas - bHas;
+      });
+      setSelectedProductId(sorted[0]?.productId || '');
+      setRecipeMode('UNITS');
+      setTargetMarginPercent('65');
+      setIngredients([]);
+      setModifiers([]);
+      setErrorMsg(null);
     }
-  }, [recipe]);
+  }, [recipe, recipes, isOpen]);
+
+  const selectedProdSummary = isCreation
+    ? recipes.find((r) => r.productId === selectedProductId)
+    : recipe;
+
+  useEffect(() => {
+    if (isCreation && selectedProdSummary) {
+      setRecipeMode(selectedProdSummary.recipeMode || 'UNITS');
+      if (selectedProdSummary.targetMarginBps) {
+        setTargetMarginPercent((selectedProdSummary.targetMarginBps / 100).toString());
+      }
+    }
+  }, [selectedProductId, isCreation, recipes]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
+      const targetId = isCreation ? selectedProductId : recipe?.productId;
+      if (!targetId) {
+        throw new Error('Selecciona un plato de la carta');
+      }
       const targetMarginBps = Math.round(parseFloat(targetMarginPercent) * 100);
-      const res = await fetch(`/api/fase3/recipes/${recipe.productId}`, {
+      const res = await fetch(`/api/fase3/recipes/${targetId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -103,8 +139,7 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
   // Cálculo de Costo en Vivo
   let liveCostCents = 0;
   if (recipeMode === 'FINISHED_PRODUCT') {
-    // Si es plato terminado, el costo es el costo base o estimado
-    liveCostCents = recipe.priceUsdCents ? Math.round(recipe.priceUsdCents * 0.4) : 0;
+    liveCostCents = selectedProdSummary?.priceUsdCents ? Math.round(selectedProdSummary.priceUsdCents * 0.4) : 0;
   } else {
     for (const item of ingredients) {
       if (item.itemType === 'SUPPLY' && item.supplyItemId) {
@@ -120,7 +155,7 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
     }
   }
 
-  const currentPriceCents = recipe?.priceUsdCents || 0;
+  const currentPriceCents = selectedProdSummary?.priceUsdCents || selectedProdSummary?.currentPriceUsdCents || 0;
   const currentMarginBps =
     currentPriceCents > 0
       ? Math.round(((currentPriceCents - liveCostCents) / currentPriceCents) * 10000)
@@ -137,7 +172,11 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title={`Ficha Técnica y Escandallo: ${recipe?.productName || ''}`}
+      title={
+        isCreation
+          ? 'Crear Ficha Técnica y Escandallo'
+          : `Ficha Técnica y Escandallo: ${recipe?.productName || ''}`
+      }
       maxWidth="lg"
     >
       <form
@@ -151,6 +190,34 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
           <div className="p-3 rounded-xl bg-danger/10 border border-danger/30 text-danger text-xs font-bold">
             {errorMsg}
           </div>
+        )}
+
+        {/* Selector de Plato de la Carta (en modo creación) */}
+        {isCreation && (
+          <Field label="Plato de la Carta" required>
+            <select
+              value={selectedProductId}
+              onChange={(e) => setSelectedProductId(e.target.value)}
+              className="w-full h-10 px-3 rounded-xl bg-surface border border-border text-ink text-xs font-bold"
+              required
+            >
+              <option value="">-- Selecciona Plato de la Carta --</option>
+              {[...recipes]
+                .sort((a, b) => {
+                  const aHas = a.items && a.items.length > 0 ? 1 : 0;
+                  const bHas = b.items && b.items.length > 0 ? 1 : 0;
+                  return aHas - bHas;
+                })
+                .map((r) => {
+                  const hasRecipe = r.items && r.items.length > 0;
+                  return (
+                    <option key={r.productId} value={r.productId}>
+                      {r.productName} {hasRecipe ? `(${r.station})` : '(Sin receta)'}
+                    </option>
+                  );
+                })}
+            </select>
+          </Field>
         )}
 
         {/* Selector de Modo de Receta (3 Modos F3) */}
@@ -343,7 +410,7 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
             type="submit"
             loading={saveMutation.isPending}
           >
-            Guardar Ficha Técnica
+            {isCreation ? 'Crear Ficha Técnica' : 'Guardar Ficha Técnica'}
           </Button>
         </div>
       </form>

@@ -28,6 +28,7 @@ export const RecipesView: React.FC = () => {
   const [selectedStation, setSelectedStation] = useState<string>('all');
   const [activeRecipe, setActiveRecipe] = useState<RecipeSummary | null>(null);
   const [isSubRecipeModalOpen, setIsSubRecipeModalOpen] = useState(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const { data: recipesData, isLoading } = useQuery<{ success: boolean; recipes: RecipeSummary[] }>({
     queryKey: ['fase3Recipes'],
@@ -82,6 +83,14 @@ export const RecipesView: React.FC = () => {
         </div>
 
         <div className="flex gap-2">
+          <Button
+            variant="primary"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex-1 sm:flex-none"
+            leftIcon={<Icon name="Plus" size={16} />}
+          >
+            Nueva receta
+          </Button>
           <Button
             variant="ghost"
             onClick={() => setIsSubRecipeModalOpen(true)}
@@ -213,6 +222,17 @@ export const RecipesView: React.FC = () => {
           isOpen={!!activeRecipe}
           onClose={() => setActiveRecipe(null)}
           recipe={activeRecipe}
+          supplies={supplies}
+          subRecipes={subRecipes}
+        />
+      )}
+
+      {/* Modal de Creación de Receta */}
+      {isCreateModalOpen && (
+        <RecipeEditorModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          recipes={recipes}
           supplies={supplies}
           subRecipes={subRecipes}
         />

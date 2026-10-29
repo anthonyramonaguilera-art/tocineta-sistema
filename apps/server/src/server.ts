@@ -117,10 +117,10 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   if (process.env.NODE_ENV !== 'test' && process.env.VITEST !== 'true') {
     worker.start(1500);
     snapshotWorker = startSnapshotWorker(dbCtx.rawDb);
-    void syncBcvRateFromInternet(dbCtx.rawDb).catch(() => {});
+    void syncBcvRateFromInternet(dbCtx.rawDb).catch((e) => console.error('[BCV sync]', e?.message));
     bcvInterval = setInterval(() => {
-      void syncBcvRateFromInternet(dbCtx.rawDb).catch(() => {});
-    }, 30 * 60 * 1000);
+      void syncBcvRateFromInternet(dbCtx.rawDb).catch((e) => console.error('[BCV sync]', e?.message));
+    }, 10 * 60 * 1000);
   }
 
   server.addHook('onClose', async () => {

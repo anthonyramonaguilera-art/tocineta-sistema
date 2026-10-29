@@ -28,47 +28,65 @@ export async function syncBcvRateFromInternet(
 
   let parsedRate: number | null = null;
   let usedSource = '';
+  let dolarapiError = '';
+  let pydolarveError = '';
 
   // 1. Fuente 1: dolarapi oficial
   try {
     const res = await fetchFn('https://ve.dolarapi.com/v1/dolares/oficial', {
-      signal: AbortSignal.timeout(3500)
+      signal: AbortSignal.timeout(8000)
     });
-    if (res.ok) {
+    if (!res.ok) {
+      dolarapiError = `HTTP ${res.status}`;
+    } else {
       const data = await res.json() as any;
       const val = Number(data?.promedio ?? data?.precio);
       if (typeof val === 'number' && !isNaN(val) && val > 10 && val < 100000) {
         parsedRate = val;
         usedSource = 'dolarapi';
+      } else {
+        dolarapiError = 'invalid data';
       }
     }
-  } catch {
-    // Falla silenciosa, pasa a fallback
+  } catch (err: any) {
+    if (err?.name === 'TimeoutError' || err?.name === 'AbortError' || err?.code === 'ABORT_ERR' || err?.message?.toLowerCase().includes('timeout') || err?.message?.toLowerCase().includes('abort')) {
+      dolarapiError = 'timeout';
+    } else {
+      dolarapiError = err?.message || 'error';
+    }
   }
 
   // 2. Fuente 2 (fallback): pydolarve oficial
   if (parsedRate === null) {
     try {
       const res = await fetchFn('https://pydolarve.org/api/v1/dollar?page=bcv', {
-        signal: AbortSignal.timeout(3500)
+        signal: AbortSignal.timeout(8000)
       });
-      if (res.ok) {
+      if (!res.ok) {
+        pydolarveError = `HTTP ${res.status}`;
+      } else {
         const data = await res.json() as any;
         const val = Number(data?.monitors?.usd?.price ?? data?.price);
         if (typeof val === 'number' && !isNaN(val) && val > 10 && val < 100000) {
           parsedRate = val;
           usedSource = 'pydolarve';
+        } else {
+          pydolarveError = 'invalid data';
         }
       }
-    } catch {
-      // Falla silenciosa
+    } catch (err: any) {
+      if (err?.name === 'TimeoutError' || err?.name === 'AbortError' || err?.code === 'ABORT_ERR' || err?.message?.toLowerCase().includes('timeout') || err?.message?.toLowerCase().includes('abort')) {
+        pydolarveError = 'timeout';
+      } else {
+        pydolarveError = err?.message || 'error';
+      }
     }
   }
 
   if (parsedRate === null) {
     return {
       updated: false,
-      error: 'No se pudo obtener la tasa oficial del BCV desde las fuentes en línea'
+      error: `dolarapi: ${dolarapiError}; pydolarve: ${pydolarveError}`
     };
   }
 

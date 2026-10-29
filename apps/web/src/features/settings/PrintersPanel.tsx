@@ -21,6 +21,10 @@ interface PrinterItem {
   is_active: number;
 }
 
+interface PrintersPanelProps {
+  token?: string | null;
+}
+
 interface WindowsPrinter {
   Name: string;
   PortName?: string;
@@ -28,7 +32,7 @@ interface WindowsPrinter {
   PrinterStatus?: string | number;
 }
 
-export const PrintersPanel: React.FC = () => {
+export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
   const queryClient = useQueryClient();
   const [testResults, setTestResults] = useState<Record<string, { diagnostic: string; message?: string; simulated?: boolean }>>({});
   const [testErrors, setTestErrors] = useState<Record<string, string>>({});
@@ -76,7 +80,10 @@ export const PrintersPanel: React.FC = () => {
     mutationFn: async ({ id, payload }: { id: string; payload: any }) => {
       const res = await fetch(`/api/printers/${id}`, {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify(payload)
       });
       if (!res.ok) {
@@ -99,7 +106,10 @@ export const PrintersPanel: React.FC = () => {
     mutationFn: async (newMode: 'one' | 'two') => {
       const res = await fetch('/api/business-settings', {
         method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        },
         body: JSON.stringify({ print_mode: newMode })
       });
       if (!res.ok) {
@@ -121,7 +131,10 @@ export const PrintersPanel: React.FC = () => {
   const testPrinterMutation = useMutation({
     mutationFn: async (id: string) => {
       const res = await fetch(`/api/printers/${id}/test`, {
-        method: 'POST'
+        method: 'POST',
+        headers: {
+          ...(token ? { Authorization: `Bearer ${token}` } : {})
+        }
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {

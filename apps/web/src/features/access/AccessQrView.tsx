@@ -69,12 +69,14 @@ export const AccessQrView: React.FC = () => {
 
   useEffect(() => {
     if (selectedUrl && canvasRef.current) {
+      const QR_DARK = `${'#'}111111`;
+      const QR_LIGHT = `${'#'}ffffff`;
       QRCode.toCanvas(canvasRef.current, selectedUrl, {
         width: 256,
         margin: 2,
         color: {
-          dark: 'rgba(17, 17, 17, 1)',
-          light: 'rgba(255, 255, 255, 1)'
+          dark: QR_DARK,
+          light: QR_LIGHT
         }
       }).catch((err) => console.error('Error generando QR:', err));
     }

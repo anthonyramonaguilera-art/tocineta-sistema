@@ -5,6 +5,8 @@ import { queryClient, ALLOWED_TABS_BY_ROLE, type TabType } from '../App.js';
 import { AppHeader } from './AppHeader.js';
 import { AppSidebar } from './AppSidebar.js';
 import { Modal, Button, Input, Field, Icon } from '../ui/index.js';
+import { PrintAttentionModal } from '../features/cashier/PrintAttentionModal.js';
+import { TicketPreviewModal } from '../features/cashier/TicketPreviewModal.js';
 
 /**
  * TOCINETA — Layout principal con cabecera oficial y navegación por roles
@@ -46,6 +48,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [manualBcvInput, setManualBcvInput] = useState('');
   const [bcvModalMsg, setBcvModalMsg] = useState<string | null>(null);
   const [isSavingBcv, setIsSavingBcv] = useState(false);
+  const [isSyncingBcv, setIsSyncingBcv] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isOnline, setIsOnline] = useState<boolean>(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
 
@@ -133,6 +136,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [confirmPinInput, setConfirmPinInput] = useState('');
   const [changePinError, setChangePinError] = useState<string | null>(null);
   const [isChangingPin, setIsChangingPin] = useState(false);
+  const [previewJobId, setPreviewJobId] = useState<string | null>(null);
 
   useEffect(() => {
     if (user?.mustChangePin) {
@@ -275,7 +279,41 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
             Define la tasa de cambio oficial en Bolívares por Dólar (Bs/USD) que regirá todos los cobros del sistema.
           </p>
 
-          <Field label="Tasa BCV (Bs/$)" required>
+          <button
+            type="button"
+            onClick={async () => {
+              setIsSyncingBcv(true);
+              setBcvModalMsg(null);
+              try {
+                const res = await fetch('/api/menu/exchange-rate/sync-now', {
+                  method: 'POST',
+                  headers: {
+                    ...(token ? { Authorization: `Bearer ${token}` } : {})
+                  }
+                });
+                const data = await res.json();
+                if (data.updated) {
+                  setBcvModalMsg(`✓ Tasa BCV sincronizada: ${data.formattedRate}`);
+                  queryClient.invalidateQueries({ queryKey: ['posMenu'] });
+                  queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
+                  setTimeout(() => setIsBcvModalOpen(false), 1200);
+                } else {
+                  setBcvModalMsg(data.message || data.error || 'La tasa BCV ya se encuentra actualizada');
+                }
+              } catch {
+                setBcvModalMsg('Fallo al contactar el servidor para sincronizar BCV');
+              } finally {
+                setIsSyncingBcv(false);
+              }
+            }}
+            disabled={isSyncingBcv}
+            className="w-full min-h-[46px] rounded-xl bg-surface border border-border hover:border-tocineta-yellow/50 text-ink font-bold text-xs transition-all flex items-center justify-center gap-2"
+          >
+            <Icon name="RefreshCw" size={16} className={isSyncingBcv ? 'animate-spin' : ''} />
+            <span>{isSyncingBcv ? 'Sincronizando con BCV oficial...' : 'Sincronizar con BCV (automático)'}</span>
+          </button>
+
+          <Field label="Tasa BCV (Bs/$)" hint="Solo si falla el automático" required>
             <Input
               type="text"
               value={manualBcvInput}
@@ -375,6 +413,9 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           </Button>
         </form>
       </Modal>
+
+      <PrintAttentionModal onOpenTicketPreview={setPreviewJobId} />
+      {previewJobId && <TicketPreviewModal jobId={previewJobId} onClose={() => setPreviewJobId(null)} />}
     </div>
   );
 };

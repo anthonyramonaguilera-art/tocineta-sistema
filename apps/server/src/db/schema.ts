@@ -214,6 +214,10 @@ export const businessSettings = sqliteTable('business_settings', {
   partnersModuleEnabled: integer('partners_module_enabled').notNull().default(0),
   eventsQuoteEnabled: integer('events_quote_enabled').notNull().default(1),
   onboardingCompleted: integer('onboarding_completed').notNull().default(1),
+  askTableOnOrder: integer('ask_table_on_order').notNull().default(0),
+  inventoryOperationMode: text('inventory_operation_mode').notNull().default('free'),
+  inventoryTrackingSinceMs: integer('inventory_tracking_since_ms'),
+  printMode: text('print_mode').notNull().default('one'),
   updatedAtMs: integer('updated_at_ms').notNull()
 });
 

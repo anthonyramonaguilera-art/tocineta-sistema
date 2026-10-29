@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Button, Input, Field, Icon } from '../../../ui/index.js';
 import type { RecipeImpact } from './CostVariationModal.js';
+import { NewSupplyModal } from './NewSupplyModal.js';
 
 interface NewPurchaseModalProps {
   isOpen: boolean;
@@ -27,6 +28,29 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
     Array<{ supplyId: string; purchaseQuantity: number; unitCostUsdCents: number }>
   >([{ supplyId: supplies[0]?.id || '', purchaseQuantity: 10, unitCostUsdCents: 100 }]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isNewSupplyModalOpen, setIsNewSupplyModalOpen] = useState(false);
+  const [activeSupplyIndex, setActiveSupplyIndex] = useState<number | null>(null);
+
+  const handleNewSupplyClose = async () => {
+    setIsNewSupplyModalOpen(false);
+    queryClient.invalidateQueries({ queryKey: ['fase3Supplies'] });
+    if (activeSupplyIndex !== null) {
+      try {
+        const res = await fetch('/api/fase3/supplies?locationId=ALL');
+        const data = await res.json();
+        if (data && data.success && data.supplies && data.supplies.length > 0) {
+          const lastSupply = data.supplies[data.supplies.length - 1];
+          if (lastSupply && lastSupply.id) {
+            updateItemRow(activeSupplyIndex, 'supplyId', lastSupply.id);
+            console.info('Insumo nuevo creado seleccionado automáticamente:', lastSupply.id, lastSupply.name);
+          }
+        }
+      } catch (err) {
+        console.error('Error al reconsultar la lista de insumos:', err);
+      }
+    }
+    setActiveSupplyIndex(null);
+  };
 
   const purchaseMutation = useMutation({
     mutationFn: async () => {
@@ -191,11 +215,11 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
                 key={idx}
                 className="flex items-center gap-2 bg-surface-alt p-2 rounded-xl border border-border text-xs"
               >
-                  <div className="flex-1 min-w-[130px]">
+                  <div className="flex-1 min-w-[200px] flex items-center gap-1.5 flex-wrap">
                     <select
                       value={item.supplyId}
                       onChange={(e) => updateItemRow(idx, 'supplyId', e.target.value)}
-                      className="w-full h-9 px-2 rounded-lg bg-surface border border-border text-ink text-xs font-bold"
+                      className="flex-1 min-w-[120px] h-9 px-2 rounded-lg bg-surface border border-border text-ink text-xs font-bold"
                     >
                       {supplies.map((s) => (
                         <option key={s.id} value={s.id}>
@@ -203,6 +227,20 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
                         </option>
                       ))}
                     </select>
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setActiveSupplyIndex(idx);
+                        setIsNewSupplyModalOpen(true);
+                      }}
+                      leftIcon={<Icon name="Plus" size={12} />}
+                      className="h-9 px-2 text-[11px] whitespace-nowrap shrink-0"
+                      title="Crear insumo nuevo"
+                    >
+                      Crear insumo nuevo
+                    </Button>
                   </div>
 
                   <div className="w-20">
@@ -275,6 +313,10 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
           </Button>
         </div>
       </form>
+      <NewSupplyModal
+        isOpen={isNewSupplyModalOpen}
+        onClose={handleNewSupplyClose}
+      />
     </Modal>
   );
 };

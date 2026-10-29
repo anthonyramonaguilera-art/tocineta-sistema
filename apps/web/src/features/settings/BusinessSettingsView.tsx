@@ -5,9 +5,11 @@ import { OnboardingWizardModal } from './OnboardingWizardModal.js';
 import { OperationalManualsModal } from './OperationalManualsModal.js';
 import { InventoryModeCard } from './InventoryModeCard.js';
 import { PrintersPanel } from './PrintersPanel.js';
+import { useAuth } from '../../context/AuthContext.js';
 import type { BusinessSettings, BusinessLocation } from './types.js';
 
 export const BusinessSettingsView: React.FC = () => {
+  const { token } = useAuth();
   const queryClient = useQueryClient();
 
   const { data, isLoading, refetch } = useQuery<{
@@ -158,7 +160,7 @@ export const BusinessSettingsView: React.FC = () => {
         />
 
         {/* Printers & Hardware Panel */}
-        <PrintersPanel />
+        <PrintersPanel token={token} />
 
         {/* 1. Identidad Corporativa */}
         <Card variant="surface" className="p-5 border border-border space-y-4">

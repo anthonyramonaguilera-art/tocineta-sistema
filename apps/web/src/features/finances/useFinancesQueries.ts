@@ -34,10 +34,10 @@ export function useFinancesQueries(selectedLocation: string, startDateMs: number
   const { data: customersData } = useQuery({
     queryKey: ['customers', 'list'],
     queryFn: async () => {
-      const res = await fetch('/api/menu/customers');
+      const res = await fetch('/api/profitability/customers');
       if (!res.ok) return [];
       const json = await res.json();
-      return json.data || [];
+      return json.customers || [];
     }
   });
 

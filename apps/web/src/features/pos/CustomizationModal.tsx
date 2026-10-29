@@ -278,7 +278,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-ink/60 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="bg-tocineta-card border border-tocineta-border rounded-3xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* Cabecera del Modal */}
@@ -297,7 +297,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
           </div>
           <button
             onClick={onClose}
-            className="w-12 h-12 flex items-center justify-center rounded-2xl bg-tocineta-card hover:bg-tocineta-border text-tocineta-muted hover:text-white transition-all text-xl font-bold"
+            className="w-12 h-12 flex items-center justify-center rounded-2xl bg-tocineta-card hover:bg-tocineta-border text-tocineta-muted hover:text-ink transition-all text-xl font-bold"
             aria-label="Cerrar modal"
           >
             ✕
@@ -316,28 +316,28 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
               <button
                 type="button"
                 onClick={handleQuickSinPan}
-                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/15 border border-amber-500/40 text-amber-300 hover:bg-amber-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
+                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/15 border border-amber-500/40 text-ink hover:bg-amber-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
               >
                 Sin Pan / Envuelta en Lechuga
               </button>
               <button
                 type="button"
                 onClick={handleQuickPocaSalsa}
-                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-blue-500/15 border border-blue-500/40 text-blue-300 hover:bg-blue-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
+                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-blue-500/15 border border-blue-500/40 text-ink hover:bg-blue-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
               >
                 Poca Salsa
               </button>
               <button
                 type="button"
                 onClick={handleQuickSinSalsas}
-                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-red-500/15 border border-red-500/40 text-red-300 hover:bg-red-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
+                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-red-500/15 border border-red-500/40 text-ink hover:bg-red-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
               >
                 Sin Salsas
               </button>
               <button
                 type="button"
                 onClick={handleQuickReset}
-                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-tocineta-border/60 border border-tocineta-border text-tocineta-muted hover:text-white active:scale-95 transition-all text-center flex items-center justify-center"
+                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-tocineta-border/60 border border-tocineta-border text-tocineta-muted hover:text-ink active:scale-95 transition-all text-center flex items-center justify-center"
               >
                 Normalizar Todo
               </button>
@@ -357,7 +357,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                     key={ing.id}
                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-tocineta-bg border border-tocineta-border rounded-2xl"
                   >
-                    <span className="text-sm font-bold text-white px-2">
+                    <span className="text-sm font-bold text-ink px-2">
                       {ing.name}
                     </span>
                     <div className="grid grid-cols-3 gap-1 shrink-0">
@@ -367,7 +367,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                         className={`min-h-[48px] px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
                           state === 'normal'
                             ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                            : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+                            : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-ink'
                         }`}
                       >
                         Normal
@@ -377,8 +377,8 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                         onClick={() => setIngredientState(ing.id, 'poco')}
                         className={`min-h-[48px] px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
                           state === 'poco'
-                            ? 'bg-blue-500 text-white shadow-md'
-                            : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+                            ? 'bg-primary text-primary-ink shadow-md'
+                            : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-ink'
                         }`}
                       >
                         Poco
@@ -388,8 +388,8 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                         onClick={() => setIngredientState(ing.id, 'sin')}
                         className={`min-h-[48px] px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
                           state === 'sin'
-                            ? 'bg-red-600 text-white shadow-md'
-                            : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white'
+                            ? 'bg-danger text-danger-ink shadow-md'
+                            : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-ink'
                         }`}
                       >
                         Sin
@@ -405,7 +405,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
           {barraLibreList.length > 0 && (
             <div>
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-400">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-success">
                   Barra Libre ($0.00 Venta):
                 </span>
                 <span className="text-[10px] text-tocineta-muted">Incluidos sin costo</span>
@@ -420,8 +420,8 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                       onClick={() => toggleBarraLibre(bl.id)}
                       className={`min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between border ${
                         isChecked
-                          ? 'bg-emerald-500/20 border-emerald-400 text-emerald-300 shadow-md'
-                          : 'bg-tocineta-bg border-tocineta-border text-tocineta-muted hover:text-white'
+                          ? 'bg-emerald-500/20 border-success text-ink shadow-md'
+                          : 'bg-tocineta-bg border-tocineta-border text-tocineta-muted hover:text-ink'
                       }`}
                     >
                       <span>+ {bl.name}</span>
@@ -451,7 +451,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                     className="flex items-center justify-between p-2.5 bg-tocineta-bg border border-tocineta-border rounded-2xl"
                   >
                     <div>
-                      <span className="text-sm font-bold text-white block">
+                      <span className="text-sm font-bold text-ink block">
                         {extra.name}
                       </span>
                       <span className="text-xs text-tocineta-yellow font-mono font-bold">
@@ -463,11 +463,11 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                         type="button"
                         onClick={() => changeExtraCount(extra.id, -1)}
                         disabled={count === 0}
-                        className="w-12 h-12 rounded-xl bg-tocineta-card border border-tocineta-border text-white font-black text-lg disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center hover:bg-tocineta-border active:scale-95"
+                        className="w-12 h-12 rounded-xl bg-tocineta-card border border-tocineta-border text-ink font-black text-lg disabled:opacity-30 disabled:pointer-events-none flex items-center justify-center hover:bg-tocineta-border active:scale-95"
                       >
                         -
                       </button>
-                      <span className="w-8 text-center font-mono font-black text-base text-white">
+                      <span className="w-8 text-center font-mono font-black text-base text-ink">
                         {count}
                       </span>
                       <button
@@ -495,7 +495,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
               placeholder="Ej: Bien tostada, servir salsa aparte..."
               value={instructions}
               onChange={e => setInstructions(e.target.value)}
-              className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-4 py-3 text-sm text-white placeholder-tocineta-muted focus:border-tocineta-yellow outline-none min-h-[48px]"
+              className="w-full bg-tocineta-bg border border-tocineta-border rounded-xl px-4 py-3 text-sm text-ink placeholder-tocineta-muted focus:border-tocineta-yellow outline-none min-h-[48px]"
             />
           </div>
 
@@ -511,11 +511,11 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                   key={idx}
                   className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
                     t.type === 'sin'
-                      ? 'bg-red-500/15 border-red-500/40 text-red-300'
+                      ? 'bg-red-500/15 border-red-500/40 text-ink'
                       : t.type === 'poco'
-                      ? 'bg-blue-500/15 border-blue-500/40 text-blue-300'
+                      ? 'bg-blue-500/15 border-blue-500/40 text-ink'
                       : t.type === 'barra'
-                      ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-300'
+                      ? 'bg-emerald-500/15 border-emerald-500/40 text-ink'
                       : 'bg-tocineta-yellow/15 border-tocineta-yellow/40 text-tocineta-yellow'
                   }`}
                 >
@@ -534,7 +534,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="w-1/3 min-h-[52px] rounded-2xl bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white font-bold text-sm transition-all flex items-center justify-center active:scale-95"
+              className="w-1/3 min-h-[52px] rounded-2xl bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-ink font-bold text-sm transition-all flex items-center justify-center active:scale-95"
             >
               Cancelar
             </button>

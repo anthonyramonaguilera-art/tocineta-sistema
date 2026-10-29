@@ -56,12 +56,9 @@ export const HomeView: React.FC<HomeViewProps> = ({
   const zSummary = summaryRes?.summary;
 
   // Cálculos reales sin inventar datos
-  const totalOrders = zSummary?.totalOrdersCount ?? zSummary?.ordersCount ?? orders.length;
+  const totalOrders = zSummary?.ordersCount ?? orders.length;
 
-  const totalSalesUsdCents = zSummary?.totalSalesUsdCents ?? zSummary?.grossSalesUsdCents ??
-    orders
-      .filter((o: any) => o.payment_status === 'pagado')
-      .reduce((sum: number, o: any) => sum + (o.total_usd_cents || 0), 0);
+  const totalSalesUsdCents = zSummary?.netFoodSalesUsdCents ?? zSummary?.totalCollectedUsdCents ?? 0;
 
   const expectedCashUsdCents = zSummary?.expectedCashUsdCents ?? zSummary?.cashUsdCents ?? 0;
 
