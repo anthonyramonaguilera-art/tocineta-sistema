@@ -64,11 +64,17 @@ export const ProfitAndLossTab: React.FC<ProfitAndLossTabProps> = ({ pnlData, isL
             <span className="text-[10px] font-bold text-ink-muted uppercase block">
               2. Costo de Ventas
             </span>
-            <span className="text-lg font-black text-danger">
-              -${(summary.costOfGoodsSoldUsdCents / 100).toFixed(2)}
-            </span>
+            {summary.cogsConfigured === false ? (
+              <span className="text-xs font-black text-ink-muted block mt-1">
+                Sin recetas configuradas
+              </span>
+            ) : (
+              <span className="text-lg font-black text-danger">
+                -${(summary.costOfGoodsSoldUsdCents / 100).toFixed(2)}
+              </span>
+            )}
             <span className="text-[10px] text-ink-muted block">
-              Food Cost ({summary.foodCostPercentage}%)
+              {summary.cogsConfigured === false ? 'Modo sin recetas' : `Food Cost (${summary.foodCostPercentage}%)`}
             </span>
           </div>
 

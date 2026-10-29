@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Badge, Icon } from '../../ui/index.js';
 import { OnboardingWizardModal } from './OnboardingWizardModal.js';
 import { OperationalManualsModal } from './OperationalManualsModal.js';
+import { InventoryModeCard } from './InventoryModeCard.js';
 import type { BusinessSettings, BusinessLocation } from './types.js';
 
 export const BusinessSettingsView: React.FC = () => {
@@ -39,6 +40,7 @@ export const BusinessSettingsView: React.FC = () => {
   const [partnersEnabled, setPartnersEnabled] = useState(Boolean(settings?.partners_module_enabled));
   const [eventsQuoteEnabled, setEventsQuoteEnabled] = useState(Boolean(settings?.events_quote_enabled ?? 1));
   const [askTableOnOrder, setAskTableOnOrder] = useState(Boolean(settings?.ask_table_on_order));
+  const [inventoryMode, setInventoryMode] = useState(settings?.inventory_operation_mode || 'free');
 
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
   const [isManualsOpen, setIsManualsOpen] = useState(false);
@@ -60,6 +62,7 @@ export const BusinessSettingsView: React.FC = () => {
       setPartnersEnabled(Boolean(settings.partners_module_enabled));
       setEventsQuoteEnabled(Boolean(settings.events_quote_enabled));
       setAskTableOnOrder(Boolean(settings.ask_table_on_order));
+      setInventoryMode(settings.inventory_operation_mode || 'free');
     }
   }, [settings]);
 
@@ -88,7 +91,8 @@ export const BusinessSettingsView: React.FC = () => {
       rate_change_hour: rateChangeHour, ticket_header_message: ticketHeader.trim(),
       ticket_footer_message: ticketFooter.trim(), iva_enabled: ivaEnabled,
       igtf_enabled: igtfEnabled, partners_module_enabled: partnersEnabled,
-      events_quote_enabled: eventsQuoteEnabled, ask_table_on_order: askTableOnOrder ? 1 : 0
+      events_quote_enabled: eventsQuoteEnabled, ask_table_on_order: askTableOnOrder ? 1 : 0,
+      inventory_operation_mode: inventoryMode
     });
   };
 
@@ -145,6 +149,13 @@ export const BusinessSettingsView: React.FC = () => {
       )}
 
       <form onSubmit={handleSave} className="space-y-6">
+        {/* Inventory Mode Card */}
+        <InventoryModeCard
+          inventoryMode={inventoryMode}
+          onChangeMode={setInventoryMode}
+          trackingSinceMs={settings?.inventory_tracking_since_ms}
+        />
+
         {/* 1. Identidad Corporativa */}
         <Card variant="surface" className="p-5 border border-border space-y-4">
           <div className="flex items-center gap-2 border-b border-border pb-3">

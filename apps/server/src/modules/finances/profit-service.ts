@@ -59,6 +59,7 @@ export interface ProfitAndLossStatement {
     discountsUsdCents: number;
     netFoodSalesUsdCents: number;
     costOfGoodsSoldUsdCents: number;
+    cogsConfigured: boolean;
     foodCostPercentage: number;
     wasteLossUsdCents: number;
     operatingExpensesUsdCents: number;
@@ -286,6 +287,7 @@ export function calculateProfitAndLoss(
       discountsUsdCents,
       netFoodSalesUsdCents,
       costOfGoodsSoldUsdCents,
+      cogsConfigured: ft.cogsConfigured,
       foodCostPercentage,
       wasteLossUsdCents,
       operatingExpensesUsdCents,

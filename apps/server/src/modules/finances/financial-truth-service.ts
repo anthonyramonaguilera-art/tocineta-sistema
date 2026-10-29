@@ -267,8 +267,11 @@ export function getFinancialTruth(
 
     // E. Costo Teórico de Recetas (COGS)
     let cogsTheoretical = 0;
+    const recipeCount = (rawDb.prepare('SELECT count(*) as cnt FROM recipes').get() as any)?.cnt || 0;
+    const cogsConfigured = recipeCount > 0;
+
     const orderIds = orders.map(o => o.id);
-    if (orderIds.length > 0) {
+    if (cogsConfigured && orderIds.length > 0) {
       const placeholders = orderIds.map(() => '?').join(',');
       const movRow = rawDb.prepare(`
         SELECT COALESCE(SUM(im.total_cost_usd_cents), 0) as total_cogs
@@ -309,6 +312,8 @@ export function getFinancialTruth(
           cogsTheoretical += costRes.totalFoodCostUsdCents;
         }
       }
+    } else {
+      cogsTheoretical = 0;
     }
 
     // F. Mermas (Deduplicación estricta entre waste_logs y worker_incidents)
@@ -345,6 +350,7 @@ export function getFinancialTruth(
         netCashBsCents: netCashBs
       },
       cogsTheoretical,
+      cogsConfigured,
       waste: {
         totalUsdCents: totalWasteUsd,
         wasteLogsUsdCents: wasteLogsUsd,
@@ -397,6 +403,7 @@ export function getFinancialTruth(
       expectedCashUsdCents: locMetrics.expectedCash.netCashUsdCents,
       expectedCashBsCents: locMetrics.expectedCash.netCashBsCents,
       cogsTheoretical: locMetrics.cogsTheoretical,
+      cogsConfigured: locMetrics.cogsConfigured,
       wasteUsdCents: locMetrics.waste.totalUsdCents,
       operatingExpensesUsdCents: locMetrics.operatingExpensesUsdCents,
       netProfitUsdCents: locMetrics.netProfitUsdCents
@@ -418,6 +425,7 @@ export function getFinancialTruth(
     collectedByMethod: overallMetrics.collectedByMethod,
     expectedCash: overallMetrics.expectedCash,
     cogsTheoretical: overallMetrics.cogsTheoretical,
+    cogsConfigured: overallMetrics.cogsConfigured,
     waste: overallMetrics.waste,
     operatingExpensesUsdCents: overallMetrics.operatingExpensesUsdCents,
     netProfitUsdCents: overallMetrics.netProfitUsdCents,

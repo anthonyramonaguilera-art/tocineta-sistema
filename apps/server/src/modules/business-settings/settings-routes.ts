@@ -30,6 +30,10 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         eventsQuoteEnabled: Boolean(settings.events_quote_enabled),
         onboardingCompleted: Boolean(settings.onboarding_completed),
         askTableOnOrder: Boolean(settings.ask_table_on_order),
+        inventoryOperationMode: settings.inventory_operation_mode,
+        inventory_operation_mode: settings.inventory_operation_mode,
+        inventoryTrackingSinceMs: settings.inventory_tracking_since_ms,
+        inventory_tracking_since_ms: settings.inventory_tracking_since_ms,
         ask_table_on_order: settings.ask_table_on_order ?? 0
       };
 
@@ -75,6 +79,15 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
       const newBlind = b.blind_closure_enabled !== undefined ? (b.blind_closure_enabled ? 1 : 0) : (b.blindClosureEnabled !== undefined ? (b.blindClosureEnabled ? 1 : 0) : current.blind_closure_enabled);
       const newAskTable = b.ask_table_on_order !== undefined ? (b.ask_table_on_order ? 1 : 0) : (b.askTableOnOrder !== undefined ? (b.askTableOnOrder ? 1 : 0) : current.ask_table_on_order);
 
+      const newInventoryMode = b.inventory_operation_mode ?? b.inventoryOperationMode ?? current.inventory_operation_mode;
+      let newInventoryTrackingSince = current.inventory_tracking_since_ms;
+      if (newInventoryMode === 'tracked' && (current.inventory_operation_mode !== 'tracked' || !current.inventory_tracking_since_ms)) {
+        newInventoryTrackingSince = now;
+      }
+      if (b.inventory_tracking_since_ms !== undefined) {
+        newInventoryTrackingSince = b.inventory_tracking_since_ms;
+      }
+
       rawDb.prepare(`
         UPDATE business_settings
         SET business_name = ?,
@@ -97,6 +110,8 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
             onboarding_completed = ?,
             blind_closure_enabled = ?,
             ask_table_on_order = ?,
+            inventory_operation_mode = ?,
+            inventory_tracking_since_ms = ?,
             updated_at_ms = ?
         WHERE id = 'default'
       `).run(
@@ -120,6 +135,8 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         newOnboarding,
         newBlind,
         newAskTable,
+        newInventoryMode,
+        newInventoryTrackingSince,
         now
       );
 
@@ -148,6 +165,10 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
           eventsQuoteEnabled: Boolean(updated.events_quote_enabled),
           onboardingCompleted: Boolean(updated.onboarding_completed),
           askTableOnOrder: Boolean(updated.ask_table_on_order),
+          inventoryOperationMode: updated.inventory_operation_mode,
+          inventory_operation_mode: updated.inventory_operation_mode,
+          inventoryTrackingSinceMs: updated.inventory_tracking_since_ms,
+          inventory_tracking_since_ms: updated.inventory_tracking_since_ms,
           ask_table_on_order: updated.ask_table_on_order ?? 0
         }
       });

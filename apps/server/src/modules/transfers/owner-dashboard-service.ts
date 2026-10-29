@@ -6,6 +6,7 @@
 
 import type Database from 'better-sqlite3';
 import { getFinancialTruth } from '../finances/financial-truth-service.js';
+import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
 
 export interface LocationSalesSummary {
   locationId: string;
@@ -136,27 +137,31 @@ export function getOwnerDashboardData(rawDb: Database.Database): OwnerDashboardD
   }
 
   // 3. Stock Bajo por Sede
-  const lowStockRows = rawDb.prepare(`
-    SELECT li.location_id, l.name as location_name, li.supply_id, si.name as supply_name,
-           li.current_stock_qty, li.minimum_stock_qty, si.usage_unit, si.unit
-    FROM location_inventory li
-    JOIN locations l ON li.location_id = l.id
-    JOIN supply_items si ON li.supply_id = si.id
-    WHERE li.current_stock_qty <= li.minimum_stock_qty
-       OR (li.minimum_stock_qty = 0 AND li.current_stock_qty <= 10)
-    ORDER BY li.current_stock_qty ASC
-    LIMIT 20
-  `).all() as any[];
+  const settings = ensureBusinessSettingsDefensive(rawDb);
+  let lowStockAlerts: LowStockAlert[] = [];
+  if (settings.inventory_operation_mode !== 'free') {
+    const lowStockRows = rawDb.prepare(`
+      SELECT li.location_id, l.name as location_name, li.supply_id, si.name as supply_name,
+             li.current_stock_qty, li.minimum_stock_qty, si.usage_unit, si.unit
+      FROM location_inventory li
+      JOIN locations l ON li.location_id = l.id
+      JOIN supply_items si ON li.supply_id = si.id
+      WHERE li.current_stock_qty <= li.minimum_stock_qty
+         OR (li.minimum_stock_qty = 0 AND li.current_stock_qty <= 10)
+      ORDER BY li.current_stock_qty ASC
+      LIMIT 20
+    `).all() as any[];
 
-  const lowStockAlerts: LowStockAlert[] = lowStockRows.map(r => ({
-    locationId: r.location_id,
-    locationName: r.location_name,
-    supplyId: r.supply_id,
-    supplyName: r.supply_name,
-    currentStock: r.current_stock_qty,
-    minimumStock: r.minimum_stock_qty,
-    unit: r.usage_unit || r.unit || 'und'
-  }));
+    lowStockAlerts = lowStockRows.map(r => ({
+      locationId: r.location_id,
+      locationName: r.location_name,
+      supplyId: r.supply_id,
+      supplyName: r.supply_name,
+      currentStock: r.current_stock_qty,
+      minimumStock: r.minimum_stock_qty,
+      unit: r.usage_unit || r.unit || 'und'
+    }));
+  }
 
   // 4. Envíos Recientes
   const transferRows = rawDb.prepare(`

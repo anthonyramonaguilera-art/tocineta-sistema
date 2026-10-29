@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
 import { resolveLocationId } from './locations-service.js';
+import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
 
 export interface SubRecipeRecord {
   id: string;
@@ -359,8 +360,24 @@ export function deductInventoryForOrder(
   now: number,
   cashierUserId: string
 ): void {
-  const order = rawDb.prepare('SELECT order_number FROM orders WHERE id = ?').get(orderId) as any;
+  const settings = ensureBusinessSettingsDefensive(rawDb);
+  if (settings.inventory_operation_mode === 'free') {
+    return;
+  }
+
+  const order = rawDb.prepare('SELECT order_number, created_at_ms, inventory_consumed_at_ms FROM orders WHERE id = ?').get(orderId) as any;
+  if (!order) return;
+  if (order.inventory_consumed_at_ms) {
+    return; // Already consumed (idempotent)
+  }
+  if (settings.inventory_tracking_since_ms && (order.created_at_ms || 0) < settings.inventory_tracking_since_ms) {
+    return; // Created before inventory tracking started
+  }
+
   const orderNum = order?.order_number || 0;
+
+  // Marcar orden como consumida en inventario
+  rawDb.prepare('UPDATE orders SET inventory_consumed_at_ms = ? WHERE id = ?').run(now, orderId);
 
   // 1. Obtener renglones de la orden (sin los combos padres abstractos)
   const lines = rawDb.prepare(`
@@ -451,8 +468,8 @@ export function deductInventoryForOrder(
   const insertMovement = rawDb.prepare(`
     INSERT INTO inventory_movements (
       id, location_id, supply_id, movement_type, quantity_delta,
-      unit_cost_usd_cents, total_cost_usd_cents, reference_doc, notes, created_by, created_at_ms
-    ) VALUES (?, ?, ?, 'VENTA_RECETA', ?, ?, ?, ?, ?, ?, ?)
+      unit_cost_usd_cents, total_cost_usd_cents, reference_doc, notes, order_id, created_by, created_at_ms
+    ) VALUES (?, ?, ?, 'VENTA_RECETA', ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (const [supplyId, qtyToDeduct] of deductions.entries()) {
@@ -473,6 +490,7 @@ export function deductInventoryForOrder(
       totalCost,
       `#CMD-${orderNum}`,
       `Consumo por venta orden #${orderNum}`,
+      orderId,
       cashierUserId,
       now
     );
@@ -520,24 +538,28 @@ export function revertInventoryForOrder(
   actorUserId: string = 'usr_cajera'
 ): void {
   try {
+    const settings = ensureBusinessSettingsDefensive(rawDb);
+    if (settings.inventory_operation_mode === 'free') {
+      return;
+    }
+
     const order = rawDb.prepare('SELECT order_number, location_id FROM orders WHERE id = ?').get(orderId) as any;
     const orderNum = order?.order_number || 0;
     const locationId = resolveLocationId(rawDb, rawLocationId || order?.location_id, actorUserId);
     const now = Date.now();
 
-    // 1. Buscar si esta orden ya tuvo movimientos previos en inventory_movements
+    // 1. Buscar si esta orden ya tuvo movimientos previos en inventory_movements por order_id exacto
     const prevMovements = rawDb.prepare(`
       SELECT * FROM inventory_movements
-      WHERE (reference_doc LIKE ? OR notes LIKE ?)
-        AND quantity_delta < 0
-    `).all(`%${orderNum}%`, `%${orderNum}%`) as any[];
+      WHERE order_id = ? AND quantity_delta < 0
+    `).all(orderId) as any[];
 
     if (prevMovements.length > 0) {
       const insertMovement = rawDb.prepare(`
         INSERT INTO inventory_movements (
           id, location_id, supply_id, movement_type, quantity_delta,
-          unit_cost_usd_cents, total_cost_usd_cents, reference_doc, notes, created_by, created_at_ms
-        ) VALUES (?, ?, ?, 'REVERSION_VENTA', ?, ?, ?, ?, ?, ?, ?)
+          unit_cost_usd_cents, total_cost_usd_cents, reference_doc, notes, order_id, created_by, created_at_ms
+        ) VALUES (?, ?, ?, 'REVERSION_VENTA', ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
       for (const m of prevMovements) {
@@ -553,6 +575,7 @@ export function revertInventoryForOrder(
           m.total_cost_usd_cents,
           `#CMD-${orderNum}`,
           `Reversión por anulación orden #${orderNum}: ${reason}`,
+          orderId,
           actorUserId,
           now
         );

@@ -46,6 +46,7 @@ export interface SedeFinancialTruth {
   expectedCashUsdCents: number;
   expectedCashBsCents: number;
   cogsTheoretical: number;
+  cogsConfigured: boolean;
   wasteUsdCents: number;
   operatingExpensesUsdCents: number;
   netProfitUsdCents: number;
@@ -71,6 +72,7 @@ export interface FinancialTruthResult {
   collectedByMethod: MethodBreakdown[];
   expectedCash: ExpectedCashBreakdown;
   cogsTheoretical: number;
+  cogsConfigured: boolean;
   waste: {
     totalUsdCents: number;
     wasteLogsUsdCents: number;
