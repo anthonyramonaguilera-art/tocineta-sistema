@@ -284,21 +284,31 @@ export const OwnerDashboardView: React.FC = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-48 overflow-y-auto pr-1">
-            {lowStock.map((ls: any, i: number) => (
-              <div
-                key={i}
-                className="p-3 rounded-2xl bg-surface border border-warning/30 flex items-center justify-between text-xs shadow-xs"
-              >
-                <div>
-                  <div className="font-bold text-ink">{ls.supplyName}</div>
-                  <div className="text-[10px] text-ink-muted">{ls.locationName}</div>
+            {lowStock.map((ls: any, i: number) => {
+              const isNegative = ls.currentStock < 0;
+              return (
+                <div
+                  key={i}
+                  className={`p-3 rounded-2xl bg-surface border ${isNegative ? 'border-danger/30' : 'border-warning/30'} flex items-center justify-between text-xs shadow-xs`}
+                >
+                  <div>
+                    <div className="font-bold text-ink">{ls.supplyName}</div>
+                    <div className="text-[10px] text-ink-muted">{ls.locationName}</div>
+                    {isNegative && (
+                      <div className="mt-1">
+                        <Badge variant="danger" size="sm" className="badge-danger" data-testid="negative-stock-alert">
+                          Stock negativo: se vendió o gastó más de lo registrado
+                        </Badge>
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right">
+                    <span className="font-black text-danger">{ls.currentStock} {ls.unit}</span>
+                    <span className="text-[10px] text-ink-muted block">Mín: {ls.minimumStock} {ls.unit}</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="font-black text-danger">{ls.currentStock} {ls.unit}</span>
-                  <span className="text-[10px] text-ink-muted block">Mín: {ls.minimumStock} {ls.unit}</span>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>

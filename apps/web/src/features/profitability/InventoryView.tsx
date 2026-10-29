@@ -184,7 +184,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filteredSupplies.map((supply) => {
-            const isLowStock = supply.currentStockQty <= supply.minStock;
+            const isNegative = supply.currentStockQty < 0;
+            const isLowStock = !isNegative && supply.currentStockQty <= supply.minStock;
             const wacUsd = (supply.weightedAvgCostUsdCents / 100).toFixed(2);
             const lastUsd = (supply.lastCostUsdCents / 100).toFixed(2);
 
@@ -197,16 +198,22 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       {supply.category || 'General'}
                     </span>
                   </div>
-                  <Badge variant={isLowStock ? 'danger' : 'neutral'}>
-                    {isLowStock ? 'Stock Bajo' : 'Normal'}
-                  </Badge>
+                  {isNegative ? (
+                    <Badge variant="danger" className="badge-danger" data-testid="negative-stock-alert">
+                      Stock negativo: se vendió o gastó más de lo registrado
+                    </Badge>
+                  ) : (
+                    <Badge variant={isLowStock ? 'danger' : 'neutral'}>
+                      {isLowStock ? 'Stock Bajo' : 'Normal'}
+                    </Badge>
+                  )}
                 </div>
 
                 {/* Métricas de Stock */}
                 <div className="grid grid-cols-2 gap-2 p-2.5 rounded-xl bg-surface-alt text-center">
                   <div>
                     <span className="text-[10px] font-bold text-ink-muted block uppercase">Stock Sede</span>
-                    <span className={`text-base font-black ${isLowStock ? 'text-danger' : 'text-ink'}`}>
+                    <span className={`text-base font-black ${isNegative || isLowStock ? 'text-danger' : 'text-ink'}`}>
                       {supply.currentStockQty.toLocaleString()} <span className="text-xs font-normal">{supply.usageUnit}</span>
                     </span>
                   </div>

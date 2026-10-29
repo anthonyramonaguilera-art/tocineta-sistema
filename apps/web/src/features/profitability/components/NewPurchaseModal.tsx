@@ -209,78 +209,99 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
             </Button>
           </div>
 
-          <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
-            {purchaseItems.map((item, idx) => (
-              <div
-                key={idx}
-                className="flex items-center gap-2 bg-surface-alt p-2 rounded-xl border border-border text-xs"
-              >
-                  <div className="flex-1 min-w-[200px] flex items-center gap-1.5 flex-wrap">
-                    <select
-                      value={item.supplyId}
-                      onChange={(e) => updateItemRow(idx, 'supplyId', e.target.value)}
-                      className="flex-1 min-w-[120px] h-9 px-2 rounded-lg bg-surface border border-border text-ink text-xs font-bold"
-                    >
-                      {supplies.map((s) => (
-                        <option key={s.id} value={s.id}>
-                          {s.name} ({s.purchaseUnit || 'u'})
-                        </option>
-                      ))}
-                    </select>
-                    <Button
+          <div className="space-y-3 max-h-[420px] overflow-y-auto pr-1">
+            {purchaseItems.map((item, idx) => {
+              const qty = item.purchaseQuantity || 0;
+              const unitCost = (item.unitCostUsdCents || 0) / 100;
+              const rowTotal = qty * unitCost;
+              return (
+                <div
+                  key={idx}
+                  className="bg-surface-alt p-3 rounded-xl border border-border text-xs space-y-2"
+                >
+                  <div className="flex items-end gap-2">
+                    <div className="flex-1 space-y-1">
+                      <span className="text-sm font-semibold text-ink flex items-center justify-between">
+                        <span>Insumo (Unidad de Compra)</span>
+                      </span>
+                      <div className="flex items-center gap-1.5">
+                        <select
+                          value={item.supplyId}
+                          onChange={(e) => updateItemRow(idx, 'supplyId', e.target.value)}
+                          className="flex-1 h-11 px-3 rounded-xl bg-surface border border-border text-ink text-xs font-bold"
+                        >
+                          {supplies.map((s) => (
+                            <option key={s.id} value={s.id}>
+                              {s.name} ({s.purchaseUnit || 'u'})
+                            </option>
+                          ))}
+                        </select>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            setActiveSupplyIndex(idx);
+                            setIsNewSupplyModalOpen(true);
+                          }}
+                          leftIcon={<Icon name="Plus" size={12} />}
+                          className="h-11 px-3 text-xs whitespace-nowrap shrink-0"
+                          title="Crear insumo nuevo"
+                        >
+                          Crear insumo nuevo
+                        </Button>
+                      </div>
+                    </div>
+
+                    <div className="w-36">
+                      <Field label="Cantidad comprada (en unidad de compra)" required>
+                        <Input
+                          type="number"
+                          step="any"
+                          value={item.purchaseQuantity.toString()}
+                          onChange={(e) =>
+                            updateItemRow(idx, 'purchaseQuantity', parseFloat(e.target.value) || 0)
+                          }
+                          placeholder="0"
+                        />
+                      </Field>
+                    </div>
+
+                    <div className="w-36">
+                      <Field label="Precio pagado por cada unidad de compra ($)" required>
+                        <Input
+                          type="number"
+                          step="0.01"
+                          value={(item.unitCostUsdCents / 100).toFixed(2)}
+                          onChange={(e) =>
+                            updateItemRow(
+                              idx,
+                              'unitCostUsdCents',
+                              Math.round((parseFloat(e.target.value) || 0) * 100)
+                            )
+                          }
+                          placeholder="0.00"
+                        />
+                      </Field>
+                    </div>
+
+                    <button
                       type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setActiveSupplyIndex(idx);
-                        setIsNewSupplyModalOpen(true);
-                      }}
-                      leftIcon={<Icon name="Plus" size={12} />}
-                      className="h-9 px-2 text-[11px] whitespace-nowrap shrink-0"
-                      title="Crear insumo nuevo"
+                      onClick={() => removeItemRow(idx)}
+                      disabled={purchaseItems.length === 1}
+                      className="p-2.5 text-danger hover:bg-danger/10 rounded-xl disabled:opacity-30 self-end mb-0.5"
+                      title="Eliminar ítem"
                     >
-                      Crear insumo nuevo
-                    </Button>
+                      <Icon name="Trash2" size={18} />
+                    </button>
                   </div>
 
-                  <div className="w-20">
-                    <Input
-                      type="number"
-                      step="any"
-                      value={item.purchaseQuantity.toString()}
-                      onChange={(e) =>
-                        updateItemRow(idx, 'purchaseQuantity', parseFloat(e.target.value) || 0)
-                      }
-                      placeholder="Cant."
-                    />
+                  <div className="text-xs text-ink-muted font-medium pt-1 border-t border-border/50">
+                    {qty} unidades de compra × ${unitCost.toFixed(2)} = ${rowTotal.toFixed(2)}
                   </div>
-
-                  <div className="w-24">
-                    <Input
-                      type="number"
-                      step="0.01"
-                      value={(item.unitCostUsdCents / 100).toFixed(2)}
-                      onChange={(e) =>
-                        updateItemRow(
-                          idx,
-                          'unitCostUsdCents',
-                          Math.round((parseFloat(e.target.value) || 0) * 100)
-                        )
-                      }
-                      placeholder="$ Costo"
-                    />
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => removeItemRow(idx)}
-                    disabled={purchaseItems.length === 1}
-                    className="p-2 text-danger hover:bg-danger/10 rounded-lg disabled:opacity-30"
-                  >
-                    <Icon name="Trash2" size={16} />
-                  </button>
                 </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="text-right text-xs font-bold text-ink pt-1">

@@ -2,7 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Button, Input, Field, Icon, Badge } from '../../../ui/index.js';
 import { RecipeModifiersSection, type ModifierRow } from './RecipeModifiersSection.js';
-
 interface IngredientRow {
   supplyItemId?: string;
   subRecipeId?: string;
@@ -11,7 +10,6 @@ interface IngredientRow {
   shrinkagePercent: number;
   unit: string;
 }
-
 interface RecipeEditorModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -20,7 +18,6 @@ interface RecipeEditorModalProps {
   subRecipes: any[];
   recipes?: any[];
 }
-
 export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
   isOpen,
   onClose,
@@ -39,7 +36,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
   const [ingredients, setIngredients] = useState<IngredientRow[]>([]);
   const [modifiers, setModifiers] = useState<ModifierRow[]>([]);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
   useEffect(() => {
     if (recipe) {
       setSelectedProductId(recipe.productId);
@@ -62,11 +58,9 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
       setErrorMsg(null);
     }
   }, [recipe, recipes, isOpen]);
-
   const selectedProdSummary = isCreation
     ? recipes.find((r) => r.productId === selectedProductId)
     : recipe;
-
   useEffect(() => {
     if (isCreation && selectedProdSummary) {
       setRecipeMode(selectedProdSummary.recipeMode || 'UNITS');
@@ -75,7 +69,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
       }
     }
   }, [selectedProductId, isCreation, recipes]);
-
   const saveMutation = useMutation({
     mutationFn: async () => {
       const targetId = isCreation ? selectedProductId : recipe?.productId;
@@ -107,7 +100,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
       setErrorMsg('Error de red al guardar la receta');
     }
   });
-
   const addIngredientRow = () => {
     setIngredients([
       ...ingredients,
@@ -120,11 +112,9 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
       }
     ]);
   };
-
   const removeIngredientRow = (idx: number) => {
     setIngredients(ingredients.filter((_, i) => i !== idx));
   };
-
   const updateIngredientRow = (idx: number, field: string, val: any) => {
     const next = [...ingredients];
     const row = { ...next[idx], [field]: val } as IngredientRow;
@@ -135,7 +125,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
     next[idx] = row;
     setIngredients(next);
   };
-
   // Cálculo de Costo en Vivo
   let liveCostCents = 0;
   if (recipeMode === 'FINISHED_PRODUCT') {
@@ -154,20 +143,17 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
       }
     }
   }
-
   const currentPriceCents = selectedProdSummary?.priceUsdCents || selectedProdSummary?.currentPriceUsdCents || 0;
   const currentMarginBps =
     currentPriceCents > 0
       ? Math.round(((currentPriceCents - liveCostCents) / currentPriceCents) * 10000)
       : 0;
-
   const targetBps = Math.round(parseFloat(targetMarginPercent || '65') * 100);
   const targetMarginFrac = targetBps / 10000;
   const suggestedPriceCents =
     targetMarginFrac < 1 && targetMarginFrac > 0
       ? Math.round(liveCostCents / (1 - targetMarginFrac))
       : liveCostCents;
-
   return (
     <Modal
       isOpen={isOpen}
@@ -191,7 +177,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
             {errorMsg}
           </div>
         )}
-
         {/* Selector de Plato de la Carta (en modo creación) */}
         {isCreation && (
           <Field label="Plato de la Carta" required>
@@ -219,7 +204,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
             </select>
           </Field>
         )}
-
         {/* Selector de Modo de Receta (3 Modos F3) */}
         <div className="space-y-1.5">
           <label className="text-xs font-bold text-ink uppercase tracking-wider block">
@@ -247,7 +231,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
             ))}
           </div>
         </div>
-
         {/* Margen Objetivo */}
         <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-surface-alt border border-border">
           <Field label="Margen Bruto Objetivo (%)" required>
@@ -260,7 +243,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
               required
             />
           </Field>
-
           <div>
             <span className="text-[10px] font-bold text-ink-muted uppercase block">
               Precio Sugerido en Vivo
@@ -273,7 +255,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
             </span>
           </div>
         </div>
-
         {/* Insumos de la Receta */}
         {recipeMode !== 'FINISHED_PRODUCT' && (
           <div className="space-y-2 border-t border-border pt-3">
@@ -291,7 +272,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
                 Agregar Componente
               </Button>
             </div>
-
             <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
               {ingredients.map((item, idx) => (
                 <div
@@ -306,7 +286,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
                     <option value="SUPPLY">Insumo</option>
                     <option value="SUB_RECIPE">Sub-Receta</option>
                   </select>
-
                   <div className="flex-1">
                     {item.itemType === 'SUPPLY' ? (
                       <select
@@ -335,7 +314,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
                       </select>
                     )}
                   </div>
-
                   <div className="w-20">
                     <Input
                       type="number"
@@ -347,7 +325,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
                       placeholder="Cant."
                     />
                   </div>
-
                   {recipeMode === 'GRAMMAGE' && (
                     <div className="w-20">
                       <Input
@@ -361,7 +338,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
                       />
                     </div>
                   )}
-
                   <button
                     type="button"
                     onClick={() => removeIngredientRow(idx)}
@@ -374,14 +350,12 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
             </div>
           </div>
         )}
-
         {/* Modificadores (Sin pan, Extra carne, Sin cebolla) */}
         <RecipeModifiersSection
           modifiers={modifiers}
           supplies={supplies}
           onChange={setModifiers}
         />
-
         {/* Resumen de Costo y Acciones */}
         <div className="p-3 rounded-xl bg-surface border border-border flex justify-between items-center text-xs">
           <div>
@@ -399,7 +373,6 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
             </div>
           </div>
         </div>
-
         <div className="flex gap-2 pt-2">
           <Button variant="ghost" className="flex-1" type="button" onClick={onClose}>
             Cancelar
