@@ -82,6 +82,18 @@ export function getPrinterConfig(rawDb: Database.Database, printerId: string): E
   }
 }
 
+export function resolveKitchenPrinterId(rawDb: Database.Database): string {
+  try {
+    const s = rawDb.prepare('SELECT print_mode FROM business_settings WHERE id = ?').get('default') as any;
+    if (s && s.print_mode === 'two') {
+      return 'print_cocina';
+    }
+    return 'print_caja_usb';
+  } catch {
+    return 'print_caja_usb';
+  }
+}
+
 export interface PrintJobRow {
   id: string;
   printer_id: string;
@@ -462,7 +474,8 @@ export function enqueueOrderPrintJobs(
   // 2. Generar Comandas de Cocina por Estación
   const kitchenIRs = buildKitchenTicketIRs({ order, kitchenLines });
   const kitchenJobIds: string[] = [];
-  const cocinaConfig = getPrinterConfig(rawDb, 'print_cocina');
+  const kitchenPrinterId = resolveKitchenPrinterId(rawDb);
+  const cocinaConfig = getPrinterConfig(rawDb, kitchenPrinterId);
 
   for (const kIR of kitchenIRs) {
     const kJobId = `pjob_${generateUuidV7()}`;
@@ -473,8 +486,8 @@ export function enqueueOrderPrintJobs(
       INSERT INTO print_jobs (
         id, printer_id, order_id, job_type, payload_bytes,
         ticket_ir_json, station, status, attempts, created_at_ms
-      ) VALUES (?, 'print_cocina', ?, 'TICKET_COCINA', ?, ?, ?, 'en_cola', 0, ?)
-    `).run(kJobId, orderId, kBytes, JSON.stringify(kIR), station, now);
+      ) VALUES (?, ?, ?, 'TICKET_COCINA', ?, ?, ?, 'en_cola', 0, ?)
+    `).run(kJobId, kitchenPrinterId, orderId, kBytes, JSON.stringify(kIR), station, now);
 
     kitchenJobIds.push(kJobId);
   }
@@ -608,7 +621,8 @@ export function createRefirePrintJob(
 
   const { order, kitchenLines } = loadOrderReceiptDataFromDb(rawDb, orderId);
   const refireIR = buildRefireTicketIR(order, kitchenLines, reason);
-  const cocinaConfig = getPrinterConfig(rawDb, 'print_cocina');
+  const kitchenPrinterId = resolveKitchenPrinterId(rawDb);
+  const cocinaConfig = getPrinterConfig(rawDb, kitchenPrinterId);
   const refireBytes = Buffer.from(renderTicketToEscPos(refireIR, cocinaConfig));
 
   const now = Date.now();
@@ -618,8 +632,8 @@ export function createRefirePrintJob(
     INSERT INTO print_jobs (
       id, printer_id, order_id, job_type, payload_bytes,
       ticket_ir_json, station, status, attempts, created_at_ms
-    ) VALUES (?, 'print_cocina', ?, 'REPOSICION_COCINA', ?, ?, 'cocina', 'en_cola', 0, ?)
-  `).run(newJobId, orderId, refireBytes, JSON.stringify(refireIR), now);
+    ) VALUES (?, ?, ?, 'REPOSICION_COCINA', ?, ?, 'cocina', 'en_cola', 0, ?)
+  `).run(newJobId, kitchenPrinterId, orderId, refireBytes, JSON.stringify(refireIR), now);
 
   // Reactivar orden y líneas en KDS
   rawDb.prepare(`

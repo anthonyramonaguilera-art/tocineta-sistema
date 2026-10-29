@@ -34,6 +34,8 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         inventory_operation_mode: settings.inventory_operation_mode,
         inventoryTrackingSinceMs: settings.inventory_tracking_since_ms,
         inventory_tracking_since_ms: settings.inventory_tracking_since_ms,
+        print_mode: settings.print_mode,
+        printMode: settings.print_mode,
         ask_table_on_order: settings.ask_table_on_order ?? 0
       };
 
@@ -96,6 +98,19 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         newInventoryTrackingSince = now;
       }
 
+      const rawPrintMode = b.print_mode ?? b.printMode;
+      let newPrintMode = current.print_mode;
+      if (rawPrintMode !== undefined) {
+        if (rawPrintMode !== 'one' && rawPrintMode !== 'two') {
+          return reply.status(400).send({
+            success: false,
+            message: "print_mode debe ser 'one' o 'two'",
+            field: 'print_mode'
+          });
+        }
+        newPrintMode = rawPrintMode;
+      }
+
       rawDb.prepare(`
         UPDATE business_settings
         SET business_name = ?,
@@ -120,6 +135,7 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
             ask_table_on_order = ?,
             inventory_operation_mode = ?,
             inventory_tracking_since_ms = ?,
+            print_mode = ?,
             updated_at_ms = ?
         WHERE id = 'default'
       `).run(
@@ -145,6 +161,7 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         newAskTable,
         newInventoryMode,
         newInventoryTrackingSince,
+        newPrintMode,
         now
       );
 
@@ -177,6 +194,8 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
           inventory_operation_mode: updated.inventory_operation_mode,
           inventoryTrackingSinceMs: updated.inventory_tracking_since_ms,
           inventory_tracking_since_ms: updated.inventory_tracking_since_ms,
+          print_mode: updated.print_mode,
+          printMode: updated.print_mode,
           ask_table_on_order: updated.ask_table_on_order ?? 0
         }
       });

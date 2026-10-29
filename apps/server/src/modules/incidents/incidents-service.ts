@@ -18,7 +18,7 @@ import {
   loadOrderReceiptDataFromDb,
   buildRefireTicketIR
 } from '../printing/templates.js';
-import { getPrinterConfig } from '../printing/worker.js';
+import { getPrinterConfig, resolveKitchenPrinterId } from '../printing/worker.js';
 import { reverseCouponRedemptionForOrder } from '../coupons/coupon-service.js';
 import { revertInventoryForOrder } from '../profitability/recipes-service.js';
 import { resolveLocationId } from '../profitability/locations-service.js';
@@ -120,7 +120,8 @@ export function reportOrderIncident(
     // Cargar datos de la orden y líneas de cocina para ticket de reposición
     const { order: receiptOrder, kitchenLines } = loadOrderReceiptDataFromDb(rawDb, orderId);
     const refireIR = buildRefireTicketIR(receiptOrder, kitchenLines, input.reasonCode);
-    const cocinaConfig = getPrinterConfig(rawDb, 'print_cocina');
+    const kitchenPrinterId = resolveKitchenPrinterId(rawDb);
+    const cocinaConfig = getPrinterConfig(rawDb, kitchenPrinterId);
     const refireBytes = Buffer.from(renderTicketToEscPos(refireIR, cocinaConfig));
 
     const printJobId = `pjob_${generateUuidV7()}`;
@@ -128,8 +129,8 @@ export function reportOrderIncident(
       INSERT INTO print_jobs (
         id, printer_id, order_id, job_type, payload_bytes,
         ticket_ir_json, station, status, attempts, created_at_ms
-      ) VALUES (?, 'print_cocina', ?, 'REPOSICION_COCINA', ?, ?, 'cocina', 'en_cola', 0, ?)
-    `).run(printJobId, orderId, refireBytes, JSON.stringify(refireIR), now);
+      ) VALUES (?, ?, ?, 'REPOSICION_COCINA', ?, ?, 'cocina', 'en_cola', 0, ?)
+    `).run(printJobId, kitchenPrinterId, orderId, refireBytes, JSON.stringify(refireIR), now);
 
     // Reactivar orden y líneas en cocina/KDS sin alterar pagos ni caja
     rawDb.prepare(`
