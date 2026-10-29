@@ -4,6 +4,7 @@ import { Card, Button, Badge, Icon } from '../../ui/index.js';
 import { OnboardingWizardModal } from './OnboardingWizardModal.js';
 import { OperationalManualsModal } from './OperationalManualsModal.js';
 import { InventoryModeCard } from './InventoryModeCard.js';
+import { PrintersPanel } from './PrintersPanel.js';
 import type { BusinessSettings, BusinessLocation } from './types.js';
 
 export const BusinessSettingsView: React.FC = () => {
@@ -155,6 +156,9 @@ export const BusinessSettingsView: React.FC = () => {
           onChangeMode={setInventoryMode}
           trackingSinceMs={settings?.inventory_tracking_since_ms}
         />
+
+        {/* Printers & Hardware Panel */}
+        <PrintersPanel />
 
         {/* 1. Identidad Corporativa */}
         <Card variant="surface" className="p-5 border border-border space-y-4">

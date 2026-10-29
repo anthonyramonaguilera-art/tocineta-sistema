@@ -16,6 +16,7 @@ export interface BusinessSettings {
   ask_table_on_order?: number;
   inventory_operation_mode?: string;
   inventory_tracking_since_ms?: number | null;
+  print_mode?: string;
   banesco_pago_movil_phone: string;
   banesco_pago_movil_id: string;
   pos_fee_bps: number;
