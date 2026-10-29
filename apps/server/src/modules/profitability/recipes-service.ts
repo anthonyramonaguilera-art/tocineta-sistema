@@ -376,152 +376,154 @@ export function deductInventoryForOrder(
 
   const orderNum = order?.order_number || 0;
 
-  // Marcar orden como consumida en inventario
-  rawDb.prepare('UPDATE orders SET inventory_consumed_at_ms = ? WHERE id = ?').run(now, orderId);
+  rawDb.transaction(() => {
+    // Marcar orden como consumida en inventario
+    rawDb.prepare('UPDATE orders SET inventory_consumed_at_ms = ? WHERE id = ?').run(now, orderId);
 
-  // 1. Obtener renglones de la orden (sin los combos padres abstractos)
-  const lines = rawDb.prepare(`
-    SELECT ol.id, ol.product_id, ol.quantity, p.recipe_mode
-    FROM order_lines ol
-    JOIN products p ON ol.product_id = p.id
-    WHERE ol.order_id = ? AND ol.line_role != 'COMBO_PARENT'
-  `).all(orderId) as any[];
+    // 1. Obtener renglones de la orden (sin los combos padres abstractos)
+    const lines = rawDb.prepare(`
+      SELECT ol.id, ol.product_id, ol.quantity, p.recipe_mode
+      FROM order_lines ol
+      JOIN products p ON ol.product_id = p.id
+      WHERE ol.order_id = ? AND ol.line_role != 'COMBO_PARENT'
+    `).all(orderId) as any[];
 
-  const deductions = new Map<string, number>();
+    const deductions = new Map<string, number>();
 
-  const addDeduction = (supplyId: string, qty: number) => {
-    if (!supplyId || qty === 0) return;
-    const current = deductions.get(supplyId) || 0;
-    deductions.set(supplyId, current + qty);
-  };
+    const addDeduction = (supplyId: string, qty: number) => {
+      if (!supplyId || qty === 0) return;
+      const current = deductions.get(supplyId) || 0;
+      deductions.set(supplyId, current + qty);
+    };
 
-  for (const line of lines) {
-    const qty = line.quantity || 1;
-    const mode = line.recipe_mode || 'UNITS';
+    for (const line of lines) {
+      const qty = line.quantity || 1;
+      const mode = line.recipe_mode || 'UNITS';
 
-    if (mode === 'FINISHED_PRODUCT') {
-      // Plato terminado: descontar insumo directo espejo
-      const candidateId = `sup_${line.product_id.replace('prod_', '')}`;
-      const found = rawDb.prepare('SELECT id FROM supply_items WHERE id = ? OR id = ?').get(candidateId, line.product_id) as any;
-      if (found) {
-        addDeduction(found.id, qty);
+      if (mode === 'FINISHED_PRODUCT') {
+        // Plato terminado: descontar insumo directo espejo
+        const candidateId = `sup_${line.product_id.replace('prod_', '')}`;
+        const found = rawDb.prepare('SELECT id FROM supply_items WHERE id = ? OR id = ?').get(candidateId, line.product_id) as any;
+        if (found) {
+          addDeduction(found.id, qty);
+        }
+      } else {
+        // UNITS o GRAMMAGE: consultar recipe_items
+        const recipe = rawDb.prepare('SELECT id FROM recipes WHERE product_id = ?').get(line.product_id) as any;
+        if (recipe) {
+          const recipeItems = rawDb.prepare('SELECT * FROM recipe_items WHERE recipe_id = ?').all(recipe.id) as any[];
+          for (const ri of recipeItems) {
+            if (ri.sub_recipe_id) {
+              // Sub-receta: desglosar en sus insumos componentes
+              const subItems = rawDb.prepare('SELECT * FROM sub_recipe_items WHERE sub_recipe_id = ?').all(ri.sub_recipe_id) as any[];
+              const subRecipe = rawDb.prepare('SELECT yield_quantity FROM sub_recipes WHERE id = ?').get(ri.sub_recipe_id) as any;
+              const yieldQty = subRecipe?.yield_quantity > 0 ? subRecipe.yield_quantity : 1;
+              for (const si of subItems) {
+                const portionNeeded = (si.quantity_required / yieldQty) * ri.quantity_required * qty;
+                addDeduction(si.supply_id, portionNeeded);
+              }
+            } else if (ri.supply_item_id) {
+              if (mode === 'GRAMMAGE' && ri.gross_weight_grams) {
+                const shrinkageFactor = 1 + ((ri.shrinkage_percentage || 0) / 100);
+                const totalGrossGrams = ri.gross_weight_grams * shrinkageFactor * qty;
+                addDeduction(ri.supply_item_id, totalGrossGrams / 1000); // en kg
+              } else {
+                addDeduction(ri.supply_item_id, ri.quantity_required * qty);
+              }
+            }
+          }
+        }
       }
-    } else {
-      // UNITS o GRAMMAGE: consultar recipe_items
-      const recipe = rawDb.prepare('SELECT id FROM recipes WHERE product_id = ?').get(line.product_id) as any;
-      if (recipe) {
-        const recipeItems = rawDb.prepare('SELECT * FROM recipe_items WHERE recipe_id = ?').all(recipe.id) as any[];
-        for (const ri of recipeItems) {
-          if (ri.sub_recipe_id) {
-            // Sub-receta: desglosar en sus insumos componentes
-            const subItems = rawDb.prepare('SELECT * FROM sub_recipe_items WHERE sub_recipe_id = ?').all(ri.sub_recipe_id) as any[];
-            const subRecipe = rawDb.prepare('SELECT yield_quantity FROM sub_recipes WHERE id = ?').get(ri.sub_recipe_id) as any;
-            const yieldQty = subRecipe?.yield_quantity > 0 ? subRecipe.yield_quantity : 1;
-            for (const si of subItems) {
-              const portionNeeded = (si.quantity_required / yieldQty) * ri.quantity_required * qty;
-              addDeduction(si.supply_id, portionNeeded);
-            }
-          } else if (ri.supply_item_id) {
-            if (mode === 'GRAMMAGE' && ri.gross_weight_grams) {
-              const shrinkageFactor = 1 + ((ri.shrinkage_percentage || 0) / 100);
-              const totalGrossGrams = ri.gross_weight_grams * shrinkageFactor * qty;
-              addDeduction(ri.supply_item_id, totalGrossGrams / 1000); // en kg
-            } else {
-              addDeduction(ri.supply_item_id, ri.quantity_required * qty);
-            }
+
+      // 2. Modificadores del renglón (Sin pan, Extra carne, etc.)
+      const modifiers = rawDb.prepare('SELECT * FROM order_line_modifiers WHERE order_line_id = ?').all(line.id) as any[];
+      for (const mod of modifiers) {
+        const type = (mod.modifier_type || '').toUpperCase();
+        const ingName = (mod.ingredient_name || '').toLowerCase();
+        const ingId = mod.ingredient_id || '';
+
+        // Mapeo inteligente de ingrediente a supply_item
+        let targetSupplyId: string | null = null;
+        if (ingId.includes('pan_perro') || ingName.includes('pan de perro')) targetSupplyId = 'sup_pan_perro';
+        else if (ingId.includes('pan_brioche') || ingName.includes('pan brioche') || ingName.includes('pan')) targetSupplyId = 'sup_pan_brioche';
+        else if (ingId.includes('carne') || ingName.includes('carne') || ingName.includes('smash')) targetSupplyId = 'sup_carne_smash';
+        else if (ingId.includes('tocineta') || ingName.includes('tocineta')) targetSupplyId = 'sup_tocineta_crispy';
+        else if (ingId.includes('salchicha_pollo') || ingName.includes('pollo')) targetSupplyId = 'sup_salchicha_pollo';
+        else if (ingId.includes('salchicha_polaca') || ingName.includes('polaca')) targetSupplyId = 'sup_salchicha_polaca';
+        else if (ingId.includes('pechuga') || ingName.includes('pechuga')) targetSupplyId = 'sup_pechuga_pollo';
+
+        if (targetSupplyId) {
+          if (type === 'SIN_INGREDIENTE' || type === 'SIN') {
+            // Resta de la deducción
+            const curr = deductions.get(targetSupplyId) || 0;
+            deductions.set(targetSupplyId, Math.max(0, curr - (1 * qty)));
+          } else if (type === 'EXTRA_INGREDIENTE' || type === 'EXTRA') {
+            // Suma a la deducción
+            addDeduction(targetSupplyId, 1 * qty);
           }
         }
       }
     }
 
-    // 2. Modificadores del renglón (Sin pan, Extra carne, etc.)
-    const modifiers = rawDb.prepare('SELECT * FROM order_line_modifiers WHERE order_line_id = ?').all(line.id) as any[];
-    for (const mod of modifiers) {
-      const type = (mod.modifier_type || '').toUpperCase();
-      const ingName = (mod.ingredient_name || '').toLowerCase();
-      const ingId = mod.ingredient_id || '';
+    // 3. Aplicar deducciones en location_inventory e inventory_movements
+    const insertMovement = rawDb.prepare(`
+      INSERT INTO inventory_movements (
+        id, location_id, supply_id, movement_type, quantity_delta,
+        unit_cost_usd_cents, total_cost_usd_cents, reference_doc, notes, order_id, created_by, created_at_ms
+      ) VALUES (?, ?, ?, 'VENTA_RECETA', ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
 
-      // Mapeo inteligente de ingrediente a supply_item
-      let targetSupplyId: string | null = null;
-      if (ingId.includes('pan_perro') || ingName.includes('pan de perro')) targetSupplyId = 'sup_pan_perro';
-      else if (ingId.includes('pan_brioche') || ingName.includes('pan brioche') || ingName.includes('pan')) targetSupplyId = 'sup_pan_brioche';
-      else if (ingId.includes('carne') || ingName.includes('carne') || ingName.includes('smash')) targetSupplyId = 'sup_carne_smash';
-      else if (ingId.includes('tocineta') || ingName.includes('tocineta')) targetSupplyId = 'sup_tocineta_crispy';
-      else if (ingId.includes('salchicha_pollo') || ingName.includes('pollo')) targetSupplyId = 'sup_salchicha_pollo';
-      else if (ingId.includes('salchicha_polaca') || ingName.includes('polaca')) targetSupplyId = 'sup_salchicha_polaca';
-      else if (ingId.includes('pechuga') || ingName.includes('pechuga')) targetSupplyId = 'sup_pechuga_pollo';
+    for (const [supplyId, qtyToDeduct] of deductions.entries()) {
+      if (qtyToDeduct <= 0) continue;
 
-      if (targetSupplyId) {
-        if (type === 'SIN_INGREDIENTE' || type === 'SIN') {
-          // Resta de la deducción
-          const curr = deductions.get(targetSupplyId) || 0;
-          deductions.set(targetSupplyId, Math.max(0, curr - (1 * qty)));
-        } else if (type === 'EXTRA_INGREDIENTE' || type === 'EXTRA') {
-          // Suma a la deducción
-          addDeduction(targetSupplyId, 1 * qty);
-        }
-      }
-    }
-  }
+      const supply = rawDb.prepare('SELECT cost_per_unit_usd_cents, weighted_avg_cost_usd_cents FROM supply_items WHERE id = ?').get(supplyId) as any;
+      if (!supply) continue;
+      const unitCost = supply?.weighted_avg_cost_usd_cents || supply?.cost_per_unit_usd_cents || 0;
+      const totalCost = Math.round(qtyToDeduct * unitCost);
 
-  // 3. Aplicar deducciones en location_inventory e inventory_movements
-  const insertMovement = rawDb.prepare(`
-    INSERT INTO inventory_movements (
-      id, location_id, supply_id, movement_type, quantity_delta,
-      unit_cost_usd_cents, total_cost_usd_cents, reference_doc, notes, order_id, created_by, created_at_ms
-    ) VALUES (?, ?, ?, 'VENTA_RECETA', ?, ?, ?, ?, ?, ?, ?, ?)
-  `);
-
-  for (const [supplyId, qtyToDeduct] of deductions.entries()) {
-    if (qtyToDeduct <= 0) continue;
-
-    const supply = rawDb.prepare('SELECT cost_per_unit_usd_cents, weighted_avg_cost_usd_cents FROM supply_items WHERE id = ?').get(supplyId) as any;
-    if (!supply) continue;
-    const unitCost = supply?.weighted_avg_cost_usd_cents || supply?.cost_per_unit_usd_cents || 0;
-    const totalCost = Math.round(qtyToDeduct * unitCost);
-
-    // Registro inmutable de movimiento
-    insertMovement.run(
-      `mov_${generateUuidV7()}`,
-      locationId,
-      supplyId,
-      -qtyToDeduct,
-      unitCost,
-      totalCost,
-      `#CMD-${orderNum}`,
-      `Consumo por venta orden #${orderNum}`,
-      orderId,
-      cashierUserId,
-      now
-    );
-
-    // Actualizar stock por sede
-    const locInvId = `${locationId}_${supplyId}`;
-    const existing = rawDb.prepare('SELECT current_stock_qty FROM location_inventory WHERE location_id = ? AND supply_id = ?').get(locationId, supplyId) as any;
-    if (existing) {
-      rawDb.prepare('UPDATE location_inventory SET current_stock_qty = current_stock_qty - ?, updated_at_ms = ? WHERE location_id = ? AND supply_id = ?').run(
-        qtyToDeduct,
-        now,
-        locationId,
-        supplyId
-      );
-    } else {
-      rawDb.prepare('INSERT INTO location_inventory (id, location_id, supply_id, current_stock_qty, minimum_stock_qty, updated_at_ms) VALUES (?, ?, ?, ?, 0, ?)').run(
-        locInvId,
+      // Registro inmutable de movimiento
+      insertMovement.run(
+        `mov_${generateUuidV7()}`,
         locationId,
         supplyId,
         -qtyToDeduct,
+        unitCost,
+        totalCost,
+        `#CMD-${orderNum}`,
+        `Consumo por venta orden #${orderNum}`,
+        orderId,
+        cashierUserId,
         now
       );
-    }
 
-    // Actualizar global supply_items
-    rawDb.prepare('UPDATE supply_items SET current_stock_qty = current_stock_qty - ?, updated_at_ms = ? WHERE id = ?').run(
-      qtyToDeduct,
-      now,
-      supplyId
-    );
-  }
+      // Actualizar stock por sede
+      const locInvId = `${locationId}_${supplyId}`;
+      const existing = rawDb.prepare('SELECT current_stock_qty FROM location_inventory WHERE location_id = ? AND supply_id = ?').get(locationId, supplyId) as any;
+      if (existing) {
+        rawDb.prepare('UPDATE location_inventory SET current_stock_qty = current_stock_qty - ?, updated_at_ms = ? WHERE location_id = ? AND supply_id = ?').run(
+          qtyToDeduct,
+          now,
+          locationId,
+          supplyId
+        );
+      } else {
+        rawDb.prepare('INSERT INTO location_inventory (id, location_id, supply_id, current_stock_qty, minimum_stock_qty, updated_at_ms) VALUES (?, ?, ?, ?, 0, ?)').run(
+          locInvId,
+          locationId,
+          supplyId,
+          -qtyToDeduct,
+          now
+        );
+      }
+
+      // Actualizar global supply_items
+      rawDb.prepare('UPDATE supply_items SET current_stock_qty = current_stock_qty - ?, updated_at_ms = ? WHERE id = ?').run(
+        qtyToDeduct,
+        now,
+        supplyId
+      );
+    }
+  })();
 }
 
 /**

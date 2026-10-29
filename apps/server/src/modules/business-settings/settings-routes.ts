@@ -79,13 +79,21 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
       const newBlind = b.blind_closure_enabled !== undefined ? (b.blind_closure_enabled ? 1 : 0) : (b.blindClosureEnabled !== undefined ? (b.blindClosureEnabled ? 1 : 0) : current.blind_closure_enabled);
       const newAskTable = b.ask_table_on_order !== undefined ? (b.ask_table_on_order ? 1 : 0) : (b.askTableOnOrder !== undefined ? (b.askTableOnOrder ? 1 : 0) : current.ask_table_on_order);
 
-      const newInventoryMode = b.inventory_operation_mode ?? b.inventoryOperationMode ?? current.inventory_operation_mode;
+      const rawInventoryMode = b.inventory_operation_mode ?? b.inventoryOperationMode;
+      let newInventoryMode = current.inventory_operation_mode;
+      if (rawInventoryMode !== undefined) {
+        if (rawInventoryMode !== 'free' && rawInventoryMode !== 'tracked') {
+          return reply.status(400).send({
+            success: false,
+            message: "inventory_operation_mode debe ser 'free' o 'tracked'",
+            field: 'inventory_operation_mode'
+          });
+        }
+        newInventoryMode = rawInventoryMode;
+      }
       let newInventoryTrackingSince = current.inventory_tracking_since_ms;
       if (newInventoryMode === 'tracked' && (current.inventory_operation_mode !== 'tracked' || !current.inventory_tracking_since_ms)) {
         newInventoryTrackingSince = now;
-      }
-      if (b.inventory_tracking_since_ms !== undefined) {
-        newInventoryTrackingSince = b.inventory_tracking_since_ms;
       }
 
       rawDb.prepare(`

@@ -13,6 +13,7 @@ import { saveSubRecipe, getProductRecipe, saveProductRecipe, deductInventoryForO
 import { seedCriticalSuppliesAndRecipes } from '../src/modules/profitability/inventory.js';
 import { registerWasteLog, performPhysicalStockCount } from '../src/modules/profitability/waste-service.js';
 import { processOrderPayment } from '../src/modules/cashier/cashier-service.js';
+import { ensureBusinessSettingsDefensive } from '../src/db/business-settings.js';
 
 describe('FASE 3 — Sedes, Inventario, Recetas, Compras, Costos y Mermas', () => {
   let app: FastifyInstance;
@@ -259,6 +260,8 @@ describe('FASE 3 — Sedes, Inventario, Recetas, Compras, Costos y Mermas', () =
     `).run(`mod_${generateUuidV7()}`, lineId);
 
     // 5. Ejecutar deducción atómica
+    ensureBusinessSettingsDefensive(rawDb);
+    rawDb.prepare("UPDATE business_settings SET inventory_operation_mode='tracked', inventory_tracking_since_ms=NULL WHERE id='default'").run();
     deductInventoryForOrder(rawDb, orderId, 'loc_alta_vista', now, 'usr_admin');
 
     // Pan: tenía 100, receta pedía 1 pero modificador era "Sin pan" -> Debe seguir en 100
