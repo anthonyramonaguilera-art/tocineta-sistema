@@ -328,7 +328,7 @@ export function resetToProductionClean(rawDb: Database.Database): void {
     seedInitialUsers(rawDb);
 
     // 6. Asegurar catálogo de 27 productos
-    seedCatalog(rawDb);
+    seedCatalog(rawDb, { force: true });
   });
 
   tx();

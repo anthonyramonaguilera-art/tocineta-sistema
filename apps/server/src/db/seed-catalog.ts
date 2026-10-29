@@ -1,17 +1,13 @@
 import type Database from 'better-sqlite3';
 
 /**
- * Semilla Oficial del Catálogo de TOCINETA (Hito M2)
- * Incorpora las 6 Reglas de Negocio Oficiales confirmadas por la Dirección General:
- * 1. Feature Flag Malteadas: Categoría MALTEADAS_Y_HELADOS con is_active = 0.
- * 2. Descomposición transparente de combos (Street, Clásico, Para Ti).
- * 3. 6 Modificadores oficiales de Barra Libre ($0.00 venta, 15c costo interno).
- * 4. 6 Sabores oficiales Pepsi para Refresco 1 Lt.
- * 5. Liquidación contable de delivery (THIRD_PARTY_PASS_THROUGH, tiers 200, 300, 400, 500).
- * 6. Sistema dual de cupones (Descuentos y Cortesías OBSEQUIOS_CUPON).
+ * Semilla Oficial del Catálogo de TOCINETA (Hito M2) - Idempotente y Defensiva
+ * Soporta opts?: { force?: boolean } para forzar restablecimiento completo.
  */
-export function seedCatalog(rawDb: Database.Database): void {
+export function seedCatalog(rawDb: Database.Database, opts?: { force?: boolean }): void {
   const now = Date.now();
+  const firstSeed = (rawDb.prepare('SELECT COUNT(*) as cnt FROM products').get() as { cnt: number }).cnt === 0;
+  const shouldReset = firstSeed || opts?.force;
 
   const seedTx = rawDb.transaction(() => {
     // ------------------------------------------------------------------------
@@ -34,7 +30,6 @@ export function seedCatalog(rawDb: Database.Database): void {
 
     // ------------------------------------------------------------------------
     // 2. Categorías del Menú
-    // Regla 1: MALTEADAS_Y_HELADOS sembrada con is_active = 0
     // ------------------------------------------------------------------------
     const categoriesData = [
       { id: 'cat_hot_dogs', name: 'Hot Dogs', description: 'Perros calientes clásicos y especiales', display_order: 1, is_active: 1, is_internal: 0, station: 'hot_dogs' },
@@ -46,22 +41,19 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'cat_obsequios', name: 'Obsequios Cupón', description: 'Ítems de cortesía canjeables por cupones', display_order: 7, is_active: 1, is_internal: 1, station: 'hot_dogs' }
     ];
 
-    const insertCat = rawDb.prepare(`
-      INSERT OR REPLACE INTO categories (
-        id, name, description, display_order, is_active, is_internal, station
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
+    const catSql = shouldReset
+      ? `INSERT OR REPLACE INTO categories (id, name, description, display_order, is_active, is_internal, station) VALUES (?, ?, ?, ?, ?, ?, ?)`
+      : `INSERT OR IGNORE INTO categories (id, name, description, display_order, is_active, is_internal, station) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
+    const insertCat = rawDb.prepare(catSql);
     for (const cat of categoriesData) {
       insertCat.run(cat.id, cat.name, cat.description, cat.display_order, cat.is_active, cat.is_internal, cat.station);
     }
 
     // ------------------------------------------------------------------------
     // 3. Ingredientes Base y de Barra Libre
-    // Regla 3: 6 ingredientes Barra Libre (is_barra_libre = 1, extra = 0, cost = 15)
     // ------------------------------------------------------------------------
     const ingredientsData = [
-      // 6 Ingredientes oficiales de Barra Libre ($0.00 venta / 15c costo interno)
       { id: 'ing_bl_tomate', name: 'Tomate', is_barra_libre: 1, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
       { id: 'ing_bl_cebolla_caramelizada', name: 'Cebolla Caramelizada', is_barra_libre: 1, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
       { id: 'ing_bl_maiz', name: 'Maíz', is_barra_libre: 1, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
@@ -69,7 +61,6 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'ing_bl_relish', name: 'Relish', is_barra_libre: 1, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
       { id: 'ing_bl_cebolla', name: 'Cebolla', is_barra_libre: 1, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
 
-      // Ingredientes base (removibles: Pan de perro y Pan brioche para "Sin Pan")
       { id: 'ing_base_pan_perro', name: 'Pan de perro', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 25 },
       { id: 'ing_base_pan_brioche', name: 'Pan brioche', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 35 },
       { id: 'ing_base_salchicha', name: 'Salchicha', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 40 },
@@ -85,7 +76,6 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'ing_base_salsa_ajo', name: 'Salsa de Ajo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 10 },
       { id: 'ing_base_papas_hilo', name: 'Papas Ralladas Hilo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
       { id: 'ing_base_lechuga', name: 'Lechuga Fresca', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 10 },
-      // Nuevos ingredientes oficiales de la carta (Fase M2 / Tarea Q10)
       { id: 'ing_base_queso_americano', name: 'Queso Americano', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 30 },
       { id: 'ing_base_salsa_americana', name: 'Salsa Americana', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
       { id: 'ing_base_salsa_chickfila', name: 'Salsa Chickfila', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
@@ -106,12 +96,11 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'ing_base_pollo_crispy', name: 'Pollo Crispy', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 80 }
     ];
 
-    const insertIng = rawDb.prepare(`
-      INSERT OR REPLACE INTO ingredients (
-        id, name, is_barra_libre, extra_price_usd_cents, internal_cost_usd_cents, is_active
-      ) VALUES (?, ?, ?, ?, ?, 1)
-    `);
+    const ingSql = shouldReset
+      ? `INSERT OR REPLACE INTO ingredients (id, name, is_barra_libre, extra_price_usd_cents, internal_cost_usd_cents, is_active) VALUES (?, ?, ?, ?, ?, 1)`
+      : `INSERT OR IGNORE INTO ingredients (id, name, is_barra_libre, extra_price_usd_cents, internal_cost_usd_cents, is_active) VALUES (?, ?, ?, ?, ?, 1)`;
 
+    const insertIng = rawDb.prepare(ingSql);
     for (const ing of ingredientsData) {
       insertIng.run(ing.id, ing.name, ing.is_barra_libre, ing.extra_price_usd_cents, ing.internal_cost_usd_cents);
     }
@@ -120,7 +109,6 @@ export function seedCatalog(rawDb: Database.Database): void {
     // 4. Catálogo Oficial de 27 Productos + 2 Cortesías de Cupones
     // ------------------------------------------------------------------------
     const productsData = [
-      // --- HOT DOGS (7 Oficiales) ---
       { id: 'prod_street_dog', category_id: 'cat_hot_dogs', name: 'Street Dog', description: 'Pan de perro, salchicha nacional de pollo, salsas tradicionales, papitas al hilo, ensalada americana, queso cheddar rallado, queso parmesano', price: 250, cost: 70, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_tocineta_dog_parmesano', category_id: 'cat_hot_dogs', name: 'Tocineta Dog Parmesano', description: 'Pan de perro, salchicha nacional de pollo, salsas tradicionales, papitas al hilo, queso cheddar fundido, mermelada de tocineta, queso parmesano, maíz', price: 350, cost: 110, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_doritos_dog_snacks', category_id: 'cat_hot_dogs', name: 'Doritos Dog Snacks', description: 'Pan de perro, salchicha nacional de pollo, salsas tradicionales, papitas al hilo, full queso fundido, mermelada de tocineta, Doritos', price: 350, cost: 105, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
@@ -129,7 +117,6 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'prod_chicago_dog', category_id: 'cat_hot_dogs', name: 'Chicago Dog', description: 'Pan de perro, salchicha polaca, salsas tradicionales, papitas al hilo, queso cheddar fundido, tocineta crocante, relish, mostaza americana, ketchup', price: 490, cost: 150, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_seattle_dog', category_id: 'cat_hot_dogs', name: 'Seattle Dog', description: 'Pan de perro, salchicha polaca, salsas tradicionales, papitas al hilo, fusión queso crema con mozzarella fundido, tocineta crocante, chutney de tomate, mostaza americana, ketchup', price: 490, cost: 150, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
-      // --- HAMBURGUESAS (8 Oficiales) ---
       { id: 'prod_americana_deluxe', category_id: 'cat_hamburguesas', name: 'Americana Deluxe', description: 'Cuatro carne prime, pollo crispy, full queso americano, queso americano fundido, tocineta ahumada coronada con pepinillos, cebolla caramelizada, salsa americana y papas fritas', price: 1300, cost: 420, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_texas_mex', category_id: 'cat_hamburguesas', name: 'Texas Mex', description: 'Doble carne prime, lechuga, doble queso americano, doble tocineta ahumada, chickfila, coronada con jalapeños y doritos', price: 690, cost: 230, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_pechuga_cesar', category_id: 'cat_hamburguesas', name: 'Pechuga Cesar', description: 'Doble pechuga crujiente, ensalada cesar, queso americano, coronada con salsa chick fil a y bbq americana', price: 690, cost: 240, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
@@ -139,12 +126,10 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'prod_new_york', category_id: 'cat_hamburguesas', name: 'New York', description: 'Doble carne prime, doble queso americano, tocineta ahumada, lechuga romana, pepinillos, salsa americana y cebolla caramelizada', price: 690, cost: 235, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_mozarrella', category_id: 'cat_hamburguesas', name: 'Mozarrella', description: 'Doble carne prime, lechuga, tocineta ahumada sellada con miel, porción de crocante queso mozzarella, fusión de queso crema con roquefort fundido', price: 690, cost: 240, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
-      // --- COMBOS (3 Oficiales) ---
       { id: 'prod_combo_street', category_id: 'cat_combos', name: 'Combo Street', description: '2 Street Dogs + 1 Malta Lata 250 ml', price: 550, cost: 190, station: 'hot_dogs', is_combo: 1, allows_flavors: 0, is_active: 1 },
       { id: 'prod_combo_clasico', category_id: 'cat_combos', name: 'Combo Clásico', description: '2 Perros Clásicos a elegir + 1 Malta Lata 250 ml', price: 790, cost: 260, station: 'hot_dogs', is_combo: 1, allows_flavors: 0, is_active: 1 },
       { id: 'prod_combo_para_ti', category_id: 'cat_combos', name: 'Combo Para Ti', description: '2 Hamburguesas de $6.90 a elegir + 1 Refresco 1 Lt', price: 1390, cost: 480, station: 'hamburguesas', is_combo: 1, allows_flavors: 0, is_active: 1 },
 
-      // --- EXTRAS Y RACIONES (6 Oficiales) ---
       { id: 'prod_papas_fritas_extra_150', category_id: 'cat_extras', name: 'Papas Fritas Extra 150g', description: 'Porción extra de papas fritas 150g', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_carne_extra', category_id: 'cat_extras', name: 'Carne Extra', description: 'Porción extra de carne smash', price: 100, cost: 50, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_tocineta_extra', category_id: 'cat_extras', name: 'Tocineta Extra', description: 'Porción extra de tocineta crocante', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
@@ -152,20 +137,16 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'prod_jalapenos_extra', category_id: 'cat_extras', name: 'Jalapeños Extra', description: 'Porción extra de jalapeños encurtidos', price: 100, cost: 20, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_papas_fritas_racion_250', category_id: 'cat_extras', name: 'Papas Fritas Ración 250g', description: 'Ración de papas fritas 250g para compartir', price: 350, cost: 90, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
-      // --- BEBIDAS (4 Oficiales) ---
       { id: 'prod_refresco_1lt', category_id: 'cat_bebidas', name: 'Refresco 1 Lt', description: 'Refresco 1 litro sabores Pepsi a elegir', price: 180, cost: 90, station: 'caja_bebidas', is_combo: 0, allows_flavors: 1, is_active: 1 },
       { id: 'prod_malta_lata_250', category_id: 'cat_bebidas', name: 'Malta Lata 250 ml', description: 'Malta Polar en lata 250 ml fría', price: 150, cost: 65, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_vaso_nestea_22oz', category_id: 'cat_bebidas', name: 'Vaso de Nestea 22 Oz', description: 'Té frío Nestea con limón vaso 22 Oz', price: 199, cost: 80, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_agua_mineral_500', category_id: 'cat_bebidas', name: 'Agua Mineral 500 ml', description: 'Agua mineral natural 500 ml (No incluida en afiche oficial)', price: 100, cost: 40, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 0 },
 
-      // --- MALTEADAS Y HELADOS (1 - Feature Flag Categoría Inactiva) ---
       { id: 'prod_malteada_especial', category_id: 'cat_malteadas', name: 'Malteada Especial Tocineta', description: 'Malteada cremosa especial (Próximamente)', price: 350, cost: 130, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 0 },
 
-      // --- OBSEQUIOS CUPÓN (2 - Cortesías internas $0.00 venta) ---
       { id: 'prod_snacks_cortesia', category_id: 'cat_obsequios', name: 'Snacks de Cortesía', description: 'Snacks de obsequio por cupón', price: 0, cost: 35, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_cafe_cortesia', category_id: 'cat_obsequios', name: 'Café de Cortesía', description: 'Café de obsequio por cupón', price: 0, cost: 35, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
-      // --- PLATOS DE PRUEBA DESACTIVADOS (is_active = 0) ---
       { id: 'prod_classic_dog', category_id: 'cat_hot_dogs', name: 'Classic Dog', description: null, price: 250, cost: 70, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 0 },
       { id: 'prod_doble_salchicha_dog', category_id: 'cat_hot_dogs', name: 'Doble Salchicha Dog', description: null, price: 380, cost: 120, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 0 },
       { id: 'prod_smash_clasica', category_id: 'cat_hamburguesas', name: 'Smash Clásica', description: null, price: 350, cost: 110, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 0 },
@@ -176,299 +157,235 @@ export function seedCatalog(rawDb: Database.Database): void {
       { id: 'prod_nuggets_pollo_6', category_id: 'cat_extras', name: 'Nuggets de Pollo (6 unid)', description: null, price: 300, cost: 85, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 0 }
     ];
 
-    const insertProd = rawDb.prepare(`
-      INSERT OR REPLACE INTO products (
-        id, category_id, name, description, price_usd_cents, estimated_cost_usd_cents,
-        station, is_active, is_combo, allows_flavors, image_url, created_at_ms, updated_at_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)
-    `);
+    const prodSql = shouldReset
+      ? `INSERT OR REPLACE INTO products (id, category_id, name, description, price_usd_cents, estimated_cost_usd_cents, station, is_active, is_combo, allows_flavors, image_url, created_at_ms, updated_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)`
+      : `INSERT OR IGNORE INTO products (id, category_id, name, description, price_usd_cents, estimated_cost_usd_cents, station, is_active, is_combo, allows_flavors, image_url, created_at_ms, updated_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, ?)`;
 
+    const insertProd = rawDb.prepare(prodSql);
     for (const p of productsData) {
       insertProd.run(p.id, p.category_id, p.name, p.description ?? null, p.price, p.cost, p.station, p.is_active ?? 1, p.is_combo, p.allows_flavors, now, now);
     }
 
     // ------------------------------------------------------------------------
-    // 5. Ingredientes Asociados a Productos (Recetas Oficiales de la Carta)
-    // EXTRAS y BEBIDAS NO tienen ingredientes vinculados (cero pan ni salsas)
+    // 5. Ingredientes Asociados a Productos
     // ------------------------------------------------------------------------
-    rawDb.prepare('DELETE FROM product_ingredients').run();
+    if (shouldReset) {
+      rawDb.prepare('DELETE FROM product_ingredients').run();
+    }
 
-    const insertProdIng = rawDb.prepare(`
-      INSERT OR REPLACE INTO product_ingredients (
-        id, product_id, ingredient_id, is_removable, display_order
-      ) VALUES (?, ?, ?, 1, ?)
-    `);
+    const piSql = shouldReset
+      ? `INSERT OR REPLACE INTO product_ingredients (id, product_id, ingredient_id, is_removable, display_order) VALUES (?, ?, ?, 1, ?)`
+      : `INSERT OR IGNORE INTO product_ingredients (id, product_id, ingredient_id, is_removable, display_order) VALUES (?, ?, ?, 1, ?)`;
 
-    // A. Recetas Oficiales: 7 Hot Dogs
+    const insertProdIng = rawDb.prepare(piSql);
+
+    const helperAddIng = (piId: string, pId: string, ingId: string, order: number) => {
+      insertProdIng.run(piId, pId, ingId, order);
+    };
+
+    // A. 7 Hot Dogs
     const dogList = [
       'prod_street_dog', 'prod_tocineta_dog_parmesano', 'prod_doritos_dog_snacks',
       'prod_jalapenos_dog', 'prod_brazil_dog', 'prod_chicago_dog', 'prod_seattle_dog'
     ];
     for (const dId of dogList) {
-      insertProdIng.run(`pi_${dId}_pan`, dId, 'ing_base_pan_perro', 1);
-      insertProdIng.run(`pi_${dId}_salchicha`, dId, 'ing_base_salchicha', 2);
-      insertProdIng.run(`pi_${dId}_hilo`, dId, 'ing_base_papas_hilo', 3);
+      helperAddIng(`pi_${dId}_pan`, dId, 'ing_base_pan_perro', 1);
+      helperAddIng(`pi_${dId}_salchicha`, dId, 'ing_base_salchicha', 2);
+      helperAddIng(`pi_${dId}_hilo`, dId, 'ing_base_papas_hilo', 3);
     }
 
-    // Específicos por perro
-    insertProdIng.run('pi_street_ceb', 'prod_street_dog', 'ing_bl_cebolla', 4);
+    helperAddIng('pi_street_ceb', 'prod_street_dog', 'ing_bl_cebolla', 4);
+    helperAddIng('pi_tocineta_parm', 'prod_tocineta_dog_parmesano', 'ing_base_queso_parmesano', 4);
+    helperAddIng('pi_tocineta_toc', 'prod_tocineta_dog_parmesano', 'ing_base_tocineta', 5);
+    helperAddIng('pi_doritos_snk', 'prod_doritos_dog_snacks', 'ing_base_doritos', 4);
+    helperAddIng('pi_doritos_cheddar', 'prod_doritos_dog_snacks', 'ing_base_queso_cheddar', 5);
+    helperAddIng('pi_jalapenos_jal', 'prod_jalapenos_dog', 'ing_base_jalapenos', 4);
+    helperAddIng('pi_jalapenos_cheddar', 'prod_jalapenos_dog', 'ing_base_queso_cheddar', 5);
+    helperAddIng('pi_brazil_maiz', 'prod_brazil_dog', 'ing_bl_maiz', 4);
+    helperAddIng('pi_brazil_ajo', 'prod_brazil_dog', 'ing_base_salsa_ajo', 5);
+    helperAddIng('pi_chicago_tom', 'prod_chicago_dog', 'ing_bl_tomate', 4);
+    helperAddIng('pi_chicago_pep', 'prod_chicago_dog', 'ing_base_pepinillo', 5);
+    helperAddIng('pi_seattle_moz', 'prod_seattle_dog', 'ing_base_queso_mozzarella', 4);
+    helperAddIng('pi_seattle_cebcar', 'prod_seattle_dog', 'ing_bl_cebolla_caramelizada', 5);
 
-    insertProdIng.run('pi_tocineta_parm', 'prod_tocineta_dog_parmesano', 'ing_base_queso_parmesano', 4);
-    insertProdIng.run('pi_tocineta_toc', 'prod_tocineta_dog_parmesano', 'ing_base_tocineta', 5);
+    // B. 8 Hamburguesas
+    helperAddIng('pi_amer_pan', 'prod_americana_deluxe', 'ing_base_pan_brioche', 1);
+    helperAddIng('pi_amer_carne_1', 'prod_americana_deluxe', 'ing_base_carne_smash', 2);
+    helperAddIng('pi_amer_carne_2', 'prod_americana_deluxe', 'ing_base_carne_smash', 3);
+    helperAddIng('pi_amer_carne_3', 'prod_americana_deluxe', 'ing_base_carne_smash', 4);
+    helperAddIng('pi_amer_carne_4', 'prod_americana_deluxe', 'ing_base_carne_smash', 5);
+    helperAddIng('pi_amer_pollo_crispy', 'prod_americana_deluxe', 'ing_base_pollo_crispy', 6);
+    helperAddIng('pi_amer_queso_amer_1', 'prod_americana_deluxe', 'ing_base_queso_americano', 7);
+    helperAddIng('pi_amer_queso_amer_2', 'prod_americana_deluxe', 'ing_base_queso_americano', 8);
+    helperAddIng('pi_amer_tocineta', 'prod_americana_deluxe', 'ing_base_tocineta', 9);
+    helperAddIng('pi_amer_pepinillo', 'prod_americana_deluxe', 'ing_base_pepinillo', 10);
+    helperAddIng('pi_amer_cebcar', 'prod_americana_deluxe', 'ing_bl_cebolla_caramelizada', 11);
+    helperAddIng('pi_amer_salsa_amer', 'prod_americana_deluxe', 'ing_base_salsa_americana', 12);
+    helperAddIng('pi_amer_papas_fritas', 'prod_americana_deluxe', 'ing_base_papas_fritas', 13);
 
-    insertProdIng.run('pi_doritos_snk', 'prod_doritos_dog_snacks', 'ing_base_doritos', 4);
-    insertProdIng.run('pi_doritos_cheddar', 'prod_doritos_dog_snacks', 'ing_base_queso_cheddar', 5);
+    helperAddIng('pi_texas_pan', 'prod_texas_mex', 'ing_base_pan_brioche', 1);
+    helperAddIng('pi_texas_carne_1', 'prod_texas_mex', 'ing_base_carne_smash', 2);
+    helperAddIng('pi_texas_carne_2', 'prod_texas_mex', 'ing_base_carne_smash', 3);
+    helperAddIng('pi_texas_lechuga', 'prod_texas_mex', 'ing_base_lechuga', 4);
+    helperAddIng('pi_texas_queso_amer_1', 'prod_texas_mex', 'ing_base_queso_americano', 5);
+    helperAddIng('pi_texas_queso_amer_2', 'prod_texas_mex', 'ing_base_queso_americano', 6);
+    helperAddIng('pi_texas_tocineta_1', 'prod_texas_mex', 'ing_base_tocineta', 7);
+    helperAddIng('pi_texas_tocineta_2', 'prod_texas_mex', 'ing_base_tocineta', 8);
+    helperAddIng('pi_texas_chickfila', 'prod_texas_mex', 'ing_base_salsa_chickfila', 9);
+    helperAddIng('pi_texas_jalapenos', 'prod_texas_mex', 'ing_base_jalapenos', 10);
+    helperAddIng('pi_texas_doritos', 'prod_texas_mex', 'ing_base_doritos', 11);
 
-    insertProdIng.run('pi_jalapenos_jal', 'prod_jalapenos_dog', 'ing_base_jalapenos', 4);
-    insertProdIng.run('pi_jalapenos_cheddar', 'prod_jalapenos_dog', 'ing_base_queso_cheddar', 5);
+    helperAddIng('pi_cesar_pan', 'prod_pechuga_cesar', 'ing_base_pan_brioche', 1);
+    helperAddIng('pi_cesar_pechuga_1', 'prod_pechuga_cesar', 'ing_base_pechuga_crispy', 2);
+    helperAddIng('pi_cesar_pechuga_2', 'prod_pechuga_cesar', 'ing_base_pechuga_crispy', 3);
+    helperAddIng('pi_cesar_lechuga_romana', 'prod_pechuga_cesar', 'ing_base_lechuga_romana', 4);
+    helperAddIng('pi_cesar_parmesano', 'prod_pechuga_cesar', 'ing_base_queso_parmesano', 5);
+    helperAddIng('pi_cesar_queso_amer', 'prod_pechuga_cesar', 'ing_base_queso_americano', 6);
+    helperAddIng('pi_cesar_chickfila', 'prod_pechuga_cesar', 'ing_base_salsa_chickfila', 7);
+    helperAddIng('pi_cesar_bbq', 'prod_pechuga_cesar', 'ing_base_bbq_americana', 8);
 
-    insertProdIng.run('pi_brazil_maiz', 'prod_brazil_dog', 'ing_bl_maiz', 4);
-    insertProdIng.run('pi_brazil_ajo', 'prod_brazil_dog', 'ing_base_salsa_ajo', 5);
+    helperAddIng('pi_grill_pan', 'prod_grill', 'ing_base_pan_brioche', 1);
+    helperAddIng('pi_grill_carne', 'prod_grill', 'ing_base_carne_smash', 2);
+    helperAddIng('pi_grill_pollo_grill', 'prod_grill', 'ing_base_pollo_marinado_grill', 3);
+    helperAddIng('pi_grill_chorizo', 'prod_grill', 'ing_base_chorizo_ahumado', 4);
+    helperAddIng('pi_grill_calabresa', 'prod_grill', 'ing_base_calabresa', 5);
+    helperAddIng('pi_grill_lechuga', 'prod_grill', 'ing_base_lechuga', 6);
+    helperAddIng('pi_grill_queso_amer', 'prod_grill', 'ing_base_queso_americano', 7);
+    helperAddIng('pi_grill_ajo_perejil', 'prod_grill', 'ing_base_salsa_ajo_perejil', 8);
 
-    insertProdIng.run('pi_chicago_tom', 'prod_chicago_dog', 'ing_bl_tomate', 4);
-    insertProdIng.run('pi_chicago_pep', 'prod_chicago_dog', 'ing_base_pepinillo', 5);
+    helperAddIng('pi_nuggets_pan', 'prod_nuggets_meat', 'ing_base_pan_brioche', 1);
+    helperAddIng('pi_nuggets_carne', 'prod_nuggets_meat', 'ing_base_carne_smash', 2);
+    helperAddIng('pi_nuggets_pollo', 'prod_nuggets_meat', 'ing_base_nuggets_pollo', 3);
+    helperAddIng('pi_nuggets_lechuga', 'prod_nuggets_meat', 'ing_base_lechuga', 4);
+    helperAddIng('pi_nuggets_tocineta', 'prod_nuggets_meat', 'ing_base_tocineta', 5);
+    helperAddIng('pi_nuggets_queso_amer', 'prod_nuggets_meat', 'ing_base_queso_americano', 6);
+    helperAddIng('pi_nuggets_queso_cheddar', 'prod_nuggets_meat', 'ing_base_queso_cheddar', 7);
+    helperAddIng('pi_nuggets_bbq', 'prod_nuggets_meat', 'ing_base_bbq_americana', 8);
+    helperAddIng('pi_nuggets_chickfila', 'prod_nuggets_meat', 'ing_base_salsa_chickfila', 9);
 
-    insertProdIng.run('pi_seattle_moz', 'prod_seattle_dog', 'ing_base_queso_mozzarella', 4);
-    insertProdIng.run('pi_seattle_cebcar', 'prod_seattle_dog', 'ing_bl_cebolla_caramelizada', 5);
+    helperAddIng('pi_miami_pan', 'prod_miami', 'ing_base_pan_brioche', 1);
+    helperAddIng('pi_miami_carne_1', 'prod_miami', 'ing_base_carne_smash', 2);
+    helperAddIng('pi_miami_carne_2', 'prod_miami', 'ing_base_carne_smash', 3);
+    helperAddIng('pi_miami_carne_3', 'prod_miami', 'ing_base_carne_smash', 4);
+    helperAddIng('pi_miami_ceb_smash', 'prod_miami', 'ing_base_cebolla_smash', 5);
+    helperAddIng('pi_miami_queso_amer_1', 'prod_miami', 'ing_base_queso_americano', 6);
+    helperAddIng('pi_miami_queso_amer_2', 'prod_miami', 'ing_base_queso_americano', 7);
+    helperAddIng('pi_miami_queso_amer_3', 'prod_miami', 'ing_base_queso_americano', 8);
+    helperAddIng('pi_miami_pepinillo', 'prod_miami', 'ing_base_pepinillo', 9);
+    helperAddIng('pi_miami_smoked_mayo', 'prod_miami', 'ing_base_smoked_mayo', 10);
 
-    // B. Recetas Oficiales: 8 Hamburguesas (Pan Brioche base, ingredientes según descripción de afiche)
-    // 1. Americana Deluxe: Cuatro carne prime, pollo crispy, full queso americano, queso americano fundido, tocineta ahumada coronada con pepinillos, cebolla caramelizada, salsa americana y papas fritas
-    insertProdIng.run('pi_amer_pan', 'prod_americana_deluxe', 'ing_base_pan_brioche', 1);
-    insertProdIng.run('pi_amer_carne_1', 'prod_americana_deluxe', 'ing_base_carne_smash', 2);
-    insertProdIng.run('pi_amer_carne_2', 'prod_americana_deluxe', 'ing_base_carne_smash', 3);
-    insertProdIng.run('pi_amer_carne_3', 'prod_americana_deluxe', 'ing_base_carne_smash', 4);
-    insertProdIng.run('pi_amer_carne_4', 'prod_americana_deluxe', 'ing_base_carne_smash', 5);
-    insertProdIng.run('pi_amer_pollo_crispy', 'prod_americana_deluxe', 'ing_base_pollo_crispy', 6);
-    insertProdIng.run('pi_amer_queso_amer_1', 'prod_americana_deluxe', 'ing_base_queso_americano', 7);
-    insertProdIng.run('pi_amer_queso_amer_2', 'prod_americana_deluxe', 'ing_base_queso_americano', 8);
-    insertProdIng.run('pi_amer_tocineta', 'prod_americana_deluxe', 'ing_base_tocineta', 9);
-    insertProdIng.run('pi_amer_pepinillo', 'prod_americana_deluxe', 'ing_base_pepinillo', 10);
-    insertProdIng.run('pi_amer_cebcar', 'prod_americana_deluxe', 'ing_bl_cebolla_caramelizada', 11);
-    insertProdIng.run('pi_amer_salsa_amer', 'prod_americana_deluxe', 'ing_base_salsa_americana', 12);
-    insertProdIng.run('pi_amer_papas_fritas', 'prod_americana_deluxe', 'ing_base_papas_fritas', 13);
+    helperAddIng('pi_ny_pan', 'prod_new_york', 'ing_base_pan_brioche', 1);
+    helperAddIng('pi_ny_carne_1', 'prod_new_york', 'ing_base_carne_smash', 2);
+    helperAddIng('pi_ny_carne_2', 'prod_new_york', 'ing_base_carne_smash', 3);
+    helperAddIng('pi_ny_queso_amer_1', 'prod_new_york', 'ing_base_queso_americano', 4);
+    helperAddIng('pi_ny_queso_amer_2', 'prod_new_york', 'ing_base_queso_americano', 5);
+    helperAddIng('pi_ny_tocineta', 'prod_new_york', 'ing_base_tocineta', 6);
+    helperAddIng('pi_ny_lechuga_romana', 'prod_new_york', 'ing_base_lechuga_romana', 7);
+    helperAddIng('pi_ny_pepinillo', 'prod_new_york', 'ing_base_pepinillo', 8);
+    helperAddIng('pi_ny_salsa_amer', 'prod_new_york', 'ing_base_salsa_americana', 9);
+    helperAddIng('pi_ny_cebcar', 'prod_new_york', 'ing_bl_cebolla_caramelizada', 10);
 
-    // 2. Texas Mex: Doble carne prime, lechuga, doble queso americano, doble tocineta ahumada, chickfila, coronada con jalapeños y doritos
-    insertProdIng.run('pi_texas_pan', 'prod_texas_mex', 'ing_base_pan_brioche', 1);
-    insertProdIng.run('pi_texas_carne_1', 'prod_texas_mex', 'ing_base_carne_smash', 2);
-    insertProdIng.run('pi_texas_carne_2', 'prod_texas_mex', 'ing_base_carne_smash', 3);
-    insertProdIng.run('pi_texas_lechuga', 'prod_texas_mex', 'ing_base_lechuga', 4);
-    insertProdIng.run('pi_texas_queso_amer_1', 'prod_texas_mex', 'ing_base_queso_americano', 5);
-    insertProdIng.run('pi_texas_queso_amer_2', 'prod_texas_mex', 'ing_base_queso_americano', 6);
-    insertProdIng.run('pi_texas_tocineta_1', 'prod_texas_mex', 'ing_base_tocineta', 7);
-    insertProdIng.run('pi_texas_tocineta_2', 'prod_texas_mex', 'ing_base_tocineta', 8);
-    insertProdIng.run('pi_texas_chickfila', 'prod_texas_mex', 'ing_base_salsa_chickfila', 9);
-    insertProdIng.run('pi_texas_jalapenos', 'prod_texas_mex', 'ing_base_jalapenos', 10);
-    insertProdIng.run('pi_texas_doritos', 'prod_texas_mex', 'ing_base_doritos', 11);
-
-    // 3. Pechuga Cesar: Doble pechuga crujiente, ensalada cesar, queso americano, coronada con salsa chick fil a y bbq americana
-    insertProdIng.run('pi_cesar_pan', 'prod_pechuga_cesar', 'ing_base_pan_brioche', 1);
-    insertProdIng.run('pi_cesar_pechuga_1', 'prod_pechuga_cesar', 'ing_base_pechuga_crispy', 2);
-    insertProdIng.run('pi_cesar_pechuga_2', 'prod_pechuga_cesar', 'ing_base_pechuga_crispy', 3);
-    insertProdIng.run('pi_cesar_lechuga_romana', 'prod_pechuga_cesar', 'ing_base_lechuga_romana', 4);
-    insertProdIng.run('pi_cesar_parmesano', 'prod_pechuga_cesar', 'ing_base_queso_parmesano', 5);
-    insertProdIng.run('pi_cesar_queso_amer', 'prod_pechuga_cesar', 'ing_base_queso_americano', 6);
-    insertProdIng.run('pi_cesar_chickfila', 'prod_pechuga_cesar', 'ing_base_salsa_chickfila', 7);
-    insertProdIng.run('pi_cesar_bbq', 'prod_pechuga_cesar', 'ing_base_bbq_americana', 8);
-
-    // 4. Grill: Carne prime, pollo marinado con especias grill a la plancha, chorizo ahumado y calabresa, lechuga, queso americano, salsa ajo y perejil
-    insertProdIng.run('pi_grill_pan', 'prod_grill', 'ing_base_pan_brioche', 1);
-    insertProdIng.run('pi_grill_carne', 'prod_grill', 'ing_base_carne_smash', 2);
-    insertProdIng.run('pi_grill_pollo_grill', 'prod_grill', 'ing_base_pollo_marinado_grill', 3);
-    insertProdIng.run('pi_grill_chorizo', 'prod_grill', 'ing_base_chorizo_ahumado', 4);
-    insertProdIng.run('pi_grill_calabresa', 'prod_grill', 'ing_base_calabresa', 5);
-    insertProdIng.run('pi_grill_lechuga', 'prod_grill', 'ing_base_lechuga', 6);
-    insertProdIng.run('pi_grill_queso_amer', 'prod_grill', 'ing_base_queso_americano', 7);
-    insertProdIng.run('pi_grill_ajo_perejil', 'prod_grill', 'ing_base_salsa_ajo_perejil', 8);
-
-    // 5. Nuggets Meat: Carne prime y nuggets de pollo, lechuga, tocineta ahumada, queso americano, coronada con queso fundido, bbq americana y chickfila
-    insertProdIng.run('pi_nuggets_pan', 'prod_nuggets_meat', 'ing_base_pan_brioche', 1);
-    insertProdIng.run('pi_nuggets_carne', 'prod_nuggets_meat', 'ing_base_carne_smash', 2);
-    insertProdIng.run('pi_nuggets_pollo', 'prod_nuggets_meat', 'ing_base_nuggets_pollo', 3);
-    insertProdIng.run('pi_nuggets_lechuga', 'prod_nuggets_meat', 'ing_base_lechuga', 4);
-    insertProdIng.run('pi_nuggets_tocineta', 'prod_nuggets_meat', 'ing_base_tocineta', 5);
-    insertProdIng.run('pi_nuggets_queso_amer', 'prod_nuggets_meat', 'ing_base_queso_americano', 6);
-    insertProdIng.run('pi_nuggets_queso_cheddar', 'prod_nuggets_meat', 'ing_base_queso_cheddar', 7);
-    insertProdIng.run('pi_nuggets_bbq', 'prod_nuggets_meat', 'ing_base_bbq_americana', 8);
-    insertProdIng.run('pi_nuggets_chickfila', 'prod_nuggets_meat', 'ing_base_salsa_chickfila', 9);
-
-    // 6. Miami: Triple carne prime, cebolla smash, triple queso americano, pepinillos, coronada con smoked mayo
-    insertProdIng.run('pi_miami_pan', 'prod_miami', 'ing_base_pan_brioche', 1);
-    insertProdIng.run('pi_miami_carne_1', 'prod_miami', 'ing_base_carne_smash', 2);
-    insertProdIng.run('pi_miami_carne_2', 'prod_miami', 'ing_base_carne_smash', 3);
-    insertProdIng.run('pi_miami_carne_3', 'prod_miami', 'ing_base_carne_smash', 4);
-    insertProdIng.run('pi_miami_ceb_smash', 'prod_miami', 'ing_base_cebolla_smash', 5);
-    insertProdIng.run('pi_miami_queso_amer_1', 'prod_miami', 'ing_base_queso_americano', 6);
-    insertProdIng.run('pi_miami_queso_amer_2', 'prod_miami', 'ing_base_queso_americano', 7);
-    insertProdIng.run('pi_miami_queso_amer_3', 'prod_miami', 'ing_base_queso_americano', 8);
-    insertProdIng.run('pi_miami_pepinillo', 'prod_miami', 'ing_base_pepinillo', 9);
-    insertProdIng.run('pi_miami_smoked_mayo', 'prod_miami', 'ing_base_smoked_mayo', 10);
-
-    // 7. New York: Doble carne prime, doble queso americano, tocineta ahumada, lechuga romana, pepinillos, salsa americana y cebolla caramelizada
-    insertProdIng.run('pi_ny_pan', 'prod_new_york', 'ing_base_pan_brioche', 1);
-    insertProdIng.run('pi_ny_carne_1', 'prod_new_york', 'ing_base_carne_smash', 2);
-    insertProdIng.run('pi_ny_carne_2', 'prod_new_york', 'ing_base_carne_smash', 3);
-    insertProdIng.run('pi_ny_queso_amer_1', 'prod_new_york', 'ing_base_queso_americano', 4);
-    insertProdIng.run('pi_ny_queso_amer_2', 'prod_new_york', 'ing_base_queso_americano', 5);
-    insertProdIng.run('pi_ny_tocineta', 'prod_new_york', 'ing_base_tocineta', 6);
-    insertProdIng.run('pi_ny_lechuga_romana', 'prod_new_york', 'ing_base_lechuga_romana', 7);
-    insertProdIng.run('pi_ny_pepinillo', 'prod_new_york', 'ing_base_pepinillo', 8);
-    insertProdIng.run('pi_ny_salsa_amer', 'prod_new_york', 'ing_base_salsa_americana', 9);
-    insertProdIng.run('pi_ny_cebcar', 'prod_new_york', 'ing_bl_cebolla_caramelizada', 10);
-
-    // 8. Mozarrella: Doble carne prime, lechuga, tocineta ahumada sellada con miel, porción de crocante queso mozzarella, fusión de queso crema con roquefort fundido
-    insertProdIng.run('pi_moz_pan', 'prod_mozarrella', 'ing_base_pan_brioche', 1);
-    insertProdIng.run('pi_moz_carne_1', 'prod_mozarrella', 'ing_base_carne_smash', 2);
-    insertProdIng.run('pi_moz_carne_2', 'prod_mozarrella', 'ing_base_carne_smash', 3);
-    insertProdIng.run('pi_moz_lechuga', 'prod_mozarrella', 'ing_base_lechuga', 4);
-    insertProdIng.run('pi_moz_tocineta', 'prod_mozarrella', 'ing_base_tocineta', 5);
-    insertProdIng.run('pi_moz_miel', 'prod_mozarrella', 'ing_base_miel', 6);
-    insertProdIng.run('pi_moz_crocante_moz', 'prod_mozarrella', 'ing_base_crocante_mozzarella', 7);
-    insertProdIng.run('pi_moz_queso_crema', 'prod_mozarrella', 'ing_base_queso_crema', 8);
-    insertProdIng.run('pi_moz_roquefort', 'prod_mozarrella', 'ing_base_roquefort', 9);
+    helperAddIng('pi_moz_pan', 'prod_mozarrella', 'ing_base_pan_brioche', 1);
+    helperAddIng('pi_moz_carne_1', 'prod_mozarrella', 'ing_base_carne_smash', 2);
+    helperAddIng('pi_moz_carne_2', 'prod_mozarrella', 'ing_base_carne_smash', 3);
+    helperAddIng('pi_moz_lechuga', 'prod_mozarrella', 'ing_base_lechuga', 4);
+    helperAddIng('pi_moz_tocineta', 'prod_mozarrella', 'ing_base_tocineta', 5);
+    helperAddIng('pi_moz_miel', 'prod_mozarrella', 'ing_base_miel', 6);
+    helperAddIng('pi_moz_crocante_moz', 'prod_mozarrella', 'ing_base_crocante_mozzarella', 7);
+    helperAddIng('pi_moz_queso_crema', 'prod_mozarrella', 'ing_base_queso_crema', 8);
+    helperAddIng('pi_moz_roquefort', 'prod_mozarrella', 'ing_base_roquefort', 9);
 
     // ------------------------------------------------------------------------
-    // 6. Sabores Oficiales Pepsi para Refresco 1 Lt
-    // Regla 4: Únicamente los 6 sabores oficiales Pepsi
+    // 6. Sabores Pepsi
     // ------------------------------------------------------------------------
+    if (shouldReset) {
+      rawDb.prepare("DELETE FROM product_flavor_options WHERE product_id = 'prod_refresco_1lt'").run();
+    }
+
+    const flavSql = shouldReset
+      ? `INSERT OR REPLACE INTO product_flavor_options (id, product_id, flavor_name, is_active, display_order) VALUES (?, 'prod_refresco_1lt', ?, 1, ?)`
+      : `INSERT OR IGNORE INTO product_flavor_options (id, product_id, flavor_name, is_active, display_order) VALUES (?, 'prod_refresco_1lt', ?, 1, ?)`;
+
+    const insertFlavor = rawDb.prepare(flavSql);
     const pepsiFlavors = ['Pepsi', '7Up', 'Frescolita', 'Manzanita', 'Piña', 'Naranja'];
-    // Limpiar cualquier sabor previo
-    rawDb.prepare("DELETE FROM product_flavor_options WHERE product_id = 'prod_refresco_1lt'").run();
-
-    const insertFlavor = rawDb.prepare(`
-      INSERT INTO product_flavor_options (
-        id, product_id, flavor_name, is_active, display_order
-      ) VALUES (?, 'prod_refresco_1lt', ?, 1, ?)
-    `);
-
     for (let i = 0; i < pepsiFlavors.length; i++) {
       insertFlavor.run(`flav_pepsi_${i + 1}`, pepsiFlavors[i], i + 1);
     }
 
     // ------------------------------------------------------------------------
-    // 7. Configuración de Combos y Descomposición
-    // Regla 2: Combo Street, Combo Clásico, Combo Para Ti
+    // 7. Combos
     // ------------------------------------------------------------------------
-    const insertCombo = rawDb.prepare(`
-      INSERT OR REPLACE INTO combos (id, name, combo_price_usd_cents, description)
-      VALUES (?, ?, ?, ?)
-    `);
-    const insertSlot = rawDb.prepare(`
-      INSERT OR REPLACE INTO combo_slots (id, combo_id, slot_number, slot_name, required_station)
-      VALUES (?, ?, ?, ?, ?)
-    `);
-    const insertSlotOpt = rawDb.prepare(`
-      INSERT OR REPLACE INTO combo_slot_options (id, slot_id, product_id, default_selected)
-      VALUES (?, ?, ?, ?)
-    `);
+    const comboSql = shouldReset
+      ? `INSERT OR REPLACE INTO combos (id, name, combo_price_usd_cents, description) VALUES (?, ?, ?, ?)`
+      : `INSERT OR IGNORE INTO combos (id, name, combo_price_usd_cents, description) VALUES (?, ?, ?, ?)`;
 
-    // A. Combo Street ($5.50 / 550 cents): 2 Street Dog + 1 Malta Lata 250 ml
+    const slotSql = shouldReset
+      ? `INSERT OR REPLACE INTO combo_slots (id, combo_id, slot_number, slot_name, required_station) VALUES (?, ?, ?, ?, ?)`
+      : `INSERT OR IGNORE INTO combo_slots (id, combo_id, slot_number, slot_name, required_station) VALUES (?, ?, ?, ?, ?)`;
+
+    const soptSql = shouldReset
+      ? `INSERT OR REPLACE INTO combo_slot_options (id, slot_id, product_id, default_selected) VALUES (?, ?, ?, ?)`
+      : `INSERT OR IGNORE INTO combo_slot_options (id, slot_id, product_id, default_selected) VALUES (?, ?, ?, ?)`;
+
+    const insertCombo = rawDb.prepare(comboSql);
+    const insertSlot = rawDb.prepare(slotSql);
+    const insertSlotOpt = rawDb.prepare(soptSql);
+
     insertCombo.run('prod_combo_street', 'Combo Street', 550, '2 Street Dogs + 1 Malta Lata 250 ml');
     insertSlot.run('slot_street_1', 'prod_combo_street', 1, 'Primer Street Dog', 'hot_dogs');
     insertSlotOpt.run('sopt_street_1_sd', 'slot_street_1', 'prod_street_dog', 1);
-
     insertSlot.run('slot_street_2', 'prod_combo_street', 2, 'Segundo Street Dog', 'hot_dogs');
     insertSlotOpt.run('sopt_street_2_sd', 'slot_street_2', 'prod_street_dog', 1);
-
     insertSlot.run('slot_street_3', 'prod_combo_street', 3, 'Bebida', 'caja_bebidas');
     insertSlotOpt.run('sopt_street_3_malta', 'slot_street_3', 'prod_malta_lata_250', 1);
 
-    // B. Combo Clásico ($7.90 / 790 cents): 2 Perros Clásicos a elegir + 1 Malta Lata
     insertCombo.run('prod_combo_clasico', 'Combo Clásico', 790, 'Elige 2 Perros Clásicos + 1 Malta Lata 250 ml');
     const classicDogOptions = [
-      'prod_tocineta_dog_parmesano',
-      'prod_doritos_dog_snacks',
-      'prod_jalapenos_dog',
-      'prod_brazil_dog',
-      'prod_chicago_dog',
-      'prod_seattle_dog'
+      'prod_tocineta_dog_parmesano', 'prod_doritos_dog_snacks',
+      'prod_jalapenos_dog', 'prod_brazil_dog', 'prod_chicago_dog', 'prod_seattle_dog'
     ];
-
     insertSlot.run('slot_clasico_1', 'prod_combo_clasico', 1, 'Primer Perro Clásico', 'hot_dogs');
     for (const optId of classicDogOptions) {
       insertSlotOpt.run(`sopt_c1_${optId}`, 'slot_clasico_1', optId, optId === 'prod_tocineta_dog_parmesano' ? 1 : 0);
     }
-
     insertSlot.run('slot_clasico_2', 'prod_combo_clasico', 2, 'Segundo Perro Clásico', 'hot_dogs');
     for (const optId of classicDogOptions) {
       insertSlotOpt.run(`sopt_c2_${optId}`, 'slot_clasico_2', optId, optId === 'prod_doritos_dog_snacks' ? 1 : 0);
     }
-
     insertSlot.run('slot_clasico_3', 'prod_combo_clasico', 3, 'Bebida', 'caja_bebidas');
     insertSlotOpt.run('sopt_clasico_3_malta', 'slot_clasico_3', 'prod_malta_lata_250', 1);
 
-    // C. Combo Para Ti ($13.90 / 1390 cents): 2 Hamburguesas de $6.90 a elegir + 1 Refresco 1 Lt
     insertCombo.run('prod_combo_para_ti', 'Combo Para Ti', 1390, 'Elige 2 Hamburguesas de $6.90 + 1 Refresco 1 Lt con sabor a elegir');
     const burgerOptions690 = [
       'prod_texas_mex', 'prod_pechuga_cesar', 'prod_grill',
       'prod_nuggets_meat', 'prod_miami', 'prod_new_york', 'prod_mozarrella'
     ];
-
     insertSlot.run('slot_parati_1', 'prod_combo_para_ti', 1, 'Primera Hamburguesa', 'hamburguesas');
     for (const optId of burgerOptions690) {
       insertSlotOpt.run(`sopt_p1_${optId}`, 'slot_parati_1', optId, optId === 'prod_texas_mex' ? 1 : 0);
     }
-
     insertSlot.run('slot_parati_2', 'prod_combo_para_ti', 2, 'Segunda Hamburguesa', 'hamburguesas');
     for (const optId of burgerOptions690) {
       insertSlotOpt.run(`sopt_p2_${optId}`, 'slot_parati_2', optId, optId === 'prod_pechuga_cesar' ? 1 : 0);
     }
-
     insertSlot.run('slot_parati_3', 'prod_combo_para_ti', 3, 'Refresco 1 Litro', 'caja_bebidas');
     insertSlotOpt.run('sopt_parati_3_refresco', 'slot_parati_3', 'prod_refresco_1lt', 1);
 
     // ------------------------------------------------------------------------
-    // 8. Cupones Oficiales y Ejemplos de Cortesía (Regla 6)
+    // 8. Cupones
     // ------------------------------------------------------------------------
     const couponsData = [
-      {
-        id: 'coup_cafe_gratis',
-        code: 'CAFEGRATIS',
-        description: 'Café de Cortesía con tu compra',
-        coupon_type: 'COURTESY_ITEM',
-        discount_mode: null,
-        discount_value: null,
-        courtesy_product_id: 'prod_cafe_cortesia',
-        max_uses: 200
-      },
-      {
-        id: 'coup_snacks_gratis',
-        code: 'SNACKSGRATIS',
-        description: 'Snacks de Cortesía para ti',
-        coupon_type: 'COURTESY_ITEM',
-        discount_mode: null,
-        discount_value: null,
-        courtesy_product_id: 'prod_snacks_cortesia',
-        max_uses: 200
-      },
-      {
-        id: 'coup_parati_10',
-        code: 'PARATI10',
-        description: '10% de descuento en comida',
-        coupon_type: 'DISCOUNT',
-        discount_mode: 'PERCENTAGE_BPS',
-        discount_value: 1000, // 10.00%
-        courtesy_product_id: null,
-        max_uses: 100
-      },
-      {
-        id: 'coup_bienvenida_1',
-        code: 'BIENVENIDA1',
-        description: '$1.00 de descuento en tu orden',
-        coupon_type: 'DISCOUNT',
-        discount_mode: 'FIXED_USD',
-        discount_value: 100, // $1.00
-        courtesy_product_id: null,
-        max_uses: 100
-      }
+      { id: 'coup_cafe_gratis', code: 'CAFEGRATIS', description: 'Café de Cortesía con tu compra', coupon_type: 'COURTESY_ITEM', discount_mode: null, discount_value: null, courtesy_product_id: 'prod_cafe_cortesia', max_uses: 200 },
+      { id: 'coup_snacks_gratis', code: 'SNACKSGRATIS', description: 'Snacks de Cortesía para ti', coupon_type: 'COURTESY_ITEM', discount_mode: null, discount_value: null, courtesy_product_id: 'prod_snacks_cortesia', max_uses: 200 },
+      { id: 'coup_parati_10', code: 'PARATI10', description: '10% de descuento en comida', coupon_type: 'DISCOUNT', discount_mode: 'PERCENTAGE_BPS', discount_value: 1000, courtesy_product_id: null, max_uses: 100 },
+      { id: 'coup_bienvenida_1', code: 'BIENVENIDA1', description: '$1.00 de descuento en tu orden', coupon_type: 'DISCOUNT', discount_mode: 'FIXED_USD', discount_value: 100, courtesy_product_id: null, max_uses: 100 }
     ];
 
-    const insertCoupon = rawDb.prepare(`
-      INSERT OR REPLACE INTO coupons (
-        id, code, description, coupon_type, discount_mode, discount_value,
-        courtesy_product_id, max_uses, used_count, expires_at_ms, is_active, created_at_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, 1, ?)
-    `);
+    const coupSql = shouldReset
+      ? `INSERT OR REPLACE INTO coupons (id, code, description, coupon_type, discount_mode, discount_value, courtesy_product_id, max_uses, used_count, expires_at_ms, is_active, created_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, 1, ?)`
+      : `INSERT OR IGNORE INTO coupons (id, code, description, coupon_type, discount_mode, discount_value, courtesy_product_id, max_uses, used_count, expires_at_ms, is_active, created_at_ms) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 0, NULL, 1, ?)`;
 
+    const insertCoupon = rawDb.prepare(coupSql);
     for (const coup of couponsData) {
       insertCoupon.run(
         coup.id, coup.code, coup.description, coup.coupon_type,
@@ -478,36 +395,18 @@ export function seedCatalog(rawDb: Database.Database): void {
     }
 
     // ------------------------------------------------------------------------
-    // 9. Configuración de Impresoras Térmicas 58mm
-    // Impresora Caja USB (OneNote / USB RAW) e Impresora Cocina (TCP 9100)
+    // 9. Impresoras
     // ------------------------------------------------------------------------
     const printersData = [
-      {
-        id: 'print_caja_usb',
-        name: 'DP58U-03',
-        connection_type: 'SPOOLER_RAW_USB',
-        address: 'DP58U-03',
-        columns: 32,
-        codepage: 16,
-        is_active: 1
-      },
-      {
-        id: 'print_cocina',
-        name: 'MP583',
-        connection_type: 'SPOOLER_RAW_USB',
-        address: 'MP583',
-        columns: 32,
-        codepage: 16,
-        is_active: 1
-      }
+      { id: 'print_caja_usb', name: 'DP58U-03', connection_type: 'SPOOLER_RAW_USB', address: 'DP58U-03', columns: 32, codepage: 16, is_active: 1 },
+      { id: 'print_cocina', name: 'MP583', connection_type: 'SPOOLER_RAW_USB', address: 'MP583', columns: 32, codepage: 16, is_active: 1 }
     ];
 
-    const insertPrinter = rawDb.prepare(`
-      INSERT OR REPLACE INTO printers (
-        id, name, connection_type, address, columns, codepage, is_active
-      ) VALUES (?, ?, ?, ?, ?, ?, ?)
-    `);
+    const printerSql = shouldReset
+      ? `INSERT OR REPLACE INTO printers (id, name, connection_type, address, columns, codepage, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)`
+      : `INSERT OR IGNORE INTO printers (id, name, connection_type, address, columns, codepage, is_active) VALUES (?, ?, ?, ?, ?, ?, ?)`;
 
+    const insertPrinter = rawDb.prepare(printerSql);
     for (const pr of printersData) {
       insertPrinter.run(pr.id, pr.name, pr.connection_type, pr.address, pr.columns, pr.codepage, pr.is_active);
     }

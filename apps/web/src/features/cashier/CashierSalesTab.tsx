@@ -4,6 +4,7 @@ import { Card, Button, Badge, Modal, Input, Field, Select, EmptyState, Icon } fr
 import { getPaymentMethodHumanLabel } from './payment-labels.js';
 import { formatTableLabel } from '../../lib/format.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
+import { CashierReprintModal } from './CashierReprintModal.js';
 
 interface PaidSale {
   orderId: string;
@@ -30,7 +31,11 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
   const queryClient = useQueryClient();
 
   // Modal de Reimpresión
-  const [reprintingId, setReprintingId] = useState<string | null>(null);
+  const [reprintingSale, setReprintingSale] = useState<PaidSale | null>(null);
+  const [reprintPin, setReprintPin] = useState<string>('');
+  const [reprintReason, setReprintReason] = useState<string>('CLIENTE_SOLICITA_COPIA');
+  const [isReprinting, setIsReprinting] = useState<boolean>(false);
+  const [reprintError, setReprintError] = useState<string | null>(null);
   const [reprintSuccess, setReprintSuccess] = useState<string | null>(null);
 
   // Modal de Anulación / Reembolso
@@ -48,23 +53,48 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
   const [isSavingExpense, setIsSavingExpense] = useState<boolean>(false);
   const [expenseMsg, setExpenseMsg] = useState<string | null>(null);
 
-  const handleReprint = async (orderId: string) => {
-    setReprintingId(orderId);
-    setReprintSuccess(null);
+  const handleExecuteReprint = async () => {
+    if (!reprintingSale) return;
+    setIsReprinting(true);
+    setReprintError(null);
+
     try {
-      const res = await fetch(`/api/print/reprint`, {
+      const jobsRes = await fetch(`/api/print-jobs?orderId=${reprintingSale.orderId}`);
+      const jobsData = await jobsRes.json();
+      if (!jobsRes.ok) {
+        throw new Error(jobsData.message || 'Error al buscar trabajos de impresión');
+      }
+
+      const jobs = jobsData.data || [];
+      const targetJob = jobs.find((j: any) => j.job_type === 'NOTA_ENTREGA' || j.job_type === 'TICKET_CLIENTE') || jobs[0];
+
+      if (!targetJob) {
+        throw new Error('No se encontró ningún trabajo de impresión registrado para esta orden');
+      }
+
+      const res = await fetch(`/api/print-jobs/${targetJob.id}/reprint`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderId, jobType: 'ticket_cliente' })
+        body: JSON.stringify({
+          pin: reprintPin.trim(),
+          reason: reprintReason
+        })
       });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Error al reimprimir');
-      setReprintSuccess(`Comprobante re-enviado a la impresora.`);
-      setTimeout(() => setReprintSuccess(null), 3000);
+
+      const resData = await res.json();
+      if (!res.ok) {
+        throw new Error(resData.message || resData.error || 'No autorizado o error al reimprimir');
+      }
+
+      setReprintingSale(null);
+      setReprintPin('');
+      setReprintReason('CLIENTE_SOLICITA_COPIA');
+      setReprintSuccess('Comprobante re-enviado a la impresora exitosamente.');
+      setTimeout(() => setReprintSuccess(null), 4000);
     } catch (err: any) {
-      alert(err.message || 'Error al conectar con el servidor de impresión');
+      setReprintError(err.message || 'Error al procesar la reimpresión');
     } finally {
-      setReprintingId(null);
+      setIsReprinting(false);
     }
   };
 
@@ -199,8 +229,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleReprint(s.orderId)}
-                      loading={reprintingId === s.orderId}
+                      onClick={() => setReprintingSale(s)}
                       leftIcon="Receipt"
                     >
                       Recibo
@@ -208,8 +237,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => handleReprint(s.orderId)}
-                      loading={reprintingId === s.orderId}
+                      onClick={() => setReprintingSale(s)}
                       leftIcon="Printer"
                     >
                       Reimprimir
@@ -343,6 +371,18 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
           </div>
         </Modal>
       )}
+
+      <CashierReprintModal
+        reprintingSale={reprintingSale}
+        onClose={() => setReprintingSale(null)}
+        reprintError={reprintError}
+        reprintReason={reprintReason}
+        setReprintReason={setReprintReason}
+        reprintPin={reprintPin}
+        setReprintPin={setReprintPin}
+        isReprinting={isReprinting}
+        onConfirm={handleExecuteReprint}
+      />
     </div>
   );
 };

@@ -5,6 +5,7 @@ import { usdToBsCents, formatMicroBsToRate } from '@tocineta/shared';
 import { publishDomainEvent, getLatestEventSeq } from '../events/event-bus.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
+import { getUploadsDir } from '../../config/paths.js';
 
 export function getCurrentExchangeRate(rawDb: Database.Database): number {
   const row = rawDb.prepare(`
@@ -672,7 +673,7 @@ export function saveProductPhoto(
     throw new Error('El archivo excede el tamaño máximo permitido de 2 MB.');
   }
 
-  const targetDir = uploadsDir || path.resolve(process.cwd(), 'data/uploads');
+  const targetDir = uploadsDir || getUploadsDir();
   if (!fs.existsSync(targetDir)) {
     fs.mkdirSync(targetDir, { recursive: true });
   }

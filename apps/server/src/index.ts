@@ -4,6 +4,7 @@ import { runMigrations } from './db/migrate.js';
 import { buildServer } from './server.js';
 import { seedInitialUsers, syncAndSanitizeCorporateUsers } from './modules/auth/seed-users.js';
 import { seedCatalog } from './db/seed-catalog.js';
+import { seedProductPhotos } from './modules/menu/photo-seed.js';
 import { ensureOfficialLocations } from './modules/profitability/locations-service.js';
 
 async function bootstrap() {
@@ -49,7 +50,8 @@ async function bootstrap() {
 
   // 4. Semilla de catálogo oficial (27 productos, combos, barra libre, sabores Pepsi, cupones)
   seedCatalog(dbContext.rawDb);
-  console.log(`🍔 Catálogo oficial sembrado con éxito.`);
+  seedProductPhotos(dbContext.rawDb);
+  console.log(`🍔 Catálogo oficial y fotografías sembrados con éxito.`);
 
   // 3. Inicialización del servidor Fastify (Proceso Único)
   const server = await buildServer();

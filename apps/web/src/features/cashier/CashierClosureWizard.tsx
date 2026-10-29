@@ -37,6 +37,18 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
 
   const isBlindClosure = Boolean(settingsData?.settings?.blindClosureEnabled);
 
+  // Consultar jornada actual
+  const { data: jornadaData } = useQuery({
+    queryKey: ['current-jornada'],
+    queryFn: async () => {
+      const res = await fetch('/api/jornadas/current');
+      if (!res.ok) return { jornada: null };
+      return res.json();
+    }
+  });
+
+  const jornada = jornadaData?.jornada;
+
   // Consultar resumen del día
   const {
     data: summaryData,
@@ -71,7 +83,6 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   }
 
   const summary = summaryData?.summary || {
-    jornadaId: 'jornada_activa',
     totalOrders: 0,
     grossSalesUsdCents: 0,
     expectedCashUsdCents: 0,
@@ -94,7 +105,12 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
     setErrorMessage(null);
 
     try {
-      const jornadaId = summary.jornadaId || 'jornada_activa';
+      const jornadaId = jornada?.id;
+      if (!jornadaId) {
+        setErrorMessage('No hay jornada abierta');
+        setIsSubmitting(false);
+        return;
+      }
       const res = await fetch(`/api/jornadas/${jornadaId}/close`, {
         method: 'POST',
         headers: {
@@ -126,7 +142,11 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   };
 
   const handleExport = (type: 'pdf' | 'excel') => {
-    const jornadaId = summary.jornadaId || 'jornada_activa';
+    const jornadaId = jornada?.id;
+    if (!jornadaId) {
+      setErrorMessage('No hay jornada abierta');
+      return;
+    }
     window.open(`/api/reports/jornada/${jornadaId}/${type}`, '_blank');
   };
 
@@ -300,7 +320,7 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
                 />
               </Field>
 
-              <Field label="PIN de Autorización de Cierre" required>
+              <Field label="PIN de Autorización de Cierre" required hint="PIN de administrador o supervisor">
                 <Input
                   type="password"
                   maxLength={6}

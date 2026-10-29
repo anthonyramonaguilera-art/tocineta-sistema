@@ -16,7 +16,7 @@ async function main() {
     await runMigrations(dbCtx.rawDb, { dbPath });
     ensureOfficialLocations(dbCtx.rawDb);
     seedInitialUsers(dbCtx.rawDb);
-    seedCatalog(dbCtx.rawDb);
+    seedCatalog(dbCtx.rawDb, { force: true });
     seedDemoData(dbCtx.rawDb);
     console.log(`✅ Datos demo sembrados con éxito. Modo DEMO activado.`);
     console.log(`✨ En la pantalla se mostrará el badge visual "DEMO".`);

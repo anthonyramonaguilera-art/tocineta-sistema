@@ -48,3 +48,22 @@
 ::-webkit-scrollbar-thumb:hover {
   background: var(--color-ink-muted);
 }
+
+@keyframes float-anim {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+.animate-float {
+  animation: float-anim 3s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-float {
+    animation: none;
+  }
+}

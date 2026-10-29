@@ -1,3 +1,4 @@
+import { getUploadsDir } from '../config/paths.js';
 import type { FastifyPluginAsync } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import * as path from 'node:path';
@@ -13,11 +14,8 @@ export const staticPlugin: FastifyPluginAsync = async (fastify) => {
 
   let webDistDir = candidatePaths.find(p => fs.existsSync(p));
 
-  // Carpeta de subida local de fotos de productos (data/uploads)
-  const uploadsDir = path.resolve(process.cwd(), 'data/uploads');
-  if (!fs.existsSync(uploadsDir)) {
-    fs.mkdirSync(uploadsDir, { recursive: true });
-  }
+  // Carpeta de subida local de fotos de productos atada a la BD
+  const uploadsDir = getUploadsDir();
 
   await fastify.register(fastifyStatic, {
     root: uploadsDir,

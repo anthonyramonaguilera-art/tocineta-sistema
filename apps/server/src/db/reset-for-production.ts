@@ -131,7 +131,7 @@ export async function resetForProduction(dbPathInput?: string): Promise<{
 
     // 8. Sembrar catálogo oficial de 27 productos con recetas exactas
     console.log(`🍔 Sembrando catálogo oficial con 27 productos y recetas exactas...`);
-    seedCatalog(dbCtx.rawDb);
+    seedCatalog(dbCtx.rawDb, { force: true });
     console.log(`✅ Catálogo oficial establecido con éxito.`);
 
     console.log(`\n🎉 SISTEMA LISTO PARA PRODUCCIÓN EN EL FOOD TRUCK (CERO ERRORES).`);
