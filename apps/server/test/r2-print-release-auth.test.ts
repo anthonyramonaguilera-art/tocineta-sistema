@@ -100,7 +100,7 @@ describe('R2 — Print Release Auth & Wiring Tests', () => {
       method: 'POST',
       url: `/api/orders/${testOrderId}/pay`,
       headers: { authorization: `Bearer ${cajeraToken}` },
-      payload: { tenders: [{ method: 'cash_usd', amountCents: 1500 }] }
+      payload: { tenders: [{ method: 'cash_usd', amountCents: 940 }] }
     });
     expect(resPay.statusCode).toBe(200);
 
