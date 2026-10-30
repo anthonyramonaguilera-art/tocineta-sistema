@@ -15,8 +15,10 @@ import * as os from 'node:os';
 import * as path from 'node:path';
 import * as fs from 'node:fs';
 import * as fsp from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
 import { execFile } from 'node:child_process';
 import type Database from 'better-sqlite3';
+import { countTocinetaJobs, purgeTocinetaJobs } from './spooler-guard.js';
 import {
   generateUuidV7,
   renderTicketToEscPos,
@@ -123,13 +125,28 @@ export interface PrintJobRow {
 
 // Ruta al script de PowerShell de WinSpool RAW
 function resolveRawSpoolerScript(): string {
+  if (process.env.TOCINETA_RAW_SPOOLER_PS1 && fs.existsSync(process.env.TOCINETA_RAW_SPOOLER_PS1)) {
+    return process.env.TOCINETA_RAW_SPOOLER_PS1;
+  }
+
+  try {
+    let dir = path.dirname(fileURLToPath(import.meta.url));
+    for (let i = 0; i < 6; i++) {
+      const candidate = path.join(dir, 'tools', 'g0-probe', 'raw-spooler.ps1');
+      if (fs.existsSync(candidate)) return candidate;
+      const parent = path.dirname(dir);
+      if (parent === dir) break;
+      dir = parent;
+    }
+  } catch {}
+
   const candidate1 = path.resolve(process.cwd(), 'tools/g0-probe/raw-spooler.ps1');
   if (fs.existsSync(candidate1)) return candidate1;
 
   const candidate2 = path.resolve(process.cwd(), '../../tools/g0-probe/raw-spooler.ps1');
   if (fs.existsSync(candidate2)) return candidate2;
 
-  return candidate1;
+  throw new Error('No se encuentra raw-spooler.ps1');
 }
 
 // ============================================================================
@@ -195,6 +212,12 @@ export async function sendTcpEscPos(
   });
 }
 
+const lastOkAt = new Map<string, number>();
+
+export function resetLastOkAtForTest() {
+  lastOkAt.clear();
+}
+
 export async function sendWindowsRawEscPos(
   printerName: string,
   payload: Buffer,
@@ -205,13 +228,28 @@ export async function sendWindowsRawEscPos(
     return { bytesWritten: payload.length };
   }
 
+  try {
+    const jobCount = await countTocinetaJobs(printerName);
+    if (jobCount >= 3) {
+      await purgeTocinetaJobs(printerName);
+      console.warn(`[printer] ${printerName} tiene ${jobCount} trabajos acumulados de Tocineta. Purgando...`);
+    }
+  } catch (err) {
+    console.warn('[sendWindowsRawEscPos] Error checking/purging spooler jobs:', err);
+  }
+
+  const lastOk = lastOkAt.get(printerName) || 0;
+  const idleMs = lastOk === 0 ? 0 : Date.now() - lastOk;
+  const needsWarm = lastOk === 0 || (Date.now() - lastOk > 5 * 60 * 1000);
+  const finalPayload = needsWarm ? Buffer.concat([Buffer.from([0x1b, 0x40]), payload]) : payload;
+
   const tempFile = path.join(os.tmpdir(), `tocineta_raw_${Date.now()}_${Math.random().toString(36).slice(2, 8)}.bin`);
   const psScript = resolveRawSpoolerScript();
 
   try {
-    await fsp.writeFile(tempFile, payload);
+    await fsp.writeFile(tempFile, finalPayload);
 
-    return await new Promise((resolve, reject) => {
+    const res = await new Promise<{ bytesWritten: number }>((resolve, reject) => {
       const child = execFile(
         'powershell',
         [
@@ -235,21 +273,38 @@ export async function sendWindowsRawEscPos(
             } catch {
               // fallback
             }
-            return reject(new Error(stderr.trim() || stdout.trim() || err.message));
+            return reject(Object.assign(err, { stderr, stdout }));
           }
 
           try {
             const parsed = JSON.parse(stdout.trim());
-            resolve({ bytesWritten: parsed.BytesWritten ?? payload.length });
+            resolve({ bytesWritten: parsed.BytesWritten ?? finalPayload.length });
           } catch {
-            resolve({ bytesWritten: payload.length });
+            resolve({ bytesWritten: finalPayload.length });
           }
         }
       );
 
-      // Si supera el timeout, child process se detiene
       child.on('error', (err) => reject(err));
     });
+
+    lastOkAt.set(printerName, Date.now());
+    console.log(`[printer] ${printerName} idleMs=${idleMs} warm=${!needsWarm}`);
+    return res;
+  } catch (err: any) {
+    try {
+      await purgeTocinetaJobs(printerName);
+    } catch {}
+
+    console.error('[sendWindowsRawEscPos technical error]:', err);
+    const errString = (err?.message || '') + ' ' + (err?.stderr || '') + ' ' + (err?.stdout || '');
+    if (err?.killed || err?.code === 'ETIMEDOUT' || errString.toLowerCase().includes('timeout') || errString.toLowerCase().includes('timed out')) {
+      throw new Error('La impresora no responde. Revise cable y encendido.');
+    }
+    if (errString.includes('OpenPrinter')) {
+      throw new Error('Windows no encuentra la impresora configurada. Revise el nombre en Ajustes > Impresoras.');
+    }
+    throw new Error('No se pudo imprimir. Revise la impresora.');
   } finally {
     await fsp.unlink(tempFile).catch(() => {});
   }
@@ -262,8 +317,10 @@ export async function sendWindowsRawEscPos(
 export class PrintingWorker {
   private rawDb: Database.Database;
   private intervalTimer: NodeJS.Timeout | null = null;
+  private keepAliveTimer: NodeJS.Timeout | null = null;
   private isRunning = false;
   private activeLocks = new Map<string, boolean>();
+  private lastSentAt = new Map<string, number>();
   public mockTransports = false;
   public mockFailures = new Set<string>();
 
@@ -279,12 +336,56 @@ export class PrintingWorker {
         console.error('[PrintingWorker] Error procesando cola:', err);
       });
     }, pollIntervalMs);
+
+    if (!this.keepAliveTimer && process.platform === 'win32' && process.env.PRINTER_DEV_SIMULATION !== 'true' && !this.mockTransports) {
+      const keepAliveMs = process.env.PRINTER_KEEPALIVE_MS ? parseInt(process.env.PRINTER_KEEPALIVE_MS, 10) : 240000;
+      if (keepAliveMs > 0) {
+        this.keepAliveTimer = setInterval(() => {
+          this.sendKeepAlives().catch((err) => {
+            console.warn('[PrintingWorker] KeepAlive warning:', err);
+          });
+        }, keepAliveMs);
+      }
+    }
   }
 
   public stop() {
     if (this.intervalTimer) {
       clearInterval(this.intervalTimer);
       this.intervalTimer = null;
+    }
+    if (this.keepAliveTimer) {
+      clearInterval(this.keepAliveTimer);
+      this.keepAliveTimer = null;
+    }
+  }
+
+  private async sendKeepAlives(): Promise<void> {
+    if (!this.rawDb.open) return;
+    try {
+      const printers = this.rawDb.prepare(`
+        SELECT id, name, address, connection_type
+        FROM printers
+        WHERE is_active = 1 AND (LOWER(connection_type) = 'windows_raw' OR LOWER(connection_type) = 'spooler_raw_usb')
+      `).all() as Array<{ id: string; name: string; address: string; connection_type: string }>;
+
+      for (const p of printers) {
+        if (this.activeLocks.get(p.id)) continue;
+        const pendingCount = this.rawDb.prepare(`
+          SELECT COUNT(*) as c FROM print_jobs WHERE printer_id = ? AND status IN ('en_cola', 'imprimiendo')
+        `).get(p.id) as { c: number };
+
+        if (pendingCount && pendingCount.c > 0) continue;
+
+        const printerTarget = p.name || p.address;
+        try {
+          await sendWindowsRawEscPos(printerTarget, Buffer.from([0x1b, 0x40]), 'Tocineta_KeepAlive', 4000);
+        } catch (err) {
+          console.warn(`[PrintingWorker] KeepAlive error for printer ${printerTarget}:`, err);
+        }
+      }
+    } catch (err) {
+      console.warn('[PrintingWorker] sendKeepAlives error:', err);
     }
   }
 
@@ -339,6 +440,14 @@ export class PrintingWorker {
     job: PrintJobRow & { connection_type: string; address: string; printer_name: string }
   ): Promise<void> {
     if (!this.rawDb.open) return;
+    // Pausa mínima de 250 ms entre dos jobs consecutivos a la misma impresora
+    const lastSent = this.lastSentAt.get(job.printer_id) || 0;
+    const elapsed = Date.now() - lastSent;
+    if (elapsed < 250) {
+      await new Promise((r) => setTimeout(r, 250 - elapsed));
+    }
+    this.lastSentAt.set(job.printer_id, Date.now());
+
     // 1. Transición de estado a 'imprimiendo'
     this.rawDb.prepare(`
       UPDATE print_jobs 
