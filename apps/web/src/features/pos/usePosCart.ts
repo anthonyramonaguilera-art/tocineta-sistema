@@ -156,7 +156,7 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
   }, [customerName]);
 
   // Enviar orden a cocina / backend
-  const submitOrder = useCallback(async (): Promise<{ success: boolean; order?: any; error?: string }> => {
+  const submitOrder = useCallback(async (options?: { announce?: boolean }): Promise<{ success: boolean; order?: any; error?: string }> => {
     if (!validateStep1()) {
       setStep(1);
       return { success: false, error: 'Por favor completa el nombre del cliente' };
@@ -217,10 +217,12 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
           throw new Error(data.error || 'Error al actualizar pedido');
         }
 
-        setStatusNotification({
-          type: 'success',
-          message: `✓ Pedido #${editingOrderNumber || ''} actualizado con éxito`
-        });
+        if (options?.announce !== false) {
+          setStatusNotification({
+            type: 'success',
+            message: `✓ Pedido #${editingOrderNumber || ''} actualizado con éxito`
+          });
+        }
         clearCart();
         onOrderSuccess?.(data.order);
         return { success: true, order: data.order };
@@ -242,10 +244,12 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
         throw new Error(data.error || 'Error al crear pedido');
       }
 
-      setStatusNotification({
-        type: 'success',
-        message: `✓ Pedido #${data.order?.order_number || ''} enviado a cocina correctamente`
-      });
+      if (options?.announce !== false) {
+        setStatusNotification({
+          type: 'success',
+          message: `✓ Pedido #${data.order?.order_number || ''} guardado. Pendiente de cobro`
+        });
+      }
       clearCart();
       onOrderSuccess?.(data.order);
       return { success: true, order: data.order };

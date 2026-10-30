@@ -264,6 +264,7 @@ export const CashierView: React.FC = () => {
           rateMicroBs={rateMicroBs}
           onRefresh={handleRefreshAll}
           userRole={user?.role}
+          token={token}
         />
       )}
 

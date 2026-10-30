@@ -14,6 +14,7 @@ import type Database from 'better-sqlite3';
 import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { getFinancialTruth } from '../finances/financial-truth-service.js';
+import { getPaymentMethodHumanLabel } from '../printing/templates.js';
 
 export interface WorkerPerformanceMetrics {
   userId: string;
@@ -266,6 +267,7 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
     totalOrders: ft.orders.totalCount,
     byMethod: ft.collectedByMethod.map(m => ({
       method: m.method,
+      label: getPaymentMethodHumanLabel(m.method),
       count: m.count,
       totalUsdCents: m.grossUsdCents,
       totalBsCents: m.grossBsCents,
@@ -274,6 +276,7 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
       netUsdCents: m.netUsdCents,
       netBsCents: m.netBsCents
     })),
+    receivablesUsdCents: ft.receivables.totalUsdCents,
     bySede: ft.bySede.map(s => ({
       locationId: s.locationId,
       locationName: s.locationName,

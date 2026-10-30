@@ -81,37 +81,37 @@
     "id": "B14",
     "titulo": "Inventario rápido no deja agregar insumos",
     "fase": "P4-A + P4-B",
-    "estado": "red"
+    "estado": "green"
   },
   {
     "id": "B15",
     "titulo": "Sub-receta: 500 y falta explicar 'rendimiento del batch'",
     "fase": "P4-A + P4-B",
-    "estado": "red"
+    "estado": "green"
   },
   {
     "id": "B16",
     "titulo": "No se pueden crear recetas desde cero",
     "fase": "P4-A + P4-B",
-    "estado": "red"
+    "estado": "green"
   },
   {
     "id": "B17",
     "titulo": "Merma: '($NaN)' y 500 por insumo",
     "fase": "P4-A + P4-B",
-    "estado": "red"
+    "estado": "green"
   },
   {
     "id": "B18",
     "titulo": "Compras: casillas sin pedagogía y sin foto de factura",
     "fase": "P4-A + P4-B",
-    "estado": "red"
+    "estado": "green"
   },
   {
     "id": "B19",
     "titulo": "Asistente: 1 solo insumo/proveedor, recetas inoperantes, 'Finalizar' sin efecto, sin tutorial",
     "fase": "P4-A + P4-C",
-    "estado": "red"
+    "estado": "green"
   },
   {
     "id": "B20",
@@ -141,7 +141,7 @@
     "id": "B24",
     "titulo": "Anulación por LIKE",
     "fase": "P4-A",
-    "estado": "red"
+    "estado": "green"
   },
   {
     "id": "B25",
@@ -171,7 +171,7 @@
     "id": "B29",
     "titulo": "Merma duplicada como gasto",
     "fase": "P4-A",
-    "estado": "red"
+    "estado": "green"
   },
   {
     "id": "B30",

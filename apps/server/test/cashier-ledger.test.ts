@@ -38,6 +38,8 @@ describe('Hito M5 - Módulo de Caja, Calculadora Multimétodo, Vueltos Mixtos y 
     adminToken = (await loginAs(app, 'admin', rawDb)).token;
     cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
     supervisorToken = (await loginAs(app, 'supervisor', rawDb)).token;
+
+    rawDb.prepare("UPDATE business_settings SET print_mode = 'two' WHERE id = 'default'").run();
   });
 
   afterAll(async () => {

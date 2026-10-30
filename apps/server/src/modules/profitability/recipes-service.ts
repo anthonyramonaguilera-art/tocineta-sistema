@@ -2,6 +2,7 @@ import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
 import { resolveLocationId } from './locations-service.js';
 import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
+import { AppError } from '../../lib/app-error.js';
 
 export interface SubRecipeRecord {
   id: string;
@@ -122,6 +123,32 @@ export function saveSubRecipe(
     items: Array<{ supplyId: string; quantityRequired: number }>;
   }
 ): SubRecipeRecord {
+  if (!input || !input.name || !input.name.trim()) {
+    throw new AppError('FIELD_REQUIRED', 400, 'El nombre de la sub-receta es obligatorio', 'name');
+  }
+  if (!input.yieldQuantity || input.yieldQuantity <= 0) {
+    throw new AppError('INVALID_QUANTITY', 400, 'El rendimiento debe ser mayor a 0', 'yieldQuantity');
+  }
+  if (!input.yieldUnit || !input.yieldUnit.trim()) {
+    throw new AppError('FIELD_REQUIRED', 400, 'La unidad de rendimiento es obligatoria', 'yieldUnit');
+  }
+  if (!input.items || !Array.isArray(input.items) || input.items.length === 0) {
+    throw new AppError('FIELD_REQUIRED', 400, 'La sub-receta debe contener al menos un insumo', 'items');
+  }
+  for (const it of input.items) {
+    const sId = it.supplyId || (it as any).supplyItemId;
+    if (!sId) {
+      throw new AppError('FIELD_REQUIRED', 400, 'ID de insumo obligatorio', 'supplyId');
+    }
+    const supply = rawDb.prepare('SELECT id FROM supply_items WHERE id = ?').get(sId);
+    if (!supply) {
+      throw new AppError('NOT_FOUND', 404, `Insumo '${sId}' no encontrado`, 'supplyId');
+    }
+    if (!it.quantityRequired || it.quantityRequired <= 0) {
+      throw new AppError('INVALID_QUANTITY', 400, 'La cantidad requerida debe ser mayor a 0', 'quantityRequired');
+    }
+  }
+
   const now = Date.now();
   const subRecipeId = input.id || `subrec_${generateUuidV7()}`;
 

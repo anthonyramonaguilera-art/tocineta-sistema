@@ -9,6 +9,8 @@ import { Step3Review } from './Step3Review.js';
 import { CustomizationModal } from './CustomizationModal.js';
 import { ComboWizardModal } from './ComboWizardModal.js';
 import { MultiMethodCalculator } from '../cashier/MultiMethodCalculator.js';
+import { PostPaymentPrintModal } from '../cashier/PostPaymentPrintModal.js';
+import { hasPendingPrintJobs } from '../cashier/fetchPendingPrintJobs.js';
 import { WizardLayout, Toast, ToastContainer, Modal } from '../../ui/index.js';
 import { canUserProcessPayments, usdToBsCents } from '@tocineta/shared';
 import { clearOutbox } from './outbox.js';
@@ -68,6 +70,7 @@ export const PosComandero: React.FC = () => {
 
   // Cobro Express en caja
   const [expressCheckoutOrder, setExpressCheckoutOrder] = useState<any | null>(null);
+  const [paidOrderForPrint, setPaidOrderForPrint] = useState<{ id: string; orderNumber: number } | null>(null);
 
   // Hook central de carrito y estado de orden
   const posCart = usePosCart({
@@ -112,7 +115,7 @@ export const PosComandero: React.FC = () => {
 
   // Cobrar ahora (Express)
   const handleExpressCheckout = async () => {
-    const res = await posCart.submitOrder();
+    const res = await posCart.submitOrder({ announce: false });
     if (res.success && res.order) {
       setExpressCheckoutOrder(res.order);
     }
@@ -337,18 +340,32 @@ export const PosComandero: React.FC = () => {
             <MultiMethodCalculator
               order={expressCheckoutOrder}
               rateMicroBs={rateMicroBs}
-              onPaymentSuccess={() => {
+              onPaymentSuccess={async () => {
+                const paid = expressCheckoutOrder;
                 setExpressCheckoutOrder(null);
                 invalidateMoney(queryClient);
-                posCart.setStatusNotification({
-                  type: 'success',
-                  message: `✓ Orden #${expressCheckoutOrder.order_number} cobrada con éxito`
-                });
+                if (paid) {
+                  const hasPending = await hasPendingPrintJobs(paid.id, token);
+                  if (hasPending) {
+                    setPaidOrderForPrint({ id: paid.id, orderNumber: paid.order_number });
+                  } else {
+                    posCart.setStatusNotification({
+                      type: 'success',
+                      message: `✓ Orden #${paid.order_number} cobrada con éxito`
+                    });
+                  }
+                }
               }}
             />
           </div>
         </Modal>
       )}
+
+      <PostPaymentPrintModal
+        order={paidOrderForPrint}
+        token={token}
+        onClose={() => setPaidOrderForPrint(null)}
+      />
     </div>
   );
 };

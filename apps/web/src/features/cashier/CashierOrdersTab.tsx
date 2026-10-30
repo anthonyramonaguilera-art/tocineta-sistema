@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import type { CashierOrder, CashierOrderLine } from './types.js';
 import { Card, Button, Badge, EmptyState, Modal, Input, Field } from '../../ui/index.js';
 import { PaymentWizard } from './PaymentWizard.js';
-import { PostPaymentPrintPanel } from './PostPaymentPrintPanel.js';
+import { PostPaymentPrintModal } from './PostPaymentPrintModal.js';
+import { hasPendingPrintJobs } from './fetchPendingPrintJobs.js';
 import { formatTableLabel } from '../../lib/format.js';
 
 interface CashierOrdersTabProps {
@@ -10,13 +11,15 @@ interface CashierOrdersTabProps {
   rateMicroBs: number;
   onRefresh: () => void;
   userRole?: string;
+  token?: string | null;
 }
 
 export const CashierOrdersTab: React.FC<CashierOrdersTabProps> = ({
   orders,
   rateMicroBs,
   onRefresh,
-  userRole = 'cajera'
+  userRole = 'cajera',
+  token
 }) => {
   const [selectedOrder, setSelectedOrder] = useState<CashierOrder | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -186,11 +189,14 @@ export const CashierOrdersTab: React.FC<CashierOrdersTabProps> = ({
           <PaymentWizard
             order={selectedOrder}
             rateMicroBs={rateMicroBs}
-            onPaymentSuccess={() => {
+            onPaymentSuccess={async () => {
               const paid = selectedOrder;
               setSelectedOrder(null);
               if (paid) {
-                setPaidOrderForPrint({ id: paid.id, orderNumber: paid.order_number });
+                const hasPending = await hasPendingPrintJobs(paid.id, token);
+                if (hasPending) {
+                  setPaidOrderForPrint({ id: paid.id, orderNumber: paid.order_number });
+                }
               }
               onRefresh();
             }}
@@ -200,19 +206,11 @@ export const CashierOrdersTab: React.FC<CashierOrdersTabProps> = ({
         </Modal>
       )}
 
-      {paidOrderForPrint && (
-        <Modal
-          isOpen={Boolean(paidOrderForPrint)}
-          onClose={() => setPaidOrderForPrint(null)}
-          title={`Impresión de Orden #${paidOrderForPrint.orderNumber}`}
-        >
-          <PostPaymentPrintPanel
-            orderId={paidOrderForPrint.id}
-            orderNumber={paidOrderForPrint.orderNumber}
-            onClose={() => setPaidOrderForPrint(null)}
-          />
-        </Modal>
-      )}
+      <PostPaymentPrintModal
+        order={paidOrderForPrint}
+        token={token}
+        onClose={() => setPaidOrderForPrint(null)}
+      />
 
       {/* Modal de Cancelación de Comanda */}
       {cancelingOrder && (
