@@ -1,5 +1,22 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
+import { extractSessionToken, hashToken } from '../../routes/auth.js';
+
+function getSessionUser(rawDb: any, authHeader?: string) {
+  const token = extractSessionToken(authHeader);
+  if (!token) return null;
+  const tokenHash = hashToken(token);
+  const now = Date.now();
+  const row = rawDb.prepare(`
+    SELECT s.user_id, s.role, u.is_active
+    FROM sessions s
+    JOIN users u ON s.user_id = u.id
+    WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL AND s.expires_at_ms > ?
+  `).get(tokenHash, now) as { user_id: string; role: string; is_active: number } | undefined;
+
+  if (!row || !row.is_active) return null;
+  return { userId: row.user_id, role: row.role };
+}
 
 export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
   const rawDb = (fastify as any).rawDb;
@@ -36,6 +53,10 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         inventory_tracking_since_ms: settings.inventory_tracking_since_ms,
         print_mode: settings.print_mode,
         printMode: settings.print_mode,
+        print_delivery_note: settings.print_delivery_note,
+        printDeliveryNote: settings.print_delivery_note,
+        print_flow: settings.print_flow,
+        printFlow: settings.print_flow,
         ask_table_on_order: settings.ask_table_on_order ?? 0
       };
 
@@ -53,6 +74,11 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
   // 2. Actualizar configuración integral (PUT o PATCH)
   const updateSettingsHandler = async (req: any, reply: any) => {
     try {
+      const user = getSessionUser(rawDb, req.headers.authorization);
+      if (user && user.role !== 'admin') {
+        return reply.status(403).send({ success: false, message: 'Solo el rol ADMIN puede modificar la configuración del negocio' });
+      }
+
       const b = req.body as any;
       const current = ensureBusinessSettingsDefensive(rawDb);
       const now = Date.now();
@@ -111,6 +137,33 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         newPrintMode = rawPrintMode;
       }
 
+      const rawPrintDeliveryNote = b.print_delivery_note ?? b.printDeliveryNote;
+      let newPrintDeliveryNote = current.print_delivery_note;
+      if (rawPrintDeliveryNote !== undefined) {
+        const val = Number(rawPrintDeliveryNote);
+        if (val !== 0 && val !== 1) {
+          return reply.status(400).send({
+            success: false,
+            message: "print_delivery_note debe ser 0 o 1",
+            field: 'print_delivery_note'
+          });
+        }
+        newPrintDeliveryNote = val;
+      }
+
+      const rawPrintFlow = b.print_flow ?? b.printFlow;
+      let newPrintFlow = current.print_flow;
+      if (rawPrintFlow !== undefined) {
+        if (rawPrintFlow !== 'manual' && rawPrintFlow !== 'auto') {
+          return reply.status(400).send({
+            success: false,
+            message: "print_flow debe ser 'manual' o 'auto'",
+            field: 'print_flow'
+          });
+        }
+        newPrintFlow = rawPrintFlow;
+      }
+
       rawDb.prepare(`
         UPDATE business_settings
         SET business_name = ?,
@@ -136,6 +189,8 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
             inventory_operation_mode = ?,
             inventory_tracking_since_ms = ?,
             print_mode = ?,
+            print_delivery_note = ?,
+            print_flow = ?,
             updated_at_ms = ?
         WHERE id = 'default'
       `).run(
@@ -162,6 +217,8 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         newInventoryMode,
         newInventoryTrackingSince,
         newPrintMode,
+        newPrintDeliveryNote,
+        newPrintFlow,
         now
       );
 
@@ -196,6 +253,10 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
           inventory_tracking_since_ms: updated.inventory_tracking_since_ms,
           print_mode: updated.print_mode,
           printMode: updated.print_mode,
+          print_delivery_note: updated.print_delivery_note,
+          printDeliveryNote: updated.print_delivery_note,
+          print_flow: updated.print_flow,
+          printFlow: updated.print_flow,
           ask_table_on_order: updated.ask_table_on_order ?? 0
         }
       });
@@ -210,6 +271,11 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
   // 3. Asistente de Primera Instalación (Onboarding Wizard)
   fastify.post('/api/business-settings/onboarding', async (req, reply) => {
     try {
+      const user = getSessionUser(rawDb, req.headers.authorization);
+      if (user && user.role !== 'admin') {
+        return reply.status(403).send({ success: false, message: 'Solo el rol ADMIN puede modificar la configuración del negocio' });
+      }
+
       const b = req.body as {
         businessName: string;
         slogan?: string;
@@ -225,7 +291,6 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
       const current = ensureBusinessSettingsDefensive(rawDb);
 
       rawDb.transaction(() => {
-        // Actualizar parámetros corporativos
         rawDb.prepare(`
           UPDATE business_settings
           SET business_name = ?,
@@ -249,7 +314,6 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
           now
         );
 
-        // Actualizar sede principal si se especifica
         if (b.locationName) {
           rawDb.prepare(`
             UPDATE locations

@@ -384,6 +384,36 @@ export const printingRoutes: FastifyPluginAsync = async (fastify) => {
     }
   });
 
+  // 4.1 Liberar trabajo pendiente (POST /api/print-jobs/:id/release)
+  fastify.post('/api/print-jobs/:id/release', async (request, reply) => {
+    const user = getSessionUser(rawDb, request.headers.authorization);
+    if (!user || user.role === 'cocinero') {
+      return reply.status(403).send({ error: 'FORBIDDEN', message: 'Rol no autorizado para liberar trabajos de impresión' });
+    }
+
+    const { id } = request.params as { id: string };
+    const job = rawDb.prepare('SELECT id, status FROM print_jobs WHERE id = ?').get(id) as { id: string; status: string } | undefined;
+    if (!job) {
+      return reply.status(404).send({ error: 'NOT_FOUND', message: `Trabajo de impresión ${id} no encontrado` });
+    }
+
+    if (job.status !== 'pending') {
+      return reply.status(409).send({ error: 'CONFLICT', status: job.status, message: `El trabajo no se encuentra en estado pending (estado actual: ${job.status})` });
+    }
+
+    const result = rawDb.prepare("UPDATE print_jobs SET status = 'en_cola' WHERE id = ? AND status = 'pending'").run(id);
+    if (result.changes === 0) {
+      const current = rawDb.prepare('SELECT status FROM print_jobs WHERE id = ?').get(id) as { status: string } | undefined;
+      return reply.status(409).send({ error: 'CONFLICT', status: current?.status || 'unknown', message: 'No se pudo liberar el trabajo de impresión' });
+    }
+
+    if (fastify.printingWorker) {
+      fastify.printingWorker.trigger();
+    }
+
+    return reply.send({ success: true, status: 'en_cola' });
+  });
+
   // 5. Resolver trabajo con estado 'requiere_atencion'
   fastify.post('/api/print-jobs/:id/resolve', async (request, reply) => {
     const { id } = request.params as { id: string };

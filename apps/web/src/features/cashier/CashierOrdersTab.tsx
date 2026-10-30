@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import type { CashierOrder, CashierOrderLine } from './types.js';
 import { Card, Button, Badge, EmptyState, Modal, Input, Field } from '../../ui/index.js';
 import { PaymentWizard } from './PaymentWizard.js';
+import { PostPaymentPrintPanel } from './PostPaymentPrintPanel.js';
 import { formatTableLabel } from '../../lib/format.js';
 
 interface CashierOrdersTabProps {
@@ -19,6 +20,7 @@ export const CashierOrdersTab: React.FC<CashierOrdersTabProps> = ({
 }) => {
   const [selectedOrder, setSelectedOrder] = useState<CashierOrder | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+  const [paidOrderForPrint, setPaidOrderForPrint] = useState<{ id: string; orderNumber: number } | null>(null);
 
   // Estados para cancelar comanda
   const [cancelingOrder, setCancelingOrder] = useState<CashierOrder | null>(null);
@@ -185,11 +187,29 @@ export const CashierOrdersTab: React.FC<CashierOrdersTabProps> = ({
             order={selectedOrder}
             rateMicroBs={rateMicroBs}
             onPaymentSuccess={() => {
+              const paid = selectedOrder;
               setSelectedOrder(null);
+              if (paid) {
+                setPaidOrderForPrint({ id: paid.id, orderNumber: paid.order_number });
+              }
               onRefresh();
             }}
             onCancel={() => setSelectedOrder(null)}
             userRole={userRole}
+          />
+        </Modal>
+      )}
+
+      {paidOrderForPrint && (
+        <Modal
+          isOpen={Boolean(paidOrderForPrint)}
+          onClose={() => setPaidOrderForPrint(null)}
+          title={`Impresión de Orden #${paidOrderForPrint.orderNumber}`}
+        >
+          <PostPaymentPrintPanel
+            orderId={paidOrderForPrint.id}
+            orderNumber={paidOrderForPrint.orderNumber}
+            onClose={() => setPaidOrderForPrint(null)}
           />
         </Modal>
       )}

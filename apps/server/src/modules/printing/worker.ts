@@ -84,8 +84,11 @@ export function getPrinterConfig(rawDb: Database.Database, printerId: string): E
 
 export function resolveKitchenPrinterId(rawDb: Database.Database): string {
   try {
-    const s = rawDb.prepare('SELECT print_mode, kitchen_printer_id FROM business_settings WHERE id = ?').get('default') as any;
+    const s = rawDb.prepare('SELECT print_mode, receipt_printer_id, kitchen_printer_id FROM business_settings WHERE id = ?').get('default') as any;
     if (s) {
+      if (s.print_mode === 'one') {
+        return s.receipt_printer_id || 'print_caja_usb';
+      }
       if (s.kitchen_printer_id && s.kitchen_printer_id !== 'print_caja_usb') {
         return s.kitchen_printer_id;
       }
@@ -448,7 +451,7 @@ export class PrintingWorker {
 // ============================================================================
 
 export interface EnqueueOrderPrintJobsResult {
-  cajaJobId: string;
+  cajaJobId: string | null;
   kitchenJobIds: string[];
 }
 
@@ -463,22 +466,31 @@ export function enqueueOrderPrintJobs(
   const now = Date.now();
   const { order, lines, kitchenLines } = loadOrderReceiptDataFromDb(rawDb, orderId);
 
-  const settings = rawDb.prepare('SELECT print_mode, receipt_printer_id, kitchen_printer_id FROM business_settings WHERE id = ?').get('default') as any;
+  const settings = rawDb.prepare('SELECT print_mode, receipt_printer_id, kitchen_printer_id, print_delivery_note, print_flow FROM business_settings WHERE id = ?').get('default') as any;
+  const printDeliveryNote = settings?.print_delivery_note ?? 1;
+  const printFlow = settings?.print_flow || 'manual';
+  const printMode = settings?.print_mode || 'one';
+
   const receiptPrinterId = (settings?.receipt_printer_id && settings.receipt_printer_id !== 'print_caja_usb') ? settings.receipt_printer_id : 'print_caja_usb';
   const kitchenPrinterId = resolveKitchenPrinterId(rawDb);
 
-  // 1. Generar Nota de Entrega para Caja (TicketIR y Buffer ESC/POS)
-  const receiptIR = buildReceiptTicketIR(order, lines);
-  const cajaConfig = getPrinterConfig(rawDb, receiptPrinterId);
-  const receiptBytes = Buffer.from(renderTicketToEscPos(receiptIR, cajaConfig));
+  const isUnique = printMode === 'one' || kitchenPrinterId === receiptPrinterId;
+  const initialStatus = (isUnique && printFlow === 'manual') ? 'pending' : 'en_cola';
 
-  const cajaJobId = `pjob_${generateUuidV7()}`;
-  rawDb.prepare(`
-    INSERT INTO print_jobs (
-      id, printer_id, order_id, job_type, payload_bytes,
-      ticket_ir_json, station, status, attempts, created_at_ms
-    ) VALUES (?, ?, ?, 'NOTA_ENTREGA', ?, ?, 'caja', 'en_cola', 0, ?)
-  `).run(cajaJobId, receiptPrinterId, orderId, receiptBytes, JSON.stringify(receiptIR), now);
+  let cajaJobId: string | null = null;
+  if (printDeliveryNote === 1) {
+    const receiptIR = buildReceiptTicketIR(order, lines);
+    const cajaConfig = getPrinterConfig(rawDb, receiptPrinterId);
+    const receiptBytes = Buffer.from(renderTicketToEscPos(receiptIR, cajaConfig));
+
+    cajaJobId = `pjob_${generateUuidV7()}`;
+    rawDb.prepare(`
+      INSERT INTO print_jobs (
+        id, printer_id, order_id, job_type, payload_bytes,
+        ticket_ir_json, station, status, attempts, created_at_ms
+      ) VALUES (?, ?, ?, 'NOTA_ENTREGA', ?, ?, 'caja', ?, 0, ?)
+    `).run(cajaJobId, receiptPrinterId, orderId, receiptBytes, JSON.stringify(receiptIR), initialStatus, now);
+  }
 
   // 2. Generar Comandas de Cocina por Estación
   const kitchenIRs = buildKitchenTicketIRs({ order, kitchenLines });
@@ -504,8 +516,8 @@ export function enqueueOrderPrintJobs(
       INSERT INTO print_jobs (
         id, printer_id, order_id, job_type, payload_bytes,
         ticket_ir_json, station, status, attempts, created_at_ms
-      ) VALUES (?, ?, ?, 'TICKET_COCINA', ?, ?, ?, 'en_cola', 0, ?)
-    `).run(kJobId, kitchenPrinterId, orderId, kBytes, JSON.stringify(kIR), station, now);
+      ) VALUES (?, ?, ?, 'TICKET_COCINA', ?, ?, ?, ?, 0, ?)
+    `).run(kJobId, kitchenPrinterId, orderId, kBytes, JSON.stringify(kIR), station, initialStatus, now);
 
     kitchenJobIds.push(kJobId);
   }
