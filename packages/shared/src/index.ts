@@ -9,3 +9,4 @@ export * from './utils/rbac.js';
 export * from './ticket-ir.js';
 export * from './contracts/financial-contracts.js';
 export * from './utils/change-split.js';
+export * from './utils/payment-method-currency.js';

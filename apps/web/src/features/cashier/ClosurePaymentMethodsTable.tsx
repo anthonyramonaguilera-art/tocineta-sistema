@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card } from '../../ui/index.js';
 import { getPaymentMethodHumanLabel } from './payment-labels.js';
+import { getPaymentMethodNativeCurrency } from '@tocineta/shared';
 
 interface ClosurePaymentMethodsTableProps {
   byMethod: Array<{
@@ -27,21 +28,44 @@ export const ClosurePaymentMethodsTable: React.FC<ClosurePaymentMethodsTableProp
         {byMethod && byMethod.length > 0 ? (
           <div className="space-y-2">
             <div className="grid grid-cols-12 text-[10px] font-bold uppercase tracking-wider text-ink-muted pb-1 border-b border-border">
-              <span className="col-span-6">Método</span>
-              <span className="col-span-3 text-center">Pagos</span>
-              <span className="col-span-3 text-right">Monto ($)</span>
+              <span className="col-span-4">Método</span>
+              <span className="col-span-2 text-center">Pagos</span>
+              <span className="col-span-3 text-right">Monto</span>
+              <span className="col-span-3 text-right">Equiv USD</span>
             </div>
-            {byMethod.map((m, idx) => (
-              <div key={idx} className="grid grid-cols-12 items-center text-xs py-1.5 border-b border-border/40 last:border-0">
-                <span className="col-span-6 text-ink font-medium">{m.label || getPaymentMethodHumanLabel(m.method)}</span>
-                <span className="col-span-3 text-center text-ink-muted font-mono">{m.count}</span>
-                <span className="col-span-3 text-right font-mono font-bold text-ink">${((m.totalUsdCents || 0) / 100).toFixed(2)}</span>
-              </div>
-            ))}
+            {byMethod.map((m, idx) => {
+              const native = getPaymentMethodNativeCurrency(m.method);
+              const usdStr = `$${((m.totalUsdCents || 0) / 100).toFixed(2)}`;
+              const bsAmount = m.totalBsCents ? m.totalBsCents / 100 : 0;
+              const bsStr = `Bs. ${bsAmount.toLocaleString('es-VE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+              let montoDisplay = usdStr;
+              let equivDisplay = '-';
+
+              if (native === 'BS') {
+                montoDisplay = bsStr;
+                equivDisplay = usdStr;
+              } else if (native === 'BOTH') {
+                montoDisplay = `${bsStr} / ${usdStr}`;
+                equivDisplay = usdStr;
+              } else {
+                montoDisplay = usdStr;
+                equivDisplay = usdStr;
+              }
+
+              return (
+                <div key={idx} className="grid grid-cols-12 items-center text-xs py-1.5 border-b border-border/40 last:border-0">
+                  <span className="col-span-4 text-ink font-medium">{m.label || getPaymentMethodHumanLabel(m.method)}</span>
+                  <span className="col-span-2 text-center text-ink-muted font-mono">{m.count}</span>
+                  <span className="col-span-3 text-right font-mono font-bold text-ink truncate" title={montoDisplay}>{montoDisplay}</span>
+                  <span className="col-span-3 text-right font-mono text-ink-muted">{equivDisplay}</span>
+                </div>
+              );
+            })}
             <div className="grid grid-cols-12 items-center text-xs pt-2 border-t border-border font-bold">
-              <span className="col-span-6 text-ink uppercase">Total Cobrado</span>
-              <span className="col-span-3 text-center text-ink font-mono">{totalCount}</span>
-              <span className="col-span-3 text-right font-mono font-black text-primary">${(totalByMethodUsdCents / 100).toFixed(2)}</span>
+              <span className="col-span-4 text-ink uppercase">Total Cobrado</span>
+              <span className="col-span-2 text-center text-ink font-mono">{totalCount}</span>
+              <span className="col-span-6 text-right font-mono font-black text-primary">${(totalByMethodUsdCents / 100).toFixed(2)}</span>
             </div>
           </div>
         ) : (

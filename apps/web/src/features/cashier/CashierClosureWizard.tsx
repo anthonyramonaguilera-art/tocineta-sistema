@@ -53,27 +53,35 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   const {
     data: summaryData,
     isError: isErrorSummary,
+    error: summaryError,
     refetch: refetchSummary
   } = useQuery({
     queryKey: ['z-report-summary'],
     queryFn: async () => {
-      const res = await fetch('/api/reports/z-report/summary');
+      const res = await fetch('/api/reports/z-report/summary', {
+        headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
+      });
+      const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        throw new Error('Error al consultar resumen contable');
+        const err: any = new Error(data.error || 'Error al consultar resumen contable');
+        err.status = res.status;
+        throw err;
       }
-      return res.json();
+      return data;
     }
   });
 
   if (isErrorSummary) {
+    const errObj: any = summaryError;
+    const isNoJornada = errObj?.status === 404 || errObj?.message?.toLowerCase().includes('jornada');
     return (
       <Card variant="alt" className="p-8 text-center space-y-4 border-danger/40 max-w-lg mx-auto my-8">
-        <div className="w-14 h-14 mx-auto rounded-full bg-danger/10 flex items-center justify-center text-danger">
-          <Icon name="AlertTriangle" className="w-7 h-7 text-danger" />
+        <div className={`w-14 h-14 mx-auto rounded-full flex items-center justify-center ${isNoJornada ? 'bg-warning/10 text-warning' : 'bg-danger/10 text-danger'}`}>
+          <Icon name={isNoJornada ? 'Info' : 'AlertTriangle'} className={`w-7 h-7 ${isNoJornada ? 'text-warning' : 'text-danger'}`} />
         </div>
-        <h3 className="text-xl font-black text-ink uppercase">Error al Cargar Cierre Z</h3>
+        <h3 className="text-xl font-black text-ink uppercase">{isNoJornada ? 'No hay jornada abierta' : 'Error al Cargar Cierre Z'}</h3>
         <p className="text-xs text-ink-muted">
-          No se pudieron obtener las cifras contables del servidor. Verifica la conexión o reintenta.
+          {errObj?.message || 'No se pudieron obtener las cifras contables del servidor. Verifica la conexión o reintenta.'}
         </p>
         <Button variant="primary" size="md" onClick={() => refetchSummary()} leftIcon="RotateCw">
           Reintentar
