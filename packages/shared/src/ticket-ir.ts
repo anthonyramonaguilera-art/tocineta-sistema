@@ -1,5 +1,7 @@
+import { THERMAL_LOGO_RASTER_B64 } from './thermal-logo.js';
+
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * SISTEMA OPERATIVO LOCAL TOCINETA (Varons Media)
  * Módulo de Representación Intermedia del Ticket (Ticket IR)
  * 
  * Define la estructura agnóstica de un ticket térmico y provee dos renderizadores:
@@ -272,40 +274,14 @@ class MonochromeBitmap {
   }
 }
 
-export function buildOfficialBaconLogoEscPos(): Uint8Array {
-  const bmp = new MonochromeBitmap();
-  bmp.drawHLine(0, 0, 384, 1);
-  bmp.drawHLine(0, 1, 384, 1);
-  bmp.drawHLine(0, 94, 384, 1);
-  bmp.drawHLine(0, 95, 384, 1);
-  bmp.drawVLine(0, 0, 96, 1);
-  bmp.drawVLine(1, 0, 96, 1);
-  bmp.drawVLine(382, 0, 96, 1);
-  bmp.drawVLine(383, 0, 96, 1);
-
-  // Banda invertida central con el nombre oficial
-  bmp.fillRect(16, 8, 352, 28, 1);
-  bmp.drawText('TOCINETA SONRIE', 58, 12, 3, true);
-
-  // Mascota: tocineta sinuosa sonriente
-  for (let x = 135; x <= 249; x++) {
-    const wave = Math.round(Math.sin((x - 135) * 0.12) * 4);
-    bmp.fillRect(x, 48 + wave, 1, 4, 1);
-    bmp.fillRect(x, 56 + wave, 1, 5, 1);
-    bmp.fillRect(x, 65 + wave, 1, 4, 1);
-  }
-  bmp.fillRect(180, 52, 3, 3, 1);
-  bmp.fillRect(202, 52, 3, 3, 1);
-  bmp.fillRect(183, 60, 2, 2, 1);
-  bmp.fillRect(185, 62, 14, 2, 1);
-  bmp.fillRect(199, 60, 2, 2, 1);
-
-  bmp.drawText('* *', 55, 52, 2, false);
-  bmp.drawText('* *', 290, 52, 2, false);
-  bmp.drawText('* FOOD TRUCK - SISTEMA LOCAL *', 50, 78, 1, false);
-
-  return bmp.toRasterCommand();
+export function buildTocinetaLogoEscPos(): Uint8Array {
+  void MonochromeBitmap;
+  // @ts-ignore
+  return new Uint8Array((globalThis as any).Buffer.from(THERMAL_LOGO_RASTER_B64, 'base64'));
 }
+
+/** @deprecated Use buildTocinetaLogoEscPos */
+export const buildOfficialBaconLogoEscPos = buildTocinetaLogoEscPos;
 
 // ============================================================================
 // RENDERIZADOR 1: VISTA PREVIA HTML EN PANTALLA
@@ -343,12 +319,7 @@ export function renderTicketToHtml(ir: TicketIR): string {
       case 'header_logo': {
         parts.push(`
   <div style="text-align: center; margin-bottom: 8px;">
-    <div style="background: #0b0d11; color: #ffffff; font-weight: 900; font-size: 15px; padding: 6px 4px; letter-spacing: 1px; border-radius: 2px;">
-      TOCINETA SONR&Iacute;E
-    </div>
-    <div style="font-size: 10px; color: #333; margin-top: 3px; font-weight: bold;">
-      &#9733; FOOD TRUCK &bull; SISTEMA LOCAL &#9733;
-    </div>
+    <img src="/brand/logo-light.png" alt="TOCINETA" style="max-width: 100%; height: auto; display: block; margin: 0 auto;" />
   </div>
 `);
         break;
@@ -508,7 +479,7 @@ export function renderTicketToEscPos(
     ir = {
       widthColumns: config?.columns || 32,
       blocks: [
-        { type: 'text', text: 'TOCINETA SONRÍE - JALAPEÑOS - MAÍZ - HAMBURGUESA CLÁSICA' },
+        { type: 'text', text: 'TOCINETA - JALAPEÑOS - MAÍZ - HAMBURGUESA CLÁSICA' },
         { type: 'cut' }
       ]
     };

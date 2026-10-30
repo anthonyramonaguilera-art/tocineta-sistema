@@ -8,7 +8,7 @@ import {
 
 describe('Ticket IR - Representación Intermedia, HTML y ESC/POS (@tocineta/shared)', () => {
   const sampleIR: TicketIR = {
-    title: 'Nota de Entrega Tocineta Sonríe',
+    title: 'Nota de Entrega Tocineta',
     widthColumns: 32,
     blocks: [
       { type: 'header_logo' },
