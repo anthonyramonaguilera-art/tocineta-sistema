@@ -17,6 +17,10 @@ export interface BusinessSettings {
   inventory_operation_mode?: string;
   inventory_tracking_since_ms?: number | null;
   print_mode?: string;
+  print_delivery_note?: number;
+  print_flow?: string;
+  kitchen_printer_id?: string;
+  receipt_printer_id?: string;
   banesco_pago_movil_phone: string;
   banesco_pago_movil_id: string;
   pos_fee_bps: number;

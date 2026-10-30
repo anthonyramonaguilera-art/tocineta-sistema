@@ -29,8 +29,8 @@ interface WindowsPrinter {
 
 export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
   const queryClient = useQueryClient();
-  const [testResults, setTestResults] = useState<Record<string, { diagnostic: string; message?: string; simulated?: boolean }>>({});
-  const [testErrors, setTestErrors] = useState<Record<string, string>>({});
+  const [_testResults, setTestResults] = useState<Record<string, { diagnostic: string; message?: string; simulated?: boolean }>>({});
+  const [_testErrors, setTestErrors] = useState<Record<string, string>>({});
   const [actionError, setActionError] = useState<string | null>(null);
 
   const { data: printersRes, isLoading: isLoadingPrinters } = useQuery<{ success: boolean; data: PrinterItem[] }>({
@@ -42,7 +42,7 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
     }
   });
 
-  const { data: windowsPrinters = [], isLoading: isLoadingWindows } = useQuery<WindowsPrinter[]>({
+  const { data: windowsPrinters = [], isLoading: _isLoadingWindows } = useQuery<WindowsPrinter[]>({
     queryKey: ['windowsPrinters'],
     queryFn: async () => {
       const res = await fetch('/api/printers/windows');

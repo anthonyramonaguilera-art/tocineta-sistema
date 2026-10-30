@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Badge, Input, Field, WizardLayout, Icon } from '../../ui/index.js';
-import { getPaymentMethodHumanLabel } from './payment-labels.js';
+import { ClosurePaymentMethodsTable } from './ClosurePaymentMethodsTable.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
 
 interface CashierClosureWizardProps {
@@ -228,19 +228,7 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
               )}
 
               {/* Métodos de pago desglosados */}
-              <Card variant="surface" className="p-4 space-y-2 border-border">
-                <span className="text-xs font-bold uppercase tracking-wider text-ink-muted block">Desglose por método</span>
-                {summary.byMethod && summary.byMethod.length > 0 ? (
-                  summary.byMethod.map((m: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center text-sm py-1.5 border-b border-border/40 last:border-0">
-                      <span className="text-ink font-medium">{getPaymentMethodHumanLabel(m.method)} ({m.count} pagos)</span>
-                      <span className="font-mono font-bold text-ink">${(m.totalUsdCents / 100).toFixed(2)}</span>
-                    </div>
-                  ))
-                ) : (
-                  <p className="text-xs text-ink-muted py-2">No hay transacciones registradas aún en este turno.</p>
-                )}
-              </Card>
+              <ClosurePaymentMethodsTable byMethod={summary.byMethod} receivablesUsdCents={summary.receivablesUsdCents} />
 
               {/* Desglose por sede si existe */}
               {summary.bySede && summary.bySede.length > 0 && (

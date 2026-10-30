@@ -786,6 +786,23 @@ export function loadOrderReceiptDataFromDb(
   };
 }
 
+export function getPaymentMethodHumanLabel(method: string): string {
+  const m = (method || '').toUpperCase().trim();
+  switch (m) {
+    case 'EFECTIVO_USD': case 'CASH_USD': case 'USD': return 'Efectivo USD';
+    case 'EFECTIVO_BS': case 'CASH_BS': case 'BS': return 'Efectivo Bs';
+    case 'PAGO_MOVIL': case 'PAGOMOVIL': return 'Pago Móvil';
+    case 'PUNTO_DE_VENTA': return 'Punto de Venta';
+    case 'UBII': return 'Ubii';
+    case 'BINANCE': case 'USDT': return 'Binance';
+    case 'ZELLE': return 'Zelle';
+    case 'OTROS': case 'OTRO': return 'Otros';
+    case 'TARJETA': return 'Tarjeta';
+    case 'CREDITO': return 'Crédito';
+    default: return method;
+  }
+}
+
 export interface ZReportData {
   jornadaId: string;
   openedAtMs: number;
@@ -810,6 +827,14 @@ export interface ZReportData {
   ordersCount: number;
   auditHeadHash: string;
   fiscalSettings?: FiscalSettings;
+  byMethod?: Array<{
+    method: string;
+    label: string;
+    count: number;
+    grossUsdCents: number;
+    grossBsCents: number;
+  }>;
+  receivablesUsdCents?: number;
 }
 
 /**
@@ -929,6 +954,39 @@ export function buildZReportTicketIR(data: ZReportData, settings?: FiscalSetting
       type: 'key_value',
       key: 'Zelle USD:',
       value: `$${(data.zelleUsdCents / 100).toFixed(2)}`
+    });
+  }
+
+  // Cobrado por Método (Desglose por todos los métodos de pago)
+  if (data.byMethod && data.byMethod.length > 0) {
+    blocks.push({ type: 'separator', style: 'single' });
+    blocks.push({
+      type: 'banner_inverted',
+      text: 'COBRADO POR MÉTODO'
+    });
+    for (const m of data.byMethod) {
+      const isUsdNative = m.method === 'EFECTIVO_USD' || m.method === 'BINANCE' || m.method === 'ZELLE' || (m.grossBsCents === 0 && m.grossUsdCents > 0);
+      let valStr = '';
+      if (isUsdNative) {
+        const bsEq = Math.round((m.grossUsdCents * data.rateMicroBs) / 1_000_000);
+        valStr = `$${(m.grossUsdCents / 100).toFixed(2)} (Bs ${(bsEq / 100).toFixed(2)})`;
+      } else {
+        valStr = `Bs ${(m.grossBsCents / 100).toFixed(2)} ($${(m.grossUsdCents / 100).toFixed(2)})`;
+      }
+      blocks.push({
+        type: 'key_value',
+        key: `${m.label}:`,
+        value: valStr
+      });
+    }
+  }
+
+  if (data.receivablesUsdCents && data.receivablesUsdCents > 0) {
+    const recBsEq = Math.round((data.receivablesUsdCents * data.rateMicroBs) / 1_000_000);
+    blocks.push({
+      type: 'key_value',
+      key: 'Ventas a crédito (por cobrar):',
+      value: `$${(data.receivablesUsdCents / 100).toFixed(2)} (Bs ${(recBsEq / 100).toFixed(2)})`
     });
   }
 

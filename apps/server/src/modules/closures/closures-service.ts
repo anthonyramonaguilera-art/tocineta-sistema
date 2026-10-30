@@ -2,7 +2,7 @@ import type Database from 'better-sqlite3';
 import { generateUuidV7, renderTicketToEscPos } from '@tocineta/shared';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
-import { buildZReportTicketIR, type ZReportData } from '../printing/templates.js';
+import { buildZReportTicketIR, getPaymentMethodHumanLabel, type ZReportData } from '../printing/templates.js';
 import { getPrinterConfig } from '../printing/worker.js';
 import { createEncryptedBackup } from '../backups/backup-service.js';
 import { getFinancialTruth } from '../finances/financial-truth-service.js';
@@ -323,6 +323,15 @@ export function closeJornadaZ(
   `).get() as { entry_hash: string } | undefined;
   const auditHeadHash = lastAudit?.entry_hash || 'GENESIS_AUDIT_HASH';
 
+  const byMethod = ft.collectedByMethod.map(m => ({
+    method: m.method,
+    label: getPaymentMethodHumanLabel(m.method),
+    count: m.count,
+    grossUsdCents: m.grossUsdCents,
+    grossBsCents: m.grossBsCents
+  }));
+  const receivablesUsdCents = ft.receivables.totalUsdCents;
+
   const zReportData: ZReportData = {
     jornadaId,
     openedAtMs: jornada.opened_at_ms,
@@ -345,7 +354,9 @@ export function closeJornadaZ(
     expensesUsdCents,
     mermasLossUsdCents: mermasUsdCents,
     ordersCount,
-    auditHeadHash
+    auditHeadHash,
+    byMethod,
+    receivablesUsdCents
   };
 
   // 5. Guardar estado de cierre en base de datos
