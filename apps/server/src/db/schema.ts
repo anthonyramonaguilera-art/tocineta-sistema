@@ -218,6 +218,8 @@ export const businessSettings = sqliteTable('business_settings', {
   inventoryOperationMode: text('inventory_operation_mode').notNull().default('free'),
   inventoryTrackingSinceMs: integer('inventory_tracking_since_ms'),
   printMode: text('print_mode').notNull().default('one'),
+  receiptPrinterId: text('receipt_printer_id').notNull().default('print_caja_usb'),
+  kitchenPrinterId: text('kitchen_printer_id').notNull().default('print_caja_usb'),
   updatedAtMs: integer('updated_at_ms').notNull()
 });
 

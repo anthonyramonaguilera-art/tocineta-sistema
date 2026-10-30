@@ -84,9 +84,14 @@ export function getPrinterConfig(rawDb: Database.Database, printerId: string): E
 
 export function resolveKitchenPrinterId(rawDb: Database.Database): string {
   try {
-    const s = rawDb.prepare('SELECT print_mode FROM business_settings WHERE id = ?').get('default') as any;
-    if (s && s.print_mode === 'two') {
-      return 'print_cocina';
+    const s = rawDb.prepare('SELECT print_mode, kitchen_printer_id FROM business_settings WHERE id = ?').get('default') as any;
+    if (s) {
+      if (s.kitchen_printer_id && s.kitchen_printer_id !== 'print_caja_usb') {
+        return s.kitchen_printer_id;
+      }
+      if (s.print_mode === 'two') {
+        return 'print_cocina';
+      }
     }
     return 'print_caja_usb';
   } catch {
@@ -458,9 +463,13 @@ export function enqueueOrderPrintJobs(
   const now = Date.now();
   const { order, lines, kitchenLines } = loadOrderReceiptDataFromDb(rawDb, orderId);
 
+  const settings = rawDb.prepare('SELECT print_mode, receipt_printer_id, kitchen_printer_id FROM business_settings WHERE id = ?').get('default') as any;
+  const receiptPrinterId = (settings?.receipt_printer_id && settings.receipt_printer_id !== 'print_caja_usb') ? settings.receipt_printer_id : 'print_caja_usb';
+  const kitchenPrinterId = resolveKitchenPrinterId(rawDb);
+
   // 1. Generar Nota de Entrega para Caja (TicketIR y Buffer ESC/POS)
   const receiptIR = buildReceiptTicketIR(order, lines);
-  const cajaConfig = getPrinterConfig(rawDb, 'print_caja_usb');
+  const cajaConfig = getPrinterConfig(rawDb, receiptPrinterId);
   const receiptBytes = Buffer.from(renderTicketToEscPos(receiptIR, cajaConfig));
 
   const cajaJobId = `pjob_${generateUuidV7()}`;
@@ -468,19 +477,28 @@ export function enqueueOrderPrintJobs(
     INSERT INTO print_jobs (
       id, printer_id, order_id, job_type, payload_bytes,
       ticket_ir_json, station, status, attempts, created_at_ms
-    ) VALUES (?, 'print_caja_usb', ?, 'NOTA_ENTREGA', ?, ?, 'caja', 'en_cola', 0, ?)
-  `).run(cajaJobId, orderId, receiptBytes, JSON.stringify(receiptIR), now);
+    ) VALUES (?, ?, ?, 'NOTA_ENTREGA', ?, ?, 'caja', 'en_cola', 0, ?)
+  `).run(cajaJobId, receiptPrinterId, orderId, receiptBytes, JSON.stringify(receiptIR), now);
 
   // 2. Generar Comandas de Cocina por Estación
   const kitchenIRs = buildKitchenTicketIRs({ order, kitchenLines });
   const kitchenJobIds: string[] = [];
-  const kitchenPrinterId = resolveKitchenPrinterId(rawDb);
   const cocinaConfig = getPrinterConfig(rawDb, kitchenPrinterId);
 
   for (const kIR of kitchenIRs) {
     const kJobId = `pjob_${generateUuidV7()}`;
     const kBytes = Buffer.from(renderTicketToEscPos(kIR, cocinaConfig));
-    const station = kIR.title?.toLowerCase().includes('hot dog') ? 'hot_dogs' : 'hamburguesas';
+    
+    // Determinar la estación usando la estación de las líneas del ticket en lugar de title.includes('hot dog')
+    let station = 'hamburguesas';
+    const lineItemBlocks = kIR.blocks.filter(b => b.type === 'line_item');
+    for (const block of lineItemBlocks) {
+      const matchingLine = kitchenLines.find(l => l.productName === block.name);
+      if (matchingLine && matchingLine.station) {
+        station = matchingLine.station;
+        break;
+      }
+    }
 
     rawDb.prepare(`
       INSERT INTO print_jobs (

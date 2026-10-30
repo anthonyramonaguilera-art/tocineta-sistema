@@ -34,6 +34,8 @@ export interface BusinessSettingsRecord {
   inventory_operation_mode: string;
   inventory_tracking_since_ms: number | null;
   print_mode: string;
+  receipt_printer_id: string;
+  kitchen_printer_id: string;
   is_demo_mode?: number;
   updated_at_ms: number;
 }
@@ -72,6 +74,8 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettingsRecord = {
   inventory_operation_mode: 'free',
   inventory_tracking_since_ms: null,
   print_mode: 'one',
+  receipt_printer_id: 'print_caja_usb',
+  kitchen_printer_id: 'print_caja_usb',
   is_demo_mode: 0,
   updated_at_ms: Date.now()
 };
@@ -95,7 +99,7 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
           profitability_pro_enabled, fiscal_module_enabled, fiscal_price_mode,
           iva_enabled, iva_rate_bps, igtf_enabled, igtf_rate_bps, igtf_applies_to,
           blind_closure_enabled, partners_module_enabled, events_quote_enabled,
-          onboarding_completed, ask_table_on_order, inventory_operation_mode, inventory_tracking_since_ms, print_mode, updated_at_ms
+          onboarding_completed, ask_table_on_order, inventory_operation_mode, inventory_tracking_since_ms, print_mode, receipt_printer_id, kitchen_printer_id, updated_at_ms
         ) VALUES (
           'default', 'TOCINETA', 'V-17040918-0', '04249728209', 'Detrás de Torre Movistar, Puerto Ordaz',
           'Cocinamos con amor y servimos como mereces', NULL, '#EAB308',
@@ -104,7 +108,7 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
           '04249728209', '17040918', 75,
           0, 0, 'INCLUSIVE',
           0, 1600, 0, 300, 'CASH_USD',
-          0, 0, 1, 1, 0, 'free', NULL, 'one', ?
+          0, 0, 1, 1, 0, 'free', NULL, 'one', 'print_caja_usb', 'print_caja_usb', ?
         )
       `).run(now);
 
@@ -145,6 +149,8 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
       inventory_operation_mode: existing.inventory_operation_mode || DEFAULT_BUSINESS_SETTINGS.inventory_operation_mode,
       inventory_tracking_since_ms: existing.inventory_tracking_since_ms !== undefined ? existing.inventory_tracking_since_ms : DEFAULT_BUSINESS_SETTINGS.inventory_tracking_since_ms,
       print_mode: existing.print_mode || DEFAULT_BUSINESS_SETTINGS.print_mode,
+      receipt_printer_id: existing.receipt_printer_id || DEFAULT_BUSINESS_SETTINGS.receipt_printer_id,
+      kitchen_printer_id: existing.kitchen_printer_id || DEFAULT_BUSINESS_SETTINGS.kitchen_printer_id,
       is_demo_mode: existing.is_demo_mode ?? 0,
       updated_at_ms: existing.updated_at_ms || Date.now()
     };
