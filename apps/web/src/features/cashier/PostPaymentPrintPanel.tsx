@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Icon } from '../../ui/index.js';
+import { apiFetch } from '../../api/client.js';
 
 interface PrintJobItem {
   id: string;
@@ -30,7 +31,7 @@ export const PostPaymentPrintPanel: React.FC<PostPaymentPrintPanelProps> = ({
   const { data: jobsRes, isLoading } = useQuery<{ data: PrintJobItem[] }>({
     queryKey: ['pendingPrintJobs', orderId],
     queryFn: async () => {
-      const res = await fetch(`/api/print-jobs?orderId=${orderId}&limit=20`, {
+      const res = await apiFetch(`/api/print-jobs?orderId=${orderId}&limit=20`, {
         headers: token ? { Authorization: `Bearer ${token}` } : {}
       });
       if (!res.ok) throw new Error('Error al cargar trabajos de impresion');
@@ -57,7 +58,7 @@ export const PostPaymentPrintPanel: React.FC<PostPaymentPrintPanelProps> = ({
     setPrintingStatus(prev => ({ ...prev, [jobId]: 'printing' }));
     setActionError(null);
     try {
-      const res = await fetch(`/api/print-jobs/${jobId}/release`, {
+      const res = await apiFetch(`/api/print-jobs/${jobId}/release`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

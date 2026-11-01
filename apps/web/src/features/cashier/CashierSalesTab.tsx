@@ -5,6 +5,7 @@ import { getPaymentMethodHumanLabel } from './payment-labels.js';
 import { formatTableLabel } from '../../lib/format.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
 import { CashierReprintModal } from './CashierReprintModal.js';
+import { apiFetch } from '../../api/client.js';
 
 interface PaidSale {
   orderId: string;
@@ -59,7 +60,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
     setReprintError(null);
 
     try {
-      const jobsRes = await fetch(`/api/print-jobs?orderId=${reprintingSale.orderId}`);
+      const jobsRes = await apiFetch(`/api/print-jobs?orderId=${reprintingSale.orderId}`);
       const jobsData = await jobsRes.json();
       if (!jobsRes.ok) {
         throw new Error(jobsData.message || 'Error al buscar trabajos de impresión');
@@ -72,7 +73,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
         throw new Error('No se encontró ningún trabajo de impresión registrado para esta orden');
       }
 
-      const res = await fetch(`/api/print-jobs/${targetJob.id}/reprint`, {
+      const res = await apiFetch(`/api/print-jobs/${targetJob.id}/reprint`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -104,7 +105,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
     setVoidError(null);
 
     try {
-      const res = await fetch(`/api/orders/${voidingSale.orderId}/void`, {
+      const res = await apiFetch(`/api/orders/${voidingSale.orderId}/void`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -141,7 +142,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
     }
 
     try {
-      const res = await fetch('/api/cash-expenses', {
+      const res = await apiFetch('/api/cash-expenses', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

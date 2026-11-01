@@ -5,6 +5,7 @@ import { PaymentWizard } from './PaymentWizard.js';
 import { PostPaymentPrintModal } from './PostPaymentPrintModal.js';
 import { hasPendingPrintJobs } from './fetchPendingPrintJobs.js';
 import { formatTableLabel } from '../../lib/format.js';
+import { apiFetch } from '../../api/client.js';
 
 interface CashierOrdersTabProps {
   orders: CashierOrder[];
@@ -41,7 +42,7 @@ export const CashierOrdersTab: React.FC<CashierOrdersTabProps> = ({
     setCancelError(null);
 
     try {
-      const res = await fetch(`/api/orders/${cancelingOrder.id}/cancel`, {
+      const res = await apiFetch(`/api/orders/${cancelingOrder.id}/cancel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ reason: cancelReason.trim() })

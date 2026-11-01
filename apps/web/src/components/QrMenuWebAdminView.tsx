@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Button, Badge, Icon } from '../ui/index.js';
 import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
+import { apiFetch } from '../api/client.js';
 
 export const QrMenuWebAdminView: React.FC = () => {
   const [customDomain, setCustomDomain] = useState(() => {
@@ -20,7 +21,7 @@ export const QrMenuWebAdminView: React.FC = () => {
   const { data: qrMenuRes, isLoading } = useQuery({
     queryKey: ['publicQrMenu'],
     queryFn: async () => {
-      const res = await fetch('/api/qr-menu');
+      const res = await apiFetch('/api/qr-menu');
       if (!res.ok) throw new Error('Error al cargar menú digital');
       return res.json();
     },

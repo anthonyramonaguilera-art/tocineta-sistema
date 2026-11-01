@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Badge, Input, Field, WizardLayout, Icon } from '../../ui/index.js';
 import { ClosurePaymentMethodsTable } from './ClosurePaymentMethodsTable.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
+import { apiFetch } from '../../api/client.js';
 
 interface CashierClosureWizardProps {
   onClosureCompleted: () => void;
@@ -29,7 +30,7 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   const { data: settingsData } = useQuery({
     queryKey: ['business-settings'],
     queryFn: async () => {
-      const res = await fetch('/api/business-settings');
+      const res = await apiFetch('/api/business-settings');
       if (!res.ok) return { success: false, settings: { blindClosureEnabled: false } };
       return res.json();
     }
@@ -41,7 +42,7 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   const { data: jornadaData } = useQuery({
     queryKey: ['current-jornada'],
     queryFn: async () => {
-      const res = await fetch('/api/jornadas/current');
+      const res = await apiFetch('/api/jornadas/current');
       if (!res.ok) return { jornada: null };
       return res.json();
     }
@@ -58,7 +59,7 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   } = useQuery({
     queryKey: ['z-report-summary'],
     queryFn: async () => {
-      const res = await fetch('/api/reports/z-report/summary', {
+      const res = await apiFetch('/api/reports/z-report/summary', {
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       });
       const data = await res.json().catch(() => ({}));
@@ -119,7 +120,7 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
         setIsSubmitting(false);
         return;
       }
-      const res = await fetch(`/api/jornadas/${jornadaId}/close`, {
+      const res = await apiFetch(`/api/jornadas/${jornadaId}/close`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

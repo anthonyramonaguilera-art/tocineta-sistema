@@ -7,6 +7,7 @@ import { PaymentWizardStep2 } from './PaymentWizardStep2.js';
 import { PaymentWizardStep3 } from './PaymentWizardStep3.js';
 import { formatTableLabel } from '../../lib/format.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
+import { apiFetch } from '../../api/client.js';
 
 export interface PaymentWizardProps {
   order: CashierOrder;
@@ -155,7 +156,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
     }
 
     try {
-      const res = await fetch(`/api/orders/${order.id}/pay`, {
+      const res = await apiFetch(`/api/orders/${order.id}/pay`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body)

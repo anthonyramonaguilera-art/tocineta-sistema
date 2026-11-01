@@ -8,6 +8,7 @@ import { AppLayout } from './components/AppLayout.js';
 import { PosView } from './components/PosView.js';
 import { ViewErrorBoundary } from './components/ViewErrorBoundary.js';
 import { Icon, Button, useLoadState } from './ui/index.js';
+import { apiFetch } from './api/client.js';
 
 // Vistas Lazy
 const CashierView = React.lazy(() => import('./features/cashier/CashierView.js').then(m => ({ default: m.CashierView })));
@@ -173,7 +174,7 @@ const MainNavigator: React.FC = () => {
   const { data: menuData } = useQuery<{ formattedRate?: string }>({
     queryKey: ['posMenu'],
     queryFn: async () => {
-      const res = await fetch('/api/menu/pos');
+      const res = await apiFetch('/api/menu/pos');
       return res.json();
     },
     staleTime: 10000

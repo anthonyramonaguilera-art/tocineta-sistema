@@ -10,6 +10,7 @@ import { CashierClosureWizard } from './CashierClosureWizard.js';
 import { CashierShiftOpeningModal } from './CashierShiftOpeningModal.js';
 import { Tabs, Button, Card, Badge, Icon } from '../../ui/index.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
+import { apiFetch } from '../../api/client.js';
 
 export const CashierView: React.FC = () => {
   const { user, token } = useAuth();
@@ -29,7 +30,7 @@ export const CashierView: React.FC = () => {
   } = useQuery<{ success: boolean; orders: CashierOrder[]; rateMicroBs?: number }>({
     queryKey: ['cashier-orders'],
     queryFn: async () => {
-      const res = await fetch('/api/orders/unpaid');
+      const res = await apiFetch('/api/orders/unpaid');
       if (!res.ok) throw new Error('Error al consultar comandas pendientes');
       return res.json();
     },
@@ -44,7 +45,7 @@ export const CashierView: React.FC = () => {
   } = useQuery<CashSalesResponse>({
     queryKey: ['cashier-sales'],
     queryFn: async () => {
-      const res = await fetch('/api/cash-sessions/current/sales');
+      const res = await apiFetch('/api/cash-sessions/current/sales');
       if (!res.ok) return { success: true, sales: [], totalCollectedUsdCents: 0, totalOrders: 0 };
       return res.json();
     },
@@ -56,7 +57,7 @@ export const CashierView: React.FC = () => {
   const { data: menuData } = useQuery<{ rateMicroBs: number; formattedRate: string }>({
     queryKey: ['pos-menu-rate'],
     queryFn: async () => {
-      const res = await fetch('/api/menu/pos');
+      const res = await apiFetch('/api/menu/pos');
       if (!res.ok) return { rateMicroBs: 40000000, formattedRate: '40.00' };
       return res.json();
     }

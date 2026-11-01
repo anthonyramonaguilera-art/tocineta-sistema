@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Modal, Button, Input, Field, Icon } from '../../ui/index.js';
+import { apiFetch } from '../../api/client.js';
 
 interface CashierShiftOpeningModalProps {
   isOpen: boolean;
@@ -27,7 +28,7 @@ export const CashierShiftOpeningModal: React.FC<CashierShiftOpeningModalProps> =
     const bsCents = Math.round(parseFloat(openingCashBs || '0') * 100);
 
     try {
-      const res = await fetch('/api/cash-sessions/open', {
+      const res = await apiFetch('/api/cash-sessions/open', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

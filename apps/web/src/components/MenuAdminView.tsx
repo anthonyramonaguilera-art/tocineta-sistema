@@ -16,6 +16,7 @@ import {
 import { Icon } from '../ui/Icon.js';
 import { LoadBoundary } from '../ui/LoadBoundary.js';
 import { useLoadState } from '../ui/useLoadState.js';
+import { apiFetch } from '../api/client.js';
 
 export const MenuAdminView: React.FC = () => {
   const { token } = useAuth();
@@ -32,7 +33,7 @@ export const MenuAdminView: React.FC = () => {
   const { data: suppliesData } = useQuery<{ supplies: any[] }>({
     queryKey: ['profitabilitySupplies'],
     queryFn: async () => {
-      const res = await fetch('/api/fase3/supplies');
+      const res = await apiFetch('/api/fase3/supplies');
       if (!res.ok) return { supplies: [] };
       return res.json();
     }
@@ -41,7 +42,7 @@ export const MenuAdminView: React.FC = () => {
   // Mutación: Aplicar Precio Sugerido en Menú
   const applySuggestedPriceMutation = useMutation({
     mutationFn: async ({ productId, priceUsdCents }: { productId: string; priceUsdCents: number }) => {
-      const res = await fetch(`/api/menu/products/${productId}`, {
+      const res = await apiFetch(`/api/menu/products/${productId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -91,7 +92,7 @@ export const MenuAdminView: React.FC = () => {
   const { data: adminMenu, isLoading, isError, error, refetch } = useQuery<AdminMenuResponse>({
     queryKey: ['adminMenu', token],
     queryFn: async () => {
-      const res = await fetch('/api/menu/admin', {
+      const res = await apiFetch('/api/menu/admin', {
         headers: { authorization: `Bearer ${token}` }
       });
       if (!res.ok) throw new Error('Error al consultar catálogo de administración');
@@ -111,7 +112,7 @@ export const MenuAdminView: React.FC = () => {
   // Mutación: Toggle Disponibilidad Producto (Agotado/Disponible)
   const toggleAvailabilityMutation = useMutation({
     mutationFn: async ({ productId, isAvailable }: { productId: string; isAvailable: boolean }) => {
-      const res = await fetch(`/api/menu/products/${productId}/availability`, {
+      const res = await apiFetch(`/api/menu/products/${productId}/availability`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -130,7 +131,7 @@ export const MenuAdminView: React.FC = () => {
   // Mutación: Toggle Disponibilidad Sabor
   const toggleFlavorMutation = useMutation({
     mutationFn: async ({ flavorId, isAvailable }: { flavorId: string; isAvailable: boolean }) => {
-      const res = await fetch(`/api/menu/flavors/${flavorId}/availability`, {
+      const res = await apiFetch(`/api/menu/flavors/${flavorId}/availability`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -156,7 +157,7 @@ export const MenuAdminView: React.FC = () => {
 
       if (editingProduct) {
         // Actualizar
-        const res = await fetch(`/api/menu/products/${editingProduct.id}`, {
+        const res = await apiFetch(`/api/menu/products/${editingProduct.id}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -174,7 +175,7 @@ export const MenuAdminView: React.FC = () => {
         if (!d.success) throw new Error(d.error);
       } else {
         // Crear
-        const res = await fetch('/api/menu/products', {
+        const res = await apiFetch('/api/menu/products', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -196,7 +197,7 @@ export const MenuAdminView: React.FC = () => {
 
       // Si se cargó foto, subirla
       if (photoBase64 && savedProductId) {
-        await fetch(`/api/menu/products/${savedProductId}/photo`, {
+        await apiFetch(`/api/menu/products/${savedProductId}/photo`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -216,7 +217,7 @@ export const MenuAdminView: React.FC = () => {
   // Mutación: Actualizar Tasa BCV
   const updateRateMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/menu/exchange-rate', {
+      const res = await apiFetch('/api/menu/exchange-rate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -257,7 +258,7 @@ export const MenuAdminView: React.FC = () => {
         payload.courtesyProductId = 'prod_cafe_cortesia';
       }
 
-      const res = await fetch('/api/menu/coupons', {
+      const res = await apiFetch('/api/menu/coupons', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -279,7 +280,7 @@ export const MenuAdminView: React.FC = () => {
   // Mutación: Toggle Cupón
   const toggleCouponMutation = useMutation({
     mutationFn: async (couponId: string) => {
-      const res = await fetch(`/api/menu/coupons/${couponId}`, {
+      const res = await apiFetch(`/api/menu/coupons/${couponId}`, {
         method: 'PATCH',
         headers: { authorization: `Bearer ${token}` }
       });
@@ -293,7 +294,7 @@ export const MenuAdminView: React.FC = () => {
   // Mutación: Eliminar Cupón
   const deleteCouponMutation = useMutation({
     mutationFn: async (couponId: string) => {
-      const res = await fetch(`/api/menu/coupons/${couponId}`, {
+      const res = await apiFetch(`/api/menu/coupons/${couponId}`, {
         method: 'DELETE',
         headers: { authorization: `Bearer ${token}` }
       });
@@ -307,7 +308,7 @@ export const MenuAdminView: React.FC = () => {
   // Mutación: Crear Categoría
   const createCategoryMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/menu/categories', {
+      const res = await apiFetch('/api/menu/categories', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -389,7 +390,7 @@ export const MenuAdminView: React.FC = () => {
     try {
       if (editingProduct?.id) {
         const body = selectedExistingIng ? { ingredientId: selectedExistingIng } : { name: newIngName.trim() };
-        const res = await fetch(`/api/menu/products/${editingProduct.id}/ingredients`, {
+        const res = await apiFetch(`/api/menu/products/${editingProduct.id}/ingredients`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -439,7 +440,7 @@ export const MenuAdminView: React.FC = () => {
     if (editingProduct?.id) {
       try {
         const targetId = ing.ingredientId || ing.id;
-        const res = await fetch(`/api/menu/products/${editingProduct.id}/ingredients/${targetId}`, {
+        const res = await apiFetch(`/api/menu/products/${editingProduct.id}/ingredients/${targetId}`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',
@@ -1200,7 +1201,7 @@ export const MenuAdminView: React.FC = () => {
               onClick={async () => {
                 setIsSyncingBcv(true);
                 try {
-                  const res = await fetch('/api/menu/exchange-rate/sync-now', {
+                  const res = await apiFetch('/api/menu/exchange-rate/sync-now', {
                     method: 'POST',
                     headers: { authorization: `Bearer ${token}` }
                   });
