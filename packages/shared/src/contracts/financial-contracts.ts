@@ -5,8 +5,12 @@ export const PaymentMethodEnum = z.enum([
   'EFECTIVO_BS',
   'PAGO_MOVIL',
   'PUNTO_DE_VENTA',
+  'UBII',
+  'TRANSFERENCIA',
   'TARJETA',
   'BINANCE',
+  'ZELLE',
+  'OTROS',
   'OTRO'
 ]);
 export type PaymentMethod = z.infer<typeof PaymentMethodEnum>;
@@ -45,11 +49,14 @@ export const ZSummaryResponseSchema = z.object({
     cashUsdCents: z.number().int(),
     cashBsCents: z.number().int(),
     pagoMovilBsCents: z.number().int(),
+    puntoDeVentaBsCents: z.number().int().default(0),
     ubiiGrossBsCents: z.number().int(),
     ubiiFeeBsCents: z.number().int(),
     ubiiNetBsCents: z.number().int(),
+    transferenciaBsCents: z.number().int().default(0),
     binanceUsdCents: z.number().int(),
     zelleUsdCents: z.number().int(),
+    otrosUsdCents: z.number().int().default(0),
     expensesUsdCents: z.number().int(),
     mermasUsdCents: z.number().int(),
     ordersCount: z.number().int(),
