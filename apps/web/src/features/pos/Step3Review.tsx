@@ -161,6 +161,7 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
                           className="px-1.5 py-0.5 rounded-md bg-surface-alt border border-border text-[10px] font-bold text-ink-muted"
                         >
                           {m.modifierType === 'SIN_INGREDIENTE' && `Sin ${m.ingredientName}`}
+                          {m.modifierType === 'POCO_INGREDIENTE' && `Poco ${m.ingredientName}`}
                           {m.modifierType === 'EXTRA_INGREDIENTE' && `Extra ${m.ingredientName} (+$${(m.extraPriceUsdCents / 100).toFixed(2)})`}
                           {m.modifierType === 'BARRA_LIBRE' && `+ ${m.ingredientName}`}
                         </span>
