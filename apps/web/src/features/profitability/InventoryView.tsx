@@ -4,6 +4,7 @@ import { Card, Button, Input, Icon, Badge } from '../../ui/index.js';
 import { TransferModal } from './components/TransferModal.js';
 import { NewSupplyModal } from './components/NewSupplyModal.js';
 import { ProductionModal } from './components/ProductionModal.js';
+import { apiFetch } from '../../api/client.js';
 
 interface SupplyItemData {
   id: string;
@@ -42,7 +43,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const { data: suppliesData, isLoading } = useQuery<{ success: boolean; supplies: SupplyItemData[] }>({
     queryKey: ['fase3Supplies', activeLocationId],
     queryFn: async () => {
-      const res = await fetch(`/api/fase3/supplies?locationId=${activeLocationId}`);
+      const res = await apiFetch(`/api/fase3/supplies?locationId=${activeLocationId}`);
       return res.json();
     }
   });

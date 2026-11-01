@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Icon } from '../../ui/Icon.js';
 import { formatTableLabel } from '../../lib/format.js';
+import { apiFetch } from '../../api/client.js';
 
 interface AuthorizeModalProps {
   isOpen: boolean;
@@ -54,7 +55,7 @@ export const AuthorizeModal: React.FC<AuthorizeModalProps> = ({
     setError(null);
 
     try {
-      const res = await fetch(`/api/orders/${orderId}/authorize-without-payment`, {
+      const res = await apiFetch(`/api/orders/${orderId}/authorize-without-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin })

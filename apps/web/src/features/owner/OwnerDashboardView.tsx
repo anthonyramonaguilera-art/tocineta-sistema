@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Badge, Icon, Button } from '../../ui/index.js';
 import { getOutboxCount, subscribeToOutboxCount } from '../pos/outbox.js';
 import { DispatchNoteSuccessModal, type DispatchNoteInfo } from '../profitability/components/DispatchNoteSuccessModal.js';
+import { apiFetch } from '../../api/client.js';
 
 export const OwnerDashboardView: React.FC = () => {
   const queryClient = useQueryClient();
@@ -71,7 +72,7 @@ export const OwnerDashboardView: React.FC = () => {
   }>({
     queryKey: ['fase4OwnerDashboard'],
     queryFn: async () => {
-      const res = await fetch('/api/fase4/owner-dashboard');
+      const res = await apiFetch('/api/fase4/owner-dashboard');
       return res.json();
     },
     refetchInterval: 10000
@@ -90,7 +91,7 @@ export const OwnerDashboardView: React.FC = () => {
 
   const handleOpenTransferDetail = async (transferId: string) => {
     try {
-      const res = await fetch(`/api/fase4/transfers?limit=100`);
+      const res = await apiFetch(`/api/fase4/transfers?limit=100`);
       const data = await res.json();
       const trf = data.transfers?.find((t: any) => t.id === transferId);
       if (trf) {

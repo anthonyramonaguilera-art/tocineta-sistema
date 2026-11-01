@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { BusinessPartner, PartnersSummary } from './types.js';
+import { apiFetch } from '../../api/client.js';
 
 export function usePartnersList() {
   return useQuery<{
@@ -10,7 +11,7 @@ export function usePartnersList() {
   }>({
     queryKey: ['businessPartners'],
     queryFn: async () => {
-      const res = await fetch('/api/partners');
+      const res = await apiFetch('/api/partners');
       if (!res.ok) throw new Error('Error al cargar socios');
       return res.json();
     },
@@ -23,7 +24,7 @@ export function usePartnerDetail(id: string | null) {
     queryKey: ['businessPartner', id],
     queryFn: async () => {
       if (!id) throw new Error('ID requerido');
-      const res = await fetch(`/api/partners/${id}`);
+      const res = await apiFetch(`/api/partners/${id}`);
       if (!res.ok) throw new Error('Error al cargar detalle de socio');
       return res.json();
     },
@@ -35,7 +36,7 @@ export function useCreatePartner() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: { name: string; docId?: string; phone?: string; email?: string; sharePercentage: number; notes?: string }) => {
-      const res = await fetch('/api/partners', {
+      const res = await apiFetch('/api/partners', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -56,7 +57,7 @@ export function useRegisterPartnerTransaction() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: { partnerId: string; type: 'APORTE' | 'RETIRO_UTILIDADES'; amountUsdCents: number; paymentMethod?: string; notes?: string }) => {
-      const res = await fetch('/api/partners/transactions', {
+      const res = await apiFetch('/api/partners/transactions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -78,7 +79,7 @@ export function useDistributeProfits() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (payload: { totalDividendUsdCents: number; notes?: string }) => {
-      const res = await fetch('/api/partners/distribute', {
+      const res = await apiFetch('/api/partners/distribute', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -99,7 +100,7 @@ export function useTogglePartnersModule() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (enabled: boolean) => {
-      const res = await fetch('/api/partners/toggle-module', {
+      const res = await apiFetch('/api/partners/toggle-module', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ enabled })

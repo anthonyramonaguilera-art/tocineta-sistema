@@ -16,6 +16,7 @@ import { canUserProcessPayments, usdToBsCents } from '@tocineta/shared';
 import { clearOutbox } from './outbox.js';
 import { formatTableLabel } from '../../lib/format.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
+import { apiFetch } from '../../api/client.js';
 
 export const PosComandero: React.FC = () => {
   const { token, user } = useAuth();
@@ -35,7 +36,7 @@ export const PosComandero: React.FC = () => {
   const { data: menuData, isLoading: loadingMenu } = useQuery<PosMenuResponse>({
     queryKey: ['posMenu'],
     queryFn: async () => {
-      const res = await fetch('/api/menu/pos');
+      const res = await apiFetch('/api/menu/pos');
       return res.json();
     },
     staleTime: 30000
@@ -45,7 +46,7 @@ export const PosComandero: React.FC = () => {
   const { data: settingsData } = useQuery<{ success: boolean; settings?: { ask_table_on_order?: number } }>({
     queryKey: ['businessSettings'],
     queryFn: async () => {
-      const res = await fetch('/api/business-settings');
+      const res = await apiFetch('/api/business-settings');
       return res.json();
     },
     staleTime: 60000

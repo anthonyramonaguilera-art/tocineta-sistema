@@ -1,6 +1,7 @@
 import { useState, useCallback } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import type { KdsOrder } from './KdsView.js';
+import { apiFetch } from '../../api/client.js';
 
 interface UseKdsActionsProps {
   token?: string | null;
@@ -13,7 +14,7 @@ export function useKdsActions({ token }: UseKdsActionsProps = {}) {
   // Mutación: avanzar o revertir plato individual
   const lineMutation = useMutation({
     mutationFn: async ({ lineId, status }: { lineId: string; status: 'pendiente' | 'preparando' | 'listo' }) => {
-      const res = await fetch(`/api/kds/lines/${lineId}/status`, {
+      const res = await apiFetch(`/api/kds/lines/${lineId}/status`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status })
@@ -29,7 +30,7 @@ export function useKdsActions({ token }: UseKdsActionsProps = {}) {
   // Mutación: despachar orden lista
   const deliverMutation = useMutation({
     mutationFn: async (orderId: string) => {
-      const res = await fetch(`/api/kds/orders/${orderId}/deliver`, {
+      const res = await apiFetch(`/api/kds/orders/${orderId}/deliver`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ archive: true })
@@ -47,7 +48,7 @@ export function useKdsActions({ token }: UseKdsActionsProps = {}) {
   // Mutación: forzar despacho (Supervisión)
   const forceCompleteMutation = useMutation({
     mutationFn: async (orderId: string) => {
-      const res = await fetch(`/api/kds/orders/${orderId}/force-complete`, {
+      const res = await apiFetch(`/api/kds/orders/${orderId}/force-complete`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

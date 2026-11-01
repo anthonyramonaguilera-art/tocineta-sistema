@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Card, Field, Input, Icon } from '../../ui/index.js';
 import { useQuery } from '@tanstack/react-query';
 import { formatTableLabel } from '../../lib/format.js';
+import { apiFetch } from '../../api/client.js';
 
 interface Step1CustomerChannelProps {
   customerName: string;
@@ -79,7 +80,7 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
     queryKey: ['posActiveOrders'],
     queryFn: async () => {
       try {
-        const res = await fetch('/api/orders?status=pendiente');
+        const res = await apiFetch('/api/orders?status=pendiente');
         if (res.ok) return res.json();
       } catch {}
       return { orders: [] };
