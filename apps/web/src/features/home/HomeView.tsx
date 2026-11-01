@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Button, Badge, Money, Icon } from '../../ui/index.js';
+import { apiFetch } from '../../api/client.js';
 import type { TabType } from '../../App.js';
 
 interface HomeViewProps {
@@ -22,7 +23,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     queryKey: ['homeSummary'],
     queryFn: async () => {
       try {
-        const res = await fetch('/api/reports/z-report/summary');
+        const res = await apiFetch('/api/reports/z-report/summary');
         if (res.ok) {
           return res.json();
         }
@@ -41,7 +42,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
     queryKey: ['homeOrders'],
     queryFn: async () => {
       try {
-        const res = await fetch('/api/orders');
+        const res = await apiFetch('/api/orders');
         if (res.ok) {
           return res.json();
         }

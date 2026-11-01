@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import { Button, Icon, Select } from '../../ui/index.js';
+import { apiFetch } from '../../api/client.js';
 import { useFinancesQueries } from './useFinancesQueries.js';
 import { OwnerNumbersConfigModal } from './OwnerNumbersConfigModal.js';
 import { ExpenseModal } from './ExpenseModal.js';
@@ -74,7 +75,7 @@ export const FinancesDashboardView: React.FC = () => {
 
   const handleSendWhatsApp = async (receivableId: string) => {
     try {
-      const res = await fetch(`/api/finances/receivables/${receivableId}/whatsapp`);
+      const res = await apiFetch(`/api/finances/receivables/${receivableId}/whatsapp`);
       const json = await res.json();
       if (json.data?.url) {
         window.open(json.data.url, '_blank');
@@ -284,7 +285,7 @@ export const FinancesDashboardView: React.FC = () => {
         onClose={() => setIsNumbersConfigOpen(false)}
         currentKeys={numbersData?.configuredKeys || []}
         onSave={async (keys) => {
-          await fetch('/api/finances/owner-numbers/config', {
+          await apiFetch('/api/finances/owner-numbers/config', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ keys })
@@ -298,7 +299,7 @@ export const FinancesDashboardView: React.FC = () => {
         onClose={() => setIsExpenseModalOpen(false)}
         categories={categoriesData || []}
         onAddCategory={async (name) => {
-          const res = await fetch('/api/finances/categories', {
+          const res = await apiFetch('/api/finances/categories', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ name })

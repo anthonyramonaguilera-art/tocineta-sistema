@@ -6,6 +6,7 @@ import { useKdsAlerts } from './useKdsAlerts.js';
 import { useKdsActions } from './useKdsActions.js';
 import { KdsCard } from './KdsCard.js';
 import { Chips, Tabs, Button, Badge, EmptyState, Icon } from '../../ui/index.js';
+import { apiFetch } from '../../api/client.js';
 
 export type StationFilter = 'all' | 'hamburguesas' | 'hot_dogs';
 
@@ -73,7 +74,7 @@ export const KdsView: React.FC = () => {
     queryKey: ['kds-orders', stationFilter],
     queryFn: async () => {
       const url = stationFilter === 'all' ? '/api/kds/orders' : `/api/kds/orders?station=${stationFilter}`;
-      const res = await fetch(url);
+      const res = await apiFetch(url);
       if (!res.ok) throw new Error('Error al cargar órdenes de cocina');
       return res.json();
     },
