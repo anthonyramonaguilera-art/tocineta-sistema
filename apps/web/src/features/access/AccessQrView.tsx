@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import QRCode from 'qrcode';
 import { Card, Button, Badge, Icon } from '../../ui/index.js';
+import { apiFetch } from '../../api/client.js';
 
 interface AccessInfo {
   status: string;
@@ -46,7 +47,7 @@ export const AccessQrView: React.FC = () => {
   useEffect(() => {
     async function fetchInfo() {
       try {
-        const res = await fetch('/api/system/access-info');
+        const res = await apiFetch('/api/system/access-info');
         if (res.ok) {
           const data: AccessInfo = await res.json();
           setAccessInfo(data);

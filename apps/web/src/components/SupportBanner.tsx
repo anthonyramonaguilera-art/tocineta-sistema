@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Wrench, ShieldAlert, X, Clock, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext.js';
+import { apiFetch } from '../api/client.js';
 
 interface SupportStatus {
   active: boolean;
@@ -24,7 +25,7 @@ export const SupportBanner: React.FC = () => {
   const { data: supportData } = useQuery<{ success: boolean; support: SupportStatus }>({
     queryKey: ['supportStatus'],
     queryFn: async () => {
-      const res = await fetch('/api/support/status');
+      const res = await apiFetch('/api/support/status');
       if (!res.ok) return { success: false, support: { active: false, remainingSeconds: 0, quickAssistLaunched: false, bannerText: '' } };
       return res.json();
     },
@@ -40,7 +41,7 @@ export const SupportBanner: React.FC = () => {
   const handleStopSupport = async () => {
     setIsStopping(true);
     try {
-      const res = await fetch('/api/support/stop', {
+      const res = await apiFetch('/api/support/stop', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})
@@ -130,7 +131,7 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
     setErrorMsg(null);
 
     try {
-      const res = await fetch('/api/support/start', {
+      const res = await apiFetch('/api/support/start', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminPin, notes })
@@ -158,7 +159,7 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
 
   const handleSelectFallback = async (option: string) => {
     try {
-      await fetch('/api/support/fallback-selection', {
+      await apiFetch('/api/support/fallback-selection', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ selectedOption: option })

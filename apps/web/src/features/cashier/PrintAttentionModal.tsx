@@ -1,6 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Icon } from '../../ui/Icon.js';
+import { apiFetch } from '../../api/client.js';
 
 interface AttentionPrintJob {
   id: string;
@@ -22,7 +23,7 @@ export const PrintAttentionModal: React.FC<PrintAttentionModalProps> = ({ onOpen
   const { data, refetch } = useQuery<{ data: AttentionPrintJob[] }>({
     queryKey: ['attentionPrintJobs'],
     queryFn: async () => {
-      const res = await fetch('/api/print-jobs?status=requiere_atencion');
+      const res = await apiFetch('/api/print-jobs?status=requiere_atencion');
       if (!res.ok) return { data: [] };
       return res.json();
     },
@@ -36,7 +37,7 @@ export const PrintAttentionModal: React.FC<PrintAttentionModalProps> = ({ onOpen
 
   const handleResolve = async (action: 'mark_printed' | 'retry_now') => {
     try {
-      const res = await fetch(`/api/print-jobs/${currentJob.id}/resolve`, {
+      const res = await apiFetch(`/api/print-jobs/${currentJob.id}/resolve`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action })

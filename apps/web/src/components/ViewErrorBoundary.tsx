@@ -1,5 +1,6 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react';
 import { Card, Button, Icon } from '../ui/index.js';
+import { apiFetch } from '../api/client.js';
 
 interface ViewErrorBoundaryProps {
   children: ReactNode;
@@ -41,7 +42,7 @@ export class ViewErrorBoundary extends Component<ViewErrorBoundaryProps, ViewErr
   private reportError = async (error: Error, errorInfo: ErrorInfo) => {
     try {
       this.setState({ isReporting: true });
-      await fetch('/api/client-errors', {
+      await apiFetch('/api/client-errors', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

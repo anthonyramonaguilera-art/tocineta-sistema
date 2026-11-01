@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import { Modal, Button, Badge, Icon } from '../../ui/index.js';
 import { DriverManagementTab, type DriverItem } from './DriverManagementTab.js';
+import { apiFetch } from '../../api/client.js';
 
 interface DriverSettlementModalProps {
   isOpen: boolean;
@@ -58,7 +59,7 @@ export const DriverSettlementModal: React.FC<DriverSettlementModalProps> = ({
       const url = selectedLocation
         ? `/api/delivery/settlement-preview?locationId=${selectedLocation}`
         : '/api/delivery/settlement-preview';
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       });
       if (!res.ok) return { success: false, preview: [] };
@@ -78,7 +79,7 @@ export const DriverSettlementModal: React.FC<DriverSettlementModalProps> = ({
       const url = selectedLocation
         ? `/api/delivery/drivers?all=true&locationId=${selectedLocation}`
         : '/api/delivery/drivers?all=true';
-      const res = await fetch(url, {
+      const res = await apiFetch(url, {
         headers: { ...(token ? { Authorization: `Bearer ${token}` } : {}) }
       });
       if (!res.ok) return { success: false, drivers: [] };
@@ -96,7 +97,7 @@ export const DriverSettlementModal: React.FC<DriverSettlementModalProps> = ({
     setFeedback(null);
 
     try {
-      const res = await fetch('/api/delivery/settle-driver', {
+      const res = await apiFetch('/api/delivery/settle-driver', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

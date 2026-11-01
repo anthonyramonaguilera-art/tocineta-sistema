@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../../context/AuthContext.js';
 import { Icon, type IconName } from '../../ui/Icon.js';
+import { apiFetch } from '../../api/client.js';
 
 interface ApplyCouponModalProps {
   isOpen: boolean;
@@ -43,7 +44,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
     setSuccessMsg(null);
 
     try {
-      const res = await fetch(`/api/orders/${orderId}/apply-coupon`, {
+      const res = await apiFetch(`/api/orders/${orderId}/apply-coupon`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +80,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
     setSuccessMsg(null);
 
     try {
-      const res = await fetch(`/api/orders/${orderId}/remove-coupon`, {
+      const res = await apiFetch(`/api/orders/${orderId}/remove-coupon`, {
         method: 'POST',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {})

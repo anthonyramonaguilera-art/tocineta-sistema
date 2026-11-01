@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import { Receipt, Printer, ShieldCheck, FileEdit } from 'lucide-react';
 import { Icon } from '../../ui/Icon.js';
+import { apiFetch } from '../../api/client.js';
 
 interface ProductItem {
   id: string;
@@ -39,7 +40,7 @@ export const DeferredPaperView: React.FC = () => {
   const { data: menuData } = useQuery<any>({
     queryKey: ['posProducts'],
     queryFn: async () => {
-      const res = await fetch('/api/menu/pos');
+      const res = await apiFetch('/api/menu/pos');
       return res.json();
     }
   });
@@ -48,7 +49,7 @@ export const DeferredPaperView: React.FC = () => {
   const { data: deferredData, refetch: refetchDeferred } = useQuery<{ orders: any[] }>({
     queryKey: ['deferredOrders'],
     queryFn: async () => {
-      const res = await fetch('/api/emergency/deferred-orders');
+      const res = await apiFetch('/api/emergency/deferred-orders');
       return res.json();
     }
   });
@@ -139,7 +140,7 @@ export const DeferredPaperView: React.FC = () => {
         ]
       };
 
-      const res = await fetch('/api/emergency/deferred-orders', {
+      const res = await apiFetch('/api/emergency/deferred-orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -180,7 +181,7 @@ export const DeferredPaperView: React.FC = () => {
   const handleBackupNow = async () => {
     try {
       setBackupStatus('Cifrando y exportando respaldo...');
-      const res = await fetch('/api/backups/export-encrypted', {
+      const res = await apiFetch('/api/backups/export-encrypted', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})

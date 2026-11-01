@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Input, Field, Badge, Icon } from '../../ui/index.js';
+import { apiFetch } from '../../api/client.js';
 
 export interface DriverItem {
   id: string;
@@ -35,7 +36,7 @@ export const DriverManagementTab: React.FC<DriverManagementTabProps> = ({
 
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/delivery/drivers', {
+      const res = await apiFetch('/api/delivery/drivers', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -66,7 +67,7 @@ export const DriverManagementTab: React.FC<DriverManagementTabProps> = ({
 
   const handleToggleDriverStatus = async (driverId: string, currentStatus: boolean) => {
     try {
-      const res = await fetch(`/api/delivery/drivers/${driverId}`, {
+      const res = await apiFetch(`/api/delivery/drivers/${driverId}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',

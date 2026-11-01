@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Button, Input, Field, Icon } from '../../ui/index.js';
+import { apiFetch } from '../../api/client.js';
 
 interface WorkerRegisterFormProps {
   onBack: () => void;
@@ -23,7 +24,7 @@ export const WorkerRegisterForm: React.FC<WorkerRegisterFormProps> = ({ onBack }
     setRegLoading(true);
     setRegError(null);
     try {
-      const res = await fetch('/api/auth/register', {
+      const res = await apiFetch('/api/auth/register', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

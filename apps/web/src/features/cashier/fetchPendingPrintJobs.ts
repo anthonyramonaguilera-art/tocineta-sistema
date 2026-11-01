@@ -1,6 +1,8 @@
+import { apiFetch } from '../../api/client.js';
+
 export async function hasPendingPrintJobs(orderId: string, token?: string | null): Promise<boolean> {
   try {
-    const res = await fetch(`/api/print-jobs?orderId=${encodeURIComponent(orderId)}&status=pending`, {
+    const res = await apiFetch(`/api/print-jobs?orderId=${encodeURIComponent(orderId)}&status=pending`, {
       headers: token ? { Authorization: `Bearer ${token}` } : {}
     });
     if (!res.ok) return false;

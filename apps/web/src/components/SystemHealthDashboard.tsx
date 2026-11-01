@@ -13,7 +13,7 @@ import {
   Usb,
   KeyRound
 } from 'lucide-react';
-import { fetchSystemHealth } from '../api/client.js';
+import { fetchSystemHealth, apiFetch } from '../api/client.js';
 import { StatusCard, MetricRow } from './StatusCard.js';
 import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
 
@@ -31,7 +31,7 @@ export const SystemHealthDashboard: React.FC = () => {
     setIsExporting(true);
     setBackupStatus(null);
     try {
-      const res = await fetch('/api/backups/export-encrypted', {
+      const res = await apiFetch('/api/backups/export-encrypted', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({})

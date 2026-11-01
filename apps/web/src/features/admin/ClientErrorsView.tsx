@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Button, Badge, EmptyState, Icon } from '../../ui/index.js';
+import { apiFetch } from '../../api/client.js';
 
 interface ClientErrorRecord {
   id: string;
@@ -18,7 +19,7 @@ export const ClientErrorsView: React.FC = () => {
   const { data, isLoading, refetch } = useQuery<{ success: boolean; errors: ClientErrorRecord[] }>({
     queryKey: ['client-errors'],
     queryFn: async () => {
-      const res = await fetch('/api/client-errors');
+      const res = await apiFetch('/api/client-errors');
       if (!res.ok) throw new Error('Error al consultar registro de incidentes');
       return res.json();
     }

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Icon } from '../../ui/Icon.js';
+import { apiFetch } from '../../api/client.js';
 
 interface TicketPreviewModalProps {
   jobId: string;
@@ -18,7 +19,7 @@ export const TicketPreviewModal: React.FC<TicketPreviewModalProps> = ({ jobId, o
   const { data, isLoading } = useQuery<{ html: string; id: string; jobType: string }>({
     queryKey: ['ticketPreview', jobId],
     queryFn: async () => {
-      const res = await fetch(`/api/print-jobs/${jobId}/preview`);
+      const res = await apiFetch(`/api/print-jobs/${jobId}/preview`);
       if (!res.ok) throw new Error('No se pudo cargar la vista previa del ticket');
       return res.json();
     }
@@ -31,7 +32,7 @@ export const TicketPreviewModal: React.FC<TicketPreviewModalProps> = ({ jobId, o
     setIsSubmitting(true);
     setActionMessage(null);
     try {
-      const res = await fetch(`/api/print-jobs/${jobId}/reprint`, {
+      const res = await apiFetch(`/api/print-jobs/${jobId}/reprint`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ pin, reason })
