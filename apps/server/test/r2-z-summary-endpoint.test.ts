@@ -176,7 +176,8 @@ describe('R2 — Z Summary Endpoint Test', () => {
     }
 
     // Assertions as required by instructions
-    expect(results.find(r => r.escenario.includes('(c)'))?.status).toBe(404);
+    expect(results.find(r => r.escenario.includes('(c)'))?.status).toBe(200);
+    expect(results.find(r => r.escenario.includes('(c)'))?.body).toEqual({ success: true, summary: null, jornada: null });
     expect(results.find(r => r.escenario.includes('(a)'))?.status).toBe(200);
     expect(results.find(r => r.escenario.includes('(b)'))?.status).toBe(200);
     expect(results.find(r => r.escenario.includes('(d)'))?.status).toBe(200);

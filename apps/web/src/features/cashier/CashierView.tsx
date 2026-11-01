@@ -18,6 +18,7 @@ export const CashierView: React.FC = () => {
   const { isBlocked, takeControl } = useMultiTabCashierGuard();
 
   const [activeTab, setActiveTab] = useState<'cobro' | 'ultimas_ventas' | 'cierre_dia'>('cobro');
+  const [wizardKey, setWizardKey] = useState<number>(0);
   const [showShiftOpening, setShowShiftOpening] = useState<boolean>(false);
   const [showSedeBreakdown, setShowSedeBreakdown] = useState<boolean>(false);
 
@@ -279,7 +280,11 @@ export const CashierView: React.FC = () => {
 
       {activeTab === 'cierre_dia' && (
         <CashierClosureWizard
-          onClosureCompleted={handleRefreshAll}
+          key={wizardKey}
+          onClosureCompleted={() => {
+            handleRefreshAll();
+            setWizardKey((prev) => prev + 1);
+          }}
           userRole={user?.role}
           token={token}
         />

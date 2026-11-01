@@ -110,7 +110,7 @@ export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
     const currentJornada = getCurrentJornada(dbCtx.rawDb);
     const jornadaId = query?.jornadaId || currentJornada?.id;
     if (!jornadaId) {
-      return reply.status(404).send({ success: false, error: 'No hay jornada abierta o registrada' });
+      return reply.status(200).send({ success: true, summary: null, jornada: null });
     }
     try {
       const summary = getJornadaReportData(dbCtx.rawDb, jornadaId);
