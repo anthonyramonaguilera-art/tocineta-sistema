@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { getSessionUser } from '../auth/session.js';
 import {
   createOrder,
   getOrderById,
@@ -17,18 +17,8 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. Crear nuevo pedido (POST /api/orders)
   fastify.post('/api/orders', async (request, reply) => {
     const dbCtx = getDatabaseContext();
-    const rawToken = extractSessionToken(request.headers.authorization);
-
-    let createdByUserId = 'usr_cajera';
-    if (rawToken) {
-      const tokenHash = hashToken(rawToken);
-      const session = dbCtx.rawDb.prepare(`
-        SELECT user_id FROM sessions WHERE token_hash = ? AND revoked_at_ms IS NULL
-      `).get(tokenHash) as { user_id: string } | undefined;
-      if (session) {
-        createdByUserId = session.user_id;
-      }
-    }
+    const user = getSessionUser(dbCtx.rawDb, request.headers.authorization);
+    const createdByUserId = user?.userId ?? 'usr_cajera';
 
     const body = request.body as CreateOrderInput | undefined;
     if (!body || !Array.isArray(body.lines) || body.lines.length === 0) {
@@ -162,17 +152,8 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
     const dbCtx = getDatabaseContext();
     const { id } = request.params as { id: string };
 
-    const rawToken = extractSessionToken(request.headers.authorization);
-    let userRole: string | undefined = undefined;
-    if (rawToken) {
-      const tokenHash = hashToken(rawToken);
-      const session = dbCtx.rawDb.prepare(`
-        SELECT u.role FROM sessions s
-        JOIN users u ON s.user_id = u.id
-        WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
-      `).get(tokenHash) as { role: string } | undefined;
-      if (session) userRole = session.role;
-    }
+    const user = getSessionUser(dbCtx.rawDb, request.headers.authorization);
+    const userRole = user?.role;
 
     const order = getOrderById(dbCtx.rawDb, id, userRole);
     if (!order) {
@@ -191,16 +172,8 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
   // 4. Edición de pedido con concurrencia optimista (PATCH /api/orders/:id)
   fastify.patch('/api/orders/:id', async (request, reply) => {
     const dbCtx = getDatabaseContext();
-    const rawToken = extractSessionToken(request.headers.authorization);
-
-    let actorUserId = 'usr_cajera';
-    if (rawToken) {
-      const tokenHash = hashToken(rawToken);
-      const session = dbCtx.rawDb.prepare(`
-        SELECT user_id FROM sessions WHERE token_hash = ? AND revoked_at_ms IS NULL
-      `).get(tokenHash) as { user_id: string } | undefined;
-      if (session) actorUserId = session.user_id;
-    }
+    const user = getSessionUser(dbCtx.rawDb, request.headers.authorization);
+    let actorUserId = user?.userId ?? 'usr_cajera';
 
     const { id } = request.params as { id: string };
     const body = request.body as UpdateOrderInput | undefined;

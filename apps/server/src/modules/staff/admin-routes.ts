@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { extractSessionToken } from '../../routes/auth.js';
+import { getSessionUser } from '../auth/session.js';
 import { getDatabaseContext } from '../../db/connection.js';
 import { UsersService } from './users-service.js';
 import { validatePinFormat } from '../auth/pin.js';
@@ -14,33 +15,28 @@ export const staffAdminRoutes: FastifyPluginAsync = async (fastify) => {
       return null;
     }
 
-    const tokenHash = hashToken(rawToken);
     const dbCtx = getDatabaseContext();
-    const now = Date.now();
-
-    const rawSession = dbCtx.rawDb.prepare(`
-      SELECT s.*, u.role as user_role
-      FROM sessions s
-      JOIN users u ON s.user_id = u.id
-      WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL AND s.expires_at_ms > ?
-    `).get(tokenHash, now) as any;
-
-    if (!rawSession) {
+    const user = getSessionUser(dbCtx.rawDb, request.headers.authorization);
+    if (!user) {
       reply.status(401).send({ success: false, error: 'Sesión inválida o expirada' });
       return null;
     }
 
-    if (requireOnlyAdmin && rawSession.user_role !== 'admin') {
+    if (requireOnlyAdmin && user.role !== 'admin') {
       reply.status(403).send({ success: false, error: 'Acceso restringido a administradores' });
       return null;
     }
 
-    if (rawSession.user_role !== 'admin' && rawSession.user_role !== 'supervisor') {
+    if (user.role !== 'admin' && user.role !== 'supervisor') {
       reply.status(403).send({ success: false, error: 'Acceso restringido a administradores y supervisores' });
       return null;
     }
 
-    return rawSession;
+    return {
+      ...user,
+      user_id: user.userId,
+      user_role: user.role
+    };
   };
 
   // 1. Listado de usuarios/personal

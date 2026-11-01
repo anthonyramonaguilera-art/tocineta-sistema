@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { getSessionUser } from '../auth/session.js';
 import {
   getDeliveryDrivers,
   createDeliveryDriver,
@@ -15,17 +15,13 @@ export const deliveryRoutes: FastifyPluginAsync = async (fastify) => {
   // Helper de autenticación y extracción de usuario
   const getUserFromRequest = (req: any) => {
     const dbCtx = getDatabaseContext();
-    const rawToken = extractSessionToken(req.headers.authorization);
-    if (!rawToken) return null;
-    const tokenHash = hashToken(rawToken);
-    const session = dbCtx.rawDb.prepare(`
-      SELECT s.user_id, u.name, u.role
-      FROM sessions s
-      JOIN users u ON s.user_id = u.id
-      WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
-    `).get(tokenHash) as { user_id: string; name: string; role: string } | undefined;
-
-    return session || null;
+    const u = getSessionUser(dbCtx.rawDb, req.headers.authorization);
+    if (!u) return null;
+    return {
+      user_id: u.userId,
+      name: u.name,
+      role: u.role
+    };
   };
 
   // 1. Listar Repartidores (GET /api/delivery/drivers)

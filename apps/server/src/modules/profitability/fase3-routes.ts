@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { getSessionUser } from '../auth/session.js';
 import { verifyPin } from '../auth/pin.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
-import { getSessionUserByToken } from '../auth/session.js';
+
 import {
   getAllLocations,
   createLocation,
@@ -41,10 +41,8 @@ import { generateUuidV7 } from '@tocineta/shared';
 export const fase3Routes: FastifyPluginAsync = async (fastify) => {
   const getUserFromRequest = (req: any) => {
     const dbCtx = getDatabaseContext();
-    const rawToken = extractSessionToken(req.headers.authorization);
-    if (!rawToken) return null;
-    const tokenHash = hashToken(rawToken);
-    return dbCtx.rawDb.prepare('SELECT user_id FROM sessions WHERE token_hash = ? AND expires_at_ms > ?').get(tokenHash, Date.now()) as { user_id: string } | undefined;
+    const user = getSessionUser(dbCtx.rawDb, req.headers.authorization);
+    return user ? { user_id: user.userId } : null;
   };
 
   // --------------------------------------------------------------------------
@@ -523,7 +521,7 @@ export const fase3Routes: FastifyPluginAsync = async (fastify) => {
     action: 'PRODUCTION_RESET_REQUESTED' | 'DEMO_SEED_REQUESTED'
   ): { ok: boolean; userId?: string } => {
     const dbCtx = getDatabaseContext();
-    const user = request.user ?? getSessionUserByToken(dbCtx.rawDb, extractSessionToken(request.headers.authorization));
+    const user = request.user ?? getSessionUser(dbCtx.rawDb, request.headers.authorization);
 
     // a. request.user ausente -> 401. Rol distinto de 'admin' -> 403.
     if (!user) {

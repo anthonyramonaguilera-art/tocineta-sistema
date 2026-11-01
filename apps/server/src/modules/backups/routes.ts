@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import type Database from 'better-sqlite3';
 import { createHotSnapshot, listSnapshots } from './snapshot-service.js';
 import { createEncryptedBackup, getBackupsHistory, executeDryRunVerification } from './backup-service.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { getSessionUser } from '../auth/session.js';
 
 interface BackupsRoutesOptions {
   rawDb: Database.Database;
@@ -13,21 +13,12 @@ export const backupsRoutes: FastifyPluginAsync<BackupsRoutesOptions> = async (fa
 
   // Helper para autenticar sesión
   const getUserFromRequest = (req: any) => {
-    const rawToken = extractSessionToken(req.headers.authorization);
-    if (!rawToken) return null;
-    const tokenHash = hashToken(rawToken);
-    const session = rawDb.prepare(`
-      SELECT s.user_id, u.name, u.role 
-      FROM sessions s
-      JOIN users u ON s.user_id = u.id
-      WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
-    `).get(tokenHash) as { user_id: string; name: string; role: any } | undefined;
-
-    if (!session) return null;
+    const user = getSessionUser(rawDb, req.headers.authorization);
+    if (!user) return null;
     return {
-      id: session.user_id,
-      name: session.name,
-      role: session.role
+      id: user.userId,
+      name: user.name,
+      role: user.role
     };
   };
 

@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { getSessionUser } from '../auth/session.js';
 import {
   startSupportMode,
   stopSupportMode,
@@ -10,10 +10,8 @@ import {
 export const supportRoutes: FastifyPluginAsync = async (fastify) => {
   const getUserFromRequest = (req: any) => {
     const dbCtx = getDatabaseContext();
-    const rawToken = extractSessionToken(req.headers.authorization);
-    if (!rawToken) return null;
-    const tokenHash = hashToken(rawToken);
-    return dbCtx.rawDb.prepare('SELECT user_id FROM sessions WHERE token_hash = ? AND expires_at_ms > ?').get(tokenHash, Date.now()) as { user_id: string } | undefined;
+    const user = getSessionUser(dbCtx.rawDb, req.headers.authorization);
+    return user ? { user_id: user.userId } : null;
   };
 
   // 1. Iniciar Modo Soporte (Exclusivo con PIN Admin)

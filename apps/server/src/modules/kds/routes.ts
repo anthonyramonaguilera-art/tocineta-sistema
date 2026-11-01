@@ -2,7 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
 import { getKdsOrders, updateKdsLineStatus, deliverKdsOrder, forceCompleteKdsOrder } from './kds-service.js';
 import { type Station } from '../../db/schema.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { getSessionUser } from '../auth/session.js';
 import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
 
 export const kdsRoutes: FastifyPluginAsync = async (server) => {
@@ -106,22 +106,11 @@ export const kdsRoutes: FastifyPluginAsync = async (server) => {
     let userId = body.userId;
     let permissions: string[] = [];
 
-    const rawToken = extractSessionToken(request.headers.authorization);
-    if (rawToken) {
-      const tokenHash = hashToken(rawToken);
-      const session = dbCtx.rawDb.prepare(`
-        SELECT s.user_id, u.role, u.permissions_json
-        FROM sessions s
-        JOIN users u ON s.user_id = u.id
-        WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
-      `).get(tokenHash) as { user_id: string; role: string; permissions_json: string } | undefined;
-      if (session) {
-        userId = session.user_id;
-        userRole = session.role;
-        try {
-          permissions = JSON.parse(session.permissions_json || '[]');
-        } catch {}
-      }
+    const session = getSessionUser(dbCtx.rawDb, request.headers.authorization);
+    if (session) {
+      userId = session.userId;
+      userRole = session.role;
+      permissions = session.permissions;
     } else if (userId) {
       const u = dbCtx.rawDb.prepare('SELECT role, permissions_json FROM users WHERE id = ?').get(userId) as any;
       if (u) {

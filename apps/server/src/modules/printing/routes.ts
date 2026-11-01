@@ -7,8 +7,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { z } from 'zod';
 import { execFile } from 'node:child_process';
 import { renderTicketToHtml, renderTicketToEscPos, type TicketIR, type EscPosConfig } from '@tocineta/shared';
-import type { UserRole } from '../../db/schema.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { getSessionUser } from '../auth/session.js';
 import {
   reprintPrintJob,
   resolveAttentionJob,
@@ -20,24 +19,6 @@ import {
 
 import { getDatabaseContext } from '../../db/connection.js';
 
-function getSessionUser(
-  rawDb: any,
-  authHeader?: string
-): { userId: string; role: UserRole } | null {
-  const token = extractSessionToken(authHeader);
-  if (!token) return null;
-  const tokenHash = hashToken(token);
-  const now = Date.now();
-  const row = rawDb.prepare(`
-    SELECT s.user_id, s.role, u.is_active
-    FROM sessions s
-    JOIN users u ON s.user_id = u.id
-    WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL AND s.expires_at_ms > ?
-  `).get(tokenHash, now) as { user_id: string; role: UserRole; is_active: number } | undefined;
-
-  if (!row || !row.is_active) return null;
-  return { userId: row.user_id, role: row.role };
-}
 
 export const printingRoutes: FastifyPluginAsync = async (fastify) => {
   const dbCtx = getDatabaseContext();

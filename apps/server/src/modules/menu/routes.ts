@@ -2,7 +2,7 @@ import type { FastifyPluginAsync, FastifyRequest, FastifyReply } from 'fastify';
 import type Database from 'better-sqlite3';
 import { getDatabaseContext } from '../../db/connection.js';
 import type { UserRole } from '../../db/schema.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { getSessionUser } from '../auth/session.js';
 import { parseRateToMicroBs } from '@tocineta/shared';
 import {
   getPosMenu,
@@ -23,24 +23,6 @@ import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
 import { syncBcvRateFromInternet } from './bcv-auto-sync.js';
 
-function getSessionUser(
-  rawDb: Database.Database,
-  authHeader?: string
-): { userId: string; role: UserRole } | null {
-  const token = extractSessionToken(authHeader);
-  if (!token) return null;
-  const tokenHash = hashToken(token);
-  const now = Date.now();
-  const row = rawDb.prepare(`
-    SELECT s.user_id, s.role, u.is_active
-    FROM sessions s
-    JOIN users u ON s.user_id = u.id
-    WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL AND s.expires_at_ms > ?
-  `).get(tokenHash, now) as { user_id: string; role: UserRole; is_active: number } | undefined;
-
-  if (!row || !row.is_active) return null;
-  return { userId: row.user_id, role: row.role };
-}
 
 function requireRoles(
   request: FastifyRequest,

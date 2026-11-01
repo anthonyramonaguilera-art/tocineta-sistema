@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { extractSessionToken } from '../../routes/auth.js';
+import { getSessionUser as getCanonicalSessionUser } from '../auth/session.js';
 import { getDatabaseContext } from '../../db/connection.js';
 import { TipsService } from './tips-service.js';
 import { resolveLocationId } from '../profitability/locations-service.js';
@@ -12,23 +13,18 @@ export const staffTipsRoutes: FastifyPluginAsync = async (fastify) => {
       return null;
     }
 
-    const tokenHash = hashToken(rawToken);
     const dbCtx = getDatabaseContext();
-    const now = Date.now();
-
-    const rawSession = dbCtx.rawDb.prepare(`
-      SELECT s.*, u.role as user_role
-      FROM sessions s
-      JOIN users u ON s.user_id = u.id
-      WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL AND s.expires_at_ms > ?
-    `).get(tokenHash, now) as any;
-
-    if (!rawSession) {
+    const user = getCanonicalSessionUser(dbCtx.rawDb, request.headers.authorization);
+    if (!user) {
       reply.status(401).send({ success: false, error: 'Sesión inválida o expirada' });
       return null;
     }
 
-    return rawSession;
+    return {
+      ...user,
+      user_id: user.userId,
+      user_role: user.role
+    };
   };
 
   function resolveLocationAndJornada(rawLocationId?: string, rawJornadaId?: string): { locationId: string; jornadaId: string } {

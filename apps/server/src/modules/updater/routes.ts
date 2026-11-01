@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { getSessionUser } from '../auth/session.js';
 import {
   getCurrentSystemVersion,
   applySignedUpdatePackage,
@@ -12,10 +12,8 @@ import { verifyManifestSignature } from './signer.js';
 export const updaterRoutes: FastifyPluginAsync = async (fastify) => {
   const getUserFromRequest = (req: any) => {
     const dbCtx = getDatabaseContext();
-    const rawToken = extractSessionToken(req.headers.authorization);
-    if (!rawToken) return null;
-    const tokenHash = hashToken(rawToken);
-    return dbCtx.rawDb.prepare('SELECT user_id FROM sessions WHERE token_hash = ? AND expires_at_ms > ?').get(tokenHash, Date.now()) as { user_id: string } | undefined;
+    const u = getSessionUser(dbCtx.rawDb, req.headers.authorization);
+    return u ? { user_id: u.userId } : null;
   };
   // 1. Consultar versión actual del sistema y ventana de mantenimiento
   fastify.get('/api/updater/version', async (_request, reply) => {

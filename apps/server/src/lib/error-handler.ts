@@ -1,7 +1,8 @@
 import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { AppError } from './app-error.js';
 import { getDatabaseContext } from '../db/connection.js';
-import { extractSessionToken, hashToken } from '../routes/auth.js';
+import { getSessionUser } from '../modules/auth/session.js';
+import { sanitizeUrl } from '../plugins/auth-guard.js';
 
 /**
  * Redacta claves sensibles en objetos anidados para auditoría segura.
@@ -13,7 +14,7 @@ export function redactSensitiveData(data: unknown): unknown {
   if (Array.isArray(data)) {
     return data.map((item) => redactSensitiveData(item));
   }
-  const sensitiveKeys = new Set(['pin', 'password', 'token', 'authorization', 'secret']);
+  const sensitiveKeys = new Set(['pin', 'password', 'passwd', 'token', 'authorization', 'secret']);
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
@@ -166,18 +167,11 @@ export async function globalErrorHandler(
     const redactedBody = redactSensitiveData(request.body);
     const bodyJson = redactedBody !== undefined ? JSON.stringify(redactedBody) : null;
 
-    let userId: string | null = null;
-    const authHeader = request.headers.authorization;
-    if (authHeader) {
+    let userId: string | null = (request as any).user?.id || null;
+    if (!userId && request.headers.authorization) {
       try {
-        const rawToken = extractSessionToken(authHeader);
-        if (rawToken) {
-          const tokenHash = hashToken(rawToken);
-          const row = rawDb
-            .prepare('SELECT user_id FROM sessions WHERE token_hash = ? AND expires_at_ms > ?')
-            .get(tokenHash, Date.now()) as { user_id: string } | undefined;
-          if (row) userId = row.user_id;
-        }
+        const user = getSessionUser(rawDb, request.headers.authorization);
+        if (user) userId = user.userId;
       } catch {}
     }
 
@@ -192,7 +186,7 @@ export async function globalErrorHandler(
       errId,
       String(request.id),
       request.method,
-      request.url,
+      sanitizeUrl(request.url),
       info.status,
       info.code,
       error?.message || info.message,
