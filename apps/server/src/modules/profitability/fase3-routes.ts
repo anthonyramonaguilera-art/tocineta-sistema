@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
 import { getSessionUser } from '../auth/session.js';
 import { verifyPin } from '../auth/pin.js';
+import { assertAuthorizerAttemptAllowed, recordAuthorizerFailure, recordAuthorizerSuccess } from '../auth/authorizer-guard.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 
 import {
@@ -535,6 +536,18 @@ export const fase3Routes: FastifyPluginAsync = async (fastify) => {
 
     const userId = user.id || user.userId;
 
+    try {
+      assertAuthorizerAttemptAllowed(userId);
+    } catch (err: any) {
+      reply.status(err.statusCode || 423).send({
+        success: false,
+        code: err.code || 'AUTHORIZER_LOCKED',
+        error: err.message,
+        remainingMs: err.remainingMs
+      });
+      return { ok: false };
+    }
+
     // b. Exigir body.pin y verificarlo con verifyPin contra el hash del usuario request.user.id (consulta users por id).
     // PIN inválido -> 403 y registra evento de auditoría (appendAuditEvent) 'DESTRUCTIVE_ACTION_DENIED'.
     const body = (request.body as any) || {};
@@ -546,6 +559,7 @@ export const fase3Routes: FastifyPluginAsync = async (fastify) => {
     } | undefined;
 
     if (!pin || typeof pin !== 'string' || !adminRow || !verifyPin(pin, adminRow.pin_salt, adminRow.pin_hash)) {
+      recordAuthorizerFailure(userId, Date.now(), dbCtx.rawDb);
       appendAuditEvent(dbCtx.rawDb, {
         actorUserId: userId,
         action: 'DESTRUCTIVE_ACTION_DENIED',
@@ -553,10 +567,11 @@ export const fase3Routes: FastifyPluginAsync = async (fastify) => {
         entityId: action === 'PRODUCTION_RESET_REQUESTED' ? 'reset_production' : 'seed_demo',
         payload: { reason: 'PIN_INVALID' }
       });
-      // TODO(M12): lockout check / increment failed attempts
       reply.status(403).send({ success: false, code: 'FORBIDDEN', error: 'PIN de administrador inválido' });
       return { ok: false };
     }
+
+    recordAuthorizerSuccess(userId);
 
     // c. Si process.env.NODE_ENV === 'production' y existe al menos una fila en jornadas -> 409 con code 'PRODUCTION_RESET_BLOCKED', sin ejecutar nada.
     if (process.env.NODE_ENV === 'production') {

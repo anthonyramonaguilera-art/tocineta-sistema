@@ -5,7 +5,8 @@ import { getDatabaseContext } from '../db/connection.js';
 import { mapUserRow, mapSessionRow, type UserRole } from '../db/schema.js';
 import { hashPin, verifyPin, validatePinFormat, isTrivialPin } from '../modules/auth/pin.js';
 import { deleteAdminInitialFileIfExists } from '../modules/auth/seed-users.js';
-import { checkUserLockout, recordFailedAttempt, resetLockout } from '../modules/auth/lockout.js';
+import { resetLockout } from '../modules/auth/lockout.js';
+import { assertAuthorizerAttemptAllowed, findAuthorizerByPin } from '../modules/auth/authorizer-guard.js';
 import { appendAuditEvent } from '../modules/audit/audit-service.js';
 import { publishDomainEvent } from '../modules/events/event-bus.js';
 import { generateUuidV7 } from '@tocineta/shared';
@@ -125,42 +126,33 @@ export const authActionsRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
+    const key = (request as any).user?.id ?? request.ip;
+    try {
+      assertAuthorizerAttemptAllowed(key);
+    } catch (err: any) {
+      return reply.status(err.statusCode || 423).send({
+        success: false,
+        code: err.code || 'AUTHORIZER_LOCKED',
+        error: err.message,
+        remainingMs: err.remainingMs
+      });
+    }
+
     const dbCtx = getDatabaseContext();
-    const rawAuthorizer = dbCtx.rawDb.prepare(`SELECT * FROM users WHERE id = ?`).get(body.authorizerUserId);
-
-    if (!rawAuthorizer) {
-      return reply.status(404).send({ success: false, error: 'Usuario autorizador no encontrado' });
-    }
-
-    const authorizer = mapUserRow(rawAuthorizer);
-
-    if (!authorizer.isActive) {
-      return reply.status(404).send({ success: false, error: 'Usuario autorizador no encontrado' });
-    }
-
-    if (authorizer.role !== 'admin' && authorizer.role !== 'supervisor') {
-      return reply.status(403).send({
-        success: false,
-        error: 'Solo supervisores o administradores pueden autorizar esta acción'
-      });
-    }
-
-    const now = Date.now();
-    const lockCheck = checkUserLockout(authorizer, now);
-    if (lockCheck.isLocked) {
-      return reply.status(423).send({
-        success: false,
-        error: 'El usuario autorizador se encuentra bloqueado temporalmente por intentos fallidos'
-      });
-    }
-
-    const valid = verifyPin(body.pin, authorizer.pinSalt, authorizer.pinHash);
-    if (!valid) {
-      recordFailedAttempt(dbCtx.rawDb, authorizer.id, authorizer.failedAttempts, authorizer.lockoutStage, now);
+    const authorizer = findAuthorizerByPin(dbCtx.rawDb, body.pin, key, Date.now(), body.authorizerUserId);
+    if (!authorizer) {
+      const rawAuthorizer = dbCtx.rawDb.prepare(`SELECT * FROM users WHERE id = ?`).get(body.authorizerUserId);
+      if (!rawAuthorizer || !(rawAuthorizer as any).is_active) {
+        return reply.status(404).send({ success: false, error: 'Usuario autorizador no encontrado' });
+      }
+      if ((rawAuthorizer as any).role !== 'admin' && (rawAuthorizer as any).role !== 'supervisor') {
+        return reply.status(403).send({
+          success: false,
+          error: 'Solo supervisores o administradores pueden autorizar esta acción'
+        });
+      }
       return reply.status(401).send({ success: false, error: 'PIN de autorización inválido' });
     }
-
-    resetLockout(dbCtx.rawDb, authorizer.id, now);
 
     appendAuditEvent(dbCtx.rawDb, {
       authorizerUserId: authorizer.id,
@@ -195,26 +187,28 @@ export const authActionsRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
+    const key = request.ip;
+    try {
+      assertAuthorizerAttemptAllowed(key);
+    } catch (err: any) {
+      return reply.status(err.statusCode || 423).send({
+        success: false,
+        code: err.code || 'AUTHORIZER_LOCKED',
+        error: err.message,
+        remainingMs: err.remainingMs
+      });
+    }
+
     const dbCtx = getDatabaseContext();
-    const rawAuthorizer = dbCtx.rawDb.prepare(`SELECT * FROM users WHERE id = ?`).get(body.authorizerUserId);
-
-    if (!rawAuthorizer) {
-      return reply.status(403).send({
-        success: false,
-        error: 'Permiso denegado: solo un supervisor o administrador puede desbloquear usuarios'
-      });
-    }
-
-    const authorizer = mapUserRow(rawAuthorizer);
-
-    if (authorizer.role !== 'admin' && authorizer.role !== 'supervisor') {
-      return reply.status(403).send({
-        success: false,
-        error: 'Permiso denegado: solo un supervisor o administrador puede desbloquear usuarios'
-      });
-    }
-
-    if (!verifyPin(body.authorizerPin, authorizer.pinSalt, authorizer.pinHash)) {
+    const authorizer = findAuthorizerByPin(dbCtx.rawDb, body.authorizerPin, key, Date.now(), body.authorizerUserId);
+    if (!authorizer) {
+      const rawAuthorizer = dbCtx.rawDb.prepare(`SELECT * FROM users WHERE id = ?`).get(body.authorizerUserId);
+      if (!rawAuthorizer || !(rawAuthorizer as any).is_active || ((rawAuthorizer as any).role !== 'admin' && (rawAuthorizer as any).role !== 'supervisor')) {
+        return reply.status(403).send({
+          success: false,
+          error: 'Permiso denegado: solo un supervisor o administrador puede desbloquear usuarios'
+        });
+      }
       return reply.status(401).send({ success: false, error: 'PIN del autorizador inválido' });
     }
 

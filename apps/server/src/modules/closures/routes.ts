@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
-import { verifyPin } from '../auth/pin.js';
+import { findAuthorizerByPin } from '../auth/authorizer-guard.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { canUserProcessPayments } from '@tocineta/shared';
 import { performBlindCount, closeJornadaZ, type BlindCountInput, type UserContext } from './closures-service.js';
@@ -9,19 +9,12 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
   const getUserFromRequest = (req: any, supervisorPin?: string, _body?: any): UserContext => {
     const dbCtx = getDatabaseContext();
 
-    // Si viene un PIN supervisor/admin, validar si pertenece a un usuario autorizado
-    // TODO(M12): Bloquear o endurecer autorización por PIN en P3-C
+    // Si viene un PIN supervisor/admin, validar si pertenece a un usuario autorizado (limitado por authorizer-guard)
     if (supervisorPin) {
-      const authorizers = dbCtx.rawDb.prepare(`
-        SELECT id, name, role, pin_salt, pin_hash
-        FROM users
-        WHERE role IN ('admin', 'supervisor') AND is_active = 1
-      `).all() as any[];
-
-      for (const a of authorizers) {
-        if (verifyPin(supervisorPin, a.pin_salt, a.pin_hash)) {
-          return { id: a.id, name: a.name, role: a.role };
-        }
+      const key = req.user?.id ?? req.ip;
+      const authorizer = findAuthorizerByPin(dbCtx.rawDb, supervisorPin, key);
+      if (authorizer) {
+        return { id: authorizer.id, name: authorizer.name, role: authorizer.role };
       }
     }
 
@@ -80,7 +73,9 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err: any) {
       return reply.status(err.statusCode || 400).send({
         success: false,
-        error: err.message
+        code: err.code,
+        error: err.message,
+        remainingMs: err.remainingMs
       });
     }
   });
@@ -99,7 +94,9 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err: any) {
       return reply.status(err.statusCode || 400).send({
         success: false,
-        error: err.message
+        code: err.code,
+        error: err.message,
+        remainingMs: err.remainingMs
       });
     }
   });

@@ -240,7 +240,8 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
       const result = annulOrderInCashier(dbCtx.rawDb, {
         orderId: id,
         reason,
-        actorUserId: (request as any).user?.id || 'usr_cajera'
+        actorUserId: (request as any).user?.id || 'usr_cajera',
+        actingKey: (request as any).user?.id ?? request.ip
       });
 
       return reply.status(200).send({
@@ -250,7 +251,9 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err: any) {
       return reply.status(err.statusCode || 400).send({
         success: false,
-        error: err.message
+        code: err.code,
+        error: err.message,
+        remainingMs: err.remainingMs
       });
     }
   });

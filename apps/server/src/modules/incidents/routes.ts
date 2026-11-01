@@ -48,13 +48,16 @@ export const incidentsRoutes: FastifyPluginAsync = async (fastify) => {
       refundMethod: body.refund_method || body.refundMethod
     };
 
+    const key = (request as any).user?.id ?? request.ip;
     try {
-      const result = reportOrderIncident(dbCtx.rawDb, id, input);
+      const result = reportOrderIncident(dbCtx.rawDb, id, input, key);
       return reply.status(200).send(result);
     } catch (err: any) {
       return reply.status(err.statusCode || 400).send({
         success: false,
-        error: err.message
+        code: err.code,
+        error: err.message,
+        remainingMs: err.remainingMs
       });
     }
   });

@@ -7,7 +7,7 @@ import {
   type SettlementResult
 } from '@tocineta/shared';
 export { canUserProcessPayments };
-import { verifyPin } from '../auth/pin.js';
+import { findAuthorizerByPin } from '../auth/authorizer-guard.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
 import { getCurrentExchangeRate } from '../menu/menu-service.js';
@@ -52,6 +52,7 @@ export interface ProcessOrderPaymentInput {
   overpaymentReason?: string;
   supervisorPin?: string;
   confirmWarning?: boolean;
+  actingKey?: string;
 }
 
 /**
@@ -301,19 +302,8 @@ export function processOrderPayment(
           }
 
           // Verificar PIN de supervisor o admin
-          const authorizers = rawDb.prepare(`
-            SELECT id, name, role, pin_salt, pin_hash 
-            FROM users 
-            WHERE role IN ('admin', 'supervisor') AND is_active = 1
-          `).all() as any[];
-
-          let verifiedAuth: any = null;
-          for (const a of authorizers) {
-            if (verifyPin(input.supervisorPin, a.pin_salt, a.pin_hash)) {
-              verifiedAuth = a;
-              break;
-            }
-          }
+          const authorizerKey = input.actingKey || input.cashierUserId || 'unknown';
+          const verifiedAuth = findAuthorizerByPin(rawDb, input.supervisorPin, authorizerKey);
 
           if (!verifiedAuth) {
             const err: any = new Error('PIN de Supervisor o Admin incorrecto para autorizar duplicidad de Pago Móvil');
@@ -773,6 +763,7 @@ export interface AnnulOrderInCashierInput {
   reason?: string;
   actorUserId?: string;
   supervisorPin?: string;
+  actingKey?: string;
 }
 
 /**
@@ -804,19 +795,8 @@ export function annulOrderInCashier(
 
   // Si la orden ya estaba pagada y viene PIN de supervisor, validar
   if (isPaid && input.supervisorPin) {
-    const authorizers = rawDb.prepare(`
-      SELECT id, name, role, pin_salt, pin_hash
-      FROM users
-      WHERE role IN ('admin', 'supervisor') AND is_active = 1
-    `).all() as any[];
-
-    let verified = false;
-    for (const a of authorizers) {
-      if (verifyPin(input.supervisorPin, a.pin_salt, a.pin_hash)) {
-        verified = true;
-        break;
-      }
-    }
+    const authorizerKey = input.actingKey || input.actorUserId || 'unknown';
+    const verified = findAuthorizerByPin(rawDb, input.supervisorPin, authorizerKey);
     if (!verified) {
       const err: any = new Error('PIN de autorización inválido para anular comanda pagada');
       err.statusCode = 403;

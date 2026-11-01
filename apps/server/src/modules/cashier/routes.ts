@@ -241,7 +241,8 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         overpaymentDisposition: body.overpaymentDisposition,
         overpaymentReason: body.overpaymentReason,
         supervisorPin: body.supervisorPin,
-        confirmWarning: body.confirmWarning
+        confirmWarning: body.confirmWarning,
+        actingKey: (request as any).user?.id ?? request.ip
       });
 
       return reply.status(200).send({
@@ -256,7 +257,8 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         requiresSupervisorPin: err.requiresSupervisorPin || false,
         requiresConfirmation: err.requiresConfirmation || false,
         settlement: err.settlement,
-        netOverpaymentUsdCents: err.netOverpaymentUsdCents
+        netOverpaymentUsdCents: err.netOverpaymentUsdCents,
+        remainingMs: err.remainingMs
       });
     }
   });
@@ -273,7 +275,8 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         orderId: id,
         reason: body.reason,
         supervisorPin: body.supervisorPin,
-        actorUserId: user.id
+        actorUserId: user.id,
+        actingKey: (request as any).user?.id ?? request.ip
       });
 
       return reply.status(200).send({
@@ -283,7 +286,9 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err: any) {
       return reply.status(err.statusCode || 400).send({
         success: false,
-        error: err.message
+        code: err.code,
+        error: err.message,
+        remainingMs: err.remainingMs
       });
     }
   });

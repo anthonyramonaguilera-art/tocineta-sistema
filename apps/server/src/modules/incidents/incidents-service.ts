@@ -11,7 +11,7 @@
 
 import type Database from 'better-sqlite3';
 import { generateUuidV7, renderTicketToEscPos } from '@tocineta/shared';
-import { verifyPin } from '../auth/pin.js';
+import { findAuthorizerByPin } from '../auth/authorizer-guard.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { publishDomainEvent } from '../events/event-bus.js';
 import {
@@ -54,7 +54,8 @@ export interface IncidentResult {
 export function reportOrderIncident(
   rawDb: Database.Database,
   orderId: string,
-  input: ReportIncidentInput
+  input: ReportIncidentInput,
+  actingKey: string = 'unknown'
 ): IncidentResult {
   const now = Date.now();
 
@@ -67,19 +68,7 @@ export function reportOrderIncident(
   }
 
   // 2. Validar PIN de Autorización (Supervisor o Admin requerido)
-  const authorizers = rawDb.prepare(`
-    SELECT id, name, role, pin_salt, pin_hash
-    FROM users
-    WHERE role IN ('admin', 'supervisor') AND is_active = 1
-  `).all() as any[];
-
-  let verifiedAuthorizer: { id: string; name: string; role: string } | null = null;
-  for (const a of authorizers) {
-    if (verifyPin(input.authorizerPin, a.pin_salt, a.pin_hash)) {
-      verifiedAuthorizer = { id: a.id, name: a.name, role: a.role };
-      break;
-    }
-  }
+  const verifiedAuthorizer = findAuthorizerByPin(rawDb, input.authorizerPin, actingKey, now);
 
   if (!verifiedAuthorizer) {
     const err: any = new Error('PIN de autorización inválido o usuario sin privilegios de Supervisor o Administrador');
