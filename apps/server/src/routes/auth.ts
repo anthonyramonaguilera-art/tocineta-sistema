@@ -279,6 +279,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         cedula: user.cedula,
         approvalStatus: user.approvalStatus,
         permissions,
+        pinLength: user.pinLength,
         mustChangePin: Boolean(user.mustChangePin)
       }
     });
@@ -329,7 +330,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
     const now = Date.now();
 
     const rawSession = dbCtx.rawDb.prepare(`
-      SELECT s.*, u.name, u.cedula, u.phone, u.must_change_pin, u.is_active, u.approval_status, u.permissions_json
+      SELECT s.*, u.name, u.cedula, u.phone, u.pin_length, u.must_change_pin, u.is_active, u.approval_status, u.permissions_json
       FROM sessions s
       JOIN users u ON s.user_id = u.id
       WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL AND s.expires_at_ms > ?
@@ -356,6 +357,7 @@ export const authRoutes: FastifyPluginAsync = async (fastify) => {
         phone: rawSession.phone,
         approvalStatus: rawSession.approval_status,
         permissions,
+        pinLength: rawSession.pin_length,
         mustChangePin: Boolean(rawSession.must_change_pin)
       },
       session: {

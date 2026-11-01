@@ -4,10 +4,10 @@ import { useAuth } from '../context/AuthContext.js';
 import { queryClient, ALLOWED_TABS_BY_ROLE, type TabType } from '../App.js';
 import { AppHeader } from './AppHeader.js';
 import { AppSidebar } from './AppSidebar.js';
-import { Modal, Button, Input, Field, Icon } from '../ui/index.js';
 import { PrintAttentionModal } from '../features/cashier/PrintAttentionModal.js';
 import { TicketPreviewModal } from '../features/cashier/TicketPreviewModal.js';
-import { apiFetch } from '../api/client.js';
+import { ChangePinModal } from '../features/auth/ChangePinModal.js';
+import { BcvRateModal } from './BcvRateModal.js';
 
 /**
  * TOCINETA — Layout principal con cabecera oficial y navegación por roles
@@ -44,14 +44,13 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   formattedRate = '40,00',
   children
 }) => {
-  const { user, token, logout, changePin } = useAuth();
+  const { user, token, logout } = useAuth();
   const [isBcvModalOpen, setIsBcvModalOpen] = useState(false);
-  const [manualBcvInput, setManualBcvInput] = useState('');
-  const [bcvModalMsg, setBcvModalMsg] = useState<string | null>(null);
-  const [isSavingBcv, setIsSavingBcv] = useState(false);
-  const [isSyncingBcv, setIsSyncingBcv] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isOnline, setIsOnline] = useState<boolean>(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
+  const [previewJobId, setPreviewJobId] = useState<string | null>(null);
+
+  const mustChangePin = Boolean(user?.mustChangePin);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -129,90 +128,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     }
   };
 
-  // 4. Contrato de Seguridad y Longitud de PIN
-  const requiredPinLength = (user?.role === 'admin' || user?.role === 'supervisor') ? 6 : 4;
-  const [isChangePinModalOpen, setIsChangePinModalOpen] = useState(false);
-  const [currentPinInput, setCurrentPinInput] = useState('');
-  const [newPinInput, setNewPinInput] = useState('');
-  const [confirmPinInput, setConfirmPinInput] = useState('');
-  const [changePinError, setChangePinError] = useState<string | null>(null);
-  const [isChangingPin, setIsChangingPin] = useState(false);
-  const [previewJobId, setPreviewJobId] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (user?.mustChangePin) {
-      setIsChangePinModalOpen(true);
-    }
-  }, [user?.mustChangePin]);
-
-  const handleSavePin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setChangePinError(null);
-
-    if (newPinInput.length !== requiredPinLength) {
-      setChangePinError(`El nuevo PIN debe tener exactamente ${requiredPinLength} dígitos`);
-      return;
-    }
-    if (newPinInput !== confirmPinInput) {
-      setChangePinError('Los PINs no coinciden');
-      return;
-    }
-
-    setIsChangingPin(true);
-    const result = await changePin(currentPinInput, newPinInput);
-    setIsChangingPin(false);
-
-    if (result.success) {
-      setIsChangePinModalOpen(false);
-      setCurrentPinInput('');
-      setNewPinInput('');
-      setConfirmPinInput('');
-    } else {
-      setChangePinError(result.error || 'Error al cambiar PIN');
-    }
-  };
-
-  // 5. Gestión de BCV
-  const handleOpenBcvModal = () => {
-    setManualBcvInput(formattedRate.replace(',', '.'));
-    setBcvModalMsg(null);
-    setIsBcvModalOpen(true);
-  };
-
-  const handleSaveManualBcv = async () => {
-    const parsed = parseFloat(manualBcvInput.replace(',', '.'));
-    if (isNaN(parsed) || parsed <= 0) {
-      setBcvModalMsg('Ingresa una tasa numérica válida');
-      return;
-    }
-    setIsSavingBcv(true);
-    try {
-      const rateMicroBs = Math.round(parsed * 1_000_000);
-      const res = await apiFetch('/api/menu/exchange-rate', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(token ? { Authorization: `Bearer ${token}` } : {})
-        },
-        body: JSON.stringify({ rateMicroBs })
-      });
-      const data = await res.json();
-      if (res.ok) {
-        setBcvModalMsg(`✓ Tasa guardada: ${data.formattedRate} Bs/$`);
-        queryClient.invalidateQueries({ queryKey: ['posMenu'] });
-        queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
-        setTimeout(() => setIsBcvModalOpen(false), 1000);
-      } else {
-        setBcvModalMsg(data.error || 'Error al guardar tasa');
-      }
-    } catch {
-      setBcvModalMsg('Error de conexión al servidor');
-    } finally {
-      setIsSavingBcv(false);
-    }
-  };
-
-  // 6. Logout
+  // 4. Logout
   const handleLogout = async () => {
     queryClient.clear();
     onTabChange('pos');
@@ -228,8 +144,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
   const isAdmin = user?.role === 'admin' || user?.role === 'supervisor';
 
-
-
   return (
     <div className="min-h-screen bg-surface-alt flex flex-col font-sans select-none transition-colors">
       {/* Cabecera Oficial 56px (Estrictamente 4 elementos) */}
@@ -237,17 +151,23 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         title={VIEW_TITLES[currentTab] || 'Inicio'}
         isAdmin={isAdmin}
         formattedRate={formattedRate}
-        onOpenBcvModal={handleOpenBcvModal}
-        onOpenMenu={() => setIsDrawerOpen(true)}
+        onOpenBcvModal={() => {
+          if (!mustChangePin) setIsBcvModalOpen(true);
+        }}
+        onOpenMenu={() => {
+          if (!mustChangePin) setIsDrawerOpen(true);
+        }}
         isOnline={isOnline}
       />
 
-      {/* Menú Lateral Desplegable (Incluye Logo, Sede y Básico/Pro) */}
+      {/* Menú Lateral Desplegable */}
       <AppSidebar
-        isOpen={isDrawerOpen}
+        isOpen={isDrawerOpen && !mustChangePin}
         onClose={() => setIsDrawerOpen(false)}
         currentTab={currentTab}
-        onSelectTab={onTabChange}
+        onSelectTab={(tab) => {
+          if (!mustChangePin) onTabChange(tab);
+        }}
         allowedTabs={allowedTabs}
         uiMode={uiMode}
         onToggleUiMode={handleToggleUiMode}
@@ -257,163 +177,35 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
         activeSede={activeSede}
         onToggleSede={handleToggleSede}
         onInstallClick={() => {
-          window.location.hash = '#acceso';
+          if (!mustChangePin) window.location.hash = '#acceso';
         }}
         onLogout={handleLogout}
         userName={user?.name}
         userRole={user?.role}
       />
 
-      {/* Contenido Principal */}
-      <main className="flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 pb-20 sm:pb-6">
+      {/* Contenido Principal: Bloqueado completamente si mustChangePin es true */}
+      <main
+        className={`flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 pb-20 sm:pb-6 transition-opacity ${
+          mustChangePin ? 'pointer-events-none select-none opacity-30 filter blur-[1px]' : ''
+        }`}
+        aria-hidden={mustChangePin}
+      >
         {children}
       </main>
 
       {/* Modal Edición Tasa BCV */}
-      <Modal
+      <BcvRateModal
         isOpen={isBcvModalOpen}
         onClose={() => setIsBcvModalOpen(false)}
-        title="Actualizar Tasa Oficial BCV"
-      >
-        <div className="space-y-4">
-          <p className="text-xs text-ink-muted">
-            Define la tasa de cambio oficial en Bolívares por Dólar (Bs/USD) que regirá todos los cobros del sistema.
-          </p>
+        token={token}
+        formattedRate={formattedRate}
+      />
 
-          <button
-            type="button"
-            onClick={async () => {
-              setIsSyncingBcv(true);
-              setBcvModalMsg(null);
-              try {
-                const res = await apiFetch('/api/menu/exchange-rate/sync-now', {
-                  method: 'POST',
-                  headers: {
-                    ...(token ? { Authorization: `Bearer ${token}` } : {})
-                  }
-                });
-                const data = await res.json();
-                if (data.updated) {
-                  setBcvModalMsg(`✓ Tasa BCV sincronizada: ${data.formattedRate}`);
-                  queryClient.invalidateQueries({ queryKey: ['posMenu'] });
-                  queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
-                  setTimeout(() => setIsBcvModalOpen(false), 1200);
-                } else {
-                  setBcvModalMsg(data.message || data.error || 'La tasa BCV ya se encuentra actualizada');
-                }
-              } catch {
-                setBcvModalMsg('Fallo al contactar el servidor para sincronizar BCV');
-              } finally {
-                setIsSyncingBcv(false);
-              }
-            }}
-            disabled={isSyncingBcv}
-            className="w-full min-h-[46px] rounded-xl bg-surface border border-border hover:border-tocineta-yellow/50 text-ink font-bold text-xs transition-all flex items-center justify-center gap-2"
-          >
-            <Icon name="RefreshCw" size={16} className={isSyncingBcv ? 'animate-spin' : ''} />
-            <span>{isSyncingBcv ? 'Sincronizando con BCV oficial...' : 'Sincronizar con BCV (automático)'}</span>
-          </button>
-
-          <Field label="Tasa BCV (Bs/$)" hint="Solo si falla el automático" required>
-            <Input
-              type="text"
-              value={manualBcvInput}
-              onChange={(e) => setManualBcvInput(e.target.value)}
-              placeholder="Ej: 42.50"
-              leftIcon={<Icon name="DollarSign" size={18} />}
-              autoFocus
-            />
-          </Field>
-
-          {bcvModalMsg && (
-            <div className={`p-3 rounded-xl text-xs font-bold text-center ${
-              bcvModalMsg.startsWith('✓')
-                ? 'bg-success/10 border border-success/30 text-success'
-                : 'bg-danger/10 border border-danger/30 text-danger'
-            }`}>
-              {bcvModalMsg}
-            </div>
-          )}
-
-          <div className="flex gap-2 pt-2">
-            <Button
-              variant="ghost"
-              className="flex-1"
-              onClick={() => setIsBcvModalOpen(false)}
-            >
-              Cancelar
-            </Button>
-            <Button
-              variant="primary"
-              className="flex-1"
-              loading={isSavingBcv}
-              onClick={handleSaveManualBcv}
-            >
-              Guardar Tasa
-            </Button>
-          </div>
-        </div>
-      </Modal>
-
-      {/* Modal Obligatorio Cambio de PIN */}
-      <Modal
-        isOpen={isChangePinModalOpen}
-        onClose={() => {}}
-        title={`Cambio Obligatorio de PIN (${requiredPinLength} dígitos)`}
-      >
-        <form onSubmit={handleSavePin} className="space-y-4">
-          <p className="text-xs text-ink-muted">
-            Por seguridad física y auditoría, debe establecer su PIN de {requiredPinLength} dígitos antes de continuar.
-          </p>
-
-          <Field label="PIN Actual" required>
-            <Input
-              type="password"
-              value={currentPinInput}
-              onChange={(e) => setCurrentPinInput(e.target.value)}
-              placeholder="PIN actual o semilla"
-              required
-            />
-          </Field>
-
-          <Field label={`Nuevo PIN (${requiredPinLength} dígitos)`} required>
-            <Input
-              type="password"
-              maxLength={requiredPinLength}
-              value={newPinInput}
-              onChange={(e) => setNewPinInput(e.target.value)}
-              placeholder={`${requiredPinLength} dígitos`}
-              required
-            />
-          </Field>
-
-          <Field label="Confirmar Nuevo PIN" required>
-            <Input
-              type="password"
-              maxLength={requiredPinLength}
-              value={confirmPinInput}
-              onChange={(e) => setConfirmPinInput(e.target.value)}
-              placeholder="Repite el nuevo PIN"
-              required
-            />
-          </Field>
-
-          {changePinError && (
-            <div className="p-3 rounded-xl bg-danger/10 border border-danger/30 text-danger text-xs font-bold text-center">
-              {changePinError}
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            variant="primary"
-            fullWidth
-            loading={isChangingPin}
-          >
-            Actualizar PIN y Entrar
-          </Button>
-        </form>
-      </Modal>
+      {/* Modal Obligatorio y No Descartable de Cambio de PIN */}
+      <ChangePinModal
+        isOpen={mustChangePin}
+      />
 
       <PrintAttentionModal onOpenTicketPreview={setPreviewJobId} />
       {previewJobId && <TicketPreviewModal jobId={previewJobId} onClose={() => setPreviewJobId(null)} />}

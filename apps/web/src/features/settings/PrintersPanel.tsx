@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Badge, Icon } from '../../ui/index.js';
 import type { BusinessSettings } from './types.js';
 import { PrintFlowSettings } from './PrintFlowSettings.js';
+import { apiFetch } from '../../api/client';
 
 interface PrinterItem {
   id: string;
@@ -36,7 +37,7 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
   const { data: printersRes, isLoading: isLoadingPrinters } = useQuery<{ success: boolean; data: PrinterItem[] }>({
     queryKey: ['printersConfig'],
     queryFn: async () => {
-      const res = await fetch('/api/printers');
+      const res = await apiFetch('/api/printers');
       if (!res.ok) throw new Error('Error al cargar impresoras configuradas');
       return res.json();
     }
@@ -45,7 +46,7 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
   const { data: windowsPrinters = [], isLoading: _isLoadingWindows } = useQuery<WindowsPrinter[]>({
     queryKey: ['windowsPrinters'],
     queryFn: async () => {
-      const res = await fetch('/api/printers/windows');
+      const res = await apiFetch('/api/printers/windows');
       if (!res.ok) return [];
       return res.json();
     }
@@ -54,7 +55,7 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
   const { data: settingsRes } = useQuery<{ success: boolean; settings: BusinessSettings }>({
     queryKey: ['businessSettings'],
     queryFn: async () => {
-      const res = await fetch('/api/business-settings');
+      const res = await apiFetch('/api/business-settings');
       if (!res.ok) throw new Error('Error al cargar ajustes del negocio');
       return res.json();
     }
@@ -70,7 +71,7 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
 
   const updatePrinterMutation = useMutation({
     mutationFn: async ({ id, payload }: { id: string; payload: any }) => {
-      const res = await fetch(`/api/printers/${id}`, {
+      const res = await apiFetch(`/api/printers/${id}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -95,7 +96,7 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
 
   const updateSettingsMutation = useMutation({
     mutationFn: async (payload: Record<string, any>) => {
-      const res = await fetch('/api/business-settings', {
+      const res = await apiFetch('/api/business-settings', {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
@@ -120,7 +121,7 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
 
   const testPrinterMutation = useMutation({
     mutationFn: async (id: string) => {
-      const res = await fetch(`/api/printers/${id}/test`, {
+      const res = await apiFetch(`/api/printers/${id}/test`, {
         method: 'POST',
         headers: {
           ...(token ? { Authorization: `Bearer ${token}` } : {})

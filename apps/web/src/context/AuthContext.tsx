@@ -7,6 +7,7 @@ export interface UserSession {
   name: string;
   role: 'admin' | 'supervisor' | 'cajera' | 'mesonero' | 'cocinero' | 'despachador';
   mustChangePin?: boolean;
+  pinLength?: number;
   cedula?: string;
   phone?: string;
   permissions?: string[];

@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import type { StaffUser, PayrollSettings, TipPool } from './types.js';
+import { apiFetch } from '../../api/client';
 
 export function useStaffData() {
   const { token } = useAuth();
@@ -15,7 +16,7 @@ export function useStaffData() {
   const staffQuery = useQuery<StaffUser[]>({
     queryKey: ['staffList', token],
     queryFn: async () => {
-      const res = await fetch('/api/admin/users', { headers });
+      const res = await apiFetch('/api/admin/users', { headers });
       if (!res.ok) throw new Error('Error al cargar la lista de personal');
       const data = await res.json();
       return data.users || data.staff || [];
@@ -28,7 +29,7 @@ export function useStaffData() {
   const payrollSettingsQuery = useQuery<PayrollSettings>({
     queryKey: ['payrollSettings', token],
     queryFn: async () => {
-      const res = await fetch('/api/staff/payroll/settings', { headers });
+      const res = await apiFetch('/api/staff/payroll/settings', { headers });
       if (!res.ok) throw new Error('Error al cargar ajustes de nómina');
       const data = await res.json();
       return data.settings;
@@ -40,7 +41,7 @@ export function useStaffData() {
   const tipPoolQuery = useQuery<TipPool>({
     queryKey: ['tipPoolOpen', token],
     queryFn: async () => {
-      const res = await fetch('/api/staff/tips/pool?locationId=loc_alta_vista', { headers });
+      const res = await apiFetch('/api/staff/tips/pool?locationId=loc_alta_vista', { headers });
       if (!res.ok) throw new Error('Error al cargar pool de propinas');
       const data = await res.json();
       return data.pool;
@@ -58,7 +59,7 @@ export function useStaffData() {
       salaryScheme?: string;
       baseSalaryUsdCents?: number;
     }) => {
-      const res = await fetch('/api/admin/users', {
+      const res = await apiFetch('/api/admin/users', {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)
@@ -74,7 +75,7 @@ export function useStaffData() {
 
   const updatePermissionsMutation = useMutation({
     mutationFn: async ({ userId, permissions }: { userId: string; permissions: string[] }) => {
-      const res = await fetch(`/api/admin/users/${userId}/permissions`, {
+      const res = await apiFetch(`/api/admin/users/${userId}/permissions`, {
         method: 'PATCH',
         headers,
         body: JSON.stringify({ permissions })
@@ -90,7 +91,7 @@ export function useStaffData() {
 
   const deleteEmployeeMutation = useMutation({
     mutationFn: async (userId: string) => {
-      const res = await fetch(`/api/admin/users/${userId}`, {
+      const res = await apiFetch(`/api/admin/users/${userId}`, {
         method: 'DELETE',
         headers
       });
@@ -105,7 +106,7 @@ export function useStaffData() {
 
   const updatePayrollSettingsMutation = useMutation({
     mutationFn: async (settings: Partial<PayrollSettings>) => {
-      const res = await fetch('/api/staff/payroll/settings', {
+      const res = await apiFetch('/api/staff/payroll/settings', {
         method: 'PUT',
         headers,
         body: JSON.stringify(settings)
@@ -123,7 +124,7 @@ export function useStaffData() {
       amountUsdCents: number;
       reason: string;
     }) => {
-      const res = await fetch('/api/staff/payroll/adjustments', {
+      const res = await apiFetch('/api/staff/payroll/adjustments', {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)
@@ -141,7 +142,7 @@ export function useStaffData() {
       amountUsdCents?: number;
       isFixedDinner?: boolean;
     }) => {
-      const res = await fetch('/api/staff/consumptions', {
+      const res = await apiFetch('/api/staff/consumptions', {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)
@@ -158,7 +159,7 @@ export function useStaffData() {
       amountUsdCents: number;
       amountBsCents: number;
     }) => {
-      const res = await fetch('/api/staff/tips/pool', {
+      const res = await apiFetch('/api/staff/tips/pool', {
         method: 'POST',
         headers,
         body: JSON.stringify({ ...payload, locationId: 'loc_alta_vista' })
@@ -175,7 +176,7 @@ export function useStaffData() {
       splitMode: 'EQUAL' | 'HOURS';
       participants: { userId: string; hoursWorked?: number }[];
     }) => {
-      const res = await fetch('/api/staff/tips/close', {
+      const res = await apiFetch('/api/staff/tips/close', {
         method: 'POST',
         headers,
         body: JSON.stringify(payload)

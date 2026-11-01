@@ -1,7 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext.js';
-import { Card, Button, Input, Field, Icon, Modal } from '../../ui/index.js';
+import { Card, Button, Input, Field, Icon } from '../../ui/index.js';
 import { WorkerRegisterForm } from './WorkerRegisterForm.js';
+import { ChangePinModal } from './ChangePinModal.js';
+import { getRequiredPinLength } from './pin-utils.js';
+import { apiFetch } from '../../api/client.js';
 
 const QUICK_PROFILES = [
   { username: 'admin', label: 'ADMIN' },
@@ -11,8 +14,15 @@ const QUICK_PROFILES = [
   { username: 'despacho', label: 'DESPACHO' }
 ];
 
+interface PublicUser {
+  id: string;
+  name: string;
+  role: string;
+  pinLength?: number;
+}
+
 export const LoginView: React.FC = () => {
-  const { login, user, changePin } = useAuth();
+  const { login, user } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -22,13 +32,8 @@ export const LoginView: React.FC = () => {
   // Perfiles rápidos: solo si están activos en ajustes (por defecto apagado)
   const [quickLoginEnabled, setQuickLoginEnabled] = useState(false);
 
-  // Modal para cambio obligatorio de clave / PIN semilla
-  const [showChangePinModal, setShowChangePinModal] = useState(false);
-  const [currentPin, setCurrentPin] = useState('');
-  const [newPin, setNewPin] = useState('');
-  const [confirmPin, setConfirmPin] = useState('');
-  const [changePinError, setChangePinError] = useState<string | null>(null);
-  const [changingPin, setChangingPin] = useState(false);
+  // Usuarios públicos para determinar pinLength
+  const [publicUsers, setPublicUsers] = useState<PublicUser[]>([]);
 
   // Registro de nuevo empleado
   const [isRegistering, setIsRegistering] = useState(false);
@@ -43,22 +48,61 @@ export const LoginView: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (user?.mustChangePin) {
-      setShowChangePinModal(true);
+    let unmounted = false;
+    apiFetch('/api/auth/users-public')
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!unmounted && data?.users && Array.isArray(data.users)) {
+          setPublicUsers(data.users);
+        }
+      })
+      .catch(() => {});
+    return () => {
+      unmounted = true;
+    };
+  }, []);
+
+  const cleanUser = username.trim();
+  const matchedUser = publicUsers.find(
+    (u) =>
+      u.name.toLowerCase() === cleanUser.toLowerCase() ||
+      u.role.toLowerCase() === cleanUser.toLowerCase() ||
+      u.id.toLowerCase() === cleanUser.toLowerCase()
+  );
+
+  const expectedPinLength = getRequiredPinLength(
+    matchedUser || {
+      role: cleanUser.toLowerCase() === 'admin' || cleanUser.toLowerCase() === 'supervisor' ? 'admin' : undefined
     }
-  }, [user?.mustChangePin]);
+  );
 
   const handleSelectQuickProfile = (profileUsername: string) => {
     setUsername(profileUsername);
+    setPassword('');
     setErrorMessage(null);
     if (passwordInputRef.current) {
       passwordInputRef.current.focus();
     }
   };
 
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    // Solo dígitos: filtra la entrada, no permite letras
+    const cleanDigits = e.target.value.replace(/\D/g, '').slice(0, expectedPinLength);
+    setPassword(cleanDigits);
+    setErrorMessage(null);
+  };
+
+  const handlePasswordPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    e.preventDefault();
+    const pasted = e.clipboardData.getData('text');
+    // Solo dígitos: filtra lo pegado
+    const cleanDigits = pasted.replace(/\D/g, '').slice(0, expectedPinLength);
+    setPassword(cleanDigits);
+    setErrorMessage(null);
+  };
+
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const cleanUser = username.trim();
     const cleanPass = password.trim();
 
     if (!cleanUser) {
@@ -66,7 +110,17 @@ export const LoginView: React.FC = () => {
       return;
     }
     if (!cleanPass) {
-      setErrorMessage('Por favor ingresa tu contraseña o clave de acceso.');
+      setErrorMessage('Por favor ingresa tu PIN de acceso.');
+      return;
+    }
+
+    if (!/^\d+$/.test(cleanPass)) {
+      setErrorMessage('El PIN debe contener únicamente dígitos numéricos.');
+      return;
+    }
+
+    if (cleanPass.length !== expectedPinLength) {
+      setErrorMessage(`El PIN debe tener exactamente ${expectedPinLength} dígitos.`);
       return;
     }
 
@@ -82,33 +136,6 @@ export const LoginView: React.FC = () => {
 
     if (!result.success) {
       setErrorMessage(result.error || 'Credenciales incorrectas');
-    }
-  };
-
-  const handleChangePinSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setChangePinError(null);
-
-    if (newPin.length < 4) {
-      setChangePinError('La nueva clave o PIN debe tener al menos 4 caracteres.');
-      return;
-    }
-    if (newPin !== confirmPin) {
-      setChangePinError('Las claves no coinciden.');
-      return;
-    }
-
-    setChangingPin(true);
-    const result = await changePin(currentPin || password, newPin);
-    setChangingPin(false);
-
-    if (result.success) {
-      setShowChangePinModal(false);
-      setCurrentPin('');
-      setNewPin('');
-      setConfirmPin('');
-    } else {
-      setChangePinError(result.error || 'Error al actualizar clave.');
     }
   };
 
@@ -151,6 +178,7 @@ export const LoginView: React.FC = () => {
                   value={username}
                   onChange={(e) => {
                     setUsername(e.target.value);
+                    setPassword('');
                     setErrorMessage(null);
                   }}
                   placeholder="Ej: admin, cajera, mesero..."
@@ -169,13 +197,13 @@ export const LoginView: React.FC = () => {
                   </span>
                   <div className="flex flex-wrap gap-1.5">
                     {QUICK_PROFILES.map((p) => {
-                      const isSelected = username.toLowerCase() === p.username;
+                      const isSelected = cleanUser.toLowerCase() === p.username;
                       return (
                         <button
                           key={p.username}
                           type="button"
                           onClick={() => handleSelectQuickProfile(p.username)}
-                          className={`min-h-[34px] px-3 py-1 rounded-xl text-xs font-black transition-all border ${
+                          className={`min-h-[48px] px-3.5 py-1.5 rounded-xl text-xs font-black transition-all border ${
                             isSelected
                               ? 'bg-primary text-primary-ink border-primary shadow-sm'
                               : 'bg-surface-alt text-ink border-border hover:border-primary/50'
@@ -189,23 +217,24 @@ export const LoginView: React.FC = () => {
                 </div>
               )}
 
-              <Field label="Contraseña / PIN" required error={undefined}>
+              <Field label={`PIN (${expectedPinLength} dígitos)`} required error={undefined}>
                 <Input
                   ref={passwordInputRef}
                   type={showPassword ? 'text' : 'password'}
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  maxLength={expectedPinLength}
                   value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setErrorMessage(null);
-                  }}
-                  placeholder="Ingresa tu clave de acceso"
+                  onChange={handlePasswordChange}
+                  onPaste={handlePasswordPaste}
+                  placeholder={`Ingresa PIN de ${expectedPinLength} dígitos`}
                   leftIcon={<Icon name="Lock" size={18} />}
                   rightIcon={
                     <button
                       type="button"
                       onClick={() => setShowPassword(!showPassword)}
                       className="text-ink-muted hover:text-ink p-1 rounded transition-colors"
-                      title={showPassword ? 'Ocultar contraseña' : 'Ver contraseña'}
+                      title={showPassword ? 'Ocultar PIN' : 'Ver PIN'}
                     >
                       <Icon name={showPassword ? 'EyeOff' : 'Eye'} size={18} />
                     </button>
@@ -224,6 +253,7 @@ export const LoginView: React.FC = () => {
                 variant="primary"
                 fullWidth
                 loading={isLoading}
+                className="min-h-[48px]"
                 rightIcon={<Icon name="ArrowRight" size={18} />}
               >
                 Iniciar Sesión
@@ -233,7 +263,7 @@ export const LoginView: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setIsRegistering(true)}
-                  className="inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink font-bold transition-colors"
+                  className="min-h-[48px] inline-flex items-center gap-1.5 text-xs text-ink-muted hover:text-ink font-bold transition-colors"
                 >
                   <Icon name="UserPlus" size={15} />
                   <span>¿Nuevo empleado? Solicitar acceso</span>
@@ -246,53 +276,11 @@ export const LoginView: React.FC = () => {
         </Card>
       </div>
 
-      {/* Modal Obligatorio: Primer inicio obliga a cambiar clave semilla */}
-      <Modal
-        isOpen={showChangePinModal}
-        onClose={() => {}}
-        title="Cambio Obligatorio de Clave"
-      >
-        <form onSubmit={handleChangePinSubmit} className="space-y-4">
-          <p className="text-xs text-ink-muted">
-            Por seguridad de la sede, tu cuenta requiere cambiar la contraseña inicial antes de operar el sistema.
-          </p>
-
-          <Field label="Nueva Clave o PIN" required>
-            <Input
-              type="password"
-              value={newPin}
-              onChange={(e) => setNewPin(e.target.value)}
-              placeholder="Mínimo 4 dígitos o letras"
-              required
-            />
-          </Field>
-
-          <Field label="Confirmar Nueva Clave" required>
-            <Input
-              type="password"
-              value={confirmPin}
-              onChange={(e) => setConfirmPin(e.target.value)}
-              placeholder="Repite la nueva clave"
-              required
-            />
-          </Field>
-
-          {changePinError && (
-            <div className="p-3 rounded-xl bg-danger/10 border border-danger/30 text-danger text-xs font-bold text-center">
-              {changePinError}
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            variant="primary"
-            fullWidth
-            loading={changingPin}
-          >
-            Actualizar Clave y Continuar
-          </Button>
-        </form>
-      </Modal>
+      {/* Modal Obligatorio y No Descartable de Cambio de PIN */}
+      <ChangePinModal
+        isOpen={Boolean(user?.mustChangePin)}
+        initialCurrentPin={password}
+      />
     </div>
   );
 };

@@ -10,6 +10,8 @@ export interface ModalProps {
   footer?: React.ReactNode;
   maxWidth?: 'sm' | 'md' | 'lg' | 'xl' | 'express';
   showCloseButton?: boolean;
+  closeOnEscape?: boolean;
+  closeOnBackdropClick?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -20,7 +22,9 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   footer,
   maxWidth = 'md',
-  showCloseButton = true
+  showCloseButton = true,
+  closeOnEscape = true,
+  closeOnBackdropClick = true
 }) => {
   useEffect(() => {
     if (!isOpen) return;
@@ -32,7 +36,7 @@ export const Modal: React.FC<ModalProps> = ({
     document.body.style.touchAction = 'none';
 
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && closeOnEscape) onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
 
@@ -41,7 +45,7 @@ export const Modal: React.FC<ModalProps> = ({
       document.body.style.touchAction = originalTouchAction;
       window.removeEventListener('keydown', handleKeyDown);
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, closeOnEscape]);
 
   if (!isOpen) return null;
 
@@ -62,7 +66,7 @@ export const Modal: React.FC<ModalProps> = ({
       {/* Backdrop */}
       <div
         className="fixed inset-0 bg-ink/60 transition-opacity"
-        onClick={onClose}
+        onClick={closeOnBackdropClick ? onClose : undefined}
         aria-hidden="true"
       />
 

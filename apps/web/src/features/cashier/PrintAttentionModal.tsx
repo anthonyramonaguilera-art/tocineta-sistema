@@ -18,8 +18,28 @@ interface PrintAttentionModalProps {
   onOpenTicketPreview?: (jobId: string) => void;
 }
 
+const FAST_POLL_INTERVAL_MS = 3000;
+const SLOW_POLL_INTERVAL_MS = 30000;
+
 export const PrintAttentionModal: React.FC<PrintAttentionModalProps> = ({ onOpenTicketPreview }) => {
-  // Consultar periódicamente si hay trabajos que requieran atención
+  const [isDocumentVisible, setIsDocumentVisible] = React.useState(
+    () => typeof document === 'undefined' || !document.hidden
+  );
+
+  React.useEffect(() => {
+    const handleVisibilityChange = () => {
+      setIsDocumentVisible(!document.hidden);
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
+  // Consultar periódicamente si hay trabajos que requieran atención:
+  // - Polling rápido (3 s) SOLO si el modal está abierto o el último resultado tiene trabajos pendientes
+  // - En reposo, polling lento de 30 s
+  // - Pausa si document.hidden
   const { data, refetch } = useQuery<{ data: AttentionPrintJob[] }>({
     queryKey: ['attentionPrintJobs'],
     queryFn: async () => {
@@ -27,7 +47,18 @@ export const PrintAttentionModal: React.FC<PrintAttentionModalProps> = ({ onOpen
       if (!res.ok) return { data: [] };
       return res.json();
     },
-    refetchInterval: 3000
+    refetchInterval: (query) => {
+      if (typeof document !== 'undefined' && document.hidden) {
+        return false;
+      }
+      if (!isDocumentVisible) {
+        return false;
+      }
+      const jobs = query.state.data?.data;
+      const hasPendingJobs = Array.isArray(jobs) && jobs.length > 0;
+      return hasPendingJobs ? FAST_POLL_INTERVAL_MS : SLOW_POLL_INTERVAL_MS;
+    },
+    refetchIntervalInBackground: false
   });
 
   const attentionJobs = data?.data || [];

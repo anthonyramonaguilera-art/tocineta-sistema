@@ -5,6 +5,7 @@ import { Select } from '../../ui/Select.js';
 import { Field } from '../../ui/Field.js';
 import { Icon } from '../../ui/Icon.js';
 import type { StaffUser, PayrollAdjustment, StaffConsumption } from './types.js';
+import { apiFetch } from '../../api/client';
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -48,8 +49,8 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
     const headers = { Authorization: `Bearer ${token}` };
     try {
       const [adjRes, consRes] = await Promise.all([
-        fetch(`/api/staff/payroll/adjustments/${userId}`, { headers }),
-        fetch(`/api/staff/consumptions/${userId}`, { headers })
+        apiFetch(`/api/staff/payroll/adjustments/${userId}`, { headers }),
+        apiFetch(`/api/staff/consumptions/${userId}`, { headers })
       ]);
 
       const adjData = await adjRes.json();
@@ -119,7 +120,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
       setIsSubmitting(true);
       setError(null);
 
-      const res = await fetch('/api/staff/settlements', {
+      const res = await apiFetch('/api/staff/settlements', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
