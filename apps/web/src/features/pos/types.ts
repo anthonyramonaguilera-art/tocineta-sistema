@@ -37,4 +37,8 @@ export interface OutboxOrder {
   createdAtMs: number;
   attempts: number;
   lastError?: string;
+  needsAttention?: boolean;
+  attentionReason?: 'AUTH' | 'RATE_LIMIT' | 'SERVER';
 }
+
+export type OutboxItem = OutboxOrder;

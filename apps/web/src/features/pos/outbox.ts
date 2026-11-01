@@ -1,11 +1,78 @@
-import type { OutboxOrder } from './types.js';
+import type { OutboxOrder, OutboxItem } from './types.js';
+
+export type { OutboxOrder, OutboxItem };
 
 const DB_NAME = 'tocineta_pos_offline';
 const DB_VERSION = 1;
 const STORE_NAME = 'outbox_orders';
+const REJECTED_RING_KEY = 'tocineta_outbox_rejected';
+const REJECTED_RING_MAX = 20;
 
 let dbPromise: Promise<IDBDatabase> | null = null;
 const listeners: Array<(count: number) => void> = [];
+
+function recordOutboxRejected(idempotencyKey: string, status: number): void {
+  try {
+    if (typeof localStorage === 'undefined') return;
+    const raw = localStorage.getItem(REJECTED_RING_KEY);
+    let list: Array<{ idempotencyKey: string; status: number; ts: number }> = [];
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          list = parsed;
+        }
+      } catch {}
+    }
+    list.push({ idempotencyKey, status, ts: Date.now() });
+    if (list.length > REJECTED_RING_MAX) {
+      list = list.slice(list.length - REJECTED_RING_MAX);
+    }
+    localStorage.setItem(REJECTED_RING_KEY, JSON.stringify(list));
+  } catch (err) {
+    console.warn('[Outbox] Error al registrar orden rechazada en localStorage:', err);
+  }
+}
+
+export function isNetworkFailure(err: unknown, res?: Response | { status: number }): boolean {
+  if (res && (res.status === 502 || res.status === 503 || res.status === 504)) {
+    return true;
+  }
+
+  // Falso para errores de código (ReferenceError, JSON SyntaxError, RangeError, etc.)
+  if (
+    err instanceof ReferenceError ||
+    err instanceof SyntaxError ||
+    err instanceof RangeError
+  ) {
+    return false;
+  }
+
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
+    return true;
+  }
+
+  if (err instanceof TypeError) {
+    const msg = err.message || '';
+    if (/cannot read|undefined is not|is not a function|null is not/i.test(msg)) {
+      return false;
+    }
+    return true;
+  }
+
+  if (err && typeof err === 'object') {
+    const msg = (err as { message?: unknown }).message;
+    if (typeof msg === 'string' && /failed to fetch|network|load failed|timeout|aborted/i.test(msg)) {
+      return true;
+    }
+  }
+
+  if (typeof err === 'string' && /failed to fetch|network|load failed|timeout|aborted/i.test(err)) {
+    return true;
+  }
+
+  return false;
+}
 
 function openDb(): Promise<IDBDatabase> {
   if (dbPromise) return dbPromise;
@@ -133,11 +200,11 @@ export async function purgeCorruptedOutboxOrders(): Promise<number> {
     const pending = await getPendingOutboxOrders();
     let purged = 0;
     for (const item of pending) {
+      const items = item.payload?.lines ?? item.payload?.items;
       if (
         !item.idempotencyKey ||
         !item.payload ||
-        !Array.isArray(item.payload.items) ||
-        (item.lastError && (item.lastError.includes('Status 4') || item.lastError.includes('400') || item.lastError.includes('500')))
+        !Array.isArray(items)
       ) {
         await removeOrderFromOutbox(item.idempotencyKey);
         purged++;
@@ -156,7 +223,7 @@ let isFlushing = false;
 
 export async function flushOutbox(fallbackToken?: string): Promise<{ sent: number; failed: number }> {
   if (isFlushing) return { sent: 0, failed: 0 };
-  if (typeof navigator !== 'undefined' && !navigator.onLine) {
+  if (typeof navigator !== 'undefined' && navigator.onLine === false) {
     return { sent: 0, failed: 0 };
   }
 
@@ -170,7 +237,8 @@ export async function flushOutbox(fallbackToken?: string): Promise<{ sent: numbe
 
     for (const item of pending) {
       try {
-        const token = item.token || fallbackToken || localStorage.getItem('tocineta_session_token');
+        const activeToken = typeof localStorage !== 'undefined' ? localStorage.getItem('tocineta_token') : null;
+        const token = activeToken || fallbackToken || item.token;
         const headers: Record<string, string> = {
           'Content-Type': 'application/json',
           'Idempotency-Key': item.idempotencyKey
@@ -189,26 +257,55 @@ export async function flushOutbox(fallbackToken?: string): Promise<{ sent: numbe
           // Si respondió 200/201 (creada) o 409 (ya procesada/idempotente)
           await removeOrderFromOutbox(item.idempotencyKey);
           sent++;
-        } else if (res.status >= 400 && res.status < 500) {
-          // Rechazado por validación de payload o regla de negocio del servidor:
-          // Descartar de inmediato para no atascar la cola
-          console.warn(`[Outbox] Descartando pedido rechazado por el servidor con error HTTP ${res.status}:`, item.idempotencyKey);
+        } else if (res.status === 401 || res.status === 403) {
+          // 401, 403 -> CONSERVAR, needsAttention=true, attentionReason='AUTH', no incrementes como definitivo, y break
+          item.needsAttention = true;
+          item.attentionReason = 'AUTH';
+          item.lastError = `Status ${res.status}`;
+          await saveOrderToOutbox(item);
+          break;
+        } else if (res.status === 408 || res.status === 429 || (res.status >= 500 && res.status < 600)) {
+          // 408, 429, 5xx -> CONSERVAR, attempts++, lastError, attentionReason 'RATE_LIMIT' (429) o 'SERVER' (5xx); en 429 y 503 haz break
+          item.attempts += 1;
+          item.lastError = `Status ${res.status}`;
+          if (res.status === 429) {
+            item.attentionReason = 'RATE_LIMIT';
+          } else if (res.status >= 500) {
+            item.attentionReason = 'SERVER';
+          }
+          await saveOrderToOutbox(item);
+          failed++;
+          if (res.status === 429 || res.status === 503) {
+            break;
+          }
+        } else if (res.status === 400 || res.status === 404 || res.status === 422 || (res.status >= 400 && res.status < 500)) {
+          // 400, 404, 422 (rechazo definitivo de payload) -> borrar, failed++, ring en localStorage y console.warn
+          recordOutboxRejected(item.idempotencyKey, res.status);
+          console.warn(`[Outbox] Descartando pedido rechazado definitivamente por el servidor con status ${res.status}:`, item.idempotencyKey);
           await removeOrderFromOutbox(item.idempotencyKey);
           failed++;
         } else {
-          // Error 5xx del servidor
+          // Código imprevisto: conservar
           item.attempts += 1;
           item.lastError = `Status ${res.status}`;
           await saveOrderToOutbox(item);
           failed++;
         }
-      } catch (err: any) {
-        // Falló de nuevo por red
-        item.attempts += 1;
-        item.lastError = err?.message || 'Error de red';
-        await saveOrderToOutbox(item);
-        failed++;
-        break; // Detener reintentos si no hay conexión real
+      } catch (err: unknown) {
+        if (isNetworkFailure(err)) {
+          // Excepción de red (isNetworkFailure) -> conservar y break como hoy
+          item.attempts += 1;
+          item.lastError = err instanceof Error ? err.message : 'Error de red';
+          await saveOrderToOutbox(item);
+          failed++;
+          break; // Detener reintentos si no hay conexión real
+        } else {
+          // Excepción NO de red -> conservar con lastError y continúa con el siguiente (no pierdas el pedido)
+          item.attempts += 1;
+          item.lastError = err instanceof Error ? err.message : String(err);
+          await saveOrderToOutbox(item);
+          failed++;
+        }
       }
     }
   } finally {
@@ -224,14 +321,18 @@ if (typeof window !== 'undefined') {
   purgeCorruptedOutboxOrders().catch(() => {});
 
   window.addEventListener('online', () => {
-    flushOutbox();
+    void flushOutbox();
+  });
+
+  window.addEventListener('tocineta:authenticated', () => {
+    void flushOutbox();
   });
 
   // Reintento periódico cada 12 segundos si hay cola
   setInterval(() => {
     if (typeof navigator !== 'undefined' && navigator.onLine) {
       getOutboxCount().then(c => {
-        if (c > 0) flushOutbox();
+        if (c > 0) void flushOutbox();
       }).catch(() => {});
     }
   }, 12000);

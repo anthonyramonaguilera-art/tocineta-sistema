@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react';
 import type { CartItem, CustomizationModifier } from './types.js';
 import type { PosProduct } from '../../types/menu.js';
 import { generateUuidV7, createIdempotencyKey, usdToBsCents, parseRateToMicroBs } from '@tocineta/shared';
-import { saveOrderToOutbox, subscribeToOutboxCount, flushOutbox } from './outbox.js';
+import { saveOrderToOutbox, subscribeToOutboxCount, flushOutbox, isNetworkFailure } from './outbox.js';
 
 export interface UsePosCartProps {
   token: string | null;
@@ -194,10 +194,11 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
       lines: linesPayload
     };
 
+    let res: Response | undefined;
     try {
       // Si estamos editando una orden existente: PATCH /api/orders/:id con concurrencia optimista
       if (editingOrderId) {
-        const res = await fetch(`/api/orders/${editingOrderId}`, {
+        res = await fetch(`/api/orders/${editingOrderId}`, {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
@@ -212,7 +213,7 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
           })
         });
 
-        const data = await res.json();
+        const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.success) {
           throw new Error(data.error || 'Error al actualizar pedido');
         }
@@ -229,7 +230,7 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
       }
 
       // Si es una NUEVA orden: POST /api/orders
-      const res = await fetch('/api/orders', {
+      res = await fetch('/api/orders', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -239,7 +240,7 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
         body: JSON.stringify(orderPayload)
       });
 
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
       if (!res.ok || !data.success) {
         throw new Error(data.error || 'Error al crear pedido');
       }
@@ -255,13 +256,7 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
       return { success: true, order: data.order };
     } catch (err: any) {
       // Revisa si es fallo de red para encolar en el outbox
-      const isNetworkError =
-        (typeof navigator !== 'undefined' && !navigator.onLine) ||
-        err instanceof TypeError ||
-        err?.message?.toLowerCase().includes('failed to fetch') ||
-        err?.message?.toLowerCase().includes('network');
-
-      if (isNetworkError && !editingOrderId) {
+      if (isNetworkFailure(err, res) && !editingOrderId) {
         try {
           await saveOrderToOutbox({
             idempotencyKey,
@@ -269,7 +264,7 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
             token: token || undefined,
             createdAtMs: Date.now(),
             attempts: 1,
-            lastError: err.message
+            lastError: err?.message || 'Error de red'
           });
 
           setStatusNotification({
@@ -287,11 +282,12 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
         }
       }
 
+      // Para un 4xx definitivo o errores no de red: muestra el error al usuario sin encolar
       setStatusNotification({
         type: 'error',
-        message: err.message || 'Error al procesar el pedido'
+        message: err?.message || 'Error al procesar el pedido'
       });
-      return { success: false, error: err.message };
+      return { success: false, error: err?.message };
     } finally {
       setIsSubmitting(false);
     }
