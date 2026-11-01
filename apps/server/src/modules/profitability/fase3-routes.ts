@@ -1,6 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
 import { extractSessionToken, hashToken } from '../../routes/auth.js';
+import { verifyPin } from '../auth/pin.js';
+import { appendAuditEvent } from '../audit/audit-service.js';
+import { getSessionUserByToken } from '../auth/session.js';
 import {
   getAllLocations,
   createLocation,
@@ -514,13 +517,87 @@ export const fase3Routes: FastifyPluginAsync = async (fastify) => {
     return reply.send({ success: true, message: 'Configuración guardada exitosamente' });
   });
 
-  fastify.post('/api/fase3/setup-wizard/init-prod', async (_request, reply) => {
+  const validateDestructiveWizardAction = (
+    request: any,
+    reply: any,
+    action: 'PRODUCTION_RESET_REQUESTED' | 'DEMO_SEED_REQUESTED'
+  ): { ok: boolean; userId?: string } => {
+    const dbCtx = getDatabaseContext();
+    const user = request.user ?? getSessionUserByToken(dbCtx.rawDb, extractSessionToken(request.headers.authorization));
+
+    // a. request.user ausente -> 401. Rol distinto de 'admin' -> 403.
+    if (!user) {
+      reply.status(401).send({ success: false, code: 'UNAUTHENTICATED', error: 'Autenticación requerida' });
+      return { ok: false };
+    }
+    if (user.role !== 'admin') {
+      reply.status(403).send({ success: false, code: 'FORBIDDEN', error: 'Acceso denegado: se requiere rol de administrador' });
+      return { ok: false };
+    }
+
+    const userId = user.id || user.userId;
+
+    // b. Exigir body.pin y verificarlo con verifyPin contra el hash del usuario request.user.id (consulta users por id).
+    // PIN inválido -> 403 y registra evento de auditoría (appendAuditEvent) 'DESTRUCTIVE_ACTION_DENIED'.
+    const body = (request.body as any) || {};
+    const pin = body.pin;
+    const adminRow = dbCtx.rawDb.prepare('SELECT id, pin_hash, pin_salt FROM users WHERE id = ?').get(userId) as {
+      id: string;
+      pin_hash: string;
+      pin_salt: string;
+    } | undefined;
+
+    if (!pin || typeof pin !== 'string' || !adminRow || !verifyPin(pin, adminRow.pin_salt, adminRow.pin_hash)) {
+      appendAuditEvent(dbCtx.rawDb, {
+        actorUserId: userId,
+        action: 'DESTRUCTIVE_ACTION_DENIED',
+        entityType: 'system',
+        entityId: action === 'PRODUCTION_RESET_REQUESTED' ? 'reset_production' : 'seed_demo',
+        payload: { reason: 'PIN_INVALID' }
+      });
+      // TODO(M12): lockout check / increment failed attempts
+      reply.status(403).send({ success: false, code: 'FORBIDDEN', error: 'PIN de administrador inválido' });
+      return { ok: false };
+    }
+
+    // c. Si process.env.NODE_ENV === 'production' y existe al menos una fila en jornadas -> 409 con code 'PRODUCTION_RESET_BLOCKED', sin ejecutar nada.
+    if (process.env.NODE_ENV === 'production') {
+      const jornadaRow = dbCtx.rawDb.prepare('SELECT id FROM jornadas LIMIT 1').get();
+      if (jornadaRow) {
+        reply.status(409).send({
+          success: false,
+          code: 'PRODUCTION_RESET_BLOCKED',
+          error: 'Operación bloqueada en producción: ya existen jornadas registradas en la base de datos'
+        });
+        return { ok: false };
+      }
+    }
+
+    // d. Antes de ejecutar, appendAuditEvent 'PRODUCTION_RESET_REQUESTED' / 'DEMO_SEED_REQUESTED' con actorUserId.
+    appendAuditEvent(dbCtx.rawDb, {
+      actorUserId: userId,
+      action,
+      entityType: 'system',
+      entityId: action === 'PRODUCTION_RESET_REQUESTED' ? 'reset_production' : 'seed_demo',
+      payload: { initiatedBy: userId }
+    });
+
+    return { ok: true, userId };
+  };
+
+  fastify.post('/api/fase3/setup-wizard/init-prod', async (request, reply) => {
+    const val = validateDestructiveWizardAction(request, reply, 'PRODUCTION_RESET_REQUESTED');
+    if (!val.ok) return;
+
     const dbCtx = getDatabaseContext();
     resetToProductionClean(dbCtx.rawDb);
     return reply.send({ success: true, message: 'Base de datos restablecida limpia para producción (Cero datos demo)' });
   });
 
-  fastify.post('/api/fase3/setup-wizard/seed-demo', async (_request, reply) => {
+  fastify.post('/api/fase3/setup-wizard/seed-demo', async (request, reply) => {
+    const val = validateDestructiveWizardAction(request, reply, 'DEMO_SEED_REQUESTED');
+    if (!val.ok) return;
+
     const dbCtx = getDatabaseContext();
     seedDemoData(dbCtx.rawDb);
     return reply.send({ success: true, message: 'Datos demo sembrados con éxito (Modo DEMO activado)' });

@@ -11,6 +11,24 @@ export function getRequiredPinLength(role: UserRole): 4 | 6 {
   return role === 'admin' || role === 'supervisor' ? 6 : 4;
 }
 
+export function isTrivialPin(pin: string): boolean {
+  if (!pin || pin.length < 4) return true;
+  // Todos los dígitos iguales (p. ej. '000000', '111111')
+  if (pin.split('').every((c) => c === pin[0])) return true;
+
+  // Secuencias ascendentes o descendentes (p. ej. '123456', '654321', '012345')
+  let isAsc = true;
+  let isDesc = true;
+  for (let i = 1; i < pin.length; i++) {
+    const prev = parseInt(pin[i - 1], 10);
+    const curr = parseInt(pin[i], 10);
+    if (isNaN(prev) || isNaN(curr)) return true;
+    if (curr !== prev + 1) isAsc = false;
+    if (curr !== prev - 1) isDesc = false;
+  }
+  return isAsc || isDesc;
+}
+
 export function validatePinFormat(pin: string, role: UserRole): { valid: boolean; requiredLength: 4 | 6; error?: string } {
   const requiredLength = getRequiredPinLength(role);
   if (typeof pin !== 'string') {

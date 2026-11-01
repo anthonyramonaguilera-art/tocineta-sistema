@@ -33,10 +33,11 @@ import { getDatabaseContext } from './db/connection.js';
 import { websocketPlugin } from './plugins/websocket.js';
 import { staticPlugin } from './plugins/static.js';
 import { idempotencyPlugin } from './modules/idempotency/idempotency-plugin.js';
-import { seedInitialUsers } from './modules/auth/seed-users.js';
+import { seedInitialUsersDetailed } from './modules/auth/seed-users.js';
 import { recoverStuckUpdatesOnBoot } from './modules/updater/updater-service.js';
 import { syncBcvRateFromInternet } from './modules/menu/bcv-auto-sync.js';
 import { globalErrorHandler } from './lib/error-handler.js';
+import { registerAuthGuard, SAFE_LOGGER_REDACT, safeReqSerializer } from './plugins/auth-guard.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -52,8 +53,11 @@ export interface BuildServerOptions {
 export async function buildServer(options: BuildServerOptions = {}): Promise<FastifyInstance> {
   const isDev = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
 
+  const safeLogger = { redact: SAFE_LOGGER_REDACT, serializers: { req: safeReqSerializer } };
+
   const defaultLogger: FastifyServerOptions['logger'] = isDev
     ? {
+        ...safeLogger,
         transport: {
           target: 'pino-pretty',
           options: {
@@ -62,7 +66,7 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
           }
         }
       }
-    : true;
+    : safeLogger;
 
   const server = Fastify({
     logger: options.logger !== undefined ? options.logger : defaultLogger
@@ -85,6 +89,8 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
     }
   });
 
+  registerAuthGuard(server);
+
   // Inicializar PrintingWorker interno
   const dbCtx = getDatabaseContext();
 
@@ -92,7 +98,7 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   try {
     const userCount = dbCtx.rawDb.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number } | undefined;
     if (userCount && userCount.cnt === 0) {
-      const count = seedInitialUsers(dbCtx.rawDb);
+      const { count } = seedInitialUsersDetailed(dbCtx.rawDb);
       server.log.info(`BOOTSTRAP: ${count} usuarios iniciales creados`);
       console.log(`BOOTSTRAP: ${count} usuarios iniciales creados`);
     }

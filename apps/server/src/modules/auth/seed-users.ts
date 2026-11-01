@@ -1,6 +1,8 @@
 import crypto from 'node:crypto';
+import fs from 'node:fs';
+import path from 'node:path';
 import type Database from 'better-sqlite3';
-import { hashPin } from './pin.js';
+import { hashPin, isTrivialPin } from './pin.js';
 import type { UserRole } from '../../db/schema.js';
 
 export interface SeedUserDefinition {
@@ -26,7 +28,52 @@ export function hashPassword(password: string): { hash: string; salt: string } {
   return { hash, salt };
 }
 
-export function syncAndSanitizeCorporateUsers(rawDb: Database.Database): void {
+export function generateSecureAdminPassword(length = 16): string {
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+  let result = '';
+  const bytes = crypto.randomBytes(length);
+  for (let i = 0; i < length; i++) {
+    result += alphabet[bytes[i] % alphabet.length];
+  }
+  return result;
+}
+
+export function generateSecureAdminPin(): string {
+  while (true) {
+    let pin = '';
+    for (let i = 0; i < 6; i++) {
+      pin += crypto.randomInt(0, 10).toString();
+    }
+    if (!isTrivialPin(pin)) {
+      return pin;
+    }
+  }
+}
+
+export function getDataDir(): string {
+  const dbPath = process.env.TOCINETA_DB_PATH || process.env.DB_PATH || './data/tocineta.db';
+  return path.dirname(path.resolve(dbPath));
+}
+
+export function deleteAdminInitialFileIfExists(customDir?: string): void {
+  try {
+    const dataDir = customDir || getDataDir();
+    const adminFilePath = path.join(dataDir, 'ADMIN_INICIAL.txt');
+    if (fs.existsSync(adminFilePath)) {
+      fs.unlinkSync(adminFilePath);
+    }
+  } catch {
+    // Continuar si no se pudo eliminar o no existe
+  }
+}
+
+export function syncAndSanitizeCorporateUsers(
+  rawDb: Database.Database,
+  opts?: { isProduction?: boolean; adminSecrets?: { password: string; pin: string } }
+): void {
+  const isProduction = opts?.isProduction ?? (process.env.NODE_ENV === 'production');
+  const adminSecrets = opts?.adminSecrets;
+
   // 1. Asegurar columna username en users
   try {
     const cols = rawDb.prepare("PRAGMA table_info('users')").all() as any[];
@@ -39,6 +86,9 @@ export function syncAndSanitizeCorporateUsers(rawDb: Database.Database): void {
   }
 
   const now = Date.now();
+
+  const adminPin = (isProduction && adminSecrets) ? adminSecrets.pin : '123456';
+  const adminPassword = (isProduction && adminSecrets) ? adminSecrets.password : 'admin123';
 
   // 2. Mapeo y saneamiento de registros históricos
   const legacyUpdates: Array<{
@@ -56,8 +106,8 @@ export function syncAndSanitizeCorporateUsers(rawDb: Database.Database): void {
       canonicalId: 'usr_admin',
       username: 'admin',
       name: 'ADMIN',
-      pin: '123456',
-      password: 'admin123'
+      pin: adminPin,
+      password: adminPassword
     },
     {
       matchIds: ['usr_cajera_principal', 'usr_cajera', 'cajera'],
@@ -100,18 +150,19 @@ export function syncAndSanitizeCorporateUsers(rawDb: Database.Database): void {
   for (const item of legacyUpdates) {
     const { hash: pinHash, salt: pinSalt } = hashPin(item.pin);
     const { hash: pwHash, salt: pwSalt } = hashPassword(item.password);
+    const mustChangePin = item.role === 'admin' ? 1 : 0;
 
     // Actualizar usuarios existentes que coincidan por ID
     for (const mId of item.matchIds) {
       rawDb.prepare(`
         UPDATE users 
         SET name = ?, username = ?, role = ?, pin_hash = ?, pin_salt = ?, pin_length = ?,
-            password_hash = ?, password_salt = ?, must_change_pin = 0, is_active = 1,
+            password_hash = ?, password_salt = ?, must_change_pin = ?, is_active = 1,
             failed_attempts = 0, lockout_stage = 0, locked_until_ms = NULL, updated_at_ms = ?
         WHERE id = ?
       `).run(
         item.name, item.username, item.role, pinHash, pinSalt, item.pin.length,
-        pwHash, pwSalt, now, mId
+        pwHash, pwSalt, mustChangePin, now, mId
       );
     }
 
@@ -121,21 +172,33 @@ export function syncAndSanitizeCorporateUsers(rawDb: Database.Database): void {
         id, name, username, role, pin_hash, pin_salt, pin_length,
         password_hash, password_salt, must_change_pin, is_active,
         failed_attempts, lockout_stage, locked_until_ms, created_at_ms, updated_at_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 1, 0, 0, NULL, ?, ?)
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 0, 0, NULL, ?, ?)
     `).run(
       item.canonicalId, item.name, item.username, item.role, pinHash, pinSalt, item.pin.length,
-      pwHash, pwSalt, now, now
+      pwHash, pwSalt, item.role === 'admin' ? 1 : (isProduction ? 0 : 1), now, now
     );
   }
 
   // 3. Saneamiento de usuarios, repartidores y clientes corporativos
   try {
+    if (isProduction) {
+      rawDb.exec(`
+        UPDATE users SET name = 'ADMIN', username = 'admin', must_change_pin = 1 WHERE LOWER(name) LIKE '%anthony%' OR LOWER(name) LIKE '%olinelcys%' OR id = 'usr_admin';
+        UPDATE users SET name = 'MESERO', username = 'mesero', must_change_pin = 0 WHERE LOWER(name) LIKE '%carlos%' OR LOWER(name) LIKE '%andrea%' OR id = 'usr_mesero';
+        UPDATE users SET name = 'PLANCHA', username = 'plancha', must_change_pin = 0 WHERE LOWER(name) LIKE '%jose%' OR LOWER(name) LIKE '%josé%' OR id = 'usr_plancha';
+        UPDATE users SET name = 'DESPACHO', username = 'despacho', must_change_pin = 0 WHERE LOWER(name) LIKE '%miguel%' OR id = 'usr_despacho';
+        UPDATE users SET name = 'CAJERA', username = 'cajera', must_change_pin = 0 WHERE id = 'usr_cajera';
+      `);
+    } else {
+      rawDb.exec(`
+        UPDATE users SET name = 'ADMIN', username = 'admin', must_change_pin = 1 WHERE LOWER(name) LIKE '%anthony%' OR LOWER(name) LIKE '%olinelcys%' OR id = 'usr_admin';
+        UPDATE users SET name = 'MESERO', username = 'mesero', must_change_pin = 1 WHERE LOWER(name) LIKE '%carlos%' OR LOWER(name) LIKE '%andrea%' OR id = 'usr_mesero';
+        UPDATE users SET name = 'PLANCHA', username = 'plancha', must_change_pin = 1 WHERE LOWER(name) LIKE '%jose%' OR LOWER(name) LIKE '%josé%' OR id = 'usr_plancha';
+        UPDATE users SET name = 'DESPACHO', username = 'despacho', must_change_pin = 1 WHERE LOWER(name) LIKE '%miguel%' OR id = 'usr_despacho';
+        UPDATE users SET name = 'CAJERA', username = 'cajera', must_change_pin = 1 WHERE id = 'usr_cajera';
+      `);
+    }
     rawDb.exec(`
-      UPDATE users SET name = 'ADMIN', username = 'admin', must_change_pin = 1 WHERE LOWER(name) LIKE '%anthony%' OR LOWER(name) LIKE '%olinelcys%' OR id = 'usr_admin';
-      UPDATE users SET name = 'MESERO', username = 'mesero', must_change_pin = 1 WHERE LOWER(name) LIKE '%carlos%' OR LOWER(name) LIKE '%andrea%' OR id = 'usr_mesero';
-      UPDATE users SET name = 'PLANCHA', username = 'plancha', must_change_pin = 1 WHERE LOWER(name) LIKE '%jose%' OR LOWER(name) LIKE '%josé%' OR id = 'usr_plancha';
-      UPDATE users SET name = 'DESPACHO', username = 'despacho', must_change_pin = 1 WHERE LOWER(name) LIKE '%miguel%' OR id = 'usr_despacho';
-      UPDATE users SET name = 'CAJERA', username = 'cajera', must_change_pin = 1 WHERE id = 'usr_cajera';
       UPDATE delivery_drivers SET name = 'REPARTIDOR 1' WHERE id = 'drv_carlos_mora' OR name LIKE '%Carlos%';
       UPDATE delivery_drivers SET name = 'REPARTIDOR 2' WHERE id = 'drv_jose_ramirez' OR name LIKE '%José%' OR name LIKE '%Jose%';
       UPDATE delivery_drivers SET name = 'REPARTIDOR 3' WHERE id = 'drv_miguel_perez' OR name LIKE '%Miguel%';
@@ -148,8 +211,38 @@ export function syncAndSanitizeCorporateUsers(rawDb: Database.Database): void {
   }
 }
 
-export function seedInitialUsers(rawDb: Database.Database): number {
-  syncAndSanitizeCorporateUsers(rawDb);
+export interface SeedUsersOptions {
+  production?: boolean;
+}
+
+export interface SeedUsersResult {
+  count: number;
+  adminSecrets?: {
+    password: string;
+    pin: string;
+  };
+}
+
+export function seedInitialUsersDetailed(
+  rawDb: Database.Database,
+  opts?: SeedUsersOptions
+): SeedUsersResult {
+  const isProduction = opts?.production ?? (process.env.NODE_ENV === 'production');
+
+  let adminPassword = 'admin123';
+  let adminPin = '123456';
+
+  if (isProduction) {
+    adminPassword = generateSecureAdminPassword(16);
+    adminPin = generateSecureAdminPin();
+  } else {
+    console.warn('⚠️ AVISO DE SEGURIDAD: Base de datos sembrada con credenciales de prueba conocidas (admin/123456). NO USAR EN PRODUCCIÓN.');
+  }
+
+  syncAndSanitizeCorporateUsers(rawDb, {
+    isProduction,
+    adminSecrets: isProduction ? { password: adminPassword, pin: adminPin } : undefined
+  });
 
   const insertStmt = rawDb.prepare(`
     INSERT OR IGNORE INTO users (
@@ -168,11 +261,21 @@ export function seedInitialUsers(rawDb: Database.Database): number {
   let insertedCount = 0;
   const now = Date.now();
 
+  const usersToSeed: SeedUserDefinition[] = [
+    { id: 'usr_admin', username: 'admin', name: 'ADMIN', role: 'admin', pin: adminPin, password: adminPassword },
+    { id: 'usr_cajera', username: 'cajera', name: 'CAJERA', role: 'cajera', pin: '1111', password: 'caja123' },
+    { id: 'usr_mesero', username: 'mesero', name: 'MESERO', role: 'mesonero', pin: '2222', password: 'mesero123' },
+    { id: 'usr_plancha', username: 'plancha', name: 'PLANCHA', role: 'cocinero', pin: '4444', password: 'plancha123' },
+    { id: 'usr_despacho', username: 'despacho', name: 'DESPACHO', role: 'despachador', pin: '5555', password: 'despacho123' }
+  ];
+
   const transaction = rawDb.transaction(() => {
-    for (const u of INITIAL_USERS) {
+    for (const u of usersToSeed) {
       const { hash: pinHash, salt: pinSalt } = hashPin(u.pin);
       const { hash: pwHash, salt: pwSalt } = hashPassword(u.password || '123456');
       const pinLength = u.pin.length;
+      const mustChangePin = u.role === 'admin' ? 1 : (isProduction ? 0 : 1);
+
       const res = insertStmt.run(
         u.id,
         u.name,
@@ -183,7 +286,7 @@ export function seedInitialUsers(rawDb: Database.Database): number {
         pinLength,
         pwHash,
         pwSalt,
-        1, // must_change_pin = 1
+        mustChangePin,
         1, // is_active = 1
         0, // failed_attempts = 0
         0, // lockout_stage = 0
@@ -194,10 +297,75 @@ export function seedInitialUsers(rawDb: Database.Database): number {
         insertedCount++;
       }
     }
+
+    if (isProduction) {
+      rawDb.prepare("UPDATE users SET must_change_pin = 0 WHERE id != 'usr_admin'").run();
+      rawDb.prepare("UPDATE users SET must_change_pin = 1 WHERE id = 'usr_admin'").run();
+    }
   });
 
   transaction();
-  return insertedCount;
+
+  if (isProduction) {
+    const box = [
+      '',
+      '┌─────────────────────────────────────────────────────────────────┐',
+      '│              CREDENCIALES INICIALES DE ADMIN                    │',
+      '│         guárdelas ahora, no se volverán a mostrar               │',
+      '├─────────────────────────────────────────────────────────────────┤',
+      '│  Usuario:  admin                                                │',
+      `│  Password: ${adminPassword.padEnd(53, ' ')}│`,
+      `│  PIN:      ${adminPin.padEnd(53, ' ')}│`,
+      '└─────────────────────────────────────────────────────────────────┘',
+      ''
+    ].join('\n');
+    process.stdout.write(box);
+
+    const dbPath = (rawDb.name && rawDb.name !== '' && rawDb.name !== ':memory:') ? rawDb.name : undefined;
+    const dataDir = dbPath ? path.dirname(path.resolve(dbPath)) : getDataDir();
+
+    if (!fs.existsSync(dataDir)) {
+      try {
+        fs.mkdirSync(dataDir, { recursive: true });
+      } catch {}
+    }
+
+    const adminFilePath = path.join(dataDir, 'ADMIN_INICIAL.txt');
+    const fileContent = [
+      '=================================================================',
+      '               CREDENCIALES INICIALES DE ADMIN',
+      '         guárdelas ahora, no se volverán a mostrar',
+      '=================================================================',
+      'Usuario:  admin',
+      `Password: ${adminPassword}`,
+      `PIN:      ${adminPin}`,
+      '',
+      'ADVERTENCIA DE SEGURIDAD:',
+      'Guarde estas credenciales en un lugar seguro.',
+      'Este archivo se eliminará automáticamente al cambiar el PIN de administrador',
+      'desde la aplicación (o debe ser eliminado manualmente tras su resguardo).',
+      '=================================================================\n'
+    ].join('\n');
+
+    try {
+      fs.writeFileSync(adminFilePath, fileContent, { encoding: 'utf-8', mode: 0o600 });
+    } catch {
+      try {
+        fs.writeFileSync(adminFilePath, fileContent, { encoding: 'utf-8' });
+      } catch {}
+    }
+  }
+
+  const totalUsers = (rawDb.prepare('SELECT COUNT(*) as c FROM users').get() as any).c;
+
+  return {
+    count: insertedCount > 0 ? insertedCount : totalUsers,
+    adminSecrets: isProduction ? { password: adminPassword, pin: adminPin } : undefined
+  };
+}
+
+export function seedInitialUsers(rawDb: Database.Database): number {
+  return seedInitialUsersDetailed(rawDb).count;
 }
 
 if (process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('seed-users.ts')) {
@@ -205,8 +373,8 @@ if (process.argv[1] && process.argv[1].replace(/\\/g, '/').endsWith('seed-users.
     const dbPath = process.env.DB_PATH || './data/tocineta.db';
     const ctx = initSqlite(dbPath);
     try {
-      const count = seedInitialUsers(ctx.rawDb);
-      console.log(`BOOTSTRAP: ${count} usuarios iniciales creados`);
+      const res = seedInitialUsersDetailed(ctx.rawDb);
+      console.log(`BOOTSTRAP: ${res.count} usuarios iniciales creados`);
     } finally {
       ctx.rawDb.close();
     }

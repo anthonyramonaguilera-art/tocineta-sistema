@@ -87,6 +87,7 @@ export const ROUTE_POLICY: readonly RouteRule[] = [
 
   // ───────────── CASHIER_PLUS (cajera, supervisor, admin) ─────────────
   ['POST', '/api/jornadas/open', 'CASHIER_PLUS'],
+  ['POST', '/api/jornadas/:id/close', 'CASHIER_PLUS'],
   ['GET', '/api/jornadas/*', 'CASHIER_PLUS'],
   ['POST', '/api/cash-sessions/open', 'CASHIER_PLUS'],
   ['GET', '/api/cash-sessions/current', 'CASHIER_PLUS'],
@@ -105,7 +106,6 @@ export const ROUTE_POLICY: readonly RouteRule[] = [
   ['*', '/api/emergency/*', 'CASHIER_PLUS'],
 
   // ───────────── ADMIN_SUPERVISOR ─────────────
-  ['POST', '/api/jornadas/:id/close', 'ADMIN_SUPERVISOR'], // DECISION_NEGOCIO: ¿la cajera puede cerrar su turno?
   ['GET', '/api/printers/windows', 'ADMIN_SUPERVISOR'],
   ['POST', '/api/delivery/drivers', 'ADMIN_SUPERVISOR'],
   ['PATCH', '/api/delivery/drivers/:id', 'ADMIN_SUPERVISOR'],

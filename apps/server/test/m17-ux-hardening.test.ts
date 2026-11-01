@@ -133,7 +133,7 @@ describe('Hito M17 - Endurecimiento UX, Táctil y Robustez Operativa (@tocineta/
         method: 'POST',
         url: '/api/auth/change-pin',
         headers: { authorization: `Bearer ${adminToken}` },
-        payload: { currentPin: '123456', newPin: '654321' }
+        payload: { currentPin: '123456', newPin: '849201' }
       });
       expect(adminChangeRes.statusCode).toBe(200);
       expect(JSON.parse(adminChangeRes.payload).success).toBe(true);

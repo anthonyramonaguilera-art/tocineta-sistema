@@ -1,8 +1,10 @@
 import type { FastifyPluginAsync } from 'fastify';
 import crypto from 'node:crypto';
+import path from 'node:path';
 import { getDatabaseContext } from '../db/connection.js';
 import { mapUserRow, mapSessionRow, type UserRole } from '../db/schema.js';
-import { hashPin, verifyPin, validatePinFormat } from '../modules/auth/pin.js';
+import { hashPin, verifyPin, validatePinFormat, isTrivialPin } from '../modules/auth/pin.js';
+import { deleteAdminInitialFileIfExists } from '../modules/auth/seed-users.js';
 import { checkUserLockout, recordFailedAttempt, resetLockout } from '../modules/auth/lockout.js';
 import { appendAuditEvent } from '../modules/audit/audit-service.js';
 import { publishDomainEvent } from '../modules/events/event-bus.js';
@@ -278,6 +280,13 @@ export const authActionsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ success: false, error: formatCheck.error });
     }
 
+    if (userRole === 'admin' && isTrivialPin(body.newPin)) {
+      return reply.status(400).send({
+        success: false,
+        error: 'El PIN de administrador no puede ser una secuencia numérica ni dígitos repetidos'
+      });
+    }
+
     const { hash: newHash, salt: newSalt } = hashPin(body.newPin);
     const now = Date.now();
 
@@ -286,6 +295,13 @@ export const authActionsRoutes: FastifyPluginAsync = async (fastify) => {
       SET pin_hash = ?, pin_salt = ?, pin_length = ?, must_change_pin = 0, updated_at_ms = ?
       WHERE id = ?
     `).run(newHash, newSalt, body.newPin.length, now, session.userId);
+
+    if (userRole === 'admin') {
+      const dbDir = (dbCtx.rawDb.name && dbCtx.rawDb.name !== '' && dbCtx.rawDb.name !== ':memory:')
+        ? path.dirname(path.resolve(dbCtx.rawDb.name))
+        : undefined;
+      deleteAdminInitialFileIfExists(dbDir);
+    }
 
     appendAuditEvent(dbCtx.rawDb, {
       actorUserId: session.userId,

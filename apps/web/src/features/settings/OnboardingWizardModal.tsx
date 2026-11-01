@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Card, Button, Icon } from '../../ui/index.js';
+import { Card, Button, Icon, Field, Input } from '../../ui/index.js';
+import { apiFetch } from '../../api/client.js';
 import type { BusinessSettings } from './types.js';
 
 interface OnboardingWizardModalProps {
@@ -27,15 +28,15 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
   const [locationName, setLocationName] = useState('Sede Alta Vista');
   const [primaryColor, setPrimaryColor] = useState(currentSettings?.primary_color || '#EAB308');
   const [rateChangeHour, setRateChangeHour] = useState(currentSettings?.rate_change_hour || '13:00');
+  const [adminPin, setAdminPin] = useState('');
 
   if (!isOpen) return null;
 
   const handleFinish = async () => {
     setIsSubmitting(true);
     try {
-      const res = await fetch('/api/business-settings/onboarding', {
+      const res = await apiFetch('/api/business-settings/onboarding', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           businessName: businessName.trim(),
           slogan: slogan.trim(),
@@ -44,7 +45,8 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
           address: address.trim(),
           primaryColor,
           rateChangeHour,
-          locationName: locationName.trim()
+          locationName: locationName.trim(),
+          pin: adminPin.trim()
         })
       });
 
@@ -246,6 +248,18 @@ export const OnboardingWizardModal: React.FC<OnboardingWizardModalProps> = ({
                 <div className="flex justify-between"><span className="text-ink-muted">Sede:</span><strong className="text-ink">{locationName}</strong></div>
                 <div className="flex justify-between"><span className="text-ink-muted">Tasa BCV:</span><strong className="text-ink">{rateChangeHour} hrs</strong></div>
               </div>
+
+              <Field label="PIN de Administrador" required hint="Ingrese su PIN de 6 dígitos para aplicar la configuración inicial">
+                <Input
+                  type="password"
+                  inputMode="numeric"
+                  maxLength={6}
+                  value={adminPin}
+                  onChange={(e) => setAdminPin(e.target.value.replace(/\D/g, ''))}
+                  placeholder="PIN de administrador"
+                  autoFocus
+                />
+              </Field>
             </div>
           )}
         </div>

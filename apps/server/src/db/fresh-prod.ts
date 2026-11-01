@@ -5,7 +5,7 @@ import { env } from '../config/env.js';
 import { initSqlite } from './connection.js';
 import { runMigrations } from './migrate.js';
 import { ensureOfficialLocations } from '../modules/profitability/locations-service.js';
-import { seedInitialUsers } from '../modules/auth/seed-users.js';
+import { seedInitialUsersDetailed } from '../modules/auth/seed-users.js';
 import { seedCatalog } from './seed-catalog.js';
 import { seedProductPhotos } from '../modules/menu/photo-seed.js';
 import { ensureBusinessSettingsDefensive } from './business-settings.js';
@@ -76,7 +76,7 @@ export async function createFreshProductionDatabase(customDbPath?: string): Prom
     ensureOfficialLocations(rawDb);
 
     console.log(`👥 Sembrando usuarios iniciales...`);
-    seedInitialUsers(rawDb);
+    seedInitialUsersDetailed(rawDb);
 
     console.log(`🍔 Sembrando catálogo oficial...`);
     seedCatalog(rawDb);
