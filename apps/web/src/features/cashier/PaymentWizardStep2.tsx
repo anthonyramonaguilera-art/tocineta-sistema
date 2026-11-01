@@ -1,7 +1,8 @@
 import React from 'react';
-import type { CashierTender, CashierPaymentMethod } from './types.js';
+import type { CashierTender } from './types.js';
 import { Button, Input, NumberPad } from '../../ui/index.js';
-import { paymentLabels, getPaymentMethodHumanLabel } from './payment-labels.js';
+import { paymentLabels, getPaymentMethodHumanLabel, type CashierPaymentMethod } from './payment-labels.js';
+import { getMethodCurrency } from '@tocineta/shared';
 
 const QUICK_USD_BILLS = [100, 500, 1000, 2000, 5000, 10000];
 
@@ -10,8 +11,7 @@ interface PaymentWizardStep2Props {
   onSelectMethod: (m: CashierPaymentMethod) => void;
   remainingUsdCents: number;
   remainingBsCents: number;
-  onExactUsd: () => void;
-  onExactBs: () => void;
+  onExact: () => void;
   onQuickBill: (cents: number) => void;
   referenceInput: string;
   onChangeReference: (val: string) => void;
@@ -27,8 +27,7 @@ export const PaymentWizardStep2: React.FC<PaymentWizardStep2Props> = ({
   onSelectMethod,
   remainingUsdCents,
   remainingBsCents,
-  onExactUsd,
-  onExactBs,
+  onExact,
   onQuickBill,
   referenceInput,
   onChangeReference,
@@ -38,9 +37,15 @@ export const PaymentWizardStep2: React.FC<PaymentWizardStep2Props> = ({
   tenders,
   onRemoveTender
 }) => {
+  const isUsd = getMethodCurrency(selectedMethod) === 'USD';
+  const remainingCents = isUsd ? remainingUsdCents : remainingBsCents;
+  const exactButtonText = isUsd
+    ? `Exacto $${(remainingUsdCents / 100).toFixed(2)}`
+    : `Exacto Bs ${(remainingBsCents / 100).toFixed(2)}`;
+
   return (
     <div className="space-y-4">
-      {/* Tarjetas grandes de método de pago */}
+      {/* Tarjetas de método de pago */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {(['cash_usd', 'cash_bs', 'pago_movil', 'ubii', 'binance'] as CashierPaymentMethod[]).map(m => (
           <button
@@ -58,45 +63,52 @@ export const PaymentWizardStep2: React.FC<PaymentWizardStep2Props> = ({
         ))}
       </div>
 
-      {/* Falta por cobrar y equivalencias para smoke check */}
+      {/* Falta por cobrar y equivalencias */}
       <div className="p-3 bg-surface-alt border border-border rounded-xl flex items-center justify-between text-xs font-mono">
         <div>
           <span className="font-bold text-ink-muted">Falta por cobrar: </span>
           <span className="text-base font-black text-danger">${(remainingUsdCents / 100).toFixed(2)}</span>
-          <span className="text-ink-muted"> ⇄ Equiv {(remainingBsCents / 100).toFixed(2)} Bs (Equivale a Bs oficial)</span>
-        </div>
-        <div className="flex gap-1.5">
-          <Button variant="ghost" size="sm" onClick={onExactUsd}>
-            Exacto USD
-          </Button>
-          <Button variant="ghost" size="sm" onClick={onExactBs}>
-            Exacto Bs.
-          </Button>
+          <span className="text-ink-muted"> ⇄ Equiv {(remainingBsCents / 100).toFixed(2)} Bs</span>
         </div>
       </div>
 
-      {/* Billetes rápidos USD */}
-      <div className="flex flex-wrap gap-1.5 justify-center">
-        {QUICK_USD_BILLS.map(cents => (
-          <Button
-            key={cents}
-            variant="secondary"
-            size="sm"
-            onClick={() => onQuickBill(cents)}
-            className="font-mono font-bold"
-          >
-            ${cents / 100}
-          </Button>
-        ))}
-      </div>
+      {/* Botón Exacto único (color primario relleno, ancho completo, min-h-[48px]) */}
+      <Button
+        variant="primary"
+        size="md"
+        fullWidth
+        onClick={onExact}
+        disabled={remainingCents <= 0}
+        className="w-full min-h-[48px] text-sm font-black"
+        leftIcon="CheckCircle2"
+      >
+        {exactButtonText}
+      </Button>
 
-      {/* Referencia si aplica */}
-      {selectedMethod === 'pago_movil' && (
+      {/* Billetes rápidos USD solo si selectedMethod === 'cash_usd' */}
+      {selectedMethod === 'cash_usd' && (
+        <div className="flex flex-wrap gap-1.5 justify-center">
+          {QUICK_USD_BILLS.map(cents => (
+            <Button
+              key={cents}
+              variant="secondary"
+              size="sm"
+              onClick={() => onQuickBill(cents)}
+              className="font-mono font-bold min-h-[44px]"
+            >
+              ${cents / 100}
+            </Button>
+          ))}
+        </div>
+      )}
+
+      {/* Referencia opcional (no bloquea cobro) */}
+      {selectedMethod !== 'cash_usd' && selectedMethod !== 'cash_bs' && (
         <Input
-          placeholder="Últimos 4 dígitos del comprobante *"
+          placeholder="Número o referencia del comprobante (opcional)"
           value={referenceInput}
           onChange={e => onChangeReference(e.target.value)}
-          maxLength={12}
+          maxLength={24}
         />
       )}
 

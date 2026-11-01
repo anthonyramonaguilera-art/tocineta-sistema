@@ -92,10 +92,8 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   }
 
   const summary = summaryData?.summary || {
-    totalOrders: 0,
-    grossSalesUsdCents: 0,
-    expectedCashUsdCents: 0,
-    expectedCashBsCents: 0,
+    totalOrders: 0, grossSalesUsdCents: 0, expectedCashUsdCents: 0, expectedCashBsCents: 0,
+    puntoDeVentaBsCents: 0, ubiiGrossBsCents: 0, transferenciaBsCents: 0, otrosUsdCents: 0,
     byMethod: [] as Array<{ method: string; count: number; totalUsdCents: number }>,
     bySede: [] as Array<{ locationId: string; locationName?: string; ordersCount: number; netSalesUsdCents: number }>
   };
@@ -233,6 +231,23 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
                       {(expectedBsCents / 100).toFixed(2)} Bs
                     </span>
                   </Card>
+                </div>
+              )}
+
+              {/* Métodos de pago registrados por el servidor */}
+              {!isBlindClosure && (
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                  {[
+                    { label: 'Punto de Venta', val: `${((summary.puntoDeVentaBsCents || 0) / 100).toFixed(2)} Bs` },
+                    { label: 'Punto Ubii', val: `${((summary.ubiiGrossBsCents || 0) / 100).toFixed(2)} Bs` },
+                    { label: 'Transferencia', val: `${((summary.transferenciaBsCents || 0) / 100).toFixed(2)} Bs` },
+                    { label: 'Otros Métodos', val: `$${((summary.otrosUsdCents || 0) / 100).toFixed(2)}` }
+                  ].map(item => (
+                    <div key={item.label} className="p-3 bg-surface rounded-xl border border-border">
+                      <span className="text-ink-muted block text-[10px] uppercase font-bold">{item.label}</span>
+                      <span className="font-mono font-bold text-ink text-sm">{item.val}</span>
+                    </div>
+                  ))}
                 </div>
               )}
 

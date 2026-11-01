@@ -1,7 +1,8 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { CashierOrder, CashierTender, CashierPaymentMethod } from './types.js';
-import { usdToBsCents, generateUuidV7 } from '@tocineta/shared';
+import type { CashierOrder, CashierTender } from './types.js';
+import type { CashierPaymentMethod } from './payment-labels.js';
+import { usdToBsCents, generateUuidV7, getMethodCurrency } from '@tocineta/shared';
 import { Card, Badge, WizardLayout, Icon } from '../../ui/index.js';
 import { PaymentWizardStep2 } from './PaymentWizardStep2.js';
 import { PaymentWizardStep3 } from './PaymentWizardStep3.js';
@@ -85,7 +86,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
 
   const handleAddTender = (customAmountCents?: number, customMethod?: CashierPaymentMethod) => {
     const method = customMethod || selectedMethod;
-    const isUsdMethod = method === 'cash_usd' || method === 'binance';
+    const isUsdMethod = getMethodCurrency(method) === 'USD';
     const currency = isUsdMethod ? 'USD' : 'BS';
 
     let amountCents = customAmountCents;
@@ -96,11 +97,6 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
     }
     if (amountCents <= 0) return;
 
-    if (method === 'pago_movil' && referenceInput.trim().length < 4) {
-      setErrorMessage('Pago móvil exige al menos los últimos 4 dígitos del comprobante');
-      return;
-    }
-
     const usdEquivalentCents = isUsdMethod
       ? amountCents
       : Math.round((amountCents * 1_000_000) / safeRate);
@@ -109,7 +105,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
       ...prev,
       {
         id: `ten_${generateUuidV7()}`,
-        method,
+        method: method as any,
         amountCents,
         currency,
         usdEquivalentCents,
@@ -253,8 +249,10 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
               onSelectMethod={m => { setSelectedMethod(m); setErrorMessage(null); }}
               remainingUsdCents={remainingUsdCents}
               remainingBsCents={remainingBsCents}
-              onExactUsd={() => handleAddTender(remainingUsdCents, 'cash_usd')}
-              onExactBs={() => handleAddTender(remainingBsCents, 'cash_bs')}
+              onExact={() => {
+                const isUsd = getMethodCurrency(selectedMethod) === 'USD';
+                handleAddTender(isUsd ? remainingUsdCents : remainingBsCents, selectedMethod);
+              }}
               onQuickBill={cents => handleAddTender(cents, 'cash_usd')}
               referenceInput={referenceInput}
               onChangeReference={setReferenceInput}

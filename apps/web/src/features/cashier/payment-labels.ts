@@ -1,3 +1,14 @@
+export type CashierPaymentMethod =
+  | 'cash_usd'
+  | 'cash_bs'
+  | 'pago_movil'
+  | 'punto_de_venta'
+  | 'ubii'
+  | 'transferencia'
+  | 'binance'
+  | 'zelle'
+  | 'otros';
+
 export const paymentLabels: Record<string, string> = {
   cash_usd: 'Efectivo dólares',
   cash_bs: 'Efectivo bolívares',
