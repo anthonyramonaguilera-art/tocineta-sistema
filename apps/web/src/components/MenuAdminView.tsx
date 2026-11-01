@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext.js';
 import type { AdminMenuResponse, AdminProduct, AdminProductIngredient, Station } from '../types/menu.js';
@@ -88,6 +88,20 @@ export const MenuAdminView: React.FC = () => {
   const [couponDesc, setCouponDesc] = useState('');
   const [showAllCoupons, setShowAllCoupons] = useState<boolean>(false);
   const [isSyncingBcv, setIsSyncingBcv] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!isCreatingProduct) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [isCreatingProduct]);
+
+  useEffect(() => {
+    if (!isCategoryModalOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => { document.body.style.overflow = prev; };
+  }, [isCategoryModalOpen]);
 
   const { data: adminMenu, isLoading, isError, error, refetch } = useQuery<AdminMenuResponse>({
     queryKey: ['adminMenu', token],
@@ -1233,7 +1247,7 @@ export const MenuAdminView: React.FC = () => {
       {/* MODAL EDITOR / CREADOR DE PRODUCTO CON SUBIDA DE FOTO               */}
       {/* -------------------------------------------------------------------- */}
       {isCreatingProduct && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain">
           <div className="bg-surface border border-border rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <h3 className="text-base font-extrabold text-ink">
@@ -1447,7 +1461,7 @@ export const MenuAdminView: React.FC = () => {
 
       {/* MODAL NUEVA CATEGORÍA */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain">
           <div className="bg-surface border border-border rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <h3 className="text-base font-bold text-ink">Nueva Categoría</h3>
