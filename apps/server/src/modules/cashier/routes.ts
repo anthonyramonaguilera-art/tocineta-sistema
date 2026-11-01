@@ -1,6 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
 import { executeDryRunVerification } from '../backups/backup-service.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import {
@@ -17,74 +16,21 @@ import {
 } from './cashier-service.js';
 
 export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
-  // Helper para resolver el usuario actuante desde cookie, cabecera x-user-id, payload o token Bearer
-  const resolveActingUser = (req: any, body?: any): { id: string; role: string; name?: string; permissions?: string[] } => {
-    const dbCtx = getDatabaseContext();
-
-    const parsePermissions = (json?: string): string[] => {
-      try {
-        return JSON.parse(json || '[]');
-      } catch {
-        return [];
-      }
+  // Helper para resolver el usuario actuante exclusivamente desde req.user (sesión validada por guard)
+  // Se extirpó la suplantación por cabecera, payload, cookie y fallback de caja activa (P1-B).
+  const resolveActingUser = (req: any, _body?: any): { id: string; role: string; name: string; permissions: string[] } => {
+    const user = req.user;
+    if (!user) {
+      const err: any = new Error('No autenticado');
+      err.statusCode = 401;
+      throw err;
+    }
+    return {
+      id: user.id,
+      name: user.name,
+      role: user.role,
+      permissions: user.permissions || []
     };
-
-    // 1. Cabecera explícita x-user-id
-    const headerUserId = req.headers['x-user-id'] as string | undefined;
-    if (headerUserId) {
-      const u = dbCtx.rawDb.prepare('SELECT id, name, role, permissions_json FROM users WHERE id = ?').get(headerUserId) as any;
-      if (u) return { id: u.id, name: u.name, role: u.role, permissions: parsePermissions(u.permissions_json) };
-    }
-
-    // 2. Campo de usuario en el payload (userId, cashierUserId, actorUserId)
-    const payloadUserId = body?.cashierUserId || body?.userId || body?.actorUserId;
-    if (payloadUserId) {
-      const u = dbCtx.rawDb.prepare('SELECT id, name, role, permissions_json FROM users WHERE id = ?').get(payloadUserId) as any;
-      if (u) return { id: u.id, name: u.name, role: u.role, permissions: parsePermissions(u.permissions_json) };
-    }
-
-    // 3. Token Bearer en Authorization
-    let rawToken = extractSessionToken(req.headers.authorization);
-
-    // 4. Cookie tocineta_session si no vino en Authorization
-    if (!rawToken && req.headers.cookie) {
-      const match = req.headers.cookie.match(/tocineta_session=([^;]+)/);
-      if (match) {
-        rawToken = match[1];
-      }
-    }
-
-    if (rawToken) {
-      const tokenHash = hashToken(rawToken);
-      const session = dbCtx.rawDb.prepare(`
-        SELECT s.user_id, u.name, u.role, u.permissions_json
-        FROM sessions s
-        JOIN users u ON s.user_id = u.id
-        WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
-      `).get(tokenHash) as { user_id: string; name: string; role: string; permissions_json?: string } | undefined;
-
-      if (session) {
-        return { id: session.user_id, name: session.name, role: session.role, permissions: parsePermissions(session.permissions_json) };
-      }
-    }
-
-    // 5. Fallback para tests previos sin usuario explícito:
-    // Buscar la cajera de la sesión de caja activa actual
-    const activeSession = dbCtx.rawDb.prepare(`
-      SELECT cs.user_id, u.name, u.role, u.permissions_json
-      FROM cash_sessions cs
-      JOIN users u ON cs.user_id = u.id
-      WHERE cs.status = 'abierta'
-      ORDER BY cs.opened_at_ms DESC
-      LIMIT 1
-    `).get() as any;
-
-    if (activeSession) {
-      return { id: activeSession.user_id, name: activeSession.name, role: activeSession.role, permissions: parsePermissions(activeSession.permissions_json) };
-    }
-
-    // Fallback por defecto si no hay sesión abierta
-    return { id: 'usr_cajera', name: 'CAJERA', role: 'cajera', permissions: [] };
   };
 
   // 1. Abrir o confirmar Jornada Diaria (POST /api/jornadas/open)

@@ -1,16 +1,16 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
 import { verifyPin } from '../auth/pin.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { canUserProcessPayments } from '@tocineta/shared';
 import { performBlindCount, closeJornadaZ, type BlindCountInput, type UserContext } from './closures-service.js';
 
 export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
-  const getUserFromRequest = (req: any, supervisorPin?: string, body?: any): UserContext => {
+  const getUserFromRequest = (req: any, supervisorPin?: string, _body?: any): UserContext => {
     const dbCtx = getDatabaseContext();
 
     // Si viene un PIN supervisor/admin, validar si pertenece a un usuario autorizado
+    // TODO(M12): Bloquear o endurecer autorización por PIN en P3-C
     if (supervisorPin) {
       const authorizers = dbCtx.rawDb.prepare(`
         SELECT id, name, role, pin_salt, pin_hash
@@ -25,43 +25,19 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
       }
     }
 
-    // Header opcional x-user-id
-    const parsePermissions = (json?: string): string[] => {
-      try {
-        return JSON.parse(json || '[]');
-      } catch {
-        return [];
-      }
+    const user = req.user;
+    if (!user) {
+      const err: any = new Error('No autenticado');
+      err.statusCode = 401;
+      throw err;
+    }
+
+    return {
+      id: user.id,
+      name: user.name,
+      role: user.role,
+      permissions: user.permissions || []
     };
-
-    const customUserId = req.headers['x-user-id'] || body?.userId || body?.cashierUserId || body?.actorUserId;
-    if (customUserId) {
-      const u = dbCtx.rawDb.prepare('SELECT id, name, role, permissions_json FROM users WHERE id = ?').get(customUserId) as any;
-      if (u) return { id: u.id, name: u.name, role: u.role, permissions: parsePermissions(u.permissions_json) };
-    }
-
-    // Verificar token Bearer si existe o cookie tocineta_session
-    let rawToken = extractSessionToken(req.headers.authorization);
-    if (!rawToken && req.headers.cookie) {
-      const match = req.headers.cookie.match(/tocineta_session=([^;]+)/);
-      if (match) rawToken = match[1];
-    }
-
-    if (rawToken) {
-      const tokenHash = hashToken(rawToken);
-      const session = dbCtx.rawDb.prepare(`
-        SELECT s.user_id, u.name, u.role, u.permissions_json
-        FROM sessions s
-        JOIN users u ON s.user_id = u.id
-        WHERE s.token_hash = ? AND s.revoked_at_ms IS NULL
-      `).get(tokenHash) as { user_id: string; name: string; role: any; permissions_json?: string } | undefined;
-
-      if (session) {
-        return { id: session.user_id, name: session.name, role: session.role, permissions: parsePermissions(session.permissions_json) };
-      }
-    }
-
-    return { id: 'usr_cajera', name: 'CAJERA', role: 'cajera', permissions: [] };
   };
 
   // 1. Arqueo Ciego de Sesión de Caja (POST /api/cash-sessions/:id/blind-count)

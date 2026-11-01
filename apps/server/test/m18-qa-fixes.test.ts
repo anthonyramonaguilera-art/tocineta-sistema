@@ -126,7 +126,7 @@ describe('Hito M18 — Suite de Calidad QA, RBAC en Caja, Detalle de Platos y Vu
       const res = await app.inject({
         method: 'POST',
         url: `/api/orders/${orderId}/pay`,
-        headers: { authorization: `Bearer ${mesoneroToken}`, 'x-user-id': 'usr_mesero' },
+        headers: { authorization: `Bearer ${mesoneroToken}` },
         payload: {
           tenders: [{ method: 'cash_usd', amountCents: 600 }]
         }
@@ -161,7 +161,7 @@ describe('Hito M18 — Suite de Calidad QA, RBAC en Caja, Detalle de Platos y Vu
       const res = await app.inject({
         method: 'POST',
         url: `/api/orders/${orderId}/pay`,
-        headers: { authorization: `Bearer ${cocineroToken}`, 'x-user-id': 'usr_plancha' },
+        headers: { authorization: `Bearer ${cocineroToken}` },
         payload: {
           tenders: [{ method: 'cash_usd', amountCents: 800 }]
         }
@@ -198,7 +198,7 @@ describe('Hito M18 — Suite de Calidad QA, RBAC en Caja, Detalle de Platos y Vu
       expect(data.order.payment_status).toBe('pagado');
     });
 
-    it('No-regresión: Petición /pay sin cabecera de sesión utiliza el cajero de la sesión activa y no rompe tests legacy', async () => {
+    it('No-regresión: Petición /pay autenticada como cajera cobra la orden y no rompe tests legacy', async () => {
       const now = Date.now();
       const orderId = `ord_rbac_leg_${now}`;
       rawDb.prepare(`
@@ -212,6 +212,7 @@ describe('Hito M18 — Suite de Calidad QA, RBAC en Caja, Detalle de Platos y Vu
       const res = await app.inject({
         method: 'POST',
         url: `/api/orders/${orderId}/pay`,
+        headers: { authorization: `Bearer ${cajeraToken}` },
         payload: {
           tenders: [{ method: 'cash_usd', amountCents: 500 }]
         }

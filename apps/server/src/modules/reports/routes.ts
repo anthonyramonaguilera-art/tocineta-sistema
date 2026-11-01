@@ -1,6 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { getDatabaseContext } from '../../db/connection.js';
-import { extractSessionToken, hashToken } from '../../routes/auth.js';
 import {
   getWorkerPerformance,
   getAdminStaffPerformance,
@@ -12,32 +11,25 @@ import { getCurrentJornada } from '../cashier/cashier-service.js';
 
 export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
   const getUserIdFromRequest = (req: any): string => {
-    const dbCtx = getDatabaseContext();
-    const rawToken = extractSessionToken(req.headers.authorization);
-    if (rawToken) {
-      const tokenHash = hashToken(rawToken);
-      const session = dbCtx.rawDb.prepare(`
-        SELECT user_id FROM sessions WHERE token_hash = ? AND revoked_at_ms IS NULL
-      `).get(tokenHash) as { user_id: string } | undefined;
-
-      if (session?.user_id) return session.user_id;
+    const user = req.user;
+    if (!user) {
+      const err: any = new Error('No autenticado');
+      err.statusCode = 401;
+      throw err;
     }
 
-    const headerUserId = req.headers['x-user-id'];
-    if (headerUserId) return headerUserId as string;
+    if ((user.role === 'admin' || user.role === 'supervisor') && (req.query as any)?.userId) {
+      return (req.query as any).userId;
+    }
 
-    const queryUserId = (req.query as any)?.userId;
-    if (queryUserId) return queryUserId;
-
-    return 'usr_mesero';
+    return user.id;
   };
 
   // 1. Vista "Mi Rendimiento" (GET /api/reports/my-performance)
   fastify.get('/api/reports/my-performance', async (request, reply) => {
     const dbCtx = getDatabaseContext();
-    const userId = getUserIdFromRequest(request);
-
     try {
+      const userId = getUserIdFromRequest(request);
       const metrics = getWorkerPerformance(dbCtx.rawDb, userId);
       return reply.status(200).send({
         success: true,
