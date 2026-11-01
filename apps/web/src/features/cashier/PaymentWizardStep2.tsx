@@ -42,7 +42,7 @@ export const PaymentWizardStep2: React.FC<PaymentWizardStep2Props> = ({
     <div className="space-y-4">
       {/* Tarjetas grandes de método de pago */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {(['cash_usd', 'cash_bs', 'pago_movil', 'ubii', 'binance', 'credit'] as CashierPaymentMethod[]).map(m => (
+        {(['cash_usd', 'cash_bs', 'pago_movil', 'ubii', 'binance'] as CashierPaymentMethod[]).map(m => (
           <button
             key={m}
             type="button"

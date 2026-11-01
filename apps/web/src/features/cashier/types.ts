@@ -1,4 +1,4 @@
-export type CashierPaymentMethod = 'cash_usd' | 'cash_bs' | 'pago_movil' | 'ubii' | 'binance' | 'credit';
+export type CashierPaymentMethod = 'cash_usd' | 'cash_bs' | 'pago_movil' | 'ubii' | 'binance';
 
 export interface CashierTender {
   id: string;

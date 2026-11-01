@@ -101,11 +101,6 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
       return;
     }
 
-    if (method === 'credit' && !order.customer_name) {
-      setErrorMessage('Para otorgar crédito la orden debe tener cliente registrado');
-      return;
-    }
-
     const usdEquivalentCents = isUsdMethod
       ? amountCents
       : Math.round((amountCents * 1_000_000) / safeRate);

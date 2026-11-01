@@ -30,6 +30,42 @@ export interface OpenCashSessionInput {
   openingCashBsCents: number;
 }
 
+export type ClassifiedTender = {
+  dbMethod: 'EFECTIVO_USD' | 'EFECTIVO_BS' | 'PAGO_MOVIL' | 'PUNTO_DE_VENTA' | 'UBII' | 'TRANSFERENCIA' | 'BINANCE' | 'ZELLE' | 'OTROS';
+  currency: 'USD' | 'BS';
+};
+
+export function classifyTender(method: string): ClassifiedTender {
+  const m = (method || '').toLowerCase().trim();
+  switch (m) {
+    case 'cash_usd':
+    case 'efectivo_usd':
+      return { dbMethod: 'EFECTIVO_USD', currency: 'USD' };
+    case 'cash_bs':
+    case 'efectivo_bs':
+      return { dbMethod: 'EFECTIVO_BS', currency: 'BS' };
+    case 'pago_movil':
+      return { dbMethod: 'PAGO_MOVIL', currency: 'BS' };
+    case 'punto_de_venta':
+      return { dbMethod: 'PUNTO_DE_VENTA', currency: 'BS' };
+    case 'ubii':
+      return { dbMethod: 'UBII', currency: 'BS' };
+    case 'transferencia':
+      return { dbMethod: 'TRANSFERENCIA', currency: 'BS' };
+    case 'binance':
+      return { dbMethod: 'BINANCE', currency: 'USD' };
+    case 'zelle':
+      return { dbMethod: 'ZELLE', currency: 'USD' };
+    case 'otros':
+      return { dbMethod: 'OTROS', currency: 'USD' };
+    default: {
+      const err: any = new Error('Método de pago no soportado: ' + method);
+      err.statusCode = 400;
+      throw err;
+    }
+  }
+}
+
 export interface PaymentTenderInput {
   method: 'cash_usd' | 'cash_bs' | 'pago_movil' | 'ubii' | 'binance' | 'zelle' | 'otros' | string;
   amountCents: number;
@@ -339,8 +375,8 @@ export function processOrderPayment(
   let paidBsCents = 0;
 
   for (const t of input.tenders) {
-    const m = t.method.toLowerCase();
-    if (m === 'cash_usd' || m === 'efectivo_usd' || m === 'binance' || m === 'zelle') {
+    const { currency } = classifyTender(t.method);
+    if (currency === 'USD') {
       paidUsdCents += t.amountCents;
     } else {
       paidBsCents += t.amountCents;
@@ -440,40 +476,10 @@ export function processOrderPayment(
       const paymentId = `pay_${generateUuidV7()}`;
       insertedPaymentIds.push(paymentId);
 
-      const mLower = t.method.toLowerCase();
-      let dbMethod: string;
-      let currency: 'USD' | 'BS';
-      let usdEquivalentCents: number;
-
-      if (mLower === 'cash_usd' || mLower === 'efectivo_usd') {
-        dbMethod = 'EFECTIVO_USD';
-        currency = 'USD';
-        usdEquivalentCents = t.amountCents;
-      } else if (mLower === 'cash_bs' || mLower === 'efectivo_bs') {
-        dbMethod = 'EFECTIVO_BS';
-        currency = 'BS';
-        usdEquivalentCents = Math.round((t.amountCents * 1_000_000) / rateMicroBs);
-      } else if (mLower === 'pago_movil') {
-        dbMethod = 'PAGO_MOVIL';
-        currency = 'BS';
-        usdEquivalentCents = Math.round((t.amountCents * 1_000_000) / rateMicroBs);
-      } else if (mLower === 'ubii' || mLower === 'punto_de_venta') {
-        dbMethod = 'UBII';
-        currency = 'BS';
-        usdEquivalentCents = Math.round((t.amountCents * 1_000_000) / rateMicroBs);
-      } else if (mLower === 'binance') {
-        dbMethod = 'BINANCE';
-        currency = 'USD';
-        usdEquivalentCents = t.amountCents;
-      } else if (mLower === 'zelle') {
-        dbMethod = 'ZELLE';
-        currency = 'USD';
-        usdEquivalentCents = t.amountCents;
-      } else {
-        dbMethod = 'OTROS';
-        currency = 'USD';
-        usdEquivalentCents = t.amountCents;
-      }
+      const { dbMethod, currency } = classifyTender(t.method);
+      const usdEquivalentCents = currency === 'USD'
+        ? t.amountCents
+        : Math.round((t.amountCents * 1_000_000) / rateMicroBs);
 
       rawDb.prepare(`
         INSERT INTO payments (
@@ -488,7 +494,7 @@ export function processOrderPayment(
         t.amountCents,
         rateMicroBs,
         usdEquivalentCents,
-        t.referenceCode?.trim() || (mLower === 'pago_movil' ? 'SIN-REF' : null),
+        t.referenceCode?.trim() || (dbMethod === 'PAGO_MOVIL' ? 'SIN-REF' : null),
         input.cashierUserId,
         now
       );
@@ -525,22 +531,20 @@ export function processOrderPayment(
 
     // A. DEBITOS POR CADA PAGO RECIBIDO
     for (const t of input.tenders) {
-      const mLower = t.method.toLowerCase();
+      const { dbMethod, currency } = classifyTender(t.method);
       let bucket: string;
-      let debitCents: number;
+      const debitCents = currency === 'USD'
+        ? t.amountCents
+        : Math.round((t.amountCents * 1_000_000) / rateMicroBs);
 
-      if (mLower === 'cash_usd' || mLower === 'efectivo_usd') {
+      if (dbMethod === 'EFECTIVO_USD') {
         bucket = 'CASH_USD';
-        debitCents = t.amountCents;
-      } else if (mLower === 'cash_bs' || mLower === 'efectivo_bs') {
+      } else if (dbMethod === 'EFECTIVO_BS') {
         bucket = 'CASH_BS';
-        debitCents = Math.round((t.amountCents * 1_000_000) / rateMicroBs);
-      } else if (mLower === 'pago_movil' || mLower === 'ubii' || mLower === 'punto_de_venta') {
+      } else if (currency === 'BS') {
         bucket = 'BANK_BS';
-        debitCents = Math.round((t.amountCents * 1_000_000) / rateMicroBs);
       } else {
         bucket = 'BANK_USD';
-        debitCents = t.amountCents;
       }
 
       insertLedger.run(
