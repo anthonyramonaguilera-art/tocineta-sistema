@@ -7,6 +7,7 @@ import { InventoryModeCard } from './InventoryModeCard.js';
 import { PrintersPanel } from './PrintersPanel.js';
 import { useAuth } from '../../context/AuthContext.js';
 import type { BusinessSettings, BusinessLocation } from './types.js';
+import { apiFetch } from '../../api/client';
 
 export const BusinessSettingsView: React.FC = () => {
   const { token } = useAuth();
@@ -19,7 +20,7 @@ export const BusinessSettingsView: React.FC = () => {
   }>({
     queryKey: ['businessSettings'],
     queryFn: async () => {
-      const res = await fetch('/api/business-settings');
+      const res = await apiFetch('/api/business-settings');
       if (!res.ok) throw new Error('Error al cargar configuración');
       return res.json();
     },
@@ -71,7 +72,7 @@ export const BusinessSettingsView: React.FC = () => {
 
   const saveMutation = useMutation({
     mutationFn: async (payload: any) => {
-      const res = await fetch('/api/business-settings', {
+      const res = await apiFetch('/api/business-settings', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)

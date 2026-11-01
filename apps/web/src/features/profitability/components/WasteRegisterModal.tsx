@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Button, Input, Field, Icon } from '../../../ui/index.js';
+import { apiFetch } from '../../../api/client';
 
 interface WasteRegisterModalProps {
   isOpen: boolean;
@@ -50,7 +51,7 @@ export const WasteRegisterModal: React.FC<WasteRegisterModalProps> = ({
 
   const wasteMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/fase3/waste', {
+      const res = await apiFetch('/api/fase3/waste', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

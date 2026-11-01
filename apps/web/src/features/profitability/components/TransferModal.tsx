@@ -6,6 +6,7 @@ import { TransferBatchesModal, type BatchItem } from './TransferBatchesModal.js'
 import { DispatchNoteSuccessModal, type DispatchNoteInfo } from './DispatchNoteSuccessModal.js';
 import { TransferInTransitTab } from './TransferInTransitTab.js';
 import { TransferLooseItemsSection } from './TransferLooseItemsSection.js';
+import { apiFetch } from '../../../api/client';
 
 interface TransferModalProps {
   isOpen: boolean;
@@ -46,7 +47,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
   }>({
     queryKey: ['fase4InTransitTransfers'],
     queryFn: async () => {
-      const res = await fetch('/api/fase4/transfers?status=EN_TRANSITO');
+      const res = await apiFetch('/api/fase4/transfers?status=EN_TRANSITO');
       return res.json();
     },
     enabled: isOpen && activeTab === 'in_transit'
@@ -92,7 +93,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
     }
 
     try {
-      const res = await fetch('/api/fase4/transfers', {
+      const res = await apiFetch('/api/fase4/transfers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -136,7 +137,7 @@ export const TransferModal: React.FC<TransferModalProps> = ({
 
   const handleReceiveInTransit = async (transferId: string) => {
     try {
-      const res = await fetch(`/api/fase4/transfers/${transferId}/receive`, {
+      const res = await apiFetch(`/api/fase4/transfers/${transferId}/receive`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' }
       });

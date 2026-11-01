@@ -4,6 +4,7 @@ import { useQuotesList, useQuoteDetail, useConvertToReservation, useDeleteQuote 
 import { QuoteModal } from './QuoteModal.js';
 import { ReserveShoppingModal } from './ReserveShoppingModal.js';
 import type { EventQuotation } from './types.js';
+import { apiFetch } from '../../api/client';
 
 export const EventQuotesView: React.FC = () => {
   const { data, isLoading, refetch } = useQuotesList();
@@ -53,7 +54,7 @@ export const EventQuotesView: React.FC = () => {
 
   const handleWhatsApp = async (quoteId: string) => {
     try {
-      const res = await fetch(`/api/quotes/${quoteId}/whatsapp`);
+      const res = await apiFetch(`/api/quotes/${quoteId}/whatsapp`);
       const d = await res.json();
       if (d.url) {
         window.open(d.url, '_blank');

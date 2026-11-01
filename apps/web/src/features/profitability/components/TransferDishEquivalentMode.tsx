@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Input, Icon } from '../../../ui/index.js';
+import { apiFetch } from '../../../api/client';
 
 export interface CalculatedSupply {
   supplyId: string;
@@ -35,7 +36,7 @@ export const TransferDishEquivalentMode: React.FC<TransferDishEquivalentModeProp
   }>({
     queryKey: ['fase4MenuProducts'],
     queryFn: async () => {
-      const res = await fetch('/api/menu/pos');
+      const res = await apiFetch('/api/menu/pos');
       const json = await res.json();
       const allProds = (json.categories || []).flatMap((c: any) => c.products || []);
       return { products: allProds };
@@ -80,7 +81,7 @@ export const TransferDishEquivalentMode: React.FC<TransferDishEquivalentModeProp
     if (selectedDishes.length === 0) return;
     setIsCalculating(true);
     try {
-      const res = await fetch('/api/fase4/transfers/calculate-dish-equivalents', {
+      const res = await apiFetch('/api/fase4/transfers/calculate-dish-equivalents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
