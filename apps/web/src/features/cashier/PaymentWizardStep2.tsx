@@ -1,10 +1,23 @@
 import React from 'react';
 import type { CashierTender } from './types.js';
 import { Button, Input, NumberPad } from '../../ui/index.js';
-import { paymentLabels, getPaymentMethodHumanLabel, type CashierPaymentMethod } from './payment-labels.js';
+import {
+  paymentLabels,
+  getPaymentMethodHumanLabel,
+  type CashierPaymentMethod
+} from './payment-labels.js';
 import { getMethodCurrency } from '@tocineta/shared';
 
 const QUICK_USD_BILLS = [100, 500, 1000, 2000, 5000, 10000];
+
+const USD_METHODS: CashierPaymentMethod[] = ['cash_usd', 'zelle', 'binance', 'otros'];
+const BS_METHODS: CashierPaymentMethod[] = [
+  'cash_bs',
+  'pago_movil',
+  'punto_de_venta',
+  'ubii',
+  'transferencia'
+];
 
 interface PaymentWizardStep2Props {
   selectedMethod: CashierPaymentMethod;
@@ -45,22 +58,61 @@ export const PaymentWizardStep2: React.FC<PaymentWizardStep2Props> = ({
 
   return (
     <div className="space-y-4">
-      {/* Tarjetas de método de pago */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-        {(['cash_usd', 'cash_bs', 'pago_movil', 'ubii', 'binance'] as CashierPaymentMethod[]).map(m => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => onSelectMethod(m)}
-            className={`min-h-[48px] p-3 rounded-xl border text-left flex flex-col justify-between transition ${
-              selectedMethod === m
-                ? 'border-primary bg-primary/10 text-ink ring-2 ring-primary/30'
-                : 'border-border bg-surface hover:border-primary/50 text-ink-muted'
-            }`}
-          >
-            <span className="text-xs font-bold leading-tight">{paymentLabels[m]}</span>
-          </button>
-        ))}
+      {/* Cuadrícula de métodos agrupada por moneda (Mobile-first, 2 columnas) */}
+      <div className="space-y-3">
+        {/* Métodos en Dólares ($) */}
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-ink-muted block mb-1.5">
+            Dólares ($)
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            {USD_METHODS.map(m => {
+              const isSelected = selectedMethod === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => onSelectMethod(m)}
+                  className={`min-h-[48px] p-2.5 rounded-xl border text-left flex items-center justify-between transition ${
+                    isSelected
+                      ? 'border-primary bg-primary/10 text-ink ring-2 ring-primary/30 font-black'
+                      : 'border-border bg-surface hover:border-primary/50 text-ink-muted font-medium'
+                  }`}
+                >
+                  <span className="text-xs leading-tight">{paymentLabels[m] || m}</span>
+                  {isSelected && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Métodos en Bolívares (Bs) */}
+        <div>
+          <span className="text-[11px] font-bold uppercase tracking-wider text-ink-muted block mb-1.5">
+            Bolívares (Bs)
+          </span>
+          <div className="grid grid-cols-2 gap-2">
+            {BS_METHODS.map(m => {
+              const isSelected = selectedMethod === m;
+              return (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => onSelectMethod(m)}
+                  className={`min-h-[48px] p-2.5 rounded-xl border text-left flex items-center justify-between transition ${
+                    isSelected
+                      ? 'border-primary bg-primary/10 text-ink ring-2 ring-primary/30 font-black'
+                      : 'border-border bg-surface hover:border-primary/50 text-ink-muted font-medium'
+                  }`}
+                >
+                  <span className="text-xs leading-tight">{paymentLabels[m] || m}</span>
+                  {isSelected && <span className="w-2 h-2 rounded-full bg-primary shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+        </div>
       </div>
 
       {/* Falta por cobrar y equivalencias */}
