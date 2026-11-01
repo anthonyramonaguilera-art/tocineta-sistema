@@ -261,8 +261,8 @@ export function closeJornadaZ(
   jornadaId: string,
   user: UserContext
 ): { success: boolean; zReport: ZReportData } {
-  if (user.role !== 'admin' && user.role !== 'supervisor') {
-    const err: any = new Error('Solo un Administrador o Supervisor puede ejecutar el Cierre Z de jornada');
+  if (user.role !== 'admin' && user.role !== 'supervisor' && user.role !== 'cajera') {
+    const err: any = new Error('Solo un Administrador, Supervisor o Cajera puede ejecutar el Cierre Z de jornada');
     err.statusCode = 403;
     throw err;
   }

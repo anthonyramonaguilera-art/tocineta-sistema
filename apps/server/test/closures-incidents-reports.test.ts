@@ -265,6 +265,18 @@ describe('Hito M8 - Arqueo Ciego, Cierre Z, Incidentes (Re-fire vs Refund) y Rep
       });
       zJornadaId = resJornada.json().jornada.id;
 
+      // Abrir sesión de caja para la cajera
+      await app.inject({
+        method: 'POST',
+        url: '/api/cash-sessions/open',
+        headers: { authorization: `Bearer ${cajeraToken}` },
+        payload: {
+          jornadaId: zJornadaId,
+          openingCashUsdCents: 2000,
+          openingCashBsCents: 0
+        }
+      });
+
       // Crear orden cobrada para generar asientos en ledger
       const resOrder = await app.inject({
         method: 'POST',
@@ -287,20 +299,20 @@ describe('Hito M8 - Arqueo Ciego, Cierre Z, Incidentes (Re-fire vs Refund) y Rep
       });
     });
 
-    it('Cajera no tiene privilegios para ejecutar el Cierre Z (Requiere Supervisor o Admin)', async () => {
+    it('Mesonero no tiene privilegios para ejecutar el Cierre Z (recibe 403)', async () => {
       const resFail = await app.inject({
         method: 'POST',
         url: `/api/jornadas/${zJornadaId}/close`,
-        headers: { authorization: `Bearer ${cajeraToken}` }
+        headers: { authorization: `Bearer ${mesoneroToken}` }
       });
       expect(resFail.statusCode).toBe(403);
     });
 
-    it('Ejecutar Cierre Z con Admin: suma ledger_entries, captura SHA-256 head hash y encola ticket térmico', async () => {
+    it('Cajera puede ejecutar Cierre Z exitosamente según D6: suma ledger_entries, captura SHA-256 head hash y encola ticket térmico', async () => {
       const resClose = await app.inject({
         method: 'POST',
         url: `/api/jornadas/${zJornadaId}/close`,
-        headers: { authorization: `Bearer ${adminToken}` }
+        headers: { authorization: `Bearer ${cajeraToken}` }
       });
 
       expect(resClose.statusCode).toBe(200);
