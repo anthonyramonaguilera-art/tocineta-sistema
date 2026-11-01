@@ -518,6 +518,14 @@ export const MenuAdminView: React.FC = () => {
     return map;
   }, [adminMenu?.categories]);
 
+  const inactiveCategoryIds = useMemo(() => {
+    return new Set(
+      adminMenu?.categories
+        .filter(c => !c.is_active || c.is_active === 0)
+        .map(c => c.id)
+    );
+  }, [adminMenu?.categories]);
+
   const normalizedQuery = normalizeSearch(searchQuery.trim());
 
   const filteredProducts = adminMenu.products.filter(p => {
@@ -707,6 +715,7 @@ export const MenuAdminView: React.FC = () => {
               const suggestedPrice = margin >= 100 ? costUsd * 2 : costUsd / (1 - (margin / 100));
               const currentPrice = p.price_usd_cents / 100;
               const hasPriceDiff = Math.abs(suggestedPrice - currentPrice) > 0.15;
+              const isCategoryInactive = inactiveCategoryIds.has(p.category_id);
 
               return (
                 <div
@@ -852,21 +861,27 @@ export const MenuAdminView: React.FC = () => {
                         </span>
                       )}
                     </div>
-                    <button
-                      onClick={() =>
-                        toggleAvailabilityMutation.mutate({
-                          productId: p.id,
-                          isAvailable: !p.isAvailable
-                        })
-                      }
-                      className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                        p.isAvailable
-                          ? 'bg-emerald-500/20 text-success font-bold border border-emerald-500/40'
-                          : 'bg-red-500/20 text-red-400 border border-red-500/40'
-                      }`}
-                    >
-                      {p.isAvailable ? '● Disponible' : '○ Agotado'}
-                    </button>
+                    {isCategoryInactive && p.isAvailable ? (
+                      <span className="px-3 py-1 rounded-full text-xs font-bold border bg-warning-subtle text-warning border-warning/30">
+                        Oculto en POS (categoría inactiva)
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() =>
+                          toggleAvailabilityMutation.mutate({
+                            productId: p.id,
+                            isAvailable: !p.isAvailable
+                          })
+                        }
+                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
+                          p.isAvailable
+                            ? 'bg-emerald-500/20 text-success font-bold border border-emerald-500/40'
+                            : 'bg-red-500/20 text-red-400 border border-red-500/40'
+                        }`}
+                      >
+                        {p.isAvailable ? '● Disponible' : '○ Agotado'}
+                      </button>
+                    )}
                   </div>
                 </div>
               );
@@ -1328,7 +1343,7 @@ export const MenuAdminView: React.FC = () => {
                   >
                     {adminMenu.categories.map(c => (
                       <option key={c.id} value={c.id}>
-                        {c.name}
+                        {c.name}{(!c.is_active || c.is_active === 0) ? ' (Inactiva: oculta en POS)' : ''}
                       </option>
                     ))}
                   </select>
