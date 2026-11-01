@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Button, Input, Field } from '../../../ui/index.js';
+import { apiFetch } from '../../../api/client';
 
 interface NewSupplyModalProps {
   isOpen: boolean;
@@ -20,7 +21,7 @@ export const NewSupplyModal: React.FC<NewSupplyModalProps> = ({ isOpen, onClose 
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/fase3/supplies', {
+      const res = await apiFetch('/api/fase3/supplies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

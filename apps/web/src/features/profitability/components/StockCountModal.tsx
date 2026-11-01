@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Button, Input, Badge } from '../../../ui/index.js';
+import { apiFetch } from '../../../api/client';
 
 interface StockCountModalProps {
   isOpen: boolean;
@@ -37,7 +38,7 @@ export const StockCountModal: React.FC<StockCountModalProps> = ({
         throw new Error('Ingresa al menos un conteo físico para conciliar');
       }
 
-      const res = await fetch('/api/fase3/stock-counts', {
+      const res = await apiFetch('/api/fase3/stock-counts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

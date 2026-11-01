@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Modal, Button, Input, Field, Icon } from '../../../ui/index.js';
+import { apiFetch } from '../../../api/client';
 
 interface ProductionModalProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export const ProductionModal: React.FC<ProductionModalProps> = ({
   const { data: subData } = useQuery<{ success: boolean; subRecipes: any[] }>({
     queryKey: ['fase3SubRecipes'],
     queryFn: async () => {
-      const res = await fetch('/api/fase3/sub-recipes');
+      const res = await apiFetch('/api/fase3/sub-recipes');
       return res.json();
     },
     enabled: isOpen && targetType === 'SUB_RECIPE'
@@ -34,7 +35,7 @@ export const ProductionModal: React.FC<ProductionModalProps> = ({
   const { data: menuData } = useQuery<{ products: any[] }>({
     queryKey: ['fase4MenuProducts'],
     queryFn: async () => {
-      const res = await fetch('/api/menu/pos');
+      const res = await apiFetch('/api/menu/pos');
       const json = await res.json();
       return { products: json.products || [] };
     },
@@ -56,7 +57,7 @@ export const ProductionModal: React.FC<ProductionModalProps> = ({
     }
 
     try {
-      const res = await fetch('/api/fase4/production', {
+      const res = await apiFetch('/api/fase4/production', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

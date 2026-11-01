@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Button, Input, Field, Icon, Badge } from '../../../ui/index.js';
+import { apiFetch } from '../../../api/client';
 import { RecipeModifiersSection, type ModifierRow } from './RecipeModifiersSection.js';
 interface IngredientRow {
   supplyItemId?: string;
@@ -76,7 +77,7 @@ export const RecipeEditorModal: React.FC<RecipeEditorModalProps> = ({
         throw new Error('Selecciona un plato de la carta');
       }
       const targetMarginBps = Math.round(parseFloat(targetMarginPercent) * 100);
-      const res = await fetch(`/api/fase3/recipes/${targetId}`, {
+      const res = await apiFetch(`/api/fase3/recipes/${targetId}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

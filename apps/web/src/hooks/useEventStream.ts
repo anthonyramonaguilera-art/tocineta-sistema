@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
+import { getAuthToken } from '../api/client.js';
 
 export function useEventStream() {
   const [isConnected, setIsConnected] = useState(false);
@@ -14,8 +15,15 @@ export function useEventStream() {
     const connect = () => {
       if (unmounted) return;
 
+      const token = getAuthToken();
+      if (!token) {
+        setIsConnected(false);
+        // Sin token: no conecta y espera al evento 'tocineta:authenticated' sin bucle ciego
+        return;
+      }
+
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-      const wsUrl = `${protocol}//${window.location.host}/ws`;
+      const wsUrl = `${protocol}//${window.location.host}/ws?token=${encodeURIComponent(token)}`;
 
       try {
         const socket = new WebSocket(wsUrl);
@@ -55,14 +63,24 @@ export function useEventStream() {
           socket.close();
         };
       } catch {
-        reconnectTimeoutRef.current = setTimeout(connect, 3000);
+        reconnectTimeoutRef.current = setTimeout(connect, 2500);
       }
     };
 
+    const handleAuthenticated = () => {
+      if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
+      if (socketRef.current) {
+        socketRef.current.close();
+      }
+      connect();
+    };
+
+    window.addEventListener('tocineta:authenticated', handleAuthenticated);
     connect();
 
     return () => {
       unmounted = true;
+      window.removeEventListener('tocineta:authenticated', handleAuthenticated);
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
       if (socketRef.current) socketRef.current.close();
     };

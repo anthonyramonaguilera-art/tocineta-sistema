@@ -1,23 +1,27 @@
 import { SystemHealthResponseSchema, type SystemHealthResponse } from '@tocineta/shared';
 
-export async function fetchSystemHealth(): Promise<SystemHealthResponse> {
-  const res = await fetch('/api/system-health', {
-    headers: {
-      'Accept': 'application/json'
-    }
-  });
+export const TOKEN_KEY = 'tocineta_token';
 
-  if (!res.ok) {
-    throw new Error(`Error HTTP al consultar estado del sistema: ${res.status} ${res.statusText}`);
+export function getAuthToken(): string | null {
+  if (typeof window === 'undefined') return null;
+  return localStorage.getItem(TOKEN_KEY);
+}
+
+export class ApiError extends Error {
+  status: number;
+  body: any;
+
+  constructor(status: number, body: any, message?: string) {
+    super(message || (body?.message || body?.error || `HTTP ${status}`));
+    this.name = 'ApiError';
+    this.status = status;
+    this.body = body;
   }
-
-  const json = await res.json();
-  return SystemHealthResponseSchema.parse(json);
 }
 
 export async function apiFetch(input: string, init?: RequestInit): Promise<Response> {
-  const token = typeof window !== 'undefined' ? localStorage.getItem('tocineta_token') : null;
-  const headers = new Headers(init?.headers || {});
+  const token = getAuthToken();
+  const headers = new Headers(init?.headers);
 
   if (token && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
@@ -36,8 +40,15 @@ export async function apiFetch(input: string, init?: RequestInit): Promise<Respo
     headers,
   });
 
-  if (response.status === 401 && typeof window !== 'undefined') {
-    window.dispatchEvent(new Event('tocineta:unauthorized'));
+  if (
+    response.status === 401 &&
+    typeof window !== 'undefined' &&
+    input !== '/api/auth/login' &&
+    input !== '/api/auth/register' &&
+    !input.startsWith('/api/auth/login?') &&
+    !input.startsWith('/api/auth/register?')
+  ) {
+    window.dispatchEvent(new CustomEvent('tocineta:unauthorized', { detail: { path: input } }));
   }
 
   return response;
@@ -46,16 +57,28 @@ export async function apiFetch(input: string, init?: RequestInit): Promise<Respo
 export async function apiJson<T = unknown>(input: string, init?: RequestInit): Promise<T> {
   const res = await apiFetch(input, init);
   if (!res.ok) {
-    let errMsg = `HTTP ${res.status}`;
+    let body: any = null;
     try {
-      const data = await res.json();
-      if (data?.message) errMsg = data.message;
-      else if (data?.error) errMsg = data.error;
+      body = await res.json();
     } catch {
       // ignore json parse error
     }
-    throw new Error(errMsg);
+    throw new ApiError(res.status, body);
   }
   return res.json() as Promise<T>;
 }
 
+export async function fetchSystemHealth(): Promise<SystemHealthResponse> {
+  const res = await apiFetch('/api/system-health', {
+    headers: {
+      'Accept': 'application/json'
+    }
+  });
+
+  if (!res.ok) {
+    throw new Error(`Error HTTP al consultar estado del sistema: ${res.status} ${res.statusText}`);
+  }
+
+  const json = await res.json();
+  return SystemHealthResponseSchema.parse(json);
+}

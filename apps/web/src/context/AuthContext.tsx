@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { apiFetch, TOKEN_KEY } from '../api/client.js';
+import { flushOutbox } from '../features/pos/outbox.js';
 
 export interface UserSession {
   id: string;
@@ -33,11 +35,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
 
   const [token, setToken] = useState<string | null>(() => {
-    return localStorage.getItem('tocineta_token');
+    return localStorage.getItem(TOKEN_KEY);
   });
 
   const [currency, setCurrency] = useState<'USD' | 'BS'>('USD');
   const isSensitiveLocked = false;
+
+  const clearSession = useCallback(() => {
+    setUser(null);
+    setToken(null);
+    localStorage.removeItem('tocineta_user');
+    localStorage.removeItem(TOKEN_KEY);
+  }, []);
+
+  useEffect(() => {
+    const handleUnauthorized = () => {
+      clearSession();
+    };
+
+    window.addEventListener('tocineta:unauthorized', handleUnauthorized);
+    return () => {
+      window.removeEventListener('tocineta:unauthorized', handleUnauthorized);
+    };
+  }, [clearSession]);
 
   const recordUserActivity = useCallback(() => {
     // Inactividad deshabilitada: la pantalla jamás se bloquea automáticamente
@@ -49,7 +69,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         ? { userId: credentialsOrUserId, pin: maybePin }
         : credentialsOrUserId;
 
-      const res = await fetch('/api/auth/login', {
+      const res = await apiFetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
@@ -66,7 +86,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(data.user);
       setToken(data.token);
       localStorage.setItem('tocineta_user', JSON.stringify(data.user));
-      localStorage.setItem('tocineta_token', data.token);
+      localStorage.setItem(TOKEN_KEY, data.token);
+
+      window.dispatchEvent(new Event('tocineta:authenticated'));
+      void flushOutbox();
 
       return { success: true };
     } catch (err: any) {
@@ -77,21 +100,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = async () => {
     if (token) {
       try {
-        await fetch('/api/auth/logout', {
+        await apiFetch('/api/auth/logout', {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
-            authorization: `Bearer ${token}`
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({})
         });
       } catch {}
     }
 
-    setUser(null);
-    setToken(null);
-    localStorage.removeItem('tocineta_user');
-    localStorage.removeItem('tocineta_token');
+    clearSession();
   };
 
   const unlockSensitive = async (_pin: string) => {
@@ -102,11 +121,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!token) return { success: false, error: 'No hay sesión activa' };
 
     try {
-      const res = await fetch('/api/auth/change-pin', {
+      const res = await apiFetch('/api/auth/change-pin', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          authorization: `Bearer ${token}`
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({ currentPin, newPin })
       });

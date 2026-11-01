@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Modal, Button, Input, Field, Icon } from '../../../ui/index.js';
+import { apiFetch } from '../../../api/client';
 
 export interface BatchItem {
   id: string;
@@ -36,7 +37,7 @@ export const TransferBatchesModal: React.FC<TransferBatchesModalProps> = ({
   const { data: batchesData, isLoading } = useQuery<{ success: boolean; batches: BatchItem[] }>({
     queryKey: ['fase4TransferBatches'],
     queryFn: async () => {
-      const res = await fetch('/api/fase4/transfer-batches');
+      const res = await apiFetch('/api/fase4/transfer-batches');
       return res.json();
     },
     enabled: isOpen
@@ -75,7 +76,7 @@ export const TransferBatchesModal: React.FC<TransferBatchesModalProps> = ({
       : '/api/fase4/transfer-batches';
     const method = editingBatchId ? 'PATCH' : 'POST';
 
-    await fetch(url, {
+    await apiFetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -89,7 +90,7 @@ export const TransferBatchesModal: React.FC<TransferBatchesModalProps> = ({
   };
 
   const handleDelete = async (id: string) => {
-    await fetch(`/api/fase4/transfer-batches/${id}`, { method: 'DELETE' });
+    await apiFetch(`/api/fase4/transfer-batches/${id}`, { method: 'DELETE' });
     queryClient.invalidateQueries({ queryKey: ['fase4TransferBatches'] });
   };
 

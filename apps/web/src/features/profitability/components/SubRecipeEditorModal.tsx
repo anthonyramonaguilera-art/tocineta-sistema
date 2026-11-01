@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Button, Input, Field, Icon } from '../../../ui/index.js';
+import { apiFetch } from '../../../api/client';
 
 interface SubRecipeEditorModalProps {
   isOpen: boolean;
@@ -24,7 +25,7 @@ export const SubRecipeEditorModal: React.FC<SubRecipeEditorModalProps> = ({
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/fase3/sub-recipes', {
+      const res = await apiFetch('/api/fase3/sub-recipes', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
