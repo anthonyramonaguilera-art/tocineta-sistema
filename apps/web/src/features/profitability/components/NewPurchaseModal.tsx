@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Modal, Button, Input, Field, Icon } from '../../../ui/index.js';
 import type { RecipeImpact } from './CostVariationModal.js';
 import { NewSupplyModal } from './NewSupplyModal.js';
+import { apiFetch } from '../../../api/client';
 
 interface NewPurchaseModalProps {
   isOpen: boolean;
@@ -36,7 +37,7 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
     queryClient.invalidateQueries({ queryKey: ['fase3Supplies'] });
     if (activeSupplyIndex !== null) {
       try {
-        const res = await fetch('/api/fase3/supplies?locationId=ALL');
+        const res = await apiFetch('/api/fase3/supplies?locationId=ALL');
         const data = await res.json();
         if (data && data.success && data.supplies && data.supplies.length > 0) {
           const lastSupply = data.supplies[data.supplies.length - 1];
@@ -59,7 +60,7 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
           ? Date.now() + parseInt(dueDateDays, 10) * 86400000
           : null;
 
-      const res = await fetch('/api/fase3/purchases', {
+      const res = await apiFetch('/api/fase3/purchases', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

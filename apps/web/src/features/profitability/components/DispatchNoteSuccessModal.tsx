@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Button, Badge, Icon } from '../../../ui/index.js';
+import { apiFetch } from '../../../api/client';
 
 export interface DispatchNoteInfo {
   id: string;
@@ -37,11 +38,11 @@ export const DispatchNoteSuccessModal: React.FC<DispatchNoteSuccessModalProps> =
 
   const handlePrint58mm = async () => {
     try {
-      const res = await fetch(`/api/fase4/transfers/${note.id}/ticket-ir`);
+      const res = await apiFetch(`/api/fase4/transfers/${note.id}/ticket-ir`);
       const data = await res.json();
       if (data.ticketIr) {
         // Enviar a cola de impresión local
-        await fetch('/api/printing/jobs', {
+        await apiFetch('/api/printing/jobs', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -59,7 +60,7 @@ export const DispatchNoteSuccessModal: React.FC<DispatchNoteSuccessModalProps> =
 
   const handleShareWhatsApp = async () => {
     try {
-      const res = await fetch(`/api/fase4/transfers/${note.id}/whatsapp-text`);
+      const res = await apiFetch(`/api/fase4/transfers/${note.id}/whatsapp-text`);
       const data = await res.json();
       if (data.text) {
         const encoded = encodeURIComponent(data.text);

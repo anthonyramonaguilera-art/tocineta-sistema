@@ -4,6 +4,7 @@ import { Card, Button, Icon, Badge } from '../../ui/index.js';
 import { CostVariationModal, type RecipeImpact } from './components/CostVariationModal.js';
 import { NewPurchaseModal } from './components/NewPurchaseModal.js';
 import { PriceHistoryModal } from './components/PriceHistoryModal.js';
+import { apiFetch } from '../../api/client';
 
 interface PurchaseRecord {
   id: string;
@@ -34,7 +35,7 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({ activeLocationId }
   const { data: purchasesData, isLoading } = useQuery<{ success: boolean; purchases: PurchaseRecord[] }>({
     queryKey: ['fase3Purchases', activeLocationId],
     queryFn: async () => {
-      const res = await fetch(`/api/fase3/purchases?locationId=${activeLocationId}`);
+      const res = await apiFetch(`/api/fase3/purchases?locationId=${activeLocationId}`);
       return res.json();
     }
   });
@@ -42,7 +43,7 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({ activeLocationId }
   const { data: suppliesData } = useQuery<{ success: boolean; supplies: any[] }>({
     queryKey: ['fase3Supplies', 'ALL'],
     queryFn: async () => {
-      const res = await fetch('/api/fase3/supplies?locationId=ALL');
+      const res = await apiFetch('/api/fase3/supplies?locationId=ALL');
       return res.json();
     }
   });
@@ -50,7 +51,7 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({ activeLocationId }
   const { data: historyData } = useQuery<{ success: boolean; history: any[] }>({
     queryKey: ['fase3PriceHistory'],
     queryFn: async () => {
-      const res = await fetch('/api/fase3/price-history');
+      const res = await apiFetch('/api/fase3/price-history');
       return res.json();
     },
     enabled: isPriceHistoryModalOpen
@@ -63,7 +64,7 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({ activeLocationId }
         newPriceUsdCents: newPriceCents
       }));
 
-      const res = await fetch('/api/fase3/purchases/adjust-prices', {
+      const res = await apiFetch('/api/fase3/purchases/adjust-prices', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adjustments })

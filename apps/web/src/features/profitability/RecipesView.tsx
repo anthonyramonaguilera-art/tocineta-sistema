@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Button, Input, Icon, Badge } from '../../ui/index.js';
 import { RecipeEditorModal } from './components/RecipeEditorModal.js';
 import { SubRecipeEditorModal } from './components/SubRecipeEditorModal.js';
+import { apiFetch } from '../../api/client';
 
 interface RecipeSummary {
   productId: string;
@@ -33,7 +34,7 @@ export const RecipesView: React.FC = () => {
   const { data: recipesData, isLoading } = useQuery<{ success: boolean; recipes: RecipeSummary[] }>({
     queryKey: ['fase3Recipes'],
     queryFn: async () => {
-      const res = await fetch('/api/fase3/recipes');
+      const res = await apiFetch('/api/fase3/recipes');
       return res.json();
     }
   });
@@ -41,7 +42,7 @@ export const RecipesView: React.FC = () => {
   const { data: suppliesData } = useQuery<{ success: boolean; supplies: any[] }>({
     queryKey: ['fase3Supplies', 'ALL'],
     queryFn: async () => {
-      const res = await fetch('/api/fase3/supplies?locationId=ALL');
+      const res = await apiFetch('/api/fase3/supplies?locationId=ALL');
       return res.json();
     }
   });
@@ -49,7 +50,7 @@ export const RecipesView: React.FC = () => {
   const { data: subRecipesData } = useQuery<{ success: boolean; subRecipes: any[] }>({
     queryKey: ['fase3SubRecipes'],
     queryFn: async () => {
-      const res = await fetch('/api/fase3/sub-recipes');
+      const res = await apiFetch('/api/fase3/sub-recipes');
       return res.json();
     }
   });

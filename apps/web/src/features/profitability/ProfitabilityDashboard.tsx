@@ -6,6 +6,7 @@ import { PurchasesView } from './PurchasesView.js';
 import { RecipesView } from './RecipesView.js';
 import { WasteView } from './WasteView.js';
 import { InitialSetupWizard } from './InitialSetupWizard.js';
+import { apiFetch } from '../../api/client';
 
 type ProfitSubTab = 'inventory' | 'purchases' | 'recipes' | 'waste' | 'wizard' | 'net-profit';
 
@@ -74,7 +75,7 @@ export const ProfitabilityDashboard: React.FC = () => {
   }>({
     queryKey: ['fase3NetProfit', activeLocationId],
     queryFn: async () => {
-      const res = await fetch(`/api/profitability/net-profit?locationId=${activeLocationId}`);
+      const res = await apiFetch(`/api/profitability/net-profit?locationId=${activeLocationId}`);
       return res.json();
     },
     enabled: activeTab === 'net-profit'

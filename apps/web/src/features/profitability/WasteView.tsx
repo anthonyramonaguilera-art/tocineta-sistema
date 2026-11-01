@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Button, Icon, Badge } from '../../ui/index.js';
 import { WasteRegisterModal } from './components/WasteRegisterModal.js';
 import { StockCountModal } from './components/StockCountModal.js';
+import { apiFetch } from '../../api/client';
 
 interface WasteLogEntry {
   id: string;
@@ -36,7 +37,7 @@ export const WasteView: React.FC<WasteViewProps> = ({
   const { data: wasteData, isLoading } = useQuery<{ success: boolean; wasteLogs: WasteLogEntry[] }>({
     queryKey: ['fase3Waste', activeLocationId],
     queryFn: async () => {
-      const res = await fetch(`/api/fase3/waste?locationId=${activeLocationId}`);
+      const res = await apiFetch(`/api/fase3/waste?locationId=${activeLocationId}`);
       return res.json();
     }
   });
@@ -44,7 +45,7 @@ export const WasteView: React.FC<WasteViewProps> = ({
   const { data: suppliesData } = useQuery<{ success: boolean; supplies: any[] }>({
     queryKey: ['fase3Supplies', activeLocationId],
     queryFn: async () => {
-      const res = await fetch(`/api/fase3/supplies?locationId=${activeLocationId}`);
+      const res = await apiFetch(`/api/fase3/supplies?locationId=${activeLocationId}`);
       return res.json();
     }
   });
@@ -52,7 +53,7 @@ export const WasteView: React.FC<WasteViewProps> = ({
   const { data: recipesData } = useQuery<{ success: boolean; recipes: any[] }>({
     queryKey: ['fase3Recipes'],
     queryFn: async () => {
-      const res = await fetch('/api/fase3/recipes');
+      const res = await apiFetch('/api/fase3/recipes');
       return res.json();
     }
   });

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Button, Icon } from '../../../ui/index.js';
+import { apiFetch } from '../../../api/client';
 
 interface CsvDataImportCardProps {
   activeLocationId: string;
@@ -13,7 +14,7 @@ export const CsvDataImportCard: React.FC<CsvDataImportCardProps> = ({ activeLoca
 
   const importMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch('/api/fase3/setup-wizard/import', {
+      const res = await apiFetch('/api/fase3/setup-wizard/import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
