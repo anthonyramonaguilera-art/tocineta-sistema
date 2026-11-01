@@ -295,16 +295,22 @@ export function closeJornadaZ(
   const cashUsdMethod = ft.collectedByMethod.find(m => m.method === 'EFECTIVO_USD');
   const cashBsMethod = ft.collectedByMethod.find(m => m.method === 'EFECTIVO_BS');
   const pagoMovilMethod = ft.collectedByMethod.find(m => m.method === 'PAGO_MOVIL');
+  const puntoDeVentaMethod = ft.collectedByMethod.find(m => m.method === 'PUNTO_DE_VENTA');
   const ubiiMethod = ft.collectedByMethod.find(m => m.method === 'UBII');
+  const transferenciaMethod = ft.collectedByMethod.find(m => m.method === 'TRANSFERENCIA');
   const binanceMethod = ft.collectedByMethod.find(m => m.method === 'BINANCE');
   const zelleMethod = ft.collectedByMethod.find(m => m.method === 'ZELLE');
+  const otrosMethod = ft.collectedByMethod.find(m => m.method === 'OTROS');
 
   const cashUsdCents = cashUsdMethod?.grossUsdCents || 0;
   const cashBsCents = cashBsMethod?.grossBsCents || 0;
   const pagoMovilBsCents = pagoMovilMethod?.grossBsCents || 0;
+  const puntoDeVentaBsCents = puntoDeVentaMethod?.grossBsCents || 0;
   const ubiiGrossBsCents = ubiiMethod?.grossBsCents || 0;
+  const transferenciaBsCents = transferenciaMethod?.grossBsCents || 0;
   const binanceUsdCents = binanceMethod?.grossUsdCents || 0;
   const zelleUsdCents = zelleMethod?.grossUsdCents || 0;
+  const otrosUsdCents = otrosMethod?.grossUsdCents || 0;
 
   // Comisión Ubii 0.75%
   const ubiiFeeBsCents = Math.round((ubiiGrossBsCents * 75) / 10000);
@@ -346,11 +352,14 @@ export function closeJornadaZ(
     cashUsdCents,
     cashBsCents,
     pagoMovilBsCents,
+    puntoDeVentaBsCents,
     ubiiGrossBsCents,
     ubiiFeeBsCents,
     ubiiNetBsCents,
+    transferenciaBsCents,
     binanceUsdCents,
     zelleUsdCents,
+    otrosUsdCents,
     expensesUsdCents,
     mermasLossUsdCents: mermasUsdCents,
     ordersCount,

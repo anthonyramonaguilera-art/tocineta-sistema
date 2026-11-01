@@ -236,8 +236,11 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
   const cashUsdMethod = ft.collectedByMethod.find(m => m.method === 'EFECTIVO_USD');
   const cashBsMethod = ft.collectedByMethod.find(m => m.method === 'EFECTIVO_BS');
   const pagoMovilMethod = ft.collectedByMethod.find(m => m.method === 'PAGO_MOVIL');
+  const puntoDeVentaMethod = ft.collectedByMethod.find(m => m.method === 'PUNTO_DE_VENTA');
+  const transferenciaMethod = ft.collectedByMethod.find(m => m.method === 'TRANSFERENCIA');
   const binanceMethod = ft.collectedByMethod.find(m => m.method === 'BINANCE');
   const zelleMethod = ft.collectedByMethod.find(m => m.method === 'ZELLE');
+  const otrosMethod = ft.collectedByMethod.find(m => m.method === 'OTROS');
 
   return {
     jornada,
@@ -250,11 +253,14 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
     cashUsdCents: cashUsdMethod?.grossUsdCents || 0,
     cashBsCents: cashBsMethod?.grossBsCents || 0,
     pagoMovilBsCents: pagoMovilMethod?.grossBsCents || 0,
+    puntoDeVentaBsCents: puntoDeVentaMethod?.grossBsCents || 0,
     ubiiGrossBsCents,
     ubiiFeeBsCents,
     ubiiNetBsCents,
+    transferenciaBsCents: transferenciaMethod?.grossBsCents || 0,
     binanceUsdCents: binanceMethod?.grossUsdCents || 0,
     zelleUsdCents: zelleMethod?.grossUsdCents || 0,
+    otrosUsdCents: otrosMethod?.grossUsdCents || 0,
     expensesUsdCents: ft.operatingExpensesUsdCents,
     mermasUsdCents: ft.waste.totalUsdCents,
     ordersCount: ft.orders.totalCount,
@@ -379,6 +385,12 @@ export async function generateJornadaExcelReport(
     notes: 'Verificado con código de referencia'
   });
   summarySheet.addRow({
+    concept: 'Punto de Venta (Bs)',
+    valBs: (data.puntoDeVentaBsCents / 100).toFixed(2),
+    valUsd: ((data.puntoDeVentaBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2),
+    notes: 'Tarjetas de débito / crédito bancario'
+  });
+  summarySheet.addRow({
     concept: 'Punto de Venta Ubii (Bruto)',
     valBs: (data.ubiiGrossBsCents / 100).toFixed(2),
     notes: 'Monto total facturado por tarjeta'
@@ -395,9 +407,25 @@ export async function generateJornadaExcelReport(
     notes: 'Liquidación esperada en cuenta bancaria'
   });
   summarySheet.addRow({
+    concept: 'Transferencia Bancaria (Bs)',
+    valBs: (data.transferenciaBsCents / 100).toFixed(2),
+    valUsd: ((data.transferenciaBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2),
+    notes: 'Transferencias bancarias recibidas'
+  });
+  summarySheet.addRow({
     concept: 'Binance Pay (USDT)',
     valUsd: (data.binanceUsdCents / 100).toFixed(2),
     notes: 'Criptoactivos'
+  });
+  summarySheet.addRow({
+    concept: 'Zelle (USD)',
+    valUsd: (data.zelleUsdCents / 100).toFixed(2),
+    notes: 'Transferencias Zelle USD'
+  });
+  summarySheet.addRow({
+    concept: 'Otros Métodos (USD)',
+    valUsd: (data.otrosUsdCents / 100).toFixed(2),
+    notes: 'Otros pagos recibidos'
   });
   summarySheet.addRow({});
 
@@ -539,10 +567,14 @@ export function generateJornadaPdfReport(
       renderRow('Efectivo Dólares (USD)', `$${(data.cashUsdCents / 100).toFixed(2)}`);
       renderRow('Efectivo Bolívares (Bs)', `$${((data.cashBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2)}`, `Bs ${(data.cashBsCents / 100).toFixed(2)}`);
       renderRow('Pago Móvil (Banesco)', `$${((data.pagoMovilBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2)}`, `Bs ${(data.pagoMovilBsCents / 100).toFixed(2)}`);
+      renderRow('Punto de Venta (Bs)', `$${((data.puntoDeVentaBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2)}`, `Bs ${(data.puntoDeVentaBsCents / 100).toFixed(2)}`);
       renderRow('Punto de Venta Ubii (Bruto)', '', `Bs ${(data.ubiiGrossBsCents / 100).toFixed(2)}`);
       renderRow(' - Comisión Punto Ubii (0.75%)', '', `-Bs ${(data.ubiiFeeBsCents / 100).toFixed(2)}`);
       renderRow(' - Neto Bancario Ubii Esperado', `$${((data.ubiiNetBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2)}`, `Bs ${(data.ubiiNetBsCents / 100).toFixed(2)}`);
+      renderRow('Transferencia Bancaria (Bs)', `$${((data.transferenciaBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2)}`, `Bs ${(data.transferenciaBsCents / 100).toFixed(2)}`);
       renderRow('Binance Pay (USDT)', `$${(data.binanceUsdCents / 100).toFixed(2)}`);
+      renderRow('Zelle (USD)', `$${(data.zelleUsdCents / 100).toFixed(2)}`);
+      renderRow('Otros Métodos (USD)', `$${(data.otrosUsdCents / 100).toFixed(2)}`);
 
       doc.moveDown(1);
 

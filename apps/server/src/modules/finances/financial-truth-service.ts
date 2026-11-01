@@ -437,6 +437,9 @@ export function getFinancialTruth(
       totalUsdCents: payabRow?.total || 0,
       pendingCount: payabRow?.count || 0
     },
-    bySede
+    bySede,
+    puntoDeVentaBsCents: overallMetrics.collectedByMethod.find(m => m.method === 'PUNTO_DE_VENTA')?.grossBsCents || 0,
+    transferenciaBsCents: overallMetrics.collectedByMethod.find(m => m.method === 'TRANSFERENCIA')?.grossBsCents || 0,
+    otrosUsdCents: overallMetrics.collectedByMethod.find(m => m.method === 'OTROS')?.grossUsdCents || 0
   };
 }

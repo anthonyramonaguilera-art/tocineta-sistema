@@ -1,4 +1,4 @@
-﻿import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import type { FastifyInstance } from 'fastify';
 import type Database from 'better-sqlite3';
 import * as path from 'node:path';
@@ -211,7 +211,7 @@ describe('P5-A â€” Paridad Z vs verdad financiera (SEV-201)', () => {
       'EFECTIVO_USD',
       'EFECTIVO_BS',
       'PAGO_MOVIL',
-      'UBII',
+      'PUNTO_DE_VENTA',
       'BINANCE',
       'ZELLE'
     ];

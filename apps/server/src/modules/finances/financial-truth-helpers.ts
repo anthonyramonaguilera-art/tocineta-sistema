@@ -9,11 +9,14 @@ export function normalizePaymentMethod(rawMethod: string | null | undefined): st
   if (m === 'CASH_USD' || m === 'EFECTIVO_USD' || m === 'USD') return 'EFECTIVO_USD';
   if (m === 'CASH_BS' || m === 'EFECTIVO_BS' || m === 'BS') return 'EFECTIVO_BS';
   if (m === 'PAGO_MOVIL' || m === 'PAGOMOVIL') return 'PAGO_MOVIL';
-  if (m === 'UBII' || m === 'PUNTO_DE_VENTA' || m === 'PUNTO') return 'UBII';
+  if (m === 'UBII') return 'UBII';
+  if (m === 'PUNTO_DE_VENTA' || m === 'PUNTO') return 'PUNTO_DE_VENTA';
+  if (m === 'TRANSFERENCIA') return 'TRANSFERENCIA';
   if (m === 'BINANCE' || m === 'USDT') return 'BINANCE';
   if (m === 'ZELLE') return 'ZELLE';
   if (m === 'TARJETA') return 'TARJETA';
   if (m === 'CREDITO') return 'CREDITO';
+  if (m === 'OTROS' || m === 'OTRO') return 'OTROS';
   return m;
 }
 

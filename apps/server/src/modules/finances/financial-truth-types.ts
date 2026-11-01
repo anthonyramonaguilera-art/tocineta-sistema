@@ -89,4 +89,7 @@ export interface FinancialTruthResult {
     pendingCount: number;
   };
   bySede: SedeFinancialTruth[];
+  puntoDeVentaBsCents: number;
+  transferenciaBsCents: number;
+  otrosUsdCents: number;
 }

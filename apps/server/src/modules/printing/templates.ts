@@ -794,6 +794,7 @@ export function getPaymentMethodHumanLabel(method: string): string {
     case 'PAGO_MOVIL': case 'PAGOMOVIL': return 'Pago Móvil';
     case 'PUNTO_DE_VENTA': return 'Punto de Venta';
     case 'UBII': return 'Ubii';
+    case 'TRANSFERENCIA': return 'Transferencia';
     case 'BINANCE': case 'USDT': return 'Binance';
     case 'ZELLE': return 'Zelle';
     case 'OTROS': case 'OTRO': return 'Otros';
@@ -817,11 +818,14 @@ export interface ZReportData {
   cashUsdCents: number;
   cashBsCents: number;
   pagoMovilBsCents: number;
+  puntoDeVentaBsCents?: number;
   ubiiGrossBsCents: number;
   ubiiFeeBsCents: number;
   ubiiNetBsCents: number;
+  transferenciaBsCents?: number;
   binanceUsdCents: number;
   zelleUsdCents: number;
+  otrosUsdCents?: number;
   expensesUsdCents: number;
   mermasLossUsdCents: number;
   ordersCount: number;
@@ -942,6 +946,20 @@ export function buildZReportTicketIR(data: ZReportData, settings?: FiscalSetting
     value: `Bs ${(data.ubiiNetBsCents / 100).toFixed(2)}`,
     bold: true
   });
+  if (data.puntoDeVentaBsCents && data.puntoDeVentaBsCents > 0) {
+    blocks.push({
+      type: 'key_value',
+      key: 'Punto de Venta:',
+      value: `Bs ${(data.puntoDeVentaBsCents / 100).toFixed(2)}`
+    });
+  }
+  if (data.transferenciaBsCents && data.transferenciaBsCents > 0) {
+    blocks.push({
+      type: 'key_value',
+      key: 'Transferencia Bs:',
+      value: `Bs ${(data.transferenciaBsCents / 100).toFixed(2)}`
+    });
+  }
   if (data.binanceUsdCents > 0) {
     blocks.push({
       type: 'key_value',
@@ -954,6 +972,13 @@ export function buildZReportTicketIR(data: ZReportData, settings?: FiscalSetting
       type: 'key_value',
       key: 'Zelle USD:',
       value: `$${(data.zelleUsdCents / 100).toFixed(2)}`
+    });
+  }
+  if (data.otrosUsdCents && data.otrosUsdCents > 0) {
+    blocks.push({
+      type: 'key_value',
+      key: 'Otros USD:',
+      value: `$${(data.otrosUsdCents / 100).toFixed(2)}`
     });
   }
 
