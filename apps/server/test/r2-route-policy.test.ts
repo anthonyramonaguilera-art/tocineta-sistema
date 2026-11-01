@@ -59,6 +59,13 @@ describe('R2 ROUTE_POLICY', () => {
     expect(isRoleAllowed('ADMIN', 'admin')).toBe(true);
   });
 
+  it('cajera puede descargar soporte de su jornada (GET /api/reports/jornada/*) y mesonero denegado', () => {
+    const policy = resolveRoutePolicy('GET', '/api/reports/jornada/jor_123/pdf');
+    expect(policy.level).toBe('CASHIER_PLUS');
+    expect(isRoleAllowed(policy.level, 'cajera')).toBe(true);
+    expect(isRoleAllowed(policy.level, 'mesonero')).toBe(false);
+  });
+
   it('sanitizeUrl y el serializer de logs eliminan el token de /ws', () => {
     expect(sanitizeUrl('/ws?token=SECRETO&x=1')).toBe('/ws');
     const out = safeReqSerializer({ method: 'GET', url: '/ws?token=SECRETO', headers: { host: 'x' }, ip: '1.1.1.1' });
