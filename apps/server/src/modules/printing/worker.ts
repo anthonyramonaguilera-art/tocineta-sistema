@@ -112,7 +112,7 @@ export interface PrintJobRow {
   payload_bytes: Buffer;
   ticket_ir_json: string | null;
   station: string | null;
-  status: 'en_cola' | 'imprimiendo' | 'impreso' | 'fallido' | 'requiere_atencion';
+  status: 'en_cola' | 'imprimiendo' | 'impreso' | 'fallido' | 'requiere_atencion' | 'pending' | 'printed' | 'failed';
   error_message: string | null;
   attempts: number;
   max_attempts: number;

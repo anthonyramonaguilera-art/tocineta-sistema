@@ -44,7 +44,7 @@ export async function loginAs(
   app: FastifyInstance,
   role: TestRole,
   rawDb?: Database.Database
-): Promise<{ token: string; user: any }> {
+): Promise<{ token: string; user: any; headers: { authorization: string } }> {
   const creds = CANONICAL_CREDENTIALS[role.toLowerCase()];
   if (!creds) {
     throw new Error(`Rol de prueba no reconocido: ${role}`);
@@ -75,11 +75,11 @@ export async function loginAs(
     });
     if (resUsername.statusCode === 200) {
       const data = JSON.parse(resUsername.payload);
-      return { token: data.token, user: data.user };
+      return { token: data.token, user: data.user, headers: { authorization: `Bearer ${data.token}` } };
     }
     throw new Error(`Error al autenticar como ${role} (HTTP ${res.statusCode}): ${res.payload}`);
   }
 
   const data = JSON.parse(res.payload);
-  return { token: data.token, user: data.user };
+  return { token: data.token, user: data.user, headers: { authorization: `Bearer ${data.token}` } };
 }

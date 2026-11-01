@@ -7,6 +7,7 @@ import { AppSidebar } from './AppSidebar.js';
 import { Modal, Button, Input, Field, Icon } from '../ui/index.js';
 import { PrintAttentionModal } from '../features/cashier/PrintAttentionModal.js';
 import { TicketPreviewModal } from '../features/cashier/TicketPreviewModal.js';
+import { apiFetch } from '../api/client.js';
 
 /**
  * TOCINETA — Layout principal con cabecera oficial y navegación por roles
@@ -187,7 +188,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     setIsSavingBcv(true);
     try {
       const rateMicroBs = Math.round(parsed * 1_000_000);
-      const res = await fetch('/api/menu/exchange-rate', {
+      const res = await apiFetch('/api/menu/exchange-rate', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -285,7 +286,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
               setIsSyncingBcv(true);
               setBcvModalMsg(null);
               try {
-                const res = await fetch('/api/menu/exchange-rate/sync-now', {
+                const res = await apiFetch('/api/menu/exchange-rate/sync-now', {
                   method: 'POST',
                   headers: {
                     ...(token ? { Authorization: `Bearer ${token}` } : {})

@@ -1,5 +1,7 @@
 import { execFile } from 'node:child_process';
 
+export const SPOOLER_PS_TIMEOUT_MS = 8000;
+
 export function isSafePrinterName(n: string): boolean {
   if (typeof n !== 'string') return false;
   return /^[\p{L}\p{N} _.\-()]{1,128}$/u.test(n);
@@ -32,13 +34,14 @@ export async function countTocinetaJobs(printerName: string): Promise<number> {
         "Get-PrintJob -PrinterName $env:TOC_PRINTER -ErrorAction SilentlyContinue | Where-Object { $_.DocumentName -like 'Tocineta_*' } | Measure-Object | ForEach-Object { $_.Count }"
       ],
       {
-        timeout: 3000,
+        timeout: SPOOLER_PS_TIMEOUT_MS,
         env: { ...process.env, TOC_PRINTER: printerName }
       }
     );
     const count = parseInt(stdout.trim(), 10);
     return isNaN(count) ? 0 : count;
   } catch (err) {
+    console.warn('[spooler-guard] No se pudo leer la cola de impresión', { printerName, error: err instanceof Error ? err.message : String(err) });
     return 0;
   }
 }
@@ -61,7 +64,7 @@ export async function purgeTocinetaJobs(printerName: string): Promise<void> {
         "Get-PrintJob -PrinterName $env:TOC_PRINTER -ErrorAction SilentlyContinue | Where-Object { $_.DocumentName -like 'Tocineta_*' } | Remove-PrintJob -ErrorAction SilentlyContinue"
       ],
       {
-        timeout: 3000,
+        timeout: SPOOLER_PS_TIMEOUT_MS,
         env: { ...process.env, TOC_PRINTER: printerName }
       }
     );

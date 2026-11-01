@@ -37,6 +37,7 @@ import { seedInitialUsers } from './modules/auth/seed-users.js';
 import { recoverStuckUpdatesOnBoot } from './modules/updater/updater-service.js';
 import { syncBcvRateFromInternet } from './modules/menu/bcv-auto-sync.js';
 import { globalErrorHandler } from './lib/error-handler.js';
+import { registerAuthGuard, SAFE_LOGGER_REDACT, safeReqSerializer } from './plugins/auth-guard.js';
 
 declare module 'fastify' {
   interface FastifyInstance {
@@ -52,8 +53,11 @@ export interface BuildServerOptions {
 export async function buildServer(options: BuildServerOptions = {}): Promise<FastifyInstance> {
   const isDev = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'test';
 
+  const safeLogger = { redact: SAFE_LOGGER_REDACT, serializers: { req: safeReqSerializer } };
+
   const defaultLogger: FastifyServerOptions['logger'] = isDev
     ? {
+        ...safeLogger,
         transport: {
           target: 'pino-pretty',
           options: {
@@ -62,7 +66,7 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
           }
         }
       }
-    : true;
+    : safeLogger;
 
   const server = Fastify({
     logger: options.logger !== undefined ? options.logger : defaultLogger
@@ -84,6 +88,8 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
       done(err as Error, undefined);
     }
   });
+
+  registerAuthGuard(server);
 
   // Inicializar PrintingWorker interno
   const dbCtx = getDatabaseContext();

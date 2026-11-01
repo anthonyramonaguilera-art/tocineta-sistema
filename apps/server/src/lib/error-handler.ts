@@ -2,6 +2,7 @@ import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
 import { AppError } from './app-error.js';
 import { getDatabaseContext } from '../db/connection.js';
 import { extractSessionToken, hashToken } from '../routes/auth.js';
+import { sanitizeUrl } from '../plugins/auth-guard.js';
 
 /**
  * Redacta claves sensibles en objetos anidados para auditoría segura.
@@ -13,7 +14,7 @@ export function redactSensitiveData(data: unknown): unknown {
   if (Array.isArray(data)) {
     return data.map((item) => redactSensitiveData(item));
   }
-  const sensitiveKeys = new Set(['pin', 'password', 'token', 'authorization', 'secret']);
+  const sensitiveKeys = new Set(['pin', 'password', 'passwd', 'token', 'authorization', 'secret']);
   const result: Record<string, unknown> = {};
 
   for (const [key, value] of Object.entries(data as Record<string, unknown>)) {
@@ -192,7 +193,7 @@ export async function globalErrorHandler(
       errId,
       String(request.id),
       request.method,
-      request.url,
+      sanitizeUrl(request.url),
       info.status,
       info.code,
       error?.message || info.message,
