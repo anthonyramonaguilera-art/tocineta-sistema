@@ -44,3 +44,7 @@ data/uploads/
 *.zip
 crear-contexto.ps1
 .gemini/mcp.json
+
+*.zip
+crear-contexto.ps1
+.gemini/mcp.json
