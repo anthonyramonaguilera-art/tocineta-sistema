@@ -18,12 +18,16 @@ import { LoadBoundary } from '../ui/LoadBoundary.js';
 import { useLoadState } from '../ui/useLoadState.js';
 import { apiFetch } from '../api/client.js';
 
+const normalizeSearch = (text: string) =>
+  text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
 export const MenuAdminView: React.FC = () => {
   const { token } = useAuth();
   const queryClient = useQueryClient();
 
   const [activeTab, setActiveTab] = useState<'products' | 'pricing-calculator' | 'supplies-costs' | 'coupons' | 'bcv'>('products');
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
@@ -508,9 +512,25 @@ export const MenuAdminView: React.FC = () => {
   }
 
 
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, string>();
+    adminMenu?.categories.forEach(c => map.set(c.id, c.name));
+    return map;
+  }, [adminMenu?.categories]);
+
+  const normalizedQuery = normalizeSearch(searchQuery.trim());
+
   const filteredProducts = adminMenu.products.filter(p => {
-    if (selectedCategory === 'all') return true;
-    return p.category_id === selectedCategory;
+    if (selectedCategory !== 'all' && p.category_id !== selectedCategory) {
+      return false;
+    }
+    if (!normalizedQuery) return true;
+    const catName = categoryMap.get(p.category_id) || '';
+    const matchName = normalizeSearch(p.name).includes(normalizedQuery);
+    const matchDesc = normalizeSearch(p.description || '').includes(normalizedQuery);
+    const matchCat = normalizeSearch(catName).includes(normalizedQuery);
+    return matchName || matchDesc || matchCat;
+
   });
 
   return (
@@ -650,8 +670,36 @@ export const MenuAdminView: React.FC = () => {
             </button>
           </div>
 
+          {/* Buscador en Carta y Precios */}
+          <div className="sticky top-0 z-10 bg-surface/95 backdrop-blur-xs py-1">
+            <div className="relative w-full">
+              <input
+                type="search"
+                placeholder="Buscar producto o categoría"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full min-h-[44px] bg-surface-alt border border-border rounded-xl px-4 py-2 pr-10 text-sm text-ink placeholder:text-ink-muted focus:outline-hidden focus:border-primary"
+              />
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className={`absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink text-lg font-bold p-1 cursor-pointer transition-opacity ${
+                  !searchQuery ? 'opacity-0 pointer-events-none' : 'opacity-100'
+                }`}
+                aria-label="Limpiar búsqueda"
+              >
+                ×
+              </button>
+            </div>
+          </div>
+
           {/* Grilla de Productos */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {filteredProducts.length === 0 ? (
+            <div className="py-12 text-center text-sm font-bold text-ink-muted bg-surface border border-border rounded-2xl">
+              No se encontraron productos
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredProducts.map(p => {
               const productFlavors = adminMenu.flavors.filter(f => f.product_id === p.id);
               const costUsd = (p.estimated_cost_usd_cents || 150) / 100;
@@ -824,6 +872,7 @@ export const MenuAdminView: React.FC = () => {
               );
             })}
           </div>
+          )}
         </div>
       )}
 
