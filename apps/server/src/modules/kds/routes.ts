@@ -55,8 +55,12 @@ export const kdsRoutes: FastifyPluginAsync = async (server) => {
       const result = updateKdsLineStatus(dbCtx.rawDb, lineId, status, userId);
       return reply.status(200).send(result);
     } catch (err: any) {
-      const code = err.statusCode || 500;
-      return reply.status(code).send({ error: err.message || 'Error al actualizar estado de la línea' });
+      const statusCode = err.statusCode || 500;
+      return reply.status(statusCode).send({
+        error: err.code || err.message || 'Error al actualizar estado de la línea',
+        code: err.code,
+        message: err.message
+      });
     }
   });
 
@@ -79,9 +83,10 @@ export const kdsRoutes: FastifyPluginAsync = async (server) => {
       const result = deliverKdsOrder(dbCtx.rawDb, orderId, { archive, actorUserId: userId });
       return reply.status(200).send(result);
     } catch (err: any) {
-      const code = err.statusCode || 500;
-      return reply.status(code).send({
+      const statusCode = err.statusCode || 500;
+      return reply.status(statusCode).send({
         error: err.code || err.message || 'Error al entregar comanda',
+        code: err.code,
         message: err.message
       });
     }
@@ -133,9 +138,10 @@ export const kdsRoutes: FastifyPluginAsync = async (server) => {
       const result = forceCompleteKdsOrder(dbCtx.rawDb, orderId, { actorUserId: userId });
       return reply.status(200).send(result);
     } catch (err: any) {
-      const code = err.statusCode || 500;
-      return reply.status(code).send({
+      const statusCode = err.statusCode || 500;
+      return reply.status(statusCode).send({
         error: err.code || err.message || 'Error al forzar despacho de comanda',
+        code: err.code,
         message: err.message
       });
     }

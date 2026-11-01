@@ -245,6 +245,32 @@ export function updateKdsLineStatus(
     throw err;
   }
 
+  const order = rawDb.prepare(`
+    SELECT id, order_number, location_id, fulfillment_status, payment_status
+    FROM orders
+    WHERE id = ?
+  `).get(line.order_id) as {
+    id: string;
+    order_number: number;
+    location_id: string;
+    fulfillment_status: string;
+    payment_status: string;
+  } | undefined;
+
+  if (!order) {
+    const err: any = new Error(`Orden con ID '${line.order_id}' no encontrada`);
+    err.statusCode = 404;
+    throw err;
+  }
+
+  const finalizedStatuses = ['entregado', 'cerrado', 'cancelado', 'anulado'];
+  if (finalizedStatuses.includes(order.fulfillment_status) || order.payment_status === 'anulado') {
+    const err: any = new Error('No se puede modificar una comanda que ya ha sido finalizada o anulada');
+    err.statusCode = 409;
+    err.code = 'ORDER_ALREADY_FINALIZED';
+    throw err;
+  }
+
   const previousStatus = line.status;
   const isReversal = (previousStatus === 'listo' && (newStatus === 'preparando' || newStatus === 'pendiente')) ||
                      (previousStatus === 'preparando' && newStatus === 'pendiente');
@@ -259,81 +285,100 @@ export function updateKdsLineStatus(
     readyAtMs = now;
   }
 
-  // 1. Actualizar estado de la línea
-  rawDb.prepare(`
-    UPDATE order_lines
-    SET status = ?,
-        prepared_at_ms = CASE 
-          WHEN ? = 'pendiente' THEN NULL 
-          WHEN ? IS NOT NULL THEN ? 
-          ELSE prepared_at_ms 
-        END,
-        ready_at_ms = CASE 
-          WHEN ? = 'listo' THEN ? 
-          ELSE NULL 
-        END
-    WHERE id = ?
-  `).run(newStatus, newStatus, preparedAtMs, preparedAtMs, newStatus, readyAtMs, lineId);
+  const tx = rawDb.transaction(() => {
+    // 1. Actualizar estado de la línea
+    rawDb.prepare(`
+      UPDATE order_lines
+      SET status = ?,
+          prepared_at_ms = CASE 
+            WHEN ? = 'pendiente' THEN NULL 
+            WHEN ? IS NOT NULL THEN ? 
+            ELSE prepared_at_ms 
+          END,
+          ready_at_ms = CASE 
+            WHEN ? = 'listo' THEN ? 
+            ELSE NULL 
+          END
+      WHERE id = ?
+    `).run(newStatus, newStatus, preparedAtMs, preparedAtMs, newStatus, readyAtMs, lineId);
 
-  // 2. Obtener todas las líneas de cocina de la orden
-  const kitchenLines = rawDb.prepare(`
-    SELECT id, station, status
-    FROM order_lines
-    WHERE order_id = ?
-      AND line_role IN ('STANDARD', 'COMBO_CHILD', 'COURTESY_ITEM')
-      AND station != 'caja_bebidas'
-  `).all(line.order_id) as Array<{
-    id: string;
-    station: Station;
-    status: 'pendiente' | 'preparando' | 'listo';
-  }>;
+    // 2. Obtener todas las líneas de cocina de la orden
+    const kitchenLines = rawDb.prepare(`
+      SELECT id, station, status
+      FROM order_lines
+      WHERE order_id = ?
+        AND line_role IN ('STANDARD', 'COMBO_CHILD', 'COURTESY_ITEM')
+        AND station != 'caja_bebidas'
+    `).all(line.order_id) as Array<{
+      id: string;
+      station: Station;
+      status: 'pendiente' | 'preparando' | 'listo';
+    }>;
 
-  const hotDogLines = kitchenLines.filter(l => l.station === 'hot_dogs');
-  const burgerLines = kitchenLines.filter(l => l.station === 'hamburguesas');
+    const hotDogLines = kitchenLines.filter(l => l.station === 'hot_dogs');
+    const burgerLines = kitchenLines.filter(l => l.station === 'hamburguesas');
 
-  // Calcular estado por estación
-  let stationStatusHotDogs: 'na' | 'pendiente' | 'en_preparacion' | 'listo' = 'na';
-  if (hotDogLines.length > 0) {
-    if (hotDogLines.every(l => l.status === 'listo')) {
-      stationStatusHotDogs = 'listo';
-    } else if (hotDogLines.some(l => l.status === 'preparando' || l.status === 'listo')) {
-      stationStatusHotDogs = 'en_preparacion';
-    } else {
-      stationStatusHotDogs = 'pendiente';
+    // Calcular estado por estación
+    let stationStatusHotDogs: 'na' | 'pendiente' | 'en_preparacion' | 'listo' = 'na';
+    if (hotDogLines.length > 0) {
+      if (hotDogLines.every(l => l.status === 'listo')) {
+        stationStatusHotDogs = 'listo';
+      } else if (hotDogLines.some(l => l.status === 'preparando' || l.status === 'listo')) {
+        stationStatusHotDogs = 'en_preparacion';
+      } else {
+        stationStatusHotDogs = 'pendiente';
+      }
     }
-  }
 
-  let stationStatusHamburguesas: 'na' | 'pendiente' | 'en_preparacion' | 'listo' = 'na';
-  if (burgerLines.length > 0) {
-    if (burgerLines.every(l => l.status === 'listo')) {
-      stationStatusHamburguesas = 'listo';
-    } else if (burgerLines.some(l => l.status === 'preparando' || l.status === 'listo')) {
-      stationStatusHamburguesas = 'en_preparacion';
-    } else {
-      stationStatusHamburguesas = 'pendiente';
+    let stationStatusHamburguesas: 'na' | 'pendiente' | 'en_preparacion' | 'listo' = 'na';
+    if (burgerLines.length > 0) {
+      if (burgerLines.every(l => l.status === 'listo')) {
+        stationStatusHamburguesas = 'listo';
+      } else if (burgerLines.some(l => l.status === 'preparando' || l.status === 'listo')) {
+        stationStatusHamburguesas = 'en_preparacion';
+      } else {
+        stationStatusHamburguesas = 'pendiente';
+      }
     }
-  }
 
-  // 3. Regla automática de ensamble:
-  // Si todas las líneas de cocina de la orden están en 'listo', orders.fulfillment_status pasa a 'listo'
-  const allReady = kitchenLines.length > 0 && kitchenLines.every(l => l.status === 'listo');
-  const newFulfillmentStatus = allReady ? 'listo' : 'en_preparacion';
+    // 3. Regla automática de ensamble:
+    // Si todas las líneas de cocina de la orden están en 'listo', orders.fulfillment_status pasa a 'listo'
+    const allReady = kitchenLines.length > 0 && kitchenLines.every(l => l.status === 'listo');
+    const newFulfillmentStatus = allReady ? 'listo' : 'en_preparacion';
 
-  // Actualizar orden
-  rawDb.prepare(`
-    UPDATE orders
-    SET fulfillment_status = ?,
-        station_status_hot_dogs = ?,
-        station_status_hamburguesas = ?,
-        updated_at_ms = ?
-    WHERE id = ?
-  `).run(newFulfillmentStatus, stationStatusHotDogs, stationStatusHamburguesas, now, line.order_id);
+    // Actualizar orden
+    rawDb.prepare(`
+      UPDATE orders
+      SET fulfillment_status = ?,
+          station_status_hot_dogs = ?,
+          station_status_hamburguesas = ?,
+          updated_at_ms = ?
+      WHERE id = ?
+    `).run(newFulfillmentStatus, stationStatusHotDogs, stationStatusHamburguesas, now, line.order_id);
 
-  // D2: Descuento de inventario una sola vez por orden (al entrar a cocina)
-  if (newStatus === 'preparando' || newFulfillmentStatus === 'en_preparacion') {
-    const ord = rawDb.prepare('SELECT location_id FROM orders WHERE id = ?').get(line.order_id) as any;
-    deductInventoryForOrder(rawDb, line.order_id, ord?.location_id || 'loc_alta_vista', now, actorUserId || 'usr_kds');
-  }
+    // D2: Descuento de inventario una sola vez por orden (al entrar a cocina)
+    if (newStatus === 'preparando' || newFulfillmentStatus === 'en_preparacion') {
+      deductInventoryForOrder(rawDb, line.order_id, order.location_id || 'loc_alta_vista', now, actorUserId || 'usr_kds');
+    }
+
+    return {
+      hotDogLines,
+      burgerLines,
+      stationStatusHotDogs,
+      stationStatusHamburguesas,
+      allReady,
+      newFulfillmentStatus
+    };
+  });
+
+  const {
+    hotDogLines,
+    burgerLines,
+    stationStatusHotDogs,
+    stationStatusHamburguesas,
+    allReady,
+    newFulfillmentStatus
+  } = tx();
 
   // Calcular estaciones faltantes
   const missingStations: Station[] = [];
@@ -344,8 +389,6 @@ export function updateKdsLineStatus(
     missingStations.push('hot_dogs');
   }
 
-  const orderInfo = rawDb.prepare('SELECT order_number FROM orders WHERE id = ?').get(line.order_id) as { order_number: number };
-
   // Registrar auditoría
   appendAuditEvent(rawDb, {
     actorUserId: actorUserId || null,
@@ -354,7 +397,7 @@ export function updateKdsLineStatus(
     entityId: lineId,
     payload: {
       orderId: line.order_id,
-      orderNumber: orderInfo.order_number,
+      orderNumber: order.order_number,
       station: line.station,
       previousStatus,
       newStatus,
@@ -370,7 +413,7 @@ export function updateKdsLineStatus(
       entityType: 'order',
       entityId: line.order_id,
       payload: {
-        orderNumber: orderInfo.order_number
+        orderNumber: order.order_number
       }
     });
 
@@ -380,7 +423,7 @@ export function updateKdsLineStatus(
       entityId: line.order_id,
       payload: {
         orderId: line.order_id,
-        orderNumber: orderInfo.order_number,
+        orderNumber: order.order_number,
         fulfillmentStatus: 'listo'
       }
     });
@@ -392,7 +435,7 @@ export function updateKdsLineStatus(
     entityId: line.order_id,
     payload: {
       orderId: line.order_id,
-      orderNumber: orderInfo.order_number,
+      orderNumber: order.order_number,
       lineId,
       station: line.station,
       previousStatus,
@@ -451,6 +494,14 @@ export function deliverKdsOrder(
   if (!order) {
     const err: any = new Error(`Orden con ID '${orderId}' no encontrada`);
     err.statusCode = 404;
+    throw err;
+  }
+
+  const finalizedStatuses = ['entregado', 'cerrado', 'cancelado', 'anulado'];
+  if (finalizedStatuses.includes(order.fulfillment_status) || order.payment_status === 'anulado') {
+    const err: any = new Error('No se puede entregar una orden que ya ha sido finalizada o anulada');
+    err.statusCode = 409;
+    err.code = 'ORDER_ALREADY_FINALIZED';
     throw err;
   }
 
@@ -555,6 +606,14 @@ export function deliverKdsOrder(
     if (!order) {
       const err: any = new Error(`Orden con ID '${orderId}' no encontrada`);
       err.statusCode = 404;
+      throw err;
+    }
+
+    const finalizedStatuses = ['entregado', 'cerrado', 'cancelado', 'anulado'];
+    if (finalizedStatuses.includes(order.fulfillment_status) || order.payment_status === 'anulado') {
+      const err: any = new Error('No se puede forzar el despacho de una orden que ya ha sido finalizada o anulada');
+      err.statusCode = 409;
+      err.code = 'ORDER_ALREADY_FINALIZED';
       throw err;
     }
 
