@@ -40,3 +40,7 @@ docs/r2/evidencia/playwright-report/
 
 
 data/uploads/
+
+*.zip
+crear-contexto.ps1
+.gemini/mcp.json
