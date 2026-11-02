@@ -39,6 +39,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, onSucce
   const [items, setItems] = useState<ItemRow[]>([]);
   const [selectedProductId, setSelectedProductId] = useState('');
   const [selectedQuantity, setSelectedQuantity] = useState(10);
+  const [itemError, setItemError] = useState<string | null>(null);
 
   const [extras, setExtras] = useState<ExtraRow[]>([
     { concept: 'Traslado y Logística Móvil', category: 'LOGISTICA', priceUsd: 30, costUsd: 15 },
@@ -48,9 +49,15 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, onSucce
   if (!isOpen) return null;
 
   const handleAddItem = () => {
+    setItemError(null);
     if (!selectedProductId) return;
     const prod = products.find((p) => p.id === selectedProductId);
     if (!prod) return;
+
+    if (!prod.price_usd_cents || prod.price_usd_cents <= 0) {
+      setItemError(`El plato "${prod.name}" no tiene un precio válido asignado en la carta.`);
+      return;
+    }
 
     const existingIndex = items.findIndex((it) => it.productId === selectedProductId);
     if (existingIndex >= 0) {
@@ -64,7 +71,7 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, onSucce
           productId: prod.id,
           productName: prod.name,
           quantity: selectedQuantity,
-          unitPriceUsdCents: prod.price_usd_cents || 500
+          unitPriceUsdCents: prod.price_usd_cents
         }
       ]);
     }
@@ -225,10 +232,19 @@ export const QuoteModal: React.FC<QuoteModalProps> = ({ isOpen, onClose, onSucce
                 <h4 className="text-xs font-black text-ink uppercase tracking-wider flex items-center gap-1.5">
                   <Icon name="Utensils" size={14} className="text-primary" /> Platos de la Carta
                 </h4>
+                {itemError && (
+                  <div className="p-2.5 bg-danger/10 border border-danger/30 rounded-xl text-xs font-bold text-danger flex items-center gap-2">
+                    <Icon name="AlertTriangle" size={14} className="shrink-0 text-danger" />
+                    <span>{itemError}</span>
+                  </div>
+                )}
                 <div className="flex gap-2">
                   <select
                     value={selectedProductId}
-                    onChange={(e) => setSelectedProductId(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedProductId(e.target.value);
+                      setItemError(null);
+                    }}
                     className="flex-1 min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-bold"
                   >
                     <option value="">-- Seleccionar Plato de la Carta --</option>

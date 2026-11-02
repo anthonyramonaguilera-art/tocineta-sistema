@@ -17,6 +17,12 @@ export function shouldWarnProductionAudit(env: { ENFORCE_AUTH?: string; NODE_ENV
   return env.NODE_ENV === 'production' && env.ENFORCE_AUTH !== 'true';
 }
 
+export function assertSafeStartup(env: { ENFORCE_AUTH?: string; NODE_ENV?: string } = process.env): void {
+  if (shouldWarnProductionAudit(env)) {
+    throw new Error('Servidor en producción con autenticación en MODO AUDITORÍA (ENFORCE_AUTH !== "true"). El arranque ha sido abortado por seguridad. Configure ENFORCE_AUTH=true en el archivo .env.');
+  }
+}
+
 async function bootstrap() {
   console.log(`\n=============================================================`);
   console.log(`🍔 SISTEMA OPERATIVO GASTRONÓMICO "TOCINETA" (PRD v2.0)`);
@@ -24,8 +30,11 @@ async function bootstrap() {
   console.log(`⚙️ Entorno: ${env.NODE_ENV} | Host: ${env.HOST} | Port: ${env.PORT}`);
   console.log(`📁 Base de Datos SQLite: ${env.DB_PATH}`);
   console.log(describeAuthMode(process.env));
-  if (shouldWarnProductionAudit(process.env)) {
-    console.warn('ADVERTENCIA: Servidor en producción con autenticación en MODO AUDITORÍA (no bloquea)');
+  try {
+    assertSafeStartup(process.env);
+  } catch (err: any) {
+    console.error(`ERROR CRÍTICO: ${err.message}`);
+    process.exit(1);
   }
 
   // 1. Inicialización de SQLite con PRAGMAs obligatorios (WAL, FULL sync, FKs, BusyTimeout)

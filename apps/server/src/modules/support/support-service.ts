@@ -56,7 +56,7 @@ let currentFallbackOptions: readonly string[] | undefined = undefined;
 let autoExpireTimer: NodeJS.Timeout | null = null;
 
 const SUPPORT_DURATION_MS = 2 * 60 * 60 * 1000; // 2 Horas exactas
-const BANNER_TEXT = '🛠️ MODO SOPORTE TÉCNICO ACTIVO — SESIÓN AUDITADA';
+const BANNER_TEXT = 'MODO SOPORTE TÉCNICO ACTIVO — SESIÓN AUDITADA';
 
 /**
  * Detección Real de Versión de Windows para compatibilidad dual Windows 10 / Windows 11.

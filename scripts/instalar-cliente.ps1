@@ -27,6 +27,24 @@ if (-not (Test-Path ".env") -and (Test-Path ".env.example")) {
   Write-Host "Se creó .env desde .env.example: REVÍSALO (puerto, claves)." -ForegroundColor Yellow
 }
 
+# Tras el paso del .env, verificar que contenga ENFORCE_AUTH=true y, si no, corregirlo
+if (Test-Path ".env") {
+  $envContent = Get-Content ".env" -Raw
+  if ($envContent -match '(?m)^\s*ENFORCE_AUTH\s*=') {
+    if ($envContent -notmatch '(?m)^\s*ENFORCE_AUTH\s*=\s*"?true"?\s*$') {
+      $envContent = [System.Text.RegularExpressions.Regex]::Replace($envContent, '(?m)^\s*ENFORCE_AUTH\s*=.*$', 'ENFORCE_AUTH=true')
+      Set-Content ".env" -Value $envContent -NoNewline
+      Write-Host "Seguridad: Se corrigió ENFORCE_AUTH=true en .env" -ForegroundColor Yellow
+    }
+  } else {
+    Add-Content ".env" "`nENFORCE_AUTH=true"
+    Write-Host "Seguridad: Se agregó ENFORCE_AUTH=true en .env" -ForegroundColor Yellow
+  }
+} else {
+  Set-Content ".env" -Value "ENFORCE_AUTH=true`n" -NoNewline
+  Write-Host "Seguridad: Se creó .env con ENFORCE_AUTH=true" -ForegroundColor Yellow
+}
+
 # --force es CLAVE para arreglar el error de @tocineta/shared en PC nuevas
 pnpm install --frozen-lockfile --force
 pnpm run build

@@ -28,19 +28,21 @@ export function useQuoteDetail(id: string | null) {
 }
 
 export function useMenuProducts() {
-  return useQuery<any[]>({
+  return useQuery<Array<{ id: string; name: string; price_usd_cents: number }>>({
     queryKey: ['activeProductsForQuotes'],
     queryFn: async () => {
-      const res = await apiFetch('/api/products');
-      if (!res.ok) {
-        // Fallback a menu pos si falla
-        const fallback = await apiFetch('/api/menu/pos');
-        if (!fallback.ok) return [];
-        const data = await fallback.json();
-        return data.products || [];
-      }
+      const res = await apiFetch('/api/menu/pos');
+      if (!res.ok) return [];
       const data = await res.json();
-      return (data.products || data || []).filter((p: any) => p.is_active !== 0 && !p.is_combo);
+      const categories: Array<{ products?: Array<any> }> = data.categories || [];
+      return categories
+        .flatMap((c) => c.products || [])
+        .filter((p: any) => p.isAvailable && !p.isCombo)
+        .map((p: any) => ({
+          id: p.id,
+          name: p.name,
+          price_usd_cents: p.priceUsdCents
+        }));
     },
     staleTime: 30000
   });

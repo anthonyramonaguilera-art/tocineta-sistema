@@ -107,7 +107,7 @@ describe('Hito M12 - Modo Soporte Auditado y Motor de Actualizaciones Firmadas E
       expect(dataStart.success).toBe(true);
       expect(dataStart.support.active).toBe(true);
       expect(dataStart.support.startedByName).toContain('ADMIN');
-      expect(dataStart.support.bannerText).toContain('MODO SOPORTE TÉCNICO ACTIVO — SESIÓN AUDITADA');
+      expect(dataStart.support.bannerText).toBe('MODO SOPORTE TÉCNICO ACTIVO — SESIÓN AUDITADA');
       expect(dataStart.support.remainingSeconds).toBeGreaterThan(7000); // ~2 horas (7200s)
 
       // 2. Consultar GET /api/support/status
