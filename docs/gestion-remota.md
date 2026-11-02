@@ -118,12 +118,15 @@ TELEGRAM_CHAT_ID=987654321
 
 ## 5. Automatización en el Programador de Tareas de Windows (Task Scheduler)
 
-Para garantizar la ejecución desatendida y continua en producción, se programan dos tareas automáticas:
+Para garantizar la ejecución desatendida y continua en producción, se programan tres tareas automáticas:
 
 | Tarea | Script | Horario Sugerido | Descripción |
 | :--- | :--- | :--- | :--- |
-| **`Tocineta-Respaldo-Drive`** | `scripts/respaldo-drive.ps1` | **05:00 AM** (Diario) | Generación de snapshot en caliente, cifrado Age y réplica en USB y Google Drive. |
-| **`Tocineta-Alertas-Telegram`** | `scripts/alertas-telegram.ps1` | **08:00 AM** (Diario) | Chequeo de salud del servidor y base de datos, reporte diario a Telegram. |
+| **`Tocineta-Actualizador-Automatico`** | `scripts/actualizar.ps1` | **05:00 AM** (Diario) | Búsqueda de releases en GitHub, verificación SHA-256, migración y rollback automático (R3). |
+| **`Tocineta-Respaldo-Drive`** | `scripts/respaldo-drive.ps1` | **05:30 AM** (Diario) | Generación de snapshot en caliente, cifrado Age y réplica en USB y Google Drive (R4). |
+| **`Tocineta-Alertas-Telegram`** | `scripts/alertas-telegram.ps1` | **08:00 AM** (Diario) | Chequeo de salud del servidor y base de datos, reporte diario a Telegram (R2). |
+
+Para detalles exhaustivos del actualizador, consulte [docs/actualizador-automatico.md](actualizador-automatico.md).
 
 ### 5.1. Método Automatizado (Recomendado)
 

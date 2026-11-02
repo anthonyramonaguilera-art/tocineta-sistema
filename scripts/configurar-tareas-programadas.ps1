@@ -3,17 +3,23 @@
     Configurador automatizado de Tareas Programadas de Windows para el Sistema TOCINETA.
 .DESCRIPTION
     Registra y configura las tareas programadas oficiales en el Programador de Tareas de Windows (Task Scheduler):
-      1. Tocineta-Respaldo-Drive:
+      1. Tocineta-Actualizador-Automatico:
          - Horario: Diario a las 05:00 AM
+         - Accion: Ejecuta scripts/actualizar.ps1 para buscar releases en GitHub, validar hash SHA-256,
+                   respaldar SQLite, actualizar, migrar y verificar salud con rollback automatico.
+      2. Tocineta-Respaldo-Drive:
+         - Horario: Diario a las 05:30 AM
          - Accion: Ejecuta scripts/respaldo-drive.ps1 para generar snapshot seguro en caliente,
                    cifrar con Age y sincronizar a USB y Google Drive.
-      2. Tocineta-Alertas-Telegram:
+      3. Tocineta-Alertas-Telegram:
          - Horario: Diario a las 08:00 AM
          - Accion: Ejecuta scripts/alertas-telegram.ps1 para validar salud del servidor y notificar por Telegram.
 .PARAMETER Action
     Accion a ejecutar: Install (predeterminada), Uninstall, Status.
+.PARAMETER UpdateTime
+    Hora programada para el actualizador automatico (por defecto "05:00").
 .PARAMETER BackupTime
-    Hora programada para el respaldo (por defecto "05:00").
+    Hora programada para el respaldo (por defecto "05:30").
 .PARAMETER AlertTime
     Hora programada para la alerta de salud (por defecto "08:00").
 #>
@@ -23,7 +29,8 @@ param (
     [ValidateSet("Install", "Uninstall", "Status")]
     [string]$Action = "Install",
 
-    [string]$BackupTime = "05:00",
+    [string]$UpdateTime = "05:00",
+    [string]$BackupTime = "05:30",
     [string]$AlertTime = "08:00"
 )
 
@@ -35,9 +42,11 @@ if (-not $powershellExe) {
     $powershellExe = "powershell.exe"
 }
 
+$taskUpdateName = "Tocineta-Actualizador-Automatico"
 $taskBackupName = "Tocineta-Respaldo-Drive"
 $taskAlertName = "Tocineta-Alertas-Telegram"
 
+$updateScript = Join-Path $repoRoot "scripts\actualizar.ps1"
 $backupScript = Join-Path $repoRoot "scripts\respaldo-drive.ps1"
 $alertScript = Join-Path $repoRoot "scripts\alertas-telegram.ps1"
 
@@ -63,8 +72,16 @@ function Get-TaskInfo {
 }
 
 if ($Action -eq "Status") {
-    Write-Host "`nConsultando estado actual de las tareas programadas:" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Consultando estado actual de las tareas programadas:" -ForegroundColor Cyan
     
+    $t0 = Get-TaskInfo -TaskName $taskUpdateName
+    if ($t0) {
+        Write-Host "  -> $taskUpdateName : [REGISTRADA] Estado: $($t0.State)" -ForegroundColor Green
+    } else {
+        Write-Host "  -> $taskUpdateName : [NO ENCONTRADA]" -ForegroundColor DarkGray
+    }
+
     $t1 = Get-TaskInfo -TaskName $taskBackupName
     if ($t1) {
         Write-Host "  -> $taskBackupName : [REGISTRADA] Estado: $($t1.State)" -ForegroundColor Green
@@ -84,38 +101,64 @@ if ($Action -eq "Status") {
 }
 
 if ($Action -eq "Uninstall") {
-    Write-Host "`nDesinstalando tareas programadas..." -ForegroundColor Yellow
+    Write-Host ""
+    Write-Host "Desinstalando tareas programadas..." -ForegroundColor Yellow
+
+    if (Get-TaskInfo -TaskName $taskUpdateName) {
+        Unregister-ScheduledTask -TaskName $taskUpdateName -Confirm:$false
+        Write-Host "[OK] Tarea '$taskUpdateName' eliminada exitosamente." -ForegroundColor Green
+    } else {
+        Write-Host "  Tarea '$taskUpdateName' no estaba registrada." -ForegroundColor Gray
+    }
 
     if (Get-TaskInfo -TaskName $taskBackupName) {
         Unregister-ScheduledTask -TaskName $taskBackupName -Confirm:$false
-        Write-Host "✓ Tarea '$taskBackupName' eliminada exitosamente." -ForegroundColor Green
+        Write-Host "[OK] Tarea '$taskBackupName' eliminada exitosamente." -ForegroundColor Green
     } else {
         Write-Host "  Tarea '$taskBackupName' no estaba registrada." -ForegroundColor Gray
     }
 
     if (Get-TaskInfo -TaskName $taskAlertName) {
         Unregister-ScheduledTask -TaskName $taskAlertName -Confirm:$false
-        Write-Host "✓ Tarea '$taskAlertName' eliminada exitosamente." -ForegroundColor Green
+        Write-Host "[OK] Tarea '$taskAlertName' eliminada exitosamente." -ForegroundColor Green
     } else {
         Write-Host "  Tarea '$taskAlertName' no estaba registrada." -ForegroundColor Gray
     }
 
-    Write-Host "`nDesinstalacion completada." -ForegroundColor Green
+    Write-Host ""
+    Write-Host "Desinstalacion completada." -ForegroundColor Green
+    Write-Host ""
     exit 0
 }
 
 if ($Action -eq "Install") {
-    Write-Host "`nConfigurando Tareas Programadas de Produccion:" -ForegroundColor Cyan
+    Write-Host ""
+    Write-Host "Configurando Tareas Programadas de Produccion:" -ForegroundColor Cyan
 
-    # 1. Registrar Tarea de Respaldo Cifrado hacia Drive (05:00 AM)
-    Write-Host "1. Creando tarea '$taskBackupName' ($BackupTime diario)..." -ForegroundColor DarkCyan
-    $actionBackup = New-ScheduledTaskAction -Execute $powershellExe -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$backupScript`"" -WorkingDirectory $repoRoot
-    $triggerBackup = New-ScheduledTaskTrigger -Daily -At $BackupTime
-    $settingsBackup = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
+    $settingsCommon = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
     $principal = New-ScheduledTaskPrincipal -UserId "$env:USERDOMAIN\$env:USERNAME" -LogonType Interactive -RunLevel Highest
 
+    # 1. Registrar Tarea de Actualizador Automatico (05:00 AM)
+    Write-Host "1. Creando tarea '$taskUpdateName' ($UpdateTime diario)..." -ForegroundColor DarkCyan
+    $actionUpdate = New-ScheduledTaskAction -Execute $powershellExe -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$updateScript`"" -WorkingDirectory $repoRoot
+    $triggerUpdate = New-ScheduledTaskTrigger -Daily -At $UpdateTime
+
     try {
-        Register-ScheduledTask -TaskName $taskBackupName -Action $actionBackup -Trigger $triggerBackup -Settings $settingsBackup -Principal $principal -Description "Respaldo diario cifrado con Age hacia almacenamiento USB y Google Drive para el ERP TOCINETA." -Force | Out-Null
+        Register-ScheduledTask -TaskName $taskUpdateName -Action $actionUpdate -Trigger $triggerUpdate -Settings $settingsCommon -Principal $principal -Description "Actualizador automatico diario de TOCINETA via GitHub Releases con verificacion de hash y rollback." -Force | Out-Null
+        Write-Host "  [OK] '$taskUpdateName' registrada exitosamente a las $UpdateTime." -ForegroundColor Green
+    } catch {
+        Write-Host "  [AVISO] No se pudo registrar via Register-ScheduledTask, intentando via schtasks.exe: $($_.Exception.Message)" -ForegroundColor Yellow
+        $schCmd = "schtasks.exe /create /tn `"$taskUpdateName`" /tr `"$powershellExe -ExecutionPolicy Bypass -WindowStyle Hidden -File \`"$updateScript\`"`" /sc daily /st $UpdateTime /f"
+        Invoke-Expression $schCmd
+    }
+
+    # 2. Registrar Tarea de Respaldo Cifrado hacia Drive (05:30 AM)
+    Write-Host "2. Creando tarea '$taskBackupName' ($BackupTime diario)..." -ForegroundColor DarkCyan
+    $actionBackup = New-ScheduledTaskAction -Execute $powershellExe -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$backupScript`"" -WorkingDirectory $repoRoot
+    $triggerBackup = New-ScheduledTaskTrigger -Daily -At $BackupTime
+
+    try {
+        Register-ScheduledTask -TaskName $taskBackupName -Action $actionBackup -Trigger $triggerBackup -Settings $settingsCommon -Principal $principal -Description "Respaldo diario cifrado con Age hacia almacenamiento USB y Google Drive para el ERP TOCINETA." -Force | Out-Null
         Write-Host "  [OK] '$taskBackupName' registrada exitosamente a las $BackupTime." -ForegroundColor Green
     } catch {
         Write-Host "  [AVISO] No se pudo registrar via Register-ScheduledTask, intentando via schtasks.exe: $($_.Exception.Message)" -ForegroundColor Yellow
@@ -123,14 +166,13 @@ if ($Action -eq "Install") {
         Invoke-Expression $schCmd
     }
 
-    # 2. Registrar Tarea de Alertas por Telegram (08:00 AM)
-    Write-Host "2. Creando tarea '$taskAlertName' ($AlertTime diario)..." -ForegroundColor DarkCyan
+    # 3. Registrar Tarea de Alertas por Telegram (08:00 AM)
+    Write-Host "3. Creando tarea '$taskAlertName' ($AlertTime diario)..." -ForegroundColor DarkCyan
     $actionAlert = New-ScheduledTaskAction -Execute $powershellExe -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$alertScript`"" -WorkingDirectory $repoRoot
     $triggerAlert = New-ScheduledTaskTrigger -Daily -At $AlertTime
-    $settingsAlert = New-ScheduledTaskSettingsSet -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
 
     try {
-        Register-ScheduledTask -TaskName $taskAlertName -Action $actionAlert -Trigger $triggerAlert -Settings $settingsAlert -Principal $principal -Description "Verificacion diaria de salud del sistema TOCINETA y notificaciones remotas via Telegram." -Force | Out-Null
+        Register-ScheduledTask -TaskName $taskAlertName -Action $actionAlert -Trigger $triggerAlert -Settings $settingsCommon -Principal $principal -Description "Verificacion diaria de salud del sistema TOCINETA y notificaciones remotas via Telegram." -Force | Out-Null
         Write-Host "  [OK] '$taskAlertName' registrada exitosamente a las $AlertTime." -ForegroundColor Green
     } catch {
         Write-Host "  [AVISO] No se pudo registrar via Register-ScheduledTask, intentando via schtasks.exe: $($_.Exception.Message)" -ForegroundColor Yellow
@@ -142,6 +184,7 @@ if ($Action -eq "Install") {
     Write-Host "=================================================================" -ForegroundColor Green
     Write-Host "   TAREAS PROGRAMADAS CONFIGURADAS EXITOSAMENTE                 " -ForegroundColor Green
     Write-Host "=================================================================" -ForegroundColor Green
+    Write-Host "- Actualizador Automatico:   $UpdateTime (Diario)" -ForegroundColor Gray
     Write-Host "- Respaldo Cifrado a Drive: $BackupTime (Diario)" -ForegroundColor Gray
     Write-Host "- Alertas de Salud Telegram: $AlertTime (Diario)" -ForegroundColor Gray
     Write-Host "Para verificar su ejecucion o administrarlas, abra 'taskschd.msc' en Windows." -ForegroundColor DarkGray

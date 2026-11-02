@@ -63,10 +63,11 @@ El repositorio cuenta con validaciones automatizadas de consistencia y diseño:
   pnpm run test
   ```
 
-## 5. Respaldos y Recuperación
+## 5. Respaldos, Actualizaciones y Gestión Remota
 
-El sistema ejecuta snapshots periódicos y respaldos cifrados con claves asimétricas para resguardo en unidades USB externas. Consulte el procedimiento operativo en:
-- `docs/restore.md`
+- Actualizador automático vía GitHub Releases (R3): `docs/actualizador-automatico.md`
+- Monitoreo, alertas de Telegram y respaldos a Google Drive (R2 / R4): `docs/gestion-remota.md`
+- Protocolo de restauración criptográfica y recuperación ante desastres: `docs/restore.md`
 
 ## 6. Gobernanza y Reglas de Desarrollo
 
