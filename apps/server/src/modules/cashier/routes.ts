@@ -1,4 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
+import { z } from 'zod';
+import { createExpense } from '../finances/expenses-service.js';
 import { getDatabaseContext } from '../../db/connection.js';
 import { executeDryRunVerification } from '../backups/backup-service.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
@@ -291,5 +293,137 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         remainingMs: err.remainingMs
       });
     }
+  });
+
+  // 7. Registrar Salida de Caja Chica (POST /api/cash-expenses)
+  fastify.post('/api/cash-expenses', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const user = resolveActingUser(request);
+
+    if (!canUserProcessPayments(user)) {
+      return reply.status(403).send({
+        success: false,
+        error: 'FORBIDDEN_ROLE_FOR_PAYMENT',
+        message: 'Tu rol no tiene permisos para registrar salidas de caja.'
+      });
+    }
+
+    const createCashExpenseSchema = z.object({
+      amountUsdCents: z.number().int().positive({ message: 'El monto debe ser un entero mayor a 0' }),
+      category: z.string().min(1, { message: 'La categoría es requerida' }),
+      description: z.string().min(1, { message: 'La descripción es requerida' }),
+      paymentMethod: z.enum(['EFECTIVO_USD', 'EFECTIVO_BS']).optional().default('EFECTIVO_USD'),
+      confirmDuplicate: z.boolean().optional()
+    });
+
+    const parsed = createCashExpenseSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        success: false,
+        code: 'VALIDATION_ERROR',
+        error: parsed.error.issues[0]?.message || 'Datos de gasto inválidos'
+      });
+    }
+
+    const jornada = dbCtx.rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
+    if (!jornada) {
+      return reply.status(409).send({
+        success: false,
+        code: 'JORNADA_CLOSED',
+        error: 'No hay una jornada abierta en el sistema. Debe abrir la jornada del día antes de procesar cobros.'
+      });
+    }
+
+    const session = dbCtx.rawDb.prepare("SELECT id, location_id, opened_at_ms FROM cash_sessions WHERE user_id = ? AND status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get(user.id) as any;
+    if (!session) {
+      return reply.status(409).send({
+        success: false,
+        code: 'CASH_SESSION_REQUIRED',
+        error: 'Debe abrir su sesión de caja (arqueo inicial) antes de procesar cobros.'
+      });
+    }
+
+    try {
+      const expense = createExpense(dbCtx.rawDb, {
+        jornadaId: jornada.id,
+        locationId: session.location_id || 'loc_alta_vista',
+        category: parsed.data.category,
+        amountUsdCents: parsed.data.amountUsdCents,
+        paymentMethod: parsed.data.paymentMethod || 'EFECTIVO_USD',
+        description: parsed.data.description,
+        confirmDuplicate: parsed.data.confirmDuplicate,
+        authorizedByUserId: user.id
+      });
+
+      return reply.status(201).send({
+        success: true,
+        expense
+      });
+    } catch (err: any) {
+      if (err.code === 'POSSIBLE_DUPLICATE' || err.statusCode === 409) {
+        return reply.status(409).send({
+          success: false,
+          code: 'DUPLICATE_EXPENSE',
+          error: err.message
+        });
+      }
+      return reply.status(err.statusCode || 400).send({
+        success: false,
+        code: err.code || 'EXPENSE_FAILED',
+        error: err.message
+      });
+    }
+  });
+
+  // 8. Listar Salidas de Caja Chica de la Sesión Actual (GET /api/cash-expenses)
+  fastify.get('/api/cash-expenses', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const user = resolveActingUser(request);
+
+    if (!canUserProcessPayments(user)) {
+      return reply.status(403).send({
+        success: false,
+        error: 'FORBIDDEN_ROLE_FOR_PAYMENT',
+        message: 'Tu rol no tiene permisos para consultar salidas de caja.'
+      });
+    }
+
+    let session = dbCtx.rawDb.prepare("SELECT id, jornada_id, opened_at_ms, closed_at_ms FROM cash_sessions WHERE user_id = ? AND status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get(user.id) as any;
+    if (!session) {
+      const jornada = dbCtx.rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
+      if (jornada) {
+        session = dbCtx.rawDb.prepare("SELECT id, jornada_id, opened_at_ms, closed_at_ms FROM cash_sessions WHERE user_id = ? AND jornada_id = ? ORDER BY opened_at_ms DESC LIMIT 1").get(user.id, jornada.id) as any;
+      }
+    }
+    if (!session) {
+      return reply.status(200).send({
+        success: true,
+        expenses: []
+      });
+    }
+
+    const expenses = dbCtx.rawDb.prepare(
+      'SELECT id, location_id, jornada_id, category, amount_usd_cents, amount_bs_cents, ' +
+      'payment_method, description, authorized_by_user_id, created_at_ms ' +
+      'FROM operating_expenses ' +
+      'WHERE jornada_id = ? AND authorized_by_user_id = ? AND created_at_ms >= ? ' +
+      'ORDER BY created_at_ms DESC'
+    ).all(session.jornada_id, user.id, session.opened_at_ms) as any[];
+
+    return reply.status(200).send({
+      success: true,
+      expenses: expenses.map((e: any) => ({
+        id: e.id,
+        locationId: e.location_id,
+        jornadaId: e.jornada_id,
+        category: e.category,
+        amountUsdCents: e.amount_usd_cents,
+        amountBsCents: e.amount_bs_cents,
+        paymentMethod: e.payment_method,
+        description: e.description,
+        authorizedByUserId: e.authorized_by_user_id,
+        createdAtMs: e.created_at_ms
+      }))
+    });
   });
 };

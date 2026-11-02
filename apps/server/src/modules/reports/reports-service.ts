@@ -585,7 +585,7 @@ export function generateJornadaPdfReport(
       doc.fillColor('#000000').font('Helvetica-Bold').fontSize(10).text('3. GASTOS Y MERMAS DE LA JORNADA', 45, doc.y + 4);
       doc.moveDown(1);
 
-      renderRow('Gastos Operativos de Caja', `$${(data.expensesUsdCents / 100).toFixed(2)}`);
+      renderRow('Salidas de caja chica', `$${(data.expensesUsdCents / 100).toFixed(2)}`);
       renderRow('Pérdidas por Mermas / Reposiciones', `$${(data.mermasUsdCents / 100).toFixed(2)}`);
 
       doc.moveDown(1.5);

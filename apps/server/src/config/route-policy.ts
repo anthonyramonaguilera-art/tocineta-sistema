@@ -104,6 +104,8 @@ export const ROUTE_POLICY: readonly RouteRule[] = [
   ['GET', '/api/reports/jornada/*', 'CASHIER_PLUS'],
   ['POST', '/api/menu/exchange-rate', 'CASHIER_PLUS'],
   ['POST', '/api/menu/exchange-rate/sync-now', 'CASHIER_PLUS'],
+  ['POST', '/api/cash-expenses', 'CASHIER_PLUS'],
+  ['GET', '/api/cash-expenses', 'CASHIER_PLUS'],
   ['*', '/api/emergency/*', 'CASHIER_PLUS'],
 
   // ───────────── ADMIN_SUPERVISOR ─────────────

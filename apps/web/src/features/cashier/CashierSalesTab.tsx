@@ -5,6 +5,7 @@ import { getPaymentMethodHumanLabel } from './payment-labels.js';
 import { formatTableLabel } from '../../lib/format.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
 import { CashierReprintModal } from './CashierReprintModal.js';
+import { CashierExpenseModal } from './CashierExpenseModal.js';
 import { apiFetch } from '../../api/client.js';
 
 interface PaidSale {
@@ -48,11 +49,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
 
   // Modal de Salida de Caja Chica
   const [showExpenseModal, setShowExpenseModal] = useState<boolean>(false);
-  const [expenseCategory, setExpenseCategory] = useState<string>('hielo_pan_insumos');
-  const [expenseAmountUsd, setExpenseAmountUsd] = useState<string>('');
-  const [expenseDesc, setExpenseDesc] = useState<string>('');
-  const [isSavingExpense, setIsSavingExpense] = useState<boolean>(false);
-  const [expenseMsg, setExpenseMsg] = useState<string | null>(null);
+
 
   const handleExecuteReprint = async () => {
     if (!reprintingSale) return;
@@ -133,42 +130,6 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
     }
   };
 
-  const handleSaveExpense = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSavingExpense(true);
-    setExpenseMsg(null);
-
-    const amountCents = Math.round(parseFloat(expenseAmountUsd || '0') * 100);
-    if (amountCents <= 0) {
-      setExpenseMsg('Ingresa un monto válido mayor a 0');
-      setIsSavingExpense(false);
-      return;
-    }
-
-    try {
-      const res = await apiFetch('/api/cash-expenses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          amountUsdCents: amountCents,
-          category: expenseCategory,
-          description: expenseDesc.trim() || 'Gasto operativo de caja chica'
-        })
-      });
-      const data = await res.json();
-      if (!res.ok || !data.success) throw new Error(data.error || 'Error al registrar gasto');
-
-      setShowExpenseModal(false);
-      setExpenseAmountUsd('');
-      setExpenseDesc('');
-      await invalidateMoney(queryClient);
-      onRefresh();
-    } catch (err: any) {
-      setExpenseMsg(err.message || 'Error al registrar salida de caja');
-    } finally {
-      setIsSavingExpense(false);
-    }
-  };
 
   return (
     <div className="space-y-4">
@@ -264,62 +225,14 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
       )}
 
       {/* Modal de Salida de Caja Chica */}
-      {showExpenseModal && (
-        <Modal
-          isOpen={showExpenseModal}
-          onClose={() => setShowExpenseModal(false)}
-          title="Salida de Caja Chica"
-        >
-          <form onSubmit={handleSaveExpense} className="space-y-4">
-            {expenseMsg && (
-              <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl text-xs font-bold text-danger">
-                {expenseMsg}
-              </div>
-            )}
-            <Field label="Categoría del gasto" required>
-              <Select
-                value={expenseCategory}
-                onChange={e => setExpenseCategory(e.target.value)}
-                options={[
-                  { value: 'hielo_pan_insumos', label: 'Hielo / Pan / Insumos urgentes' },
-                  { value: 'servilletas_bolsas', label: 'Empaques / Servilletas / Bolsas' },
-                  { value: 'transporte_emergencia', label: 'Transporte / Logística de emergencia' },
-                  { value: 'otros_menores', label: 'Otros gastos menores' }
-                ]}
-              />
-            </Field>
-
-            <Field label="Monto en Dólares ($)" required>
-              <Input
-                type="number"
-                step="0.01"
-                min="0.10"
-                value={expenseAmountUsd}
-                onChange={e => setExpenseAmountUsd(e.target.value)}
-                placeholder="0.00"
-                className="font-mono text-lg font-bold"
-              />
-            </Field>
-
-            <Field label="Descripción / Concepto">
-              <Input
-                value={expenseDesc}
-                onChange={e => setExpenseDesc(e.target.value)}
-                placeholder="Ej. 2 bolsas de hielo compradas en la esquina..."
-              />
-            </Field>
-
-            <div className="flex gap-2 justify-end pt-2">
-              <Button variant="ghost" size="md" onClick={() => setShowExpenseModal(false)} disabled={isSavingExpense}>
-                Cancelar
-              </Button>
-              <Button variant="primary" size="md" type="submit" loading={isSavingExpense} leftIcon="Check">
-                Registrar Gasto
-              </Button>
-            </div>
-          </form>
-        </Modal>
-      )}
+      <CashierExpenseModal
+        isOpen={showExpenseModal}
+        onClose={() => setShowExpenseModal(false)}
+        onExpenseCreated={async () => {
+          await invalidateMoney(queryClient);
+          onRefresh();
+        }}
+      />
 
       {/* Modal de Anulación / Reembolso con PIN */}
       {voidingSale && (

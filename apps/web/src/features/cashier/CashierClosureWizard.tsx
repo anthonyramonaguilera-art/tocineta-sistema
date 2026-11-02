@@ -247,12 +247,13 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
               )}
 
               {!isBlindClosure && (
-                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2 text-xs">
                   {[
                     { label: 'Punto de Venta', val: `${((summary.puntoDeVentaBsCents || 0) / 100).toFixed(2)} Bs` },
                     { label: 'Punto Ubii', val: `${((summary.ubiiGrossBsCents || 0) / 100).toFixed(2)} Bs` },
                     { label: 'Transferencia', val: `${((summary.transferenciaBsCents || 0) / 100).toFixed(2)} Bs` },
-                    { label: 'Otros Métodos', val: `$${((summary.otrosUsdCents || 0) / 100).toFixed(2)}` }
+                    { label: 'Otros Métodos', val: `$${((summary.otrosUsdCents || 0) / 100).toFixed(2)}` },
+                    { label: 'Salidas de caja chica', val: `$${((summary.expensesUsdCents || 0) / 100).toFixed(2)}` }
                   ].map(item => (
                     <div key={item.label} className="p-3 bg-surface rounded-xl border border-border">
                       <span className="text-ink-muted block text-[10px] uppercase font-bold">{item.label}</span>
