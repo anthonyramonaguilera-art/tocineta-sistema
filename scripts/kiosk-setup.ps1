@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     kiosk-setup.ps1 - Configuración de entorno Windows 11 para Kiosco Food Truck (Laptop HP)
 .DESCRIPTION
@@ -57,7 +57,7 @@ try {
 
     New-NetFirewallRule `
         -DisplayName $ruleName `
-        -Description "Permite conexiones HTTP a la API y Web del sistema local Tocineta Sonrie exclusivamente desde la subred local (LAN)." `
+        -Description "Permite conexiones HTTP a la API y Web del sistema local TOCINETA exclusivamente desde la subred local (LAN)." `
         -Direction Inbound `
         -LocalPort $Port `
         -Protocol TCP `
@@ -109,7 +109,7 @@ try {
 
     # Programar reinicio de mantenimiento automático diario a las 04:00 AM
     $taskName = "Tocineta_Daily_Maintenance_Reboot"
-    $action = New-ScheduledTaskAction -Execute "shutdown.exe" -Argument "/r /t 60 /c ""Reinicio programado de mantenimiento diario Tocineta Sonrie"""
+    $action = New-ScheduledTaskAction -Execute "shutdown.exe" -Argument "/r /t 60 /c ""Reinicio programado de mantenimiento diario TOCINETA"""
     $trigger = New-ScheduledTaskTrigger -Daily -At "04:00"
     $principal = New-ScheduledTaskPrincipal -UserId "SYSTEM" -LogonType ServiceAccount -RunLevel Highest
 

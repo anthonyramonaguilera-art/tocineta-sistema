@@ -1,5 +1,5 @@
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE (Varons Media)
+ * SISTEMA OPERATIVO LOCAL TOCINETA
  * Aprovisionamiento Seguro de Claves Criptográficas de Producción (age)
  *
  * PROTOCOLO DE SEGURIDAD ESTRICTO (F7, C.3):

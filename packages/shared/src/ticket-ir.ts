@@ -1,7 +1,7 @@
 import { THERMAL_LOGO_RASTER_B64 } from './thermal-logo.js';
 
 /**
- * SISTEMA OPERATIVO LOCAL TOCINETA (Varons Media)
+ * SISTEMA OPERATIVO LOCAL TOCINETA
  * Módulo de Representación Intermedia del Ticket (Ticket IR)
  * 
  * Define la estructura agnóstica de un ticket térmico y provee dos renderizadores:

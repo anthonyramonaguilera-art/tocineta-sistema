@@ -1,7 +1,7 @@
 # Protocolo Oficial de Recuperación ante Desastres y Restauración de Respaldos
-## Tocineta Sonríe — Sistema Operativo Local (Varons Media)
+## TOCINETA — Sistema Operativo Local
 
-Este documento detalla el Procedimiento Operativo Estándar (SOP) para blindar los datos comerciales y contables de **Tocineta Sonríe** contra fallas de disco, cortes eléctricos abruptos, corrupción de archivos o robo físico de la laptop del Food Truck.
+Este documento detalla el Procedimiento Operativo Estándar (SOP) para blindar los datos comerciales y contables de **TOCINETA** contra fallas de disco, cortes eléctricos abruptos, corrupción de archivos o robo físico del equipo local.
 
 ---
 
@@ -9,13 +9,13 @@ Este documento detalla el Procedimiento Operativo Estándar (SOP) para blindar l
 
 El sistema implementa una arquitectura de **Cifrado con Clave Pública Asimétrica (`age`)** con dos destinatarios autorizados independientes:
 
-1. **Sra. Olinelcys (Dueña del Food Truck):**
+1. **Administración / Propietario:**
    - Clave pública configurada en el servidor:
      `age1q5q9c7am7xx9e4flj0j8ugyfqejpyp5dc8qsvqpnv7uamg4wkcuqye3f0r`
    - Clave privada de custodia física:
      *(Almacenada impresa en papel dentro de un sobre sellado e inviolable en la caja fuerte de su residencia).*
 
-2. **Varons Media (Agencia Tecnológica y Soporte):**
+2. **Soporte Técnico Especializado:**
    - Clave pública configurada en el servidor:
      `age15asuchr5fv6fvqhpxm7zedh0n54p7sukdzn5zjp4auqaju8h5cfslg5ne7`
    - Clave privada de custodia digital:

@@ -1,6 +1,6 @@
-<#
+﻿<#
 .SYNOPSIS
-    install-service.ps1 - Instalación de Tocineta Sonríe como Servicio de Windows mediante NSSM
+    install-service.ps1 - Instalación de TOCINETA como Servicio de Windows mediante NSSM
 .DESCRIPTION
     Instala, configura e inicia apps/server como un servicio nativo de Windows usando NSSM
     (Non-Sucking Service Manager). Configura inicio automático, retardo de reinicio ante fallos
@@ -8,7 +8,7 @@
 .PARAMETER Action
     Acción a ejecutar: Install, Uninstall, Start, Stop, Status, Restart.
 .PARAMETER ServiceName
-    Nombre del servicio (por defecto: TocinetaSonrieServer).
+    Nombre del servicio.
 #>
 
 [CmdletBinding()]
@@ -106,8 +106,8 @@ switch ($Action) {
         # 1. Instalar ejecutable y argumentos
         & $nssmExe install $ServiceName $nodeExe $serverEntry
         & $nssmExe set $ServiceName AppDirectory $repoRoot
-        & $nssmExe set $ServiceName DisplayName "Tocineta Sonrie - Local OS Server"
-        & $nssmExe set $ServiceName Description "Servidor central de Fastify, WebSockets y SQLite para Food Truck Tocineta Sonrie (Varons Media)."
+        & $nssmExe set $ServiceName DisplayName "TOCINETA - Local OS Server"
+        & $nssmExe set $ServiceName Description "Servidor central de Fastify, WebSockets y SQLite para TOCINETA."
 
         # 2. Configurar inicio automático
         & $nssmExe set $ServiceName Start SERVICE_AUTO_START
