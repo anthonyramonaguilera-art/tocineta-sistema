@@ -124,7 +124,7 @@ switch ($Action) {
         & $nssmExe set $ServiceName AppRotateBytes 10485760 # 10 MB
 
         # 5. Variables de entorno
-        & $nssmExe set $ServiceName AppEnvironmentExtra "NODE_ENV=production`nPORT=3000`nHOST=0.0.0.0`nDB_PATH=./data/tocineta.db"
+        & $nssmExe set $ServiceName AppEnvironmentExtra "NODE_ENV=production`nPORT=3000`nHOST=0.0.0.0`nDB_PATH=./data/tocineta.db`nENFORCE_AUTH=true"
 
         # 6. Iniciar el servicio
         & $nssmExe start $ServiceName

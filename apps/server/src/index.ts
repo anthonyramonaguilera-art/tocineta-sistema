@@ -7,12 +7,26 @@ import { seedCatalog } from './db/seed-catalog.js';
 import { seedProductPhotos } from './modules/menu/photo-seed.js';
 import { ensureOfficialLocations } from './modules/profitability/locations-service.js';
 
+export function describeAuthMode(env: { ENFORCE_AUTH?: string } = process.env): string {
+  return env.ENFORCE_AUTH === 'true'
+    ? 'Autenticación: ESTRICTA (ENFORCE_AUTH=true)'
+    : 'Autenticación: MODO AUDITORÍA (no bloquea)';
+}
+
+export function shouldWarnProductionAudit(env: { ENFORCE_AUTH?: string; NODE_ENV?: string } = process.env): boolean {
+  return env.NODE_ENV === 'production' && env.ENFORCE_AUTH !== 'true';
+}
+
 async function bootstrap() {
   console.log(`\n=============================================================`);
   console.log(`🍔 SISTEMA OPERATIVO GASTRONÓMICO "TOCINETA" (PRD v2.0)`);
   console.log(`=============================================================`);
   console.log(`⚙️ Entorno: ${env.NODE_ENV} | Host: ${env.HOST} | Port: ${env.PORT}`);
   console.log(`📁 Base de Datos SQLite: ${env.DB_PATH}`);
+  console.log(describeAuthMode(process.env));
+  if (shouldWarnProductionAudit(process.env)) {
+    console.warn('ADVERTENCIA: Servidor en producción con autenticación en MODO AUDITORÍA (no bloquea)');
+  }
 
   // 1. Inicialización de SQLite con PRAGMAs obligatorios (WAL, FULL sync, FKs, BusyTimeout)
   const dbContext = initSqlite(env.DB_PATH);
@@ -89,7 +103,9 @@ async function bootstrap() {
   process.on('SIGTERM', () => shutdown('SIGTERM'));
 }
 
-bootstrap().catch(err => {
-  console.error('Error fatal durante el bootstrap:', err);
-  process.exit(1);
-});
+if (process.env.NODE_ENV !== 'test' && process.env.VITEST !== 'true') {
+  bootstrap().catch(err => {
+    console.error('Error fatal durante el bootstrap:', err);
+    process.exit(1);
+  });
+}
