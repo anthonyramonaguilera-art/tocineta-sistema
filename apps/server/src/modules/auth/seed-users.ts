@@ -4,6 +4,7 @@ import path from 'node:path';
 import type Database from 'better-sqlite3';
 import { hashPin, isTrivialPin } from './pin.js';
 import type { UserRole } from '../../db/schema.js';
+import { getProjectRoot } from '../../config/paths.js';
 
 export interface SeedUserDefinition {
   id: string;
@@ -52,7 +53,10 @@ export function generateSecureAdminPin(): string {
 
 export function getDataDir(): string {
   const dbPath = process.env.TOCINETA_DB_PATH || process.env.DB_PATH || './data/tocineta.db';
-  return path.dirname(path.resolve(dbPath));
+  const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+  const isProd = process.env.NODE_ENV === 'production' && !isTest;
+  const baseDir = (isProd && !path.isAbsolute(dbPath)) ? getProjectRoot() : process.cwd();
+  return path.dirname(path.resolve(baseDir, dbPath));
 }
 
 export function deleteAdminInitialFileIfExists(customDir?: string): void {

@@ -1,3 +1,7 @@
+import path from 'node:path';
+import fs from 'node:fs';
+import Database from 'better-sqlite3';
+import { getProjectRoot } from './config/paths.js';
 import { env } from './config/env.js';
 import { initSqlite } from './db/connection.js';
 import { runMigrations } from './db/migrate.js';
@@ -23,12 +27,67 @@ export function assertSafeStartup(env: { ENFORCE_AUTH?: string; NODE_ENV?: strin
   }
 }
 
+export function warnIfSiblingDatabaseHasUsers(currentDbPath: string): boolean {
+  try {
+    const resolvedCurrent = path.resolve(currentDbPath);
+    const projectRoot = getProjectRoot();
+    const candidatePaths = [
+      path.resolve(projectRoot, 'data/tocineta.db'),
+      path.resolve(process.cwd(), 'data/tocineta.db'),
+      path.resolve(process.cwd(), '../data/tocineta.db'),
+      path.resolve(process.cwd(), '../../data/tocineta.db'),
+      path.resolve(process.cwd(), 'apps/server/data/tocineta.db'),
+      path.resolve(path.dirname(resolvedCurrent), '../data/tocineta.db'),
+      path.resolve(path.dirname(resolvedCurrent), '../../data/tocineta.db'),
+      path.resolve(path.dirname(resolvedCurrent), '../tocineta.db')
+    ];
+
+    const visited = new Set<string>();
+    for (const candidate of candidatePaths) {
+      const resolvedCandidate = path.resolve(candidate);
+      if (resolvedCandidate === resolvedCurrent || visited.has(resolvedCandidate)) {
+        continue;
+      }
+      visited.add(resolvedCandidate);
+
+      if (!fs.existsSync(resolvedCandidate)) {
+        continue;
+      }
+
+      try {
+        const checkDb = new Database(resolvedCandidate, { readonly: true, fileMustExist: true });
+        try {
+          const row = checkDb.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number } | undefined;
+          if (row && row.cnt > 0) {
+            console.warn(
+              `\n⚠️ [ADVERTENCIA CRÍTICA DE PRODUCCIÓN]: La base de datos resuelta en "${resolvedCurrent}" está VACÍA (0 usuarios), ` +
+              `pero se detectó otra base de datos con ${row.cnt} usuarios en una carpeta hermana/relacionada: "${resolvedCandidate}".`
+            );
+            console.warn(
+              '⚠️ Verifique que el servicio esté apuntando a la ruta correcta o revise TOCINETA_HOME / DB_PATH.\n'
+            );
+            return true;
+          }
+        } finally {
+          checkDb.close();
+        }
+      } catch {
+        // Ignorar bases ilegibles
+      }
+    }
+  } catch {
+    // Proteger contra errores inesperados
+  }
+  return false;
+}
+
 async function bootstrap() {
   console.log(`\n=============================================================`);
   console.log(`🍔 SISTEMA OPERATIVO GASTRONÓMICO "TOCINETA" (PRD v2.0)`);
   console.log(`=============================================================`);
   console.log(`⚙️ Entorno: ${env.NODE_ENV} | Host: ${env.HOST} | Port: ${env.PORT}`);
-  console.log(`📁 Base de Datos SQLite: ${env.DB_PATH}`);
+  console.log(`📁 Base de Datos SQLite (Configurada): ${env.DB_PATH}`);
+  console.log(`📂 Directorio de Trabajo (cwd): ${process.cwd()}`);
   console.log(describeAuthMode(process.env));
   try {
     assertSafeStartup(process.env);
@@ -39,6 +98,7 @@ async function bootstrap() {
 
   // 1. Inicialización de SQLite con PRAGMAs obligatorios (WAL, FULL sync, FKs, BusyTimeout)
   const dbContext = initSqlite(env.DB_PATH);
+  console.log(`📁 Base de Datos SQLite (Ruta Absoluta): ${dbContext.dbPath}`);
   const pragmas = dbContext.getPragmas();
   console.log(`🔒 SQLite configurado con éxito:`);
   console.log(`   - journal_mode: ${pragmas.journalMode}`);
@@ -63,6 +123,10 @@ async function bootstrap() {
 
   // 3. Saneamiento y sincronización de perfiles corporativos limpios (PRD v2.0)
   const userCountRow = dbContext.rawDb.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number };
+  console.log(`👥 Número de usuarios en base de datos: ${userCountRow.cnt}`);
+  if (process.env.NODE_ENV === 'production' && userCountRow.cnt === 0) {
+    warnIfSiblingDatabaseHasUsers(dbContext.dbPath);
+  }
   if (userCountRow.cnt === 0) {
     const seededCount = seedInitialUsers(dbContext.rawDb);
     console.log(`BOOTSTRAP: ${seededCount} usuarios iniciales creados`);

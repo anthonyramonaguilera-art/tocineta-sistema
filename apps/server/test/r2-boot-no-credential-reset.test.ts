@@ -4,6 +4,8 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import crypto from 'node:crypto';
 import { buildServer } from '../src/server.js';
+import { warnIfSiblingDatabaseHasUsers } from '../src/index.js';
+import { getProjectRoot } from '../src/config/paths.js';
 import { initSqlite, resetDatabaseContext, type DatabaseContext } from '../src/db/connection.js';
 import { runMigrations } from '../src/db/migrate.js';
 import {
@@ -234,5 +236,46 @@ describe('T-01: No resetear credenciales ni hashes de usuarios en arranque de se
     } finally {
       await app.close();
     }
+  });
+  describe('PASO B — Refuerzo de rutas y advertencias de producción', () => {
+    it('getProjectRoot encuentra la raíz del proyecto con pnpm-workspace.yaml', () => {
+      const root = getProjectRoot();
+      expect(fs.existsSync(path.join(root, 'pnpm-workspace.yaml'))).toBe(true);
+    });
+
+    it('getProjectRoot prioriza TOCINETA_HOME cuando está definido', () => {
+      const original = process.env.TOCINETA_HOME;
+      try {
+        const customHome = path.join(tempDir, 'custom_tocineta_home');
+        process.env.TOCINETA_HOME = customHome;
+        expect(getProjectRoot()).toBe(path.resolve(customHome));
+      } finally {
+        if (original === undefined) {
+          delete process.env.TOCINETA_HOME;
+        } else {
+          process.env.TOCINETA_HOME = original;
+        }
+      }
+    });
+
+    it('warnIfSiblingDatabaseHasUsers detecta base hermana con usuarios cuando la actual está vacía', () => {
+      // Crear base hermana con usuarios
+      const siblingDbPath = path.join(tempDir, 'tocineta.db');
+      const siblingCtx = initSqlite(siblingDbPath);
+      runMigrations(siblingCtx.rawDb, { dbPath: siblingDbPath });
+      seedInitialUsers(siblingCtx.rawDb);
+      siblingCtx.rawDb.close();
+
+      // Crear base actual vacía dentro de una subcarpeta (ej. data/temp)
+      const subDir = path.join(tempDir, 'subfolder');
+      fs.mkdirSync(subDir, { recursive: true });
+      const emptyDbPath = path.join(subDir, 'empty.test.db');
+      const emptyCtx = initSqlite(emptyDbPath);
+      runMigrations(emptyCtx.rawDb, { dbPath: emptyDbPath });
+      emptyCtx.rawDb.close();
+
+      const warned = warnIfSiblingDatabaseHasUsers(emptyDbPath);
+      expect(warned).toBe(true);
+    });
   });
 });

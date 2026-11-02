@@ -19,6 +19,7 @@ export interface DatabaseContext {
 }
 
 import { assertIsolatedTestDatabase } from './test-guard.js';
+import { getProjectRoot } from '../config/paths.js';
 
 let activeContext: DatabaseContext | null = null;
 
@@ -39,7 +40,10 @@ export function initSqlite(dbFilePath?: string): DatabaseContext {
   const effectivePath = dbFilePath || getDefaultDbPath();
   assertIsolatedTestDatabase(effectivePath);
   const isMemory = effectivePath === ':memory:';
-  const resolvedPath = isMemory ? ':memory:' : path.resolve(process.cwd(), effectivePath);
+  const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+  const isProd = process.env.NODE_ENV === 'production' && !isTest;
+  const baseDir = (isProd && !path.isAbsolute(effectivePath)) ? getProjectRoot() : process.cwd();
+  const resolvedPath = isMemory ? ':memory:' : path.resolve(baseDir, effectivePath);
 
   if (!isMemory) {
     const dir = path.dirname(resolvedPath);
