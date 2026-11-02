@@ -493,12 +493,14 @@ describe('Hito M17 - Endurecimiento UX, Táctil y Robustez Operativa (@tocineta/
   // ==========================================================================
   describe('Bloque 2: [SMOKE CHECK - SOURCE CONTRACT] Verificación de Contratos Frontend', () => {
 
-    it('[SMOKE CHECK - SOURCE CONTRACT] 1. components/AppLayout.tsx contiene requiredPinLength, admin y supervisor', () => {
+    it('[SMOKE CHECK - SOURCE CONTRACT] 1. components/AppLayout.tsx contiene admin y supervisor, y ChangePinModal.tsx contiene requiredPinLength', () => {
       console.log('Ruta de ejecución Smoke:', __dirname, process.cwd());
-      const src = readWebSource('components/AppLayout.tsx');
-      expect(src).toContain('requiredPinLength');
-      expect(src).toContain("'admin'");
-      expect(src).toContain("'supervisor'");
+      // Actualizado: requiredPinLength reside en ChangePinModal.tsx tras modularizar autenticación; AppLayout.tsx mantiene la verificación de roles admin y supervisor.
+      const srcLayout = readWebSource('components/AppLayout.tsx');
+      expect(srcLayout).toContain("'admin'");
+      expect(srcLayout).toContain("'supervisor'");
+      const srcModal = readWebSource('features/auth/ChangePinModal.tsx');
+      expect(srcModal).toContain('requiredPinLength');
     });
 
     it('[SMOKE CHECK - SOURCE CONTRACT] 2. features/cashier/CashierView.tsx contiene isError y Reintentar conexión', () => {

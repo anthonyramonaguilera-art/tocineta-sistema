@@ -9,7 +9,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { buildServer } from '../src/server.js';
-import { renderTicketToEscPos, prorateComboLargestRemainder } from '@tocineta/shared';
+import { renderTicketToEscPos, prorateComboLargestRemainder, type TicketIR } from '@tocineta/shared';
 import { createOrder } from '../src/modules/orders/order-service.js';
 import { reportOrderIncident } from '../src/modules/incidents/incidents-service.js';
 import { hashPin } from '../src/modules/auth/pin.js';
@@ -288,7 +288,15 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
   // TEST 5: renderTicketToEscPos({ codepage: 16, hasCutter: false, hasBuzzer: false })
   // ==========================================================================
   it('5. renderTicketToEscPos({ codepage: 16, hasCutter: false, hasBuzzer: false }): WPC1252, sin cutter, sin buzzer, termina con 0x0A x 5', () => {
-    const bytes = renderTicketToEscPos({ codepage: 16, hasCutter: false, hasBuzzer: false });
+    // Actualizado: la marca fue saneada (Regla 1); el test verifica la codificación CP850/WPC1252, no el nombre comercial.
+    const testTicket: TicketIR = {
+      widthColumns: 32,
+      blocks: [
+        { type: 'text', text: 'MAÍZ - JALAPEÑOS - CLÁSICA' },
+        { type: 'cut' }
+      ]
+    };
+    const bytes = renderTicketToEscPos(testTicket, { codepage: 16, hasCutter: false, hasBuzzer: false });
     expect(bytes).toBeInstanceOf(Uint8Array);
 
     // Contiene 0x1B 0x74 0x10 (ESC t 16)
@@ -296,7 +304,7 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
     expect(bytes[3]).toBe(0x74);
     expect(bytes[4]).toBe(0x10);
 
-    // Codifica "TOCINETA SONRÍE - JALAPEÑOS - MAÍZ" en WPC1252:
+    // Codifica "MAÍZ - JALAPEÑOS - CLÁSICA" en WPC1252:
     // Í = 0xCD, Ñ = 0xD1, Á = 0xC1
     expect(bytes).toContain(0xcd); // Í
     expect(bytes).toContain(0xd1); // Ñ
@@ -319,7 +327,15 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
   // TEST 6: (Test 5b) renderTicketToEscPos({ codepage: 2, hasCutter: false, hasBuzzer: false })
   // ==========================================================================
   it('6. (Test 5b) renderTicketToEscPos({ codepage: 2, hasCutter: false, hasBuzzer: false }): CP850, sin cutter, sin buzzer', () => {
-    const bytes = renderTicketToEscPos({ codepage: 2, hasCutter: false, hasBuzzer: false });
+    // Actualizado: la marca fue saneada (Regla 1); el test verifica la codificación CP850/WPC1252, no el nombre comercial.
+    const testTicket: TicketIR = {
+      widthColumns: 32,
+      blocks: [
+        { type: 'text', text: 'MAÍZ - JALAPEÑOS' },
+        { type: 'cut' }
+      ]
+    };
+    const bytes = renderTicketToEscPos(testTicket, { codepage: 2, hasCutter: false, hasBuzzer: false });
     expect(bytes).toBeInstanceOf(Uint8Array);
 
     // Contiene 0x1B 0x74 0x02 (ESC t 2)
@@ -327,7 +343,7 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
     expect(bytes[3]).toBe(0x74);
     expect(bytes[4]).toBe(0x02);
 
-    // Codifica "TOCINETA SONRÍE - JALAPEÑOS" en CP850:
+    // Codifica "MAÍZ - JALAPEÑOS" en CP850:
     // Í = 0xD6, Ñ = 0xA5
     expect(bytes).toContain(0xd6); // Í en CP850
     expect(bytes).toContain(0xa5); // Ñ en CP850
@@ -449,13 +465,14 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
     expect(mustChangePin).toBe(true);
 
     // 2. Cambiar PIN
+    // Actualizado: P1-D prohíbe PINs triviales/secuenciales (987654) para admin; se utiliza un PIN no trivial válido de 6 dígitos.
     const resChange = await app.inject({
       method: 'POST',
       url: '/api/auth/change-pin',
       headers: { authorization: `Bearer ${token}` },
       payload: {
         currentPin: '123456',
-        newPin: '987654'
+        newPin: '829401'
       }
     });
 
@@ -472,7 +489,7 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
       url: '/api/auth/login',
       payload: {
         userId: 'usr_admin',
-        pin: '987654'
+        pin: '829401'
       }
     });
 

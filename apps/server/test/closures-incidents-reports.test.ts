@@ -415,7 +415,8 @@ describe('Hito M8 - Arqueo Ciego, Cierre Z, Incidentes (Re-fire vs Refund) y Rep
       // Verificar que el ticket de reposición está en print_jobs con banner '*** REPOSICIÓN URGENTE SIN COBRO ***'
       const pjob = rawDb.prepare('SELECT * FROM print_jobs WHERE id = ?').get(incData.printJobId) as any;
       expect(pjob.job_type).toBe('REPOSICION_COCINA');
-      expect(pjob.printer_id).toBe('print_cocina');
+      // Actualizado: según migración 0034 y R2, con print_mode='one' (default) la comanda se despacha a la impresora de caja (print_caja_usb).
+      expect(pjob.printer_id).toBe('print_caja_usb');
       expect(pjob.ticket_ir_json).toContain('REPOSICIÓN');
 
       // Verificar que NO se alteró la caja (mismos asientos en ledger)
