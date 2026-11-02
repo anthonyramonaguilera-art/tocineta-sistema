@@ -1,4 +1,4 @@
-﻿# ==============================================================================
+# ==============================================================================
 # SCRIPT DE EMPAQUETADO PARA EL DIRECTOR - TOCINETA ERP
 # ==============================================================================
 $ErrorActionPreference = "Stop"
@@ -59,11 +59,14 @@ foreach ($item in $itemsToInclude) {
 # 4. LIMPIEZA PROFUNDA
 # ==============================================================================
 Write-Host "4. Limpiando node_modules, dist y archivos .db..." -ForegroundColor Cyan
-$excludeDirs = @("node_modules", "dist", "build", ".vite", "coverage", ".git")
+$excludeDirs = @("node_modules", "dist", "build", ".vite", "coverage", ".git", "docs/auditoria/capturas")
 $excludeFiles = @("*.log", "*.db", "*.db-shm", "*.db-wal", "*.zip", ".env")
 
 Get-ChildItem -Path $tempDir -Recurse -Force -Directory -ErrorAction SilentlyContinue |
-    Where-Object { $_.Name -in $excludeDirs } |
+    Where-Object {
+        $rel = $_.FullName.Substring($tempDir.Length).TrimStart('\', '/').Replace('\', '/')
+        $_.Name -in $excludeDirs -or $rel -in $excludeDirs
+    } |
     Remove-Item -Recurse -Force -ErrorAction SilentlyContinue
 
 Get-ChildItem -Path $tempDir -Recurse -Force -File -ErrorAction SilentlyContinue |
