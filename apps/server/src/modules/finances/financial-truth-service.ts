@@ -69,7 +69,9 @@ export function getFinancialTruth(
   // Helper para calcular métricas por filtro de sede
   function computeMetrics(targetLocId: string | null) {
     // A. Órdenes
-    const orderConditions = ["o.fulfillment_status != 'anulado'"];
+    // REGLA UNIFICADA T-02: Las órdenes con payment_status='reembolsado' o canceladas
+    // no suman como ingreso del turno ni como ventas activas.
+    const orderConditions = ["o.fulfillment_status NOT IN ('anulado', 'cancelado')", "o.payment_status != 'reembolsado'"];
     const orderParams: any[] = [];
 
     if (jornada?.id) {
@@ -116,7 +118,9 @@ export function getFinancialTruth(
     }
 
     // B. Medios de Pago y Cobros
-    const paymentConditions = ["o.fulfillment_status != 'anulado'", "o.payment_status = 'pagado'"];
+    // REGLA UNIFICADA T-02: Las órdenes con payment_status='reembolsado' no suman como ingreso del turno
+    // (solo se computan pagos y vueltos de órdenes con payment_status = 'pagado').
+    const paymentConditions = ["o.fulfillment_status NOT IN ('anulado', 'cancelado')", "o.payment_status = 'pagado'"];
     const paymentParams: any[] = [];
     if (jornada?.id) {
       if (params.jornadaId === 'jornada_r2_scenario') {

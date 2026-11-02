@@ -59,10 +59,12 @@ export function getWorkerPerformance(
   }
 
   // 1. Total de órdenes atendidas/creadas por el trabajador
+  // REGLA UNIFICADA T-02: Las órdenes con payment_status='reembolsado' o canceladas
+  // no suman como producción ni ingreso del turno.
   const ordersRow = rawDb.prepare(`
     SELECT count(*) as count
     FROM orders
-    WHERE created_by_user_id = ?
+    WHERE created_by_user_id = ? AND payment_status != 'reembolsado' AND fulfillment_status NOT IN ('anulado', 'cancelado')
   `).get(userId) as { count: number };
   const ordersCount = ordersRow?.count || 0;
 
@@ -71,7 +73,7 @@ export function getWorkerPerformance(
     SELECT count(*) as count
     FROM order_lines ol
     JOIN orders o ON ol.order_id = o.id
-    WHERE o.created_by_user_id = ?
+    WHERE o.created_by_user_id = ? AND o.payment_status != 'reembolsado' AND o.fulfillment_status NOT IN ('anulado', 'cancelado')
       AND (ol.line_role = 'UPSELL' OR EXISTS (
         SELECT 1 FROM order_line_modifiers olm 
         WHERE olm.order_line_id = ol.id 

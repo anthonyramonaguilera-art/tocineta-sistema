@@ -115,7 +115,11 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
       });
       const data = await res.json();
       if (!res.ok || !data.success) {
-        throw new Error(data.error || 'PIN incorrecto o no autorizado para anular ventas');
+        if (data.remainingMs || data.code === 'AUTHORIZER_LOCKED') {
+          const mins = Math.max(1, Math.ceil((data.remainingMs || 0) / 60000));
+          throw new Error(`Bloqueado, reintente en ${mins} min`);
+        }
+        throw new Error(data.error || data.message || 'Error al anular la venta');
       }
 
       setVoidingSale(null);

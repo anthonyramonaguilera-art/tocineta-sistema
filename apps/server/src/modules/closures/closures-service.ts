@@ -71,24 +71,25 @@ export function performBlindCount(
   }
 
   // 1. Calcular montos esperados en efectivo USD, Bs y Ubii para esta sesión
-  // Suma de pagos asociados a las órdenes cobradas en esta sesión de caja
+  // REGLA UNIFICADA T-02: Las órdenes con payment_status='reembolsado' (o diferente de 'pagado')
+  // no suman como ingreso del turno ni sus vueltos como egreso (se excluyen de la recaudación neta).
   const payments = rawDb.prepare(`
     SELECT p.method, p.amount_cents, p.usd_equivalent_cents
     FROM payments p
     JOIN orders o ON p.order_id = o.id
-    WHERE o.cash_session_id = ?
+    WHERE o.cash_session_id = ? AND o.payment_status = 'pagado'
   `).all(sessionId) as Array<{
     method: string;
     amount_cents: number;
     usd_equivalent_cents: number;
   }>;
 
-  // Suma de vueltos entregados en las órdenes de esta sesión
+  // Suma de vueltos entregados en las órdenes cobradas válidas de esta sesión
   const changes = rawDb.prepare(`
     SELECT cd.change_usd_cents, cd.change_bs_cents
     FROM change_deliveries cd
     JOIN orders o ON cd.order_id = o.id
-    WHERE o.cash_session_id = ?
+    WHERE o.cash_session_id = ? AND o.payment_status = 'pagado'
   `).all(sessionId) as Array<{
     change_usd_cents: number;
     change_bs_cents: number;
