@@ -1,12 +1,13 @@
 /**
  * SISTEMA OPERATIVO LOCAL TOCINETA
- * Motor de Respaldo Cifrado con Age hacia Almacenamiento Local (USB) y Nube (Google Drive)
+ * Motor de Respaldo Cifrado con Age hacia Almacenamiento Local (USB) y Telegram
  *
- * TAREA 1 (R4):
- * - Genera snapshot en caliente de la base de datos SQLite sin interrumpir operaciones.
+ * TAREA 1 (Ajuste R4):
+ * - Genera snapshot en caliente de la base de datos SQLite sin interrumpir operaciones (WAL-safe).
  * - Incrusta manifiesto de auditoría y versión en el snapshot.
  * - Cifra el archivo usando Age con las claves públicas de la Administración y Custodio Seguro.
- * - Copia el archivo (.age) a USB_BACKUP_PATH y a DRIVE_SYNC_PATH (Google Drive).
+ * - Copia el archivo (.db.age) a USB_BACKUP_PATH si existe la ruta (opcional, si no existe solo avisa).
+ * - Envía el archivo cifrado .db.age directamente al chat de Telegram del administrador usando la API de Telegram (sendDocument).
  * - Si ocurre cualquier fallo, registra un registro de error en la tabla server_errors.
  */
 
@@ -22,8 +23,9 @@ import { appendAuditEvent, GENESIS_HASH } from '../apps/server/src/modules/audit
 interface CliOptions {
   dbPath?: string;
   usbBackupPath?: string;
-  driveSyncPath?: string;
   envFilePath?: string;
+  botToken?: string;
+  chatId?: string;
 }
 
 function parseCliArgs(): CliOptions {
@@ -35,10 +37,12 @@ function parseCliArgs(): CliOptions {
       opts.dbPath = args[++i];
     } else if (arg === '--usb' && args[i + 1]) {
       opts.usbBackupPath = args[++i];
-    } else if (arg === '--drive' && args[i + 1]) {
-      opts.driveSyncPath = args[++i];
     } else if (arg === '--env' && args[i + 1]) {
       opts.envFilePath = args[++i];
+    } else if (arg === '--bot-token' && args[i + 1]) {
+      opts.botToken = args[++i];
+    } else if (arg === '--chat-id' && args[i + 1]) {
+      opts.chatId = args[++i];
     }
   }
   return opts;
@@ -108,7 +112,7 @@ function logServerErrorToDatabase(dbPath: string, error: Error, contextDetails: 
       'scripts/respaldo-drive.ps1',
       500,
       'BACKUP_FAILED',
-      error.message || 'Error en respaldo a Drive',
+      error.message || 'Error en respaldo a Telegram',
       error.stack || null,
       JSON.stringify(contextDetails),
       'SYSTEM',
@@ -147,11 +151,25 @@ async function runBackup() {
     cliOpts.dbPath || process.env.DB_PATH || fileEnv.DB_PATH || './data/tocineta.db'
   );
 
-  const usbBackupDir = path.resolve(
-    cliOpts.usbBackupPath || process.env.USB_BACKUP_PATH || fileEnv.USB_BACKUP_PATH || './data/backups/usb'
-  );
+  const rawUsbBackupPath = (cliOpts.usbBackupPath || process.env.USB_BACKUP_PATH || fileEnv.USB_BACKUP_PATH || '').trim();
+  let usbBackupDir: string | null = null;
+  if (rawUsbBackupPath) {
+    const resolvedUsb = path.resolve(rawUsbBackupPath);
+    if (fs.existsSync(resolvedUsb)) {
+      usbBackupDir = resolvedUsb;
+    } else {
+      console.log(`[AVISO] La ruta USB_BACKUP_PATH no existe o no esta conectada: ${resolvedUsb}. Se omitira la copia local y se continuara con el envio por Telegram.`);
+    }
+  } else {
+    console.log(`[AVISO] USB_BACKUP_PATH no esta configurado. El respaldo continuara exclusivamente por Telegram.`);
+  }
 
-  const driveSyncDir = (cliOpts.driveSyncPath || process.env.DRIVE_SYNC_PATH || fileEnv.DRIVE_SYNC_PATH || '').trim();
+  const telegramBotToken = (cliOpts.botToken || process.env.TELEGRAM_BOT_TOKEN || fileEnv.TELEGRAM_BOT_TOKEN || '').trim();
+  const telegramChatId = (cliOpts.chatId || process.env.TELEGRAM_CHAT_ID || fileEnv.TELEGRAM_CHAT_ID || '').trim();
+
+  if (!telegramBotToken || !telegramChatId) {
+    throw new Error('TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID deben estar configurados en .env o pasarse como parametros para enviar el respaldo por Telegram.');
+  }
 
   const adminKey = (process.env.AGE_RECIPIENT_ADMIN || fileEnv.AGE_RECIPIENT_ADMIN || '').trim();
   const secureKey = (process.env.AGE_RECIPIENT_SECURE || fileEnv.AGE_RECIPIENT_SECURE || '').trim();
@@ -167,25 +185,16 @@ async function runBackup() {
   }
 
   console.log('\n=============================================================');
-  console.log('   TOCINETA - RESPALDO CIFRADO CON AGE HACIA LOCAL Y DRIVE   ');
+  console.log('   TOCINETA - RESPALDO CIFRADO CON AGE HACIA TELEGRAM        ');
   console.log('=============================================================');
   console.log(`- Base de Datos origen:   ${dbPath}`);
-  console.log(`- Directorio USB / Local: ${usbBackupDir}`);
-  console.log(`- Directorio Google Drive:${driveSyncDir ? ` ${driveSyncDir}` : ' (No configurado)'}`);
+  console.log(`- Directorio USB / Local: ${usbBackupDir ? usbBackupDir : '(Omitido / No disponible)'}`);
+  console.log(`- Canal de Respaldo:      Telegram (Chat ID: ${telegramChatId})`);
   console.log(`- Destinatarios Age:      ${recipients.length} claves publicas activas`);
 
   // Validar existencia de base de datos origen
   if (!fs.existsSync(dbPath)) {
     throw new Error(`Base de datos principal no encontrada en: ${dbPath}`);
-  }
-
-  // Asegurar directorios de destino
-  if (!fs.existsSync(usbBackupDir)) {
-    fs.mkdirSync(usbBackupDir, { recursive: true });
-  }
-
-  if (driveSyncDir && !fs.existsSync(driveSyncDir)) {
-    fs.mkdirSync(driveSyncDir, { recursive: true });
   }
 
   const now = Date.now();
@@ -261,45 +270,72 @@ async function runBackup() {
 
     // 7. Calcular checksum SHA-256
     const sha256Hash = crypto.createHash('sha256').update(encryptedBuffer).digest('hex');
-
-    // 8. Escribir archivo .db.age en USB_BACKUP_PATH
     const filename = `tocineta-backup-${now}.db.age`;
-    const localEncryptedPath = path.join(usbBackupDir, filename);
-    fs.writeFileSync(localEncryptedPath, encryptedBuffer);
-    console.log(`- Guardado en directorio USB/Local: ${localEncryptedPath} (${encryptedBuffer.length} bytes)`);
 
-    // 9. Si existe Cierre Z, escribir manifiesto companero JSON
-    if (zReportJson) {
-      companionFilename = `cierre-z-${now}.json`;
-      const manifestObject = {
-        backupId,
-        backupType: 'ENCRYPTED_USB_DAILY',
-        jornadaId,
-        auditHeadHash,
-        sha256BackupDbAge: sha256Hash,
-        createdAtMs: now,
-        cierreZ: JSON.parse(zReportJson)
-      };
-      companionJsonContent = JSON.stringify(manifestObject, null, 2);
-      fs.writeFileSync(path.join(usbBackupDir, companionFilename), companionJsonContent, 'utf-8');
-    }
+    // 8. Escribir archivo .db.age en USB_BACKUP_PATH solo si existe la ruta
+    let localEncryptedPath: string | null = null;
+    if (usbBackupDir) {
+      localEncryptedPath = path.join(usbBackupDir, filename);
+      fs.writeFileSync(localEncryptedPath, encryptedBuffer);
+      console.log(`- Guardado en directorio USB/Local: ${localEncryptedPath} (${encryptedBuffer.length} bytes)`);
 
-    // 10. Copiar a DRIVE_SYNC_PATH si esta configurado
-    let driveEncryptedPath: string | null = null;
-    if (driveSyncDir) {
-      driveEncryptedPath = path.join(driveSyncDir, filename);
-      fs.writeFileSync(driveEncryptedPath, encryptedBuffer);
-      console.log(`- Sincronizado en Google Drive:    ${driveEncryptedPath}`);
-
-      if (companionFilename && companionJsonContent) {
-        fs.writeFileSync(path.join(driveSyncDir, companionFilename), companionJsonContent, 'utf-8');
-        console.log(`- Sincronizado manifiesto Z:      ${path.join(driveSyncDir, companionFilename)}`);
+      // 9. Si existe Cierre Z, escribir manifiesto companero JSON en USB
+      if (zReportJson) {
+        companionFilename = `cierre-z-${now}.json`;
+        const manifestObject = {
+          backupId,
+          backupType: 'ENCRYPTED_USB_DAILY',
+          jornadaId,
+          auditHeadHash,
+          sha256BackupDbAge: sha256Hash,
+          createdAtMs: now,
+          cierreZ: JSON.parse(zReportJson)
+        };
+        companionJsonContent = JSON.stringify(manifestObject, null, 2);
+        fs.writeFileSync(path.join(usbBackupDir, companionFilename), companionJsonContent, 'utf-8');
       }
-    } else {
-      console.log(`[AVISO] DRIVE_SYNC_PATH no esta configurado en .env. Respaldo conservado localmente.`);
     }
+
+    // 10. Enviar archivo cifrado (.db.age) a Telegram vía sendDocument
+    console.log(`- Enviando archivo cifrado a Telegram (Chat ID: ${telegramChatId})...`);
+    const telegramUrl = `https://api.telegram.org/bot${telegramBotToken}/sendDocument`;
+
+    const formData = new FormData();
+    formData.append('chat_id', telegramChatId);
+
+    const fileBlob = new Blob([encryptedBuffer], { type: 'application/octet-stream' });
+    formData.append('document', fileBlob, filename);
+
+    const captionLines = [
+      'TOCINETA — Respaldo Cifrado (.db.age)',
+      `ID: ${backupId}`,
+      `Fecha: ${new Date(now).toISOString()}`,
+      `SHA-256: ${sha256Hash}`,
+      `Tamano: ${(encryptedBuffer.length / 1024).toFixed(2)} KB`
+    ];
+    if (jornadaId) {
+      captionLines.push(`Jornada: ${jornadaId}`);
+    }
+    formData.append('caption', captionLines.join('\n'));
+
+    const tgResponse = await fetch(telegramUrl, {
+      method: 'POST',
+      body: formData
+    });
+
+    if (!tgResponse.ok) {
+      const errorText = await tgResponse.text();
+      throw new Error(`Error HTTP ${tgResponse.status} al enviar respaldo a Telegram: ${errorText}`);
+    }
+
+    const tgResult = (await tgResponse.json()) as { ok: boolean; description?: string };
+    if (!tgResult.ok) {
+      throw new Error(`Telegram rechazo el envio del respaldo: ${tgResult.description || 'Error desconocido'}`);
+    }
+    console.log(`- Entregado exitosamente al chat de Telegram.`);
 
     // 11. Registrar en tabla backups_log de la base de datos activa
+    const loggedDestination = localEncryptedPath || `TELEGRAM:${telegramChatId}`;
     rawDb.prepare(`
       INSERT INTO backups_log (
         id, backup_type, destination_path, file_size_bytes, sha256_hash,
@@ -308,7 +344,7 @@ async function runBackup() {
     `).run(
       backupId,
       'ENCRYPTED_USB_DAILY',
-      localEncryptedPath,
+      loggedDestination,
       encryptedBuffer.length,
       sha256Hash,
       jornadaId,
@@ -327,7 +363,7 @@ async function runBackup() {
         backupType: 'ENCRYPTED_USB_DAILY',
         filename,
         destinationUsb: localEncryptedPath,
-        destinationDrive: driveEncryptedPath,
+        destinationTelegram: `chat_id:${telegramChatId}`,
         fileSizeBytes: encryptedBuffer.length,
         sha256Hash,
         recipientsCount
@@ -335,7 +371,7 @@ async function runBackup() {
     });
 
     console.log('\n=============================================================');
-    console.log('   RESPALDO COMPLETADO Y VERIFICADO EXITOSAMENTE');
+    console.log('   RESPALDO COMPLETADO Y ENVIADO A TELEGRAM CON EXITO       ');
     console.log('=============================================================');
     console.log(`- ID de Respaldo:  ${backupId}`);
     console.log(`- Archivo Cifrado: ${filename}`);

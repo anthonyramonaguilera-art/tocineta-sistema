@@ -1,10 +1,10 @@
-# GESTION REMOTA, RESPALDOS EN LA NUBE Y ALERTAS POR TELEGRAM — SISTEMA TOCINETA
+# GESTION REMOTA, RESPALDOS POR TELEGRAM, ALERTAS Y DIAGNOSTICO FORENSE — SISTEMA TOCINETA
 
-Este documento detalla la arquitectura operativa para el monitoreo remoto, los respaldos cifrados hacia la nube (Google Drive) y el canal de alertas automáticas vía Telegram para el Sistema Operativo Gastronómico TOCINETA.
+Este documento detalla la arquitectura operativa para el monitoreo remoto, los respaldos cifrados con Age enviados directamente vía Telegram, la generación de paquetes de diagnóstico forense y el canal de alertas automáticas para el Sistema Operativo Gastronómico TOCINETA.
 
 ---
 
-## 1. Arquitectura de Respaldo Cifrado (R4)
+## 1. Arquitectura de Respaldo Cifrado Exclusivo por Telegram (R4)
 
 El proceso de respaldo de TOCINETA está diseñado para ser seguro, tolerante a fallos y sin interrupciones operativas:
 
@@ -14,36 +14,23 @@ El proceso de respaldo de TOCINETA está diseñado para ser seguro, tolerante a 
    Se inyecta una tabla temporal `_backup_manifest` con la versión del sistema, fecha de creación, ID de jornada y hash de cabeza de la cadena inmutable de auditoría (`audit_events`).
 3. **Cifrado Criptográfico con Age:**  
    El snapshot se cifra empleando el estándar Age (X25519 + ChaCha20-Poly1305). Únicamente las claves públicas autorizadas de la Administración y el Custodio Técnico Seguro pueden descifrar el contenido. La computadora local jamás almacena claves privadas.
-4. **Almacenamiento Local y Réplica en Nube:**  
-   El archivo cifrado final (`.db.age`) se guarda en la unidad o carpeta local (`USB_BACKUP_PATH`) y se copia de forma sincronizada al directorio local de Google Drive (`DRIVE_SYNC_PATH`).
-5. **Auditoría y Registro de Fallas:**  
+4. **Almacenamiento USB Opcional:**  
+   La variable `USB_BACKUP_PATH` es completamente opcional. Si la unidad o ruta USB configurada existe en el equipo, se guarda una copia del archivo cifrado `.db.age`. Si la ruta no existe o el dispositivo externo está desconectado, el sistema registra un aviso informativo y continúa sin interrupciones hacia el envío por Telegram.
+5. **Envío Directo a Telegram vía `sendDocument`:**  
+   El archivo cifrado `.db.age` se envía directamente como documento al chat de Telegram del administrador mediante la API oficial de bots (`https://api.telegram.org/bot<TOKEN>/sendDocument`), garantizando que la administración reciba el respaldo cifrado en su teléfono o dispositivo seguro.
+6. **Auditoría y Registro de Fallas:**  
    Todo respaldo exitoso se asienta en `backups_log` y `audit_events`. Si ocurre cualquier anomalía, el evento se documenta de inmediato en la tabla `server_errors`.
 
 ---
 
-## 2. Configuración de Google Drive (Google Drive para Escritorio)
+## 2. Configuración del Bot de Telegram (R2 y R4)
 
-Para que los respaldos se sincronicen automáticamente con la nube:
-
-1. Instalar la aplicación oficial **Google Drive para escritorio** (Google Drive for Desktop) en la computadora local de producción.
-2. Iniciar sesión con la cuenta de Google institucional designada.
-3. Crear o seleccionar una carpeta en la unidad virtual de Google Drive, por ejemplo:
-   - `G:\Mi unidad\Respaldos-Tocineta` (si se usa asignación de letra de unidad), o
-   - `C:\Users\<Usuario>\Google Drive\Respaldos-Tocineta` (si se usa duplicación en disco).
-4. Configurar la ruta en el archivo `.env`:
-   ```ini
-   DRIVE_SYNC_PATH=C:\Users\Administrador\Google Drive\Respaldos-Tocineta
-   ```
-
----
-
-## 3. Configuración del Bot de Telegram (R2)
-
-El sistema de alertas de TOCINETA utiliza la API oficial de bots de Telegram para enviar dos tipos de notificaciones:
-- **Reporte Diario de Salud:** Resumen de operatividad matutino diario.
+El bot de Telegram cumple una función dual en TOCINETA:
+- **Recepción de Respaldos Cifrados (.db.age):** Entrega diaria del snapshot cifrado con Age en el chat privado del administrador.
+- **Reporte Diario de Salud:** Resumen de operatividad matutino.
 - **Alerta Inmediata:** Notificación urgente cuando el servidor no responde o cuando se registran fallas críticas en la base de datos (`server_errors`).
 
-### 3.1. Crear el Bot en @BotFather
+### 2.1. Crear el Bot en @BotFather
 
 1. Abrir la aplicación de Telegram en teléfono o computadora.
 2. En el buscador de Telegram, escribir `@BotFather` (verificar la marca azul de verificación oficial).
@@ -58,11 +45,11 @@ El sistema de alertas de TOCINETA utiliza la API oficial de bots de Telegram par
    ```
 7. Guardar este token de forma segura.
 
-### 3.2. Obtener el Chat ID
+### 2.2. Obtener el Chat ID
 
-El mensaje puede enviarse a un chat individual o a un grupo/canal donde esté el equipo directivo.
+El mensaje y los respaldos pueden enviarse al chat individual del administrador o a un grupo/canal donde esté el equipo directivo.
 
-#### Opción A: Chat Directo Individual
+#### Opción A: Chat Directo Individual (Recomendado para Administrador)
 1. En Telegram, buscar el bot por su username recién creado (ej. `@tocineta_alerts_bot`) y pulsar **Iniciar** o enviar el comando `/start`.
 2. Enviar cualquier mensaje de prueba en el chat (por ejemplo: `hola`).
 3. Abrir el navegador web o ejecutar en consola la siguiente petición (reemplazando con el token real):
@@ -96,91 +83,58 @@ El mensaje puede enviarse a un chat individual o a un grupo/canal donde esté el
 
 ---
 
-## 4. Configuración en el Archivo `.env`
+## 3. Configuración en el Archivo `.env`
 
-Agregar o verificar las siguientes variables en el archivo `.env` en la raíz del proyecto:
+Configurar las siguientes variables en el archivo `.env` en la raíz del proyecto:
 
 ```ini
 # ------------------------------------------------------------------------------
-# 4. RESPALDOS EN DISPOSITIVOS EXTERNOS (USB) Y LA NUBE (GOOGLE DRIVE)
+# 4. RESPALDOS EN DISPOSITIVOS EXTERNOS (USB) Y TELEGRAM
 # ------------------------------------------------------------------------------
+# Ruta de respaldo en unidad USB (opcional: si no existe, solo se envía a Telegram)
 USB_BACKUP_PATH=./data/backups/usb
-DRIVE_SYNC_PATH=C:\Users\Administrador\Google Drive\Respaldos-Tocineta
 
 # ------------------------------------------------------------------------------
-# 5. MONITOREO Y ALERTAS REMOTAS (TELEGRAM)
+# 5. MONITOREO, ALERTAS Y RESPALDOS POR TELEGRAM
 # ------------------------------------------------------------------------------
+# Token del bot de Telegram emitido por @BotFather (requerido para alertas y respaldos)
 TELEGRAM_BOT_TOKEN=1234567890:ABCdefGHIjklMNOpqrSTUvwxYZ123456789
+
+# Chat ID o identificador del administrador/canal para recibir alertas y archivos .db.age
 TELEGRAM_CHAT_ID=987654321
 ```
 
+> **Nota sobre Google Drive:** El sistema ya no requiere la aplicación de Google Drive ni la variable `DRIVE_SYNC_PATH`. El canal de entrega en la nube es 100% exclusivo y directo vía Telegram.
+
 ---
 
-## 5. Automatización en el Programador de Tareas de Windows (Task Scheduler)
+## 4. Automatización en el Programador de Tareas de Windows (Task Scheduler)
 
 Para garantizar la ejecución desatendida y continua en producción, se programan tres tareas automáticas:
 
 | Tarea | Script | Horario Sugerido | Descripción |
 | :--- | :--- | :--- | :--- |
 | **`Tocineta-Actualizador-Automatico`** | `scripts/actualizar.ps1` | **05:00 AM** (Diario) | Búsqueda de releases en GitHub, verificación SHA-256, migración y rollback automático (R3). |
-| **`Tocineta-Respaldo-Drive`** | `scripts/respaldo-drive.ps1` | **05:30 AM** (Diario) | Generación de snapshot en caliente, cifrado Age y réplica en USB y Google Drive (R4). |
+| **`Tocineta-Respaldo-Drive`** | `scripts/respaldo-drive.ps1` | **05:30 AM** (Diario) | Generación de snapshot en caliente, cifrado Age y envío directo a Telegram vía sendDocument (R4). |
 | **`Tocineta-Alertas-Telegram`** | `scripts/alertas-telegram.ps1` | **08:00 AM** (Diario) | Chequeo de salud del servidor y base de datos, reporte diario a Telegram (R2). |
-
-Para detalles exhaustivos del actualizador, consulte [docs/actualizador-automatico.md](actualizador-automatico.md).
-
-### 5.1. Método Automatizado (Recomendado)
-
-Ejecutar PowerShell como Administrador desde la raíz del sistema:
-
-```powershell
-powershell -ExecutionPolicy Bypass -File scripts\configurar-tareas-programadas.ps1 -Action Install
-```
-
-Opciones disponibles del configurador:
-- Consultar estado: `.\scripts\configurar-tareas-programadas.ps1 -Action Status`
-- Desinstalar tareas: `.\scripts\configurar-tareas-programadas.ps1 -Action Uninstall`
-- Cambiar horarios: `.\scripts\configurar-tareas-programadas.ps1 -BackupTime "04:30" -AlertTime "07:45"`
-
-### 5.2. Método Manual mediante `schtasks.exe`
-
-Si se requiere crear las tareas manualmente desde la consola de Windows (CMD o PowerShell con privilegios elevados):
-
-1. **Tarea de Respaldo a Drive (05:00 AM):**
-   ```cmd
-   schtasks.exe /create /tn "Tocineta-Respaldo-Drive" /tr "powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File \"C:\TOCINETA\scripts\respaldo-drive.ps1\"" /sc daily /st 05:00 /f
-   ```
-
-2. **Tarea de Alertas por Telegram (08:00 AM):**
-   ```cmd
-   schtasks.exe /create /tn "Tocineta-Alertas-Telegram" /tr "powershell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -File \"C:\TOCINETA\scripts\alertas-telegram.ps1\"" /sc daily /st 08:00 /f
-   ```
-
-### 5.3. Método Gráfico (`taskschd.msc`)
-
-1. Presionar `Win + R`, escribir `taskschd.msc` y pulsar Enter.
-2. En el panel lateral derecho, seleccionar **Crear tarea básica...**.
-3. Nombre: `Tocineta-Respaldo-Drive`.
-4. Desencadenador: **Diariamente** a las `05:00:00`.
-5. Acción: **Iniciar un programa**.
-   - Programa o script: `powershell.exe`
-   - Agregar argumentos: `-ExecutionPolicy Bypass -WindowStyle Hidden -File "C:\...\scripts\respaldo-drive.ps1"`
-   - Iniciar en: Ruta raíz del proyecto.
-6. Repetir el proceso para `Tocineta-Alertas-Telegram` a las `08:00:00` con `scripts\alertas-telegram.ps1`.
 
 ---
 
-## 6. Procedimiento de Verificación y Pruebas
+## 5. Procedimiento de Verificación y Pruebas de Respaldo
 
-### 6.1. Probar el Respaldo Cifrado
+### 5.1. Probar el Respaldo Cifrado a Telegram
 Ejecutar en PowerShell:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\respaldo-drive.ps1
 ```
 Verificar que:
-- Se cree el archivo `.db.age` en `./data/backups/usb/` y en `DRIVE_SYNC_PATH`.
-- Se imprima el hash SHA-256 y la confirmación en verde.
+- Si existe `USB_BACKUP_PATH`, se cree el archivo `.db.age` en la carpeta local.
+- Si no existe `USB_BACKUP_PATH`, se muestre el aviso `[AVISO] La ruta USB_BACKUP_PATH no existe...` y continúe.
+- Se envíe el archivo `.db.age` al chat de Telegram con la confirmación:
+  `[OK] Proceso de respaldo completado y entregado a Telegram en X.X s.`
+- El administrador reciba el archivo `.db.age` con su checksum SHA-256 y tamaño en Telegram.
 
-### 6.2. Probar las Alertas de Telegram (Simulación)
+### 5.2. Probar las Alertas de Telegram (Simulación)
 Ejecutar en PowerShell con la bandera `-DryRun`:
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts\alertas-telegram.ps1 -DryRun
@@ -191,10 +145,74 @@ Verificar que el mensaje generado cumpla el formato oficial:
 
 ---
 
+## 6. Script y Ruta de Diagnóstico Forense (R1)
+
+El sistema incluye una herramienta integral de diagnóstico forense para resolución de incidencias y soporte técnico.
+
+### 6.1. Contenido del Paquete de Diagnóstico (.zip)
+
+El archivo `.zip` generado contiene tres artefactos fundamentales:
+
+1. **`server-errors.json`:**  
+   Los últimos 50 registros de fallas de la tabla `server_errors` de SQLite, procesados por un filtro de sanitización estricto:
+   - Se redactan todos los PINs (`pin`, `adminPin`, `oldPin`, `newPin`, `pin_hash`, `pin_salt`).
+   - Se redactan contraseñas, secretos, tokens Bearer y encabezados de autorización.
+   - Se redactan datos personales (teléfonos, cédulas, números de tarjeta).
+2. **`logs/`:**  
+   Copia de todos los archivos de registro generados o modificados en las últimas 24 horas dentro de `apps/server/logs`. Si no existen logs en dicho período, se genera un archivo informativo `sin-logs-recientes.txt`.
+3. **`sistema-info.json`:**  
+   Metadatos del sistema leídos directamente de `package.json` y del entorno operativo (versión actual, plataforma, arquitectura, versión de Node.js, uso de memoria y fecha exacta de captura).
+
+### 6.2. Uso por Consola (PowerShell)
+
+Para generar el diagnóstico manualmente desde una terminal en el equipo:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\diagnostico.ps1
+```
+
+Opciones disponibles:
+- **Destino personalizado:**  
+  `powershell -ExecutionPolicy Bypass -File scripts\diagnostico.ps1 -OutputPath "C:\Ruta\diagnostico-personalizado.zip"`
+- **Base de datos alternativa:**  
+  `powershell -ExecutionPolicy Bypass -File scripts\diagnostico.ps1 -DbPath "data\tocineta.db"`
+- **Directorio de logs alternativo:**  
+  `powershell -ExecutionPolicy Bypass -File scripts\diagnostico.ps1 -LogsDir "apps\server\logs"`
+
+El script compilará los artefactos, los comprimirá con `Compress-Archive` en `./data/diagnostico/diagnostico-tocineta-<timestamp>.zip` y limpiará cualquier archivo temporal.
+
+### 6.3. Descarga Web desde el Backend (Solo Rol Administrador)
+
+TOCINETA expone un endpoint seguro y exclusivo para administradores autenticados que permite descargar el paquete `.zip` directamente desde el navegador web o la interfaz administrativa:
+
+- **Ruta principal:** `GET /api/support/diagnostico`
+- **Ruta alias:** `GET /api/admin/diagnostico`
+- **Control de acceso:** Exige sesión activa y rol `'admin'`. Cualquier intento con otros roles (`cajera`, `mesonero`, etc.) o sin sesión es rechazado de inmediato con `401 Unauthorized` o `403 Forbidden`.
+- **Encabezados de respuesta:**
+  - `Content-Type: application/zip`
+  - `Content-Disposition: attachment; filename="diagnostico-tocineta-<timestamp>.zip"`
+
+#### Ejemplo de Descarga vía Navegador Web / Frontend:
+El administrador, con su sesión activa en TOCINETA, puede iniciar la descarga usando el cliente autenticado:
+```typescript
+import { downloadWithAuth } from './lib/download-file.js';
+
+await downloadWithAuth('/api/support/diagnostico', 'diagnostico-tocineta.zip');
+```
+
+#### Ejemplo de Descarga vía Consola con curl:
+```bash
+curl -H "Authorization: Bearer <TOKEN_ADMIN>" \
+     -o diagnostico-tocineta.zip \
+     http://localhost:3000/api/support/diagnostico
+```
+
+---
+
 ## 7. Protocolo de Recuperación ante Desastres
 
-Para restaurar cualquier respaldo `.db.age` generado en Google Drive o dispositivo USB:
-1. Localizar el archivo `.db.age` correspondiente en Google Drive o USB.
+Para restaurar cualquier respaldo `.db.age` recibido por Telegram o recuperado de una unidad USB:
+1. Descargar el archivo `.db.age` desde el chat de Telegram o conectarlo desde la unidad USB.
 2. Ejecutar el script interactivo de restauración verificado:
    ```powershell
    powershell -ExecutionPolicy Bypass -File scripts\restore-backup.ps1 -BackupPath "C:\ruta\al\tocineta-backup.db.age"

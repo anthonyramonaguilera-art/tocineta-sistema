@@ -1,18 +1,21 @@
 <#
 .SYNOPSIS
-    Script automatizado de respaldo cifrado con Age hacia almacenamiento USB y Google Drive para TOCINETA.
+    Script automatizado de respaldo cifrado con Age hacia Telegram y almacenamiento USB para TOCINETA.
 .DESCRIPTION
     Ejecuta un snapshot seguro en caliente de la base de datos SQLite (WAL-safe),
     cifra el archivo utilizando Age con las claves públicas autorizadas (AGE_RECIPIENT_ADMIN y AGE_RECIPIENT_SECURE),
-    y copia el respaldo cifrado (.db.age) a la carpeta local configurable (USB_BACKUP_PATH) y a la carpeta
-    sincronizada con Google Drive (DRIVE_SYNC_PATH).
+    guarda una copia local si la ruta USB_BACKUP_PATH existe (opcional),
+    y envía el archivo cifrado (.db.age) directamente al chat de Telegram del administrador
+    usando la API de Telegram (sendDocument) con TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID.
     Si ocurre cualquier fallo durante el proceso, se registra automáticamente una entrada de error en la tabla server_errors.
 .PARAMETER DbPath
     Ruta a la base de datos SQLite principal (por defecto lee DB_PATH de .env o ./data/tocineta.db).
 .PARAMETER UsbBackupPath
-    Ruta de destino local o USB (por defecto lee USB_BACKUP_PATH de .env o ./data/backups/usb).
-.PARAMETER DriveSyncPath
-    Ruta local sincronizada con Google Drive (por defecto lee DRIVE_SYNC_PATH de .env).
+    Ruta de destino local o USB (opcional; por defecto lee USB_BACKUP_PATH de .env).
+.PARAMETER BotToken
+    Token del bot de Telegram (opcional; por defecto lee TELEGRAM_BOT_TOKEN de .env).
+.PARAMETER ChatId
+    Chat ID de destino en Telegram (opcional; por defecto lee TELEGRAM_CHAT_ID de .env).
 .PARAMETER EnvFile
     Ruta al archivo de variables de entorno (.env). Por defecto: .env en la raíz del proyecto.
 #>
@@ -26,7 +29,10 @@ param (
     [string]$UsbBackupPath,
 
     [Parameter(Mandatory = $false)]
-    [string]$DriveSyncPath,
+    [string]$BotToken,
+
+    [Parameter(Mandatory = $false)]
+    [string]$ChatId,
 
     [Parameter(Mandatory = $false)]
     [string]$EnvFile = ".env"
@@ -39,7 +45,7 @@ Set-Location $repoRoot
 
 Write-Host ""
 Write-Host "=================================================================" -ForegroundColor Cyan
-Write-Host "     SISTEMA TOCINETA - RESPALDO CIFRADO A GOOGLE DRIVE         " -ForegroundColor Yellow
+Write-Host "       SISTEMA TOCINETA - RESPALDO CIFRADO A TELEGRAM            " -ForegroundColor Yellow
 Write-Host "=================================================================" -ForegroundColor Cyan
 Write-Host "Iniciando proceso a las: $(Get-Date -Format 'yyyy-MM-dd HH:mm:ss')" -ForegroundColor Gray
 
@@ -78,14 +84,17 @@ if ($DbPath -and $DbPath.Trim() -ne "") {
 if ($UsbBackupPath -and $UsbBackupPath.Trim() -ne "") {
     $cliArgs += @("--usb", $UsbBackupPath)
 }
-if ($DriveSyncPath -and $DriveSyncPath.Trim() -ne "") {
-    $cliArgs += @("--drive", $DriveSyncPath)
+if ($BotToken -and $BotToken.Trim() -ne "") {
+    $cliArgs += @("--bot-token", $BotToken)
+}
+if ($ChatId -and $ChatId.Trim() -ne "") {
+    $cliArgs += @("--chat-id", $ChatId)
 }
 if ($resolvedEnv -and (Test-Path $resolvedEnv)) {
     $cliArgs += @("--env", $resolvedEnv)
 }
 
-# 4. Ejecutar motor con npx tsx / pnpm exec tsx
+# 4. Ejecutar motor con npx tsx
 $sw = [System.Diagnostics.Stopwatch]::StartNew()
 try {
     & npx tsx @cliArgs
@@ -96,7 +105,7 @@ try {
 
     if ($exitCode -eq 0) {
         Write-Host ""
-        Write-Host "[OK] Proceso de respaldo completado satisfactoriamente en $elapsed s." -ForegroundColor Green
+        Write-Host "[OK] Proceso de respaldo completado y entregado a Telegram en $elapsed s." -ForegroundColor Green
         exit 0
     } else {
         Write-Host ""

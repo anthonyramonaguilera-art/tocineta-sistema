@@ -1,4 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as childProcess from 'node:child_process';
 import { getDatabaseContext } from '../../db/connection.js';
 import { getSessionUser } from '../auth/session.js';
 import {
@@ -140,6 +143,99 @@ export const supportRoutes: FastifyPluginAsync = async (fastify) => {
       errors
     });
   });
+
+  // 7. Descargar Paquete de Diagnóstico Forense .zip (GET /api/support/diagnostico) - Exclusivo Admin (R1)
+  fastify.get('/api/support/diagnostico', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const session = getUserFromRequest(request);
+    if (!session?.user_id) {
+      return reply.status(401).send({
+        success: false,
+        error: 'No autorizado',
+        code: 'UNAUTHORIZED'
+      });
+    }
+
+    const user = dbCtx.rawDb.prepare('SELECT role FROM users WHERE id = ?').get(session.user_id) as { role: string } | undefined;
+    if (user?.role !== 'admin') {
+      return reply.status(403).send({
+        success: false,
+        error: 'Acceso restringido a administradores',
+        code: 'FORBIDDEN'
+      });
+    }
+
+    try {
+      const now = Date.now();
+      const zipFilename = `diagnostico-tocineta-${now}.zip`;
+      const tempDir = path.resolve(process.cwd(), './data/temp');
+      if (!fs.existsSync(tempDir)) {
+        fs.mkdirSync(tempDir, { recursive: true });
+      }
+      const zipPath = path.join(tempDir, zipFilename);
+      const scriptPath = path.resolve(process.cwd(), './scripts/diagnostico.ps1');
+
+      await new Promise<void>((resolve, reject) => {
+        childProcess.execFile(
+          'powershell.exe',
+          ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', scriptPath, '-OutputPath', zipPath],
+          (error, stdout, stderr) => {
+            if (error) {
+              return reject(new Error(`Fallo al generar diagnostico: ${error.message}. ${stderr || stdout}`));
+            }
+            resolve();
+          }
+        );
+      });
+
+      if (!fs.existsSync(zipPath)) {
+        throw new Error('El archivo de diagnostico .zip no fue generado');
+      }
+
+      const fileBuffer = fs.readFileSync(zipPath);
+
+      // Limpieza segura del archivo temporal tras entrega
+      setTimeout(() => {
+        try {
+          if (fs.existsSync(zipPath)) fs.unlinkSync(zipPath);
+        } catch {}
+      }, 5000);
+
+      return reply
+        .header('Content-Type', 'application/zip')
+        .header('Content-Disposition', `attachment; filename="${zipFilename}"`)
+        .header('Content-Length', fileBuffer.length)
+        .send(fileBuffer);
+    } catch (err: any) {
+      fastify.log.error(err, 'Error al generar paquete de diagnostico');
+      return reply.status(500).send({
+        success: false,
+        error: err.message || 'Error al generar paquete de diagnostico'
+      });
+    }
+  });
+
+  // Alias administrativo adicional (GET /api/admin/diagnostico)
+  fastify.get('/api/admin/diagnostico', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const session = getUserFromRequest(request);
+    if (!session?.user_id) {
+      return reply.status(401).send({
+        success: false,
+        error: 'No autorizado',
+        code: 'UNAUTHORIZED'
+      });
+    }
+
+    const user = dbCtx.rawDb.prepare('SELECT role FROM users WHERE id = ?').get(session.user_id) as { role: string } | undefined;
+    if (user?.role !== 'admin') {
+      return reply.status(403).send({
+        success: false,
+        error: 'Acceso restringido a administradores',
+        code: 'FORBIDDEN'
+      });
+    }
+
+    return reply.redirect('/api/support/diagnostico');
+  });
 };
-
-
