@@ -4,7 +4,7 @@ import path from 'node:path';
 import { getDatabaseContext } from '../db/connection.js';
 import { mapUserRow, mapSessionRow, type UserRole } from '../db/schema.js';
 import { hashPin, verifyPin, validatePinFormat, isTrivialPin } from '../modules/auth/pin.js';
-import { deleteAdminInitialFileIfExists } from '../modules/auth/seed-users.js';
+import { deleteAdminInitialFileIfExists, hashPassword } from '../modules/auth/seed-users.js';
 import { resetLockout } from '../modules/auth/lockout.js';
 import { assertAuthorizerAttemptAllowed, findAuthorizerByPin } from '../modules/auth/authorizer-guard.js';
 import { appendAuditEvent } from '../modules/audit/audit-service.js';
@@ -242,7 +242,7 @@ export const authActionsRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(401).send({ success: false, error: 'Token no proporcionado' });
     }
 
-    const body = request.body as { currentPin?: string; newPin?: string } | undefined;
+    const body = request.body as { currentPin?: string; newPin?: string; newPassword?: string; password?: string } | undefined;
     if (!body?.currentPin || !body?.newPin) {
       return reply.status(400).send({ success: false, error: 'Debe proporcionar currentPin y newPin' });
     }
@@ -281,29 +281,49 @@ export const authActionsRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    const { hash: newHash, salt: newSalt } = hashPin(body.newPin);
+    const newPin = body.newPin;
+    const { hash: newHash, salt: newSalt } = hashPin(newPin);
     const now = Date.now();
 
-    dbCtx.rawDb.prepare(`
-      UPDATE users 
-      SET pin_hash = ?, pin_salt = ?, pin_length = ?, must_change_pin = 0, updated_at_ms = ?
-      WHERE id = ?
-    `).run(newHash, newSalt, body.newPin.length, now, session.userId);
-
-    if (userRole === 'admin') {
-      const dbDir = (dbCtx.rawDb.name && dbCtx.rawDb.name !== '' && dbCtx.rawDb.name !== ':memory:')
-        ? path.dirname(path.resolve(dbCtx.rawDb.name))
-        : undefined;
-      deleteAdminInitialFileIfExists(dbDir);
+    const candidatePassword = body.newPassword?.trim() || body.password?.trim();
+    let pwHash: string | null = null;
+    let pwSalt: string | null = null;
+    if (candidatePassword) {
+      const hashedPw = hashPassword(candidatePassword);
+      pwHash = hashedPw.hash;
+      pwSalt = hashedPw.salt;
     }
 
-    appendAuditEvent(dbCtx.rawDb, {
-      actorUserId: session.userId,
-      action: 'USER_PIN_CHANGED',
-      entityType: 'user',
-      entityId: session.userId,
-      payload: {}
+    const updateTx = dbCtx.rawDb.transaction(() => {
+      if (pwHash && pwSalt) {
+        dbCtx.rawDb.prepare(`
+          UPDATE users 
+          SET pin_hash = ?, pin_salt = ?, pin_length = ?, password_hash = ?, password_salt = ?, must_change_pin = 0, updated_at_ms = ?
+          WHERE id = ?
+        `).run(newHash, newSalt, newPin.length, pwHash, pwSalt, now, session.userId);
+      } else {
+        dbCtx.rawDb.prepare(`
+          UPDATE users 
+          SET pin_hash = ?, pin_salt = ?, pin_length = ?, must_change_pin = 0, updated_at_ms = ?
+          WHERE id = ?
+        `).run(newHash, newSalt, newPin.length, now, session.userId);
+      }
+
+      appendAuditEvent(dbCtx.rawDb, {
+        actorUserId: session.userId,
+        action: 'USER_PIN_CHANGED',
+        entityType: 'user',
+        entityId: session.userId,
+        payload: { changedPassword: Boolean(pwHash) }
+      });
     });
+
+    updateTx();
+
+    const dbDir = (dbCtx.rawDb.name && dbCtx.rawDb.name !== '' && dbCtx.rawDb.name !== ':memory:')
+      ? path.dirname(path.resolve(dbCtx.rawDb.name))
+      : undefined;
+    deleteAdminInitialFileIfExists(dbDir);
 
     return reply.status(200).send({
       success: true,

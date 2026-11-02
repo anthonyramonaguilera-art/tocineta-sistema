@@ -2,7 +2,7 @@ import { env } from './config/env.js';
 import { initSqlite } from './db/connection.js';
 import { runMigrations } from './db/migrate.js';
 import { buildServer } from './server.js';
-import { seedInitialUsers, syncAndSanitizeCorporateUsers } from './modules/auth/seed-users.js';
+import { seedInitialUsers, ensureCorporateUsersNonDestructive } from './modules/auth/seed-users.js';
 import { seedCatalog } from './db/seed-catalog.js';
 import { seedProductPhotos } from './modules/menu/photo-seed.js';
 import { ensureOfficialLocations } from './modules/profitability/locations-service.js';
@@ -62,12 +62,12 @@ async function bootstrap() {
   ensureOfficialLocations(dbContext.rawDb);
 
   // 3. Saneamiento y sincronización de perfiles corporativos limpios (PRD v2.0)
-  syncAndSanitizeCorporateUsers(dbContext.rawDb);
   const userCountRow = dbContext.rawDb.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number };
   if (userCountRow.cnt === 0) {
     const seededCount = seedInitialUsers(dbContext.rawDb);
     console.log(`BOOTSTRAP: ${seededCount} usuarios iniciales creados`);
   } else {
+    ensureCorporateUsersNonDestructive(dbContext.rawDb);
     console.log(`👥 Perfiles corporativos sincronizados (ADMIN, CAJERA, MESERO, PLANCHA, DESPACHO)`);
   }
 

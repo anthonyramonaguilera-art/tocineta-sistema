@@ -364,6 +364,87 @@ export function seedInitialUsersDetailed(
   };
 }
 
+export function ensureCorporateUsersNonDestructive(rawDb: Database.Database): void {
+  // 1. Asegurar columna username en users
+  try {
+    const cols = rawDb.prepare("PRAGMA table_info('users')").all() as any[];
+    if (!cols.some(c => c.name.toLowerCase() === 'username')) {
+      rawDb.exec('ALTER TABLE users ADD COLUMN username TEXT');
+      rawDb.exec('CREATE INDEX IF NOT EXISTS idx_users_username ON users(username)');
+    }
+  } catch {
+    // Continuar si ya existe
+  }
+
+  // 2. Normalizar name/username de usuarios corporativos canónicos y alias legados
+  // SIN tocar pin_hash, pin_salt, pin_length, password_hash, password_salt,
+  // must_change_pin, failed_attempts, lockout_stage, locked_until_ms ni is_active.
+  try {
+    rawDb.exec(`
+      UPDATE users SET name = 'ADMIN', username = 'admin' WHERE LOWER(name) LIKE '%anthony%' OR LOWER(name) LIKE '%olinelcys%' OR id IN ('usr_admin', 'usr_admin_olinelcys', 'admin');
+      UPDATE users SET name = 'MESERO', username = 'mesero' WHERE LOWER(name) LIKE '%carlos%' OR LOWER(name) LIKE '%andrea%' OR id IN ('usr_mesero', 'usr_mesonero_carlos', 'usr_mesonero_andrea', 'mesero');
+      UPDATE users SET name = 'PLANCHA', username = 'plancha' WHERE LOWER(name) LIKE '%jose%' OR LOWER(name) LIKE '%josé%' OR id IN ('usr_plancha', 'usr_cocina_plancha', 'plancha');
+      UPDATE users SET name = 'DESPACHO', username = 'despacho' WHERE LOWER(name) LIKE '%miguel%' OR id IN ('usr_despacho', 'usr_cocina_perros', 'despacho');
+      UPDATE users SET name = 'CAJERA', username = 'cajera' WHERE id IN ('usr_cajera', 'usr_cajera_principal', 'cajera');
+    `);
+    rawDb.exec(`
+      UPDATE delivery_drivers SET name = 'REPARTIDOR 1' WHERE id = 'drv_carlos_mora' OR name LIKE '%Carlos%';
+      UPDATE delivery_drivers SET name = 'REPARTIDOR 2' WHERE id = 'drv_jose_ramirez' OR name LIKE '%José%' OR name LIKE '%Jose%';
+      UPDATE delivery_drivers SET name = 'REPARTIDOR 3' WHERE id = 'drv_miguel_perez' OR name LIKE '%Miguel%';
+      UPDATE customers SET name = 'Socio Director', address = 'TOCINETA' WHERE id = 'cust_partner_olinelcys' OR name LIKE '%Olinelcys%';
+      UPDATE customers SET name = 'Cliente Frecuente 1' WHERE id = 'cust_vip_carlos' OR name LIKE '%Carlos%';
+      UPDATE business_settings SET business_name = 'TOCINETA' WHERE id = 'default';
+    `);
+  } catch {
+    // Si alguna tabla no existe aún, ignorar
+  }
+
+  // 3. Insertar con INSERT OR IGNORE los usuarios canónicos que falten
+  const now = Date.now();
+  const canonicalUsers: SeedUserDefinition[] = [
+    { id: 'usr_admin', username: 'admin', name: 'ADMIN', role: 'admin', pin: '123456', password: 'admin123' },
+    { id: 'usr_cajera', username: 'cajera', name: 'CAJERA', role: 'cajera', pin: '1111', password: 'caja123' },
+    { id: 'usr_mesero', username: 'mesero', name: 'MESERO', role: 'mesonero', pin: '2222', password: 'mesero123' },
+    { id: 'usr_plancha', username: 'plancha', name: 'PLANCHA', role: 'cocinero', pin: '4444', password: 'plancha123' },
+    { id: 'usr_despacho', username: 'despacho', name: 'DESPACHO', role: 'despachador', pin: '5555', password: 'despacho123' }
+  ];
+
+  const insertStmt = rawDb.prepare(`
+    INSERT OR IGNORE INTO users (
+      id, name, username, role, pin_hash, pin_salt, pin_length,
+      password_hash, password_salt, must_change_pin, is_active,
+      failed_attempts, lockout_stage, locked_until_ms, created_at_ms, updated_at_ms
+    ) VALUES (
+      ?, ?, ?, ?, ?, ?, ?,
+      ?, ?, ?, 1,
+      0, 0, NULL, ?, ?
+    )
+  `);
+
+  const isProduction = process.env.NODE_ENV === 'production';
+
+  for (const u of canonicalUsers) {
+    const { hash: pinHash, salt: pinSalt } = hashPin(u.pin);
+    const { hash: pwHash, salt: pwSalt } = hashPassword(u.password || '123456');
+    const mustChangePin = u.role === 'admin' ? 1 : (isProduction ? 0 : 1);
+
+    insertStmt.run(
+      u.id,
+      u.name,
+      u.username,
+      u.role,
+      pinHash,
+      pinSalt,
+      u.pin.length,
+      pwHash,
+      pwSalt,
+      mustChangePin,
+      now,
+      now
+    );
+  }
+}
+
 export function seedInitialUsers(rawDb: Database.Database): number {
   return seedInitialUsersDetailed(rawDb).count;
 }
