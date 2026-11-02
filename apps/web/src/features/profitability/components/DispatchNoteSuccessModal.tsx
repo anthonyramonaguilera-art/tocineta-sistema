@@ -1,6 +1,7 @@
 import React from 'react';
 import { Modal, Button, Badge, Icon } from '../../../ui/index.js';
 import { apiFetch } from '../../../api/client';
+import { downloadWithAuth } from '../../../lib/download-file.js';
 
 export interface DispatchNoteInfo {
   id: string;
@@ -32,8 +33,12 @@ export const DispatchNoteSuccessModal: React.FC<DispatchNoteSuccessModalProps> =
 }) => {
   if (!isOpen || !note) return null;
 
-  const handleDownloadPdf = () => {
-    window.open(`/api/fase4/transfers/${note.id}/pdf`, '_blank');
+  const handleDownloadPdf = async () => {
+    try {
+      await downloadWithAuth(`/api/fase4/transfers/${note.id}/pdf`, `nota-despacho-${note.id}.pdf`);
+    } catch (err: any) {
+      alert(err.message || 'Error al descargar la nota de despacho en PDF');
+    }
   };
 
   const handlePrint58mm = async () => {

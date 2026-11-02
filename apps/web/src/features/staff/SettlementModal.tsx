@@ -6,6 +6,7 @@ import { Field } from '../../ui/Field.js';
 import { Icon } from '../../ui/Icon.js';
 import type { StaffUser, PayrollAdjustment, StaffConsumption } from './types.js';
 import { apiFetch } from '../../api/client';
+import { downloadWithAuth } from '../../lib/download-file.js';
 
 interface SettlementModalProps {
   isOpen: boolean;
@@ -150,9 +151,13 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
     }
   };
 
-  const downloadPdf = () => {
+  const downloadPdf = async () => {
     if (!settledResult) return;
-    window.open(`/api/staff/settlements/${settledResult.id}/pdf`, '_blank');
+    try {
+      await downloadWithAuth(`/api/staff/settlements/${settledResult.id}/pdf`, `liquidacion-${settledResult.id}.pdf`);
+    } catch (err: any) {
+      alert(err.message || 'Error al descargar liquidación en PDF');
+    }
   };
 
   return (

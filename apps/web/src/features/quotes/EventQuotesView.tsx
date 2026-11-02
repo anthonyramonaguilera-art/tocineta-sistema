@@ -5,6 +5,7 @@ import { QuoteModal } from './QuoteModal.js';
 import { ReserveShoppingModal } from './ReserveShoppingModal.js';
 import type { EventQuotation } from './types.js';
 import { apiFetch } from '../../api/client';
+import { downloadWithAuth } from '../../lib/download-file.js';
 
 export const EventQuotesView: React.FC = () => {
   const { data, isLoading, refetch } = useQuotesList();
@@ -48,8 +49,12 @@ export const EventQuotesView: React.FC = () => {
     }
   };
 
-  const handleDownloadPdf = (quoteId: string) => {
-    window.open(`/api/quotes/${quoteId}/pdf`, '_blank');
+  const handleDownloadPdf = async (quoteId: string) => {
+    try {
+      await downloadWithAuth(`/api/quotes/${quoteId}/pdf`, `cotizacion-${quoteId}.pdf`);
+    } catch (err: any) {
+      alert(err.message || 'Error al descargar la cotización en PDF');
+    }
   };
 
   const handleWhatsApp = async (quoteId: string) => {

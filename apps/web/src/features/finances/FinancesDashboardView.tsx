@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
 import { Button, Icon, Select } from '../../ui/index.js';
 import { apiFetch } from '../../api/client.js';
+import { downloadWithAuth } from '../../lib/download-file.js';
 import { useFinancesQueries } from './useFinancesQueries.js';
 import { OwnerNumbersConfigModal } from './OwnerNumbersConfigModal.js';
 import { ExpenseModal } from './ExpenseModal.js';
@@ -83,8 +84,16 @@ export const FinancesDashboardView: React.FC = () => {
     } catch {}
   };
 
-  const handleExport = (type: 'excel' | 'pdf') => {
-    window.open(`/api/finances/export/${type}?locationId=${selectedLocation}&startDateMs=${startDateMs}`, '_blank');
+  const handleExport = async (type: 'excel' | 'pdf') => {
+    try {
+      const ext = type === 'excel' ? 'xlsx' : 'pdf';
+      await downloadWithAuth(
+        `/api/finances/export/${type}?locationId=${selectedLocation}&startDateMs=${startDateMs}`,
+        `finanzas-${type}.${ext}`
+      );
+    } catch (err: any) {
+      alert(err.message || 'Error al exportar finanzas');
+    }
   };
 
   return (
