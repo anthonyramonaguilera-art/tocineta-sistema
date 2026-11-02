@@ -72,9 +72,13 @@ async function bootstrap() {
   }
 
   // 4. Semilla de catálogo oficial (27 productos, combos, barra libre, sabores Pepsi, cupones)
-  seedCatalog(dbContext.rawDb);
-  seedProductPhotos(dbContext.rawDb);
-  console.log(`🍔 Catálogo oficial y fotografías sembrados con éxito.`);
+  if (process.env.SKIP_SEED_CATALOG !== 'true') {
+    seedCatalog(dbContext.rawDb);
+    seedProductPhotos(dbContext.rawDb);
+    console.log(`🍔 Catálogo oficial y fotografías sembrados con éxito.`);
+  } else {
+    console.log(`ℹ️ SKIP_SEED_CATALOG=true: Omitiendo siembra automática del catálogo oficial.`);
+  }
 
   // 3. Inicialización del servidor Fastify (Proceso Único)
   const server = await buildServer();

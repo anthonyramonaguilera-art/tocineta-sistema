@@ -24,7 +24,8 @@
     "probe:server": "tsx tools/g0-probe/probe.ts --port 3000",
     "guard:visual": "node scripts/guard-visual.mjs",
     "r2:e2e": "playwright test -c playwright.r2.config.ts",
-    "r2:status": "node scripts/r2-status.mjs"
+    "r2:status": "node scripts/r2-status.mjs",
+    "export:virgenes": "node scripts/generar-exportes-virgenes.mjs"
   },
   "packageManager": "pnpm@12.14.0",
   "devDependencies": {

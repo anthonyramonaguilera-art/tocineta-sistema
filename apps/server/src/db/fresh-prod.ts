@@ -172,6 +172,106 @@ export async function createFreshProductionDatabase(customDbPath?: string): Prom
       }
     };
   } finally {
+    try {
+      rawDb.pragma('wal_checkpoint(TRUNCATE)');
+    } catch {}
+    rawDb.close();
+  }
+}
+
+export async function createFreshTotalDatabase(customDbPath?: string): Promise<{
+  dbPath: string;
+  counts: {
+    products: number;
+    sedes: number;
+    users: number;
+    printers: number;
+    orders: number;
+    operatingExpenses: number;
+    socios: number;
+    proveedores: number;
+    customers: number;
+  };
+}> {
+  const dbPath = customDbPath || './data/tocineta_virgen_total.db';
+  const resolvedDbPath = path.resolve(process.cwd(), dbPath);
+  console.log(`📁 Creando Base de Datos Virgen Total en: ${resolvedDbPath}`);
+
+  if (fs.existsSync(resolvedDbPath)) {
+    fs.unlinkSync(resolvedDbPath);
+  }
+  const walPath = resolvedDbPath + '-wal';
+  const shmPath = resolvedDbPath + '-shm';
+  if (fs.existsSync(walPath)) fs.unlinkSync(walPath);
+  if (fs.existsSync(shmPath)) fs.unlinkSync(shmPath);
+
+  const dbCtx = initSqlite(resolvedDbPath);
+  const rawDb = dbCtx.rawDb;
+
+  try {
+    console.log(`⚙️ Ejecutando migraciones forward-only...`);
+    await runMigrations(rawDb, { dbPath: resolvedDbPath });
+
+    console.log(`📍 Asegurando sedes oficiales...`);
+    ensureOfficialLocations(rawDb);
+
+    console.log(`👥 Sembrando usuarios iniciales corporativos...`);
+    seedInitialUsersDetailed(rawDb);
+
+    console.log(`⚙️ Asegurando ajustes del negocio (inventory_operation_mode='free', print_mode='one')...`);
+    ensureBusinessSettingsDefensive(rawDb);
+    rawDb.prepare(`
+      UPDATE business_settings 
+      SET inventory_operation_mode = 'free', print_mode = 'one', updated_at_ms = ? 
+      WHERE id = 'default'
+    `).run(Date.now());
+
+    // Verificación
+    const ordersCount = (rawDb.prepare('SELECT COUNT(*) as c FROM orders').get() as any).c;
+    const operatingExpensesCount = (rawDb.prepare('SELECT COUNT(*) as c FROM operating_expenses').get() as any).c;
+    const sociosCount = (rawDb.prepare('SELECT COUNT(*) as c FROM business_partners').get() as any).c;
+    const suppliersCount = (rawDb.prepare('SELECT COUNT(*) as c FROM suppliers').get() as any).c;
+    const customersCount = (rawDb.prepare('SELECT COUNT(*) as c FROM customers').get() as any).c;
+    const locationsCount = (rawDb.prepare('SELECT COUNT(*) as c FROM locations').get() as any).c;
+    const usersCount = (rawDb.prepare('SELECT COUNT(*) as c FROM users').get() as any).c;
+    const printersCount = (rawDb.prepare('SELECT COUNT(*) as c FROM printers').get() as any).c;
+    const productsCount = (rawDb.prepare('SELECT COUNT(*) as c FROM products').get() as any).c;
+
+    if (ordersCount !== 0) throw new Error(`VERIFICATION_FAIL: orders count is ${ordersCount}, expected 0`);
+    if (productsCount !== 0) throw new Error(`VERIFICATION_FAIL: products count is ${productsCount}, expected 0`);
+    if (operatingExpensesCount !== 0) throw new Error(`VERIFICATION_FAIL: operating_expenses count is ${operatingExpensesCount}, expected 0`);
+    if (sociosCount !== 0) throw new Error(`VERIFICATION_FAIL: business_partners (socios) count is ${sociosCount}, expected 0`);
+    if (suppliersCount !== 0) throw new Error(`VERIFICATION_FAIL: suppliers count is ${suppliersCount}, expected 0`);
+    if (customersCount !== 0) throw new Error(`VERIFICATION_FAIL: customers count is ${customersCount}, expected 0`);
+
+    const fkErrors = rawDb.prepare('PRAGMA foreign_key_check').all();
+    if (fkErrors.length > 0) throw new Error(`FOREIGN_KEY_CHECK_FAIL: ${JSON.stringify(fkErrors)}`);
+
+    const integrityRes = rawDb.prepare('PRAGMA integrity_check').all() as Array<{ integrity_check: string }>;
+    if (integrityRes.length !== 1 || integrityRes[0].integrity_check !== 'ok') {
+      throw new Error(`INTEGRITY_CHECK_FAIL: ${JSON.stringify(integrityRes)}`);
+    }
+
+    try {
+      rawDb.pragma('wal_checkpoint(TRUNCATE)');
+    } catch {}
+    console.log(`\n✅ ¡Base de datos Virgen Total creada con éxito (0 órdenes, 0 productos, 0 gastos)!\n`);
+
+    return {
+      dbPath: resolvedDbPath,
+      counts: {
+        products: productsCount,
+        sedes: locationsCount,
+        users: usersCount,
+        printers: printersCount,
+        orders: ordersCount,
+        operatingExpenses: operatingExpensesCount,
+        socios: sociosCount,
+        proveedores: suppliersCount,
+        customers: customersCount
+      }
+    };
+  } finally {
     rawDb.close();
   }
 }

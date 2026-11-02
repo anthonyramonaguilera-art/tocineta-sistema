@@ -64,7 +64,17 @@ export function seedCatalog(rawDb: Database.Database, opts?: { force?: boolean }
       { id: 'ing_base_pan_perro', name: 'Pan de perro', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 25 },
       { id: 'ing_base_pan_brioche', name: 'Pan brioche', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 35 },
       { id: 'ing_base_salchicha', name: 'Salchicha', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 40 },
-      { id: 'ing_base_carne_smash', name: 'Carne Smash', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 70 },
+      { id: 'ing_base_salchicha_pollo', name: 'Salchicha Nacional de Pollo', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 40 },
+      { id: 'ing_base_salchicha_polaca', name: 'Salchicha Polaca', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 55 },
+      { id: 'ing_base_salsas_tradicionales', name: 'Salsas Tradicionales', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 10 },
+      { id: 'ing_base_ensalada_americana', name: 'Ensalada Americana', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 20 },
+      { id: 'ing_base_ensalada_cesar', name: 'Ensalada Cesar', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 25 },
+      { id: 'ing_base_mermelada_tocineta', name: 'Mermelada de Tocineta', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 35 },
+      { id: 'ing_base_mostaza_honey', name: 'Mostaza Honey', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 15 },
+      { id: 'ing_base_chutney_tomate', name: 'Chutney de Tomate', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 20 },
+      { id: 'ing_base_mostaza_americana', name: 'Mostaza Americana', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 10 },
+      { id: 'ing_base_ketchup', name: 'Ketchup', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 10 },
+      { id: 'ing_base_carne_smash', name: 'Carne Prime Smash', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 70 },
       { id: 'ing_base_pechuga_crispy', name: 'Pechuga de Pollo Crispy', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 80 },
       { id: 'ing_base_tocineta', name: 'Tocineta Crispy', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 30 },
       { id: 'ing_base_queso_cheddar', name: 'Queso Amarillo Cheddar', is_barra_libre: 0, extra_price_usd_cents: 0, internal_cost_usd_cents: 25 },
@@ -130,12 +140,12 @@ export function seedCatalog(rawDb: Database.Database, opts?: { force?: boolean }
       { id: 'prod_combo_clasico', category_id: 'cat_combos', name: 'Combo Clásico', description: '2 Perros Clásicos a elegir + 1 Malta Lata 250 ml', price: 790, cost: 260, station: 'hot_dogs', is_combo: 1, allows_flavors: 0, is_active: 1 },
       { id: 'prod_combo_para_ti', category_id: 'cat_combos', name: 'Combo Para Ti', description: '2 Hamburguesas de $6.90 a elegir + 1 Refresco 1 Lt', price: 1390, cost: 480, station: 'hamburguesas', is_combo: 1, allows_flavors: 0, is_active: 1 },
 
-      { id: 'prod_papas_fritas_extra_150', category_id: 'cat_extras', name: 'Papas Fritas Extra 150g', description: 'Porción extra de papas fritas 150g', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_papas_fritas_extra_150', category_id: 'cat_extras', name: 'Papas Fritas Extra 160 gr', description: 'Porción extra de papas fritas 160 gr', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_carne_extra', category_id: 'cat_extras', name: 'Carne Extra', description: 'Porción extra de carne smash', price: 100, cost: 50, station: 'hamburguesas', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_tocineta_extra', category_id: 'cat_extras', name: 'Tocineta Extra', description: 'Porción extra de tocineta crocante', price: 100, cost: 30, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_pepinillo_extra', category_id: 'cat_extras', name: 'Pepinillo Extra', description: 'Porción extra de pepinillos', price: 100, cost: 20, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
       { id: 'prod_jalapenos_extra', category_id: 'cat_extras', name: 'Jalapeños Extra', description: 'Porción extra de jalapeños encurtidos', price: 100, cost: 20, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
-      { id: 'prod_papas_fritas_racion_250', category_id: 'cat_extras', name: 'Papas Fritas Ración 250g', description: 'Ración de papas fritas 250g para compartir', price: 350, cost: 90, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
+      { id: 'prod_papas_fritas_racion_250', category_id: 'cat_extras', name: 'Papas Fritas (Ración 200 gr)', description: 'Ración 200 gr de Papa Tradicional', price: 350, cost: 90, station: 'hot_dogs', is_combo: 0, allows_flavors: 0, is_active: 1 },
 
       { id: 'prod_refresco_1lt', category_id: 'cat_bebidas', name: 'Refresco 1 Lt', description: 'Refresco 1 litro sabores Pepsi a elegir', price: 180, cost: 90, station: 'caja_bebidas', is_combo: 0, allows_flavors: 1, is_active: 1 },
       { id: 'prod_malta_lata_250', category_id: 'cat_bebidas', name: 'Malta Lata 250 ml', description: 'Malta Polar en lata 250 ml fría', price: 150, cost: 65, station: 'caja_bebidas', is_combo: 0, allows_flavors: 0, is_active: 1 },
@@ -183,30 +193,78 @@ export function seedCatalog(rawDb: Database.Database, opts?: { force?: boolean }
       insertProdIng.run(piId, pId, ingId, order);
     };
 
-    // A. 7 Hot Dogs
-    const dogList = [
-      'prod_street_dog', 'prod_tocineta_dog_parmesano', 'prod_doritos_dog_snacks',
-      'prod_jalapenos_dog', 'prod_brazil_dog', 'prod_chicago_dog', 'prod_seattle_dog'
-    ];
-    for (const dId of dogList) {
-      helperAddIng(`pi_${dId}_pan`, dId, 'ing_base_pan_perro', 1);
-      helperAddIng(`pi_${dId}_salchicha`, dId, 'ing_base_salchicha', 2);
-      helperAddIng(`pi_${dId}_hilo`, dId, 'ing_base_papas_hilo', 3);
-    }
+    // A. 7 Hot Dogs (Fieles al afiche oficial)
+    // 1. Street Dog: Pan, Salchicha Pollo, Salsas Tradicionales, Papitas Hilo, Ensalada Americana, Cheddar Rallado, Parmesano
+    helperAddIng('pi_street_pan', 'prod_street_dog', 'ing_base_pan_perro', 1);
+    helperAddIng('pi_street_salchicha', 'prod_street_dog', 'ing_base_salchicha_pollo', 2);
+    helperAddIng('pi_street_salsas', 'prod_street_dog', 'ing_base_salsas_tradicionales', 3);
+    helperAddIng('pi_street_hilo', 'prod_street_dog', 'ing_base_papas_hilo', 4);
+    helperAddIng('pi_street_ensalada', 'prod_street_dog', 'ing_base_ensalada_americana', 5);
+    helperAddIng('pi_street_cheddar', 'prod_street_dog', 'ing_base_queso_cheddar', 6);
+    helperAddIng('pi_street_parmesano', 'prod_street_dog', 'ing_base_queso_parmesano', 7);
 
-    helperAddIng('pi_street_ceb', 'prod_street_dog', 'ing_bl_cebolla', 4);
-    helperAddIng('pi_tocineta_parm', 'prod_tocineta_dog_parmesano', 'ing_base_queso_parmesano', 4);
-    helperAddIng('pi_tocineta_toc', 'prod_tocineta_dog_parmesano', 'ing_base_tocineta', 5);
-    helperAddIng('pi_doritos_snk', 'prod_doritos_dog_snacks', 'ing_base_doritos', 4);
-    helperAddIng('pi_doritos_cheddar', 'prod_doritos_dog_snacks', 'ing_base_queso_cheddar', 5);
-    helperAddIng('pi_jalapenos_jal', 'prod_jalapenos_dog', 'ing_base_jalapenos', 4);
-    helperAddIng('pi_jalapenos_cheddar', 'prod_jalapenos_dog', 'ing_base_queso_cheddar', 5);
-    helperAddIng('pi_brazil_maiz', 'prod_brazil_dog', 'ing_bl_maiz', 4);
-    helperAddIng('pi_brazil_ajo', 'prod_brazil_dog', 'ing_base_salsa_ajo', 5);
-    helperAddIng('pi_chicago_tom', 'prod_chicago_dog', 'ing_bl_tomate', 4);
-    helperAddIng('pi_chicago_pep', 'prod_chicago_dog', 'ing_base_pepinillo', 5);
-    helperAddIng('pi_seattle_moz', 'prod_seattle_dog', 'ing_base_queso_mozzarella', 4);
-    helperAddIng('pi_seattle_cebcar', 'prod_seattle_dog', 'ing_bl_cebolla_caramelizada', 5);
+    // 2. Tocineta Dog Parmesano: Pan, Salchicha Pollo, Salsas Tradicionales, Papitas Hilo, Cheddar Fundido, Mermelada Tocineta, Parmesano, Maíz
+    helperAddIng('pi_toc_pan', 'prod_tocineta_dog_parmesano', 'ing_base_pan_perro', 1);
+    helperAddIng('pi_toc_salchicha', 'prod_tocineta_dog_parmesano', 'ing_base_salchicha_pollo', 2);
+    helperAddIng('pi_toc_salsas', 'prod_tocineta_dog_parmesano', 'ing_base_salsas_tradicionales', 3);
+    helperAddIng('pi_toc_hilo', 'prod_tocineta_dog_parmesano', 'ing_base_papas_hilo', 4);
+    helperAddIng('pi_toc_cheddar', 'prod_tocineta_dog_parmesano', 'ing_base_queso_cheddar', 5);
+    helperAddIng('pi_toc_mermelada', 'prod_tocineta_dog_parmesano', 'ing_base_mermelada_tocineta', 6);
+    helperAddIng('pi_toc_parmesano', 'prod_tocineta_dog_parmesano', 'ing_base_queso_parmesano', 7);
+    helperAddIng('pi_toc_maiz', 'prod_tocineta_dog_parmesano', 'ing_bl_maiz', 8);
+
+    // 3. Doritos Dog Snacks: Pan, Salchicha Pollo, Salsas Tradicionales, Papitas Hilo, Full Queso Fundido, Mermelada Tocineta, Doritos
+    helperAddIng('pi_dor_pan', 'prod_doritos_dog_snacks', 'ing_base_pan_perro', 1);
+    helperAddIng('pi_dor_salchicha', 'prod_doritos_dog_snacks', 'ing_base_salchicha_pollo', 2);
+    helperAddIng('pi_dor_salsas', 'prod_doritos_dog_snacks', 'ing_base_salsas_tradicionales', 3);
+    helperAddIng('pi_dor_hilo', 'prod_doritos_dog_snacks', 'ing_base_papas_hilo', 4);
+    helperAddIng('pi_dor_cheddar', 'prod_doritos_dog_snacks', 'ing_base_queso_cheddar', 5);
+    helperAddIng('pi_dor_mermelada', 'prod_doritos_dog_snacks', 'ing_base_mermelada_tocineta', 6);
+    helperAddIng('pi_dor_doritos', 'prod_doritos_dog_snacks', 'ing_base_doritos', 7);
+
+    // 4. Jalapeños Dog: Pan, Salchicha Pollo, Salsas Tradicionales, Papitas Hilo, Tocineta Crocante, Cheddar Fundido, Jalapeños, Mostaza Honey, BBQ
+    helperAddIng('pi_jal_pan', 'prod_jalapenos_dog', 'ing_base_pan_perro', 1);
+    helperAddIng('pi_jal_salchicha', 'prod_jalapenos_dog', 'ing_base_salchicha_pollo', 2);
+    helperAddIng('pi_jal_salsas', 'prod_jalapenos_dog', 'ing_base_salsas_tradicionales', 3);
+    helperAddIng('pi_jal_hilo', 'prod_jalapenos_dog', 'ing_base_papas_hilo', 4);
+    helperAddIng('pi_jal_tocineta', 'prod_jalapenos_dog', 'ing_base_tocineta', 5);
+    helperAddIng('pi_jal_cheddar', 'prod_jalapenos_dog', 'ing_base_queso_cheddar', 6);
+    helperAddIng('pi_jal_jalapenos', 'prod_jalapenos_dog', 'ing_base_jalapenos', 7);
+    helperAddIng('pi_jal_honey', 'prod_jalapenos_dog', 'ing_base_mostaza_honey', 8);
+    helperAddIng('pi_jal_bbq', 'prod_jalapenos_dog', 'ing_base_bbq_americana', 9);
+
+    // 5. Brazil Dog: Pan, Salchicha Pollo, Salsas Tradicionales, Papitas Hilo, Smoked Mayo, Salsa de Ajo, Calabresa, Chorizo Ahumado
+    helperAddIng('pi_bra_pan', 'prod_brazil_dog', 'ing_base_pan_perro', 1);
+    helperAddIng('pi_bra_salchicha', 'prod_brazil_dog', 'ing_base_salchicha_pollo', 2);
+    helperAddIng('pi_bra_salsas', 'prod_brazil_dog', 'ing_base_salsas_tradicionales', 3);
+    helperAddIng('pi_bra_hilo', 'prod_brazil_dog', 'ing_base_papas_hilo', 4);
+    helperAddIng('pi_bra_smoked_mayo', 'prod_brazil_dog', 'ing_base_smoked_mayo', 5);
+    helperAddIng('pi_bra_salsa_ajo', 'prod_brazil_dog', 'ing_base_salsa_ajo', 6);
+    helperAddIng('pi_bra_calabresa', 'prod_brazil_dog', 'ing_base_calabresa', 7);
+    helperAddIng('pi_bra_chorizo', 'prod_brazil_dog', 'ing_base_chorizo_ahumado', 8);
+
+    // 6. Chicago Dog: Pan, Salchicha Polaca, Salsas Tradicionales, Papitas Hilo, Cheddar Fundido, Tocineta Crocante, Relish, Mostaza Americana, Ketchup
+    helperAddIng('pi_chi_pan', 'prod_chicago_dog', 'ing_base_pan_perro', 1);
+    helperAddIng('pi_chi_salchicha', 'prod_chicago_dog', 'ing_base_salchicha_polaca', 2);
+    helperAddIng('pi_chi_salsas', 'prod_chicago_dog', 'ing_base_salsas_tradicionales', 3);
+    helperAddIng('pi_chi_hilo', 'prod_chicago_dog', 'ing_base_papas_hilo', 4);
+    helperAddIng('pi_chi_cheddar', 'prod_chicago_dog', 'ing_base_queso_cheddar', 5);
+    helperAddIng('pi_chi_tocineta', 'prod_chicago_dog', 'ing_base_tocineta', 6);
+    helperAddIng('pi_chi_relish', 'prod_chicago_dog', 'ing_bl_relish', 7);
+    helperAddIng('pi_chi_mostaza', 'prod_chicago_dog', 'ing_base_mostaza_americana', 8);
+    helperAddIng('pi_chi_ketchup', 'prod_chicago_dog', 'ing_base_ketchup', 9);
+
+    // 7. Seattle Dog: Pan, Salchicha Polaca, Salsas Tradicionales, Papitas Hilo, Queso Crema, Mozzarella Fundido, Tocineta Crocante, Chutney Tomate, Mostaza Americana, Ketchup
+    helperAddIng('pi_sea_pan', 'prod_seattle_dog', 'ing_base_pan_perro', 1);
+    helperAddIng('pi_sea_salchicha', 'prod_seattle_dog', 'ing_base_salchicha_polaca', 2);
+    helperAddIng('pi_sea_salsas', 'prod_seattle_dog', 'ing_base_salsas_tradicionales', 3);
+    helperAddIng('pi_sea_hilo', 'prod_seattle_dog', 'ing_base_papas_hilo', 4);
+    helperAddIng('pi_sea_crema', 'prod_seattle_dog', 'ing_base_queso_crema', 5);
+    helperAddIng('pi_sea_mozzarella', 'prod_seattle_dog', 'ing_base_queso_mozzarella', 6);
+    helperAddIng('pi_sea_tocineta', 'prod_seattle_dog', 'ing_base_tocineta', 7);
+    helperAddIng('pi_sea_chutney', 'prod_seattle_dog', 'ing_base_chutney_tomate', 8);
+    helperAddIng('pi_sea_mostaza', 'prod_seattle_dog', 'ing_base_mostaza_americana', 9);
+    helperAddIng('pi_sea_ketchup', 'prod_seattle_dog', 'ing_base_ketchup', 10);
 
     // B. 8 Hamburguesas
     helperAddIng('pi_amer_pan', 'prod_americana_deluxe', 'ing_base_pan_brioche', 1);
@@ -238,11 +296,10 @@ export function seedCatalog(rawDb: Database.Database, opts?: { force?: boolean }
     helperAddIng('pi_cesar_pan', 'prod_pechuga_cesar', 'ing_base_pan_brioche', 1);
     helperAddIng('pi_cesar_pechuga_1', 'prod_pechuga_cesar', 'ing_base_pechuga_crispy', 2);
     helperAddIng('pi_cesar_pechuga_2', 'prod_pechuga_cesar', 'ing_base_pechuga_crispy', 3);
-    helperAddIng('pi_cesar_lechuga_romana', 'prod_pechuga_cesar', 'ing_base_lechuga_romana', 4);
-    helperAddIng('pi_cesar_parmesano', 'prod_pechuga_cesar', 'ing_base_queso_parmesano', 5);
-    helperAddIng('pi_cesar_queso_amer', 'prod_pechuga_cesar', 'ing_base_queso_americano', 6);
-    helperAddIng('pi_cesar_chickfila', 'prod_pechuga_cesar', 'ing_base_salsa_chickfila', 7);
-    helperAddIng('pi_cesar_bbq', 'prod_pechuga_cesar', 'ing_base_bbq_americana', 8);
+    helperAddIng('pi_cesar_ensalada', 'prod_pechuga_cesar', 'ing_base_ensalada_cesar', 4);
+    helperAddIng('pi_cesar_queso_amer', 'prod_pechuga_cesar', 'ing_base_queso_americano', 5);
+    helperAddIng('pi_cesar_chickfila', 'prod_pechuga_cesar', 'ing_base_salsa_chickfila', 6);
+    helperAddIng('pi_cesar_bbq', 'prod_pechuga_cesar', 'ing_base_bbq_americana', 7);
 
     helperAddIng('pi_grill_pan', 'prod_grill', 'ing_base_pan_brioche', 1);
     helperAddIng('pi_grill_carne', 'prod_grill', 'ing_base_carne_smash', 2);
