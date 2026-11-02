@@ -1,33 +1,75 @@
-# SISTEMA OPERATIVO LOCAL TOCINETA SONRÍE
-## Gate G0: Herramientas de Diagnóstico Físico de Impresoras Térmicas y Red
+# TOCINETA — Sistema Operativo y ERP Gastronómico Local
 
-Herramienta de diagnóstico CLI y servidor HTTP ligero para la validación en vivo de las impresoras térmicas de 58mm (**DP58U-03** y **MP583**), red LAN y conectividad de dispositivos Android sin acceso a internet en el Food Truck de **Tocineta Sonríe** (Varons Media).
+Sistema operativo comercial y ERP de alta disponibilidad diseñado para restaurantes y entornos gastronómicos. Opera en red local con soporte de tolerancia a fallos, base de datos SQLite integrada, impresión térmica ESC/POS, control de caja multimoneda y sincronización con comanderos táctiles y KDS.
 
----
+## 1. Estructura del Monorepo
 
-### Entregables del Gate G0
-* [tools/g0-probe/raw-spooler.ps1](file:///c:/Users/Shell/Documents/Varonsmedia/clientes/tocinetasonrie/SISTEMA/tools/g0-probe/raw-spooler.ps1): Script PowerShell con `Add-Type` a `winspool.Drv` para envío binario ESC/POS en modo `"RAW"` sin diálogos ni `Out-Printer`.
-* [tools/g0-probe/probe.ts](file:///c:/Users/Shell/Documents/Varonsmedia/clientes/tocinetasonrie/SISTEMA/tools/g0-probe/probe.ts): Diagnóstico completo en Node.js 24 LTS + TypeScript (USB Spooler RAW, TCP 9100, regla de 42 columnas, matriz de codepages en español, logo raster `GS v 0` a 384 dots y servidor HTTP con `/health`).
-* [docs/g0-checklist.md](file:///c:/Users/Shell/Documents/Varonsmedia/clientes/tocinetasonrie/SISTEMA/docs/g0-checklist.md): Hoja de ruta y protocolo paso a paso para la visita técnica al Food Truck.
+- `apps/server`: Servidor HTTP/WebSocket con Fastify, base de datos SQLite (Drizzle ORM), motor de impresión y control de acceso.
+- `apps/web`: Interfaz de usuario táctil con React, Vite, Tailwind CSS y TanStack Query.
+- `packages/shared`: Esquemas de validación Zod, contratos de dominio, utilidades monetarias y definición de Ticket IR.
+- `tools/g0-probe`: Herramientas de diagnóstico de red y prueba directa de impresoras térmicas.
+- `scripts`: Scripts de empaquetado, instalación y administración de servicios en Windows.
+- `docs`: Protocolos de restauración, arquitectura y manuales operativos.
 
----
+## 2. Requisitos del Sistema
 
-### Comandos de Aceptación
+- Node.js LTS (v20 o superior).
+- pnpm (v10 o superior, monorepo gestionado con pnpm workspaces).
+- Sistema Operativo: Windows 10/11 (para spooler nativo de impresión) o Linux.
 
-```powershell
-# 1. Listar impresoras instaladas en Windows
-pnpm tsx tools/g0-probe/probe.ts --list
+## 3. Instalación y Arranque
 
-# 2. Enviar ticket de prueba completo por USB Spooler RAW
-pnpm tsx tools/g0-probe/probe.ts --usb "<NombreImpresora>"
+1. Copiar la plantilla de configuración de entorno:
+   ```bash
+   cp .env.example .env
+   ```
+2. Instalar dependencias del monorepo:
+   ```bash
+   pnpm install
+   ```
+3. Ejecutar las migraciones de base de datos:
+   ```bash
+   pnpm run db:migrate
+   ```
+4. Compilar los paquetes y aplicaciones:
+   ```bash
+   pnpm run build
+   ```
+5. Iniciar el servidor en producción:
+   ```bash
+   pnpm run start
+   ```
 
-# 3. Enviar ticket de prueba completo por TCP 9100 (LAN)
-pnpm tsx tools/g0-probe/probe.ts --tcp "192.168.31.200:9100"
-
-# 4. Iniciar Servidor HTTP Dashboard para celulares Android
-pnpm tsx tools/g0-probe/probe.ts --port 3000
+Para desarrollo local simultáneo:
+```bash
+pnpm run dev:server
+pnpm run dev:web
 ```
 
-Desde cualquier celular Android conectado a la red Wi-Fi del Food Truck (sin internet):
-1. Abrir Chrome y navegar a: `http://<IP_LAPTOP>:3000/health`
-2. Usar el botón grande **"🔔 PROBAR PITIDO Y CORTE"** para probar la respuesta en tiempo real.
+## 4. Verificación y Calidad de Código
+
+El repositorio cuenta con validaciones automatizadas de consistencia y diseño:
+
+- Validador estricto de UI y reglas semánticas:
+  ```bash
+  pnpm run guard
+  ```
+- Verificación de tipos TypeScript:
+  ```bash
+  pnpm run lint
+  ```
+- Pruebas unitarias y de integración:
+  ```bash
+  pnpm run test
+  ```
+
+## 5. Respaldos y Recuperación
+
+El sistema ejecuta snapshots periódicos y respaldos cifrados con claves asimétricas para resguardo en unidades USB externas. Consulte el procedimiento operativo en:
+- `docs/restore.md`
+
+## 6. Gobernanza y Reglas de Desarrollo
+
+Para la evolución del código fuente, arquitectura y gobernanza del proyecto, revise:
+- `AGENTS.md` (Reglas estrictas de ingeniería, UI táctil y control de cambios)
+- `BITACORA-DE-CONTEXTO.md` (Decisiones arquitectónicas D1–D9 y registro histórico)
