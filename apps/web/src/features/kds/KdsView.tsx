@@ -22,9 +22,12 @@ export interface KdsLineItem {
   readyAtMs?: number | null;
   customInstructions?: string | null;
   modifiers?: string[];
+  barraLibreModifiers?: string[];
   ingredientExclusions?: string[];
   ingredientExtras?: string[];
 }
+
+export type KdsLine = KdsLineItem;
 
 export interface KdsOrder {
   orderId: string;

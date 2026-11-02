@@ -142,6 +142,11 @@ export const KdsCard: React.FC<KdsCardProps> = ({
                     + EXTRA: {line.ingredientExtras.join(', ')}
                   </p>
                 )}
+                {line.barraLibreModifiers && line.barraLibreModifiers.length > 0 && (
+                  <p className="text-xs font-bold text-ink">
+                    + AGREGAR: {line.barraLibreModifiers.join(', ')}
+                  </p>
+                )}
                 {line.customInstructions && (
                   <p className="text-xs text-ink-muted italic">
                     Instrucción: {line.customInstructions}
