@@ -6,6 +6,7 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import DatabaseConstructor from 'better-sqlite3';
+export { validateChatTarget, formatDailyMessage } from './health-report.js';
 
 function formatDate(ms: number): string {
   const d = new Date(ms);

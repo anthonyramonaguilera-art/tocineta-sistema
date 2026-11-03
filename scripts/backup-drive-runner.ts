@@ -19,6 +19,7 @@ import { generateUuidV7 } from '../packages/shared/src/utils/id.js';
 import { encryptWithAge } from '../apps/server/src/modules/backups/age-service.js';
 import { DEFAULT_AGE_RECIPIENTS } from '../apps/server/src/modules/backups/constants.js';
 import { appendAuditEvent, GENESIS_HASH } from '../apps/server/src/modules/audit/audit-service.js';
+import { validateChatTarget } from './health-report.js';
 
 interface CliOptions {
   dbPath?: string;
@@ -169,6 +170,31 @@ async function runBackup() {
 
   if (!telegramBotToken || !telegramChatId) {
     throw new Error('TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_ID deben estar configurados en .env o pasarse como parametros para enviar el respaldo por Telegram.');
+  }
+
+  // Validar identidad del bot con getMe y comprobar que el destino no apunte al bot
+  console.log(`- Consultando identidad del bot en Telegram (getMe)...`);
+  let botId: number | string;
+  try {
+    const getMeRes = await fetch(`https://api.telegram.org/bot${telegramBotToken}/getMe`);
+    if (!getMeRes.ok) {
+      const errText = await getMeRes.text();
+      throw new Error(`Telegram getMe respondió HTTP ${getMeRes.status}: ${errText}`);
+    }
+    const getMeJson = (await getMeRes.json()) as { ok: boolean; result?: { id: number; is_bot?: boolean }; description?: string };
+    if (!getMeJson.ok || !getMeJson.result?.id) {
+      throw new Error(`Respuesta inválida de getMe: ${getMeJson.description || 'sin ID'}`);
+    }
+    botId = getMeJson.result.id;
+  } catch (err: any) {
+    throw new Error(`Fallo al consultar getMe de Telegram antes de enviar respaldo: ${err.message}`);
+  }
+
+  const validation = validateChatTarget(botId, telegramChatId);
+  if (!validation.ok) {
+    const reason = validation.reason || 'El destino de avisos apunta a un bot; use su ID personal';
+    console.error(`[ALERTA DE SEGURIDAD] ${reason}`);
+    throw new Error(reason);
   }
 
   const adminKey = (process.env.AGE_RECIPIENT_ADMIN || fileEnv.AGE_RECIPIENT_ADMIN || '').trim();
@@ -389,6 +415,19 @@ async function runBackup() {
   }
 }
 
+function writeBackupStatus(repoRoot: string, status: { atMs: number; ok: boolean; error?: string }) {
+  try {
+    const statusPath = path.resolve(repoRoot, 'data/backup-status.json');
+    const parentDir = path.dirname(statusPath);
+    if (!fs.existsSync(parentDir)) {
+      fs.mkdirSync(parentDir, { recursive: true });
+    }
+    fs.writeFileSync(statusPath, JSON.stringify(status, null, 2), 'utf-8');
+  } catch (err: any) {
+    console.error(`[ADVERTENCIA] No se pudo escribir data/backup-status.json: ${err.message}`);
+  }
+}
+
 async function main() {
   const cliOpts = parseCliArgs();
   const repoRoot = path.resolve(process.cwd());
@@ -402,9 +441,11 @@ async function main() {
 
   try {
     await runBackup();
+    writeBackupStatus(repoRoot, { atMs: Date.now(), ok: true });
     process.exit(0);
   } catch (err: any) {
     console.error('\n[FALLO CRITICO EN EL RESPALDO]', err.message);
+    writeBackupStatus(repoRoot, { atMs: Date.now(), ok: false, error: err.message || 'Error en respaldo' });
     logServerErrorToDatabase(dbPath, err, {
       cliOpts,
       time: new Date().toISOString()

@@ -31,7 +31,8 @@ param (
 
     [string]$UpdateTime = "05:00",
     [string]$BackupTime = "05:30",
-    [string]$AlertTime = "08:00"
+    [string]$AlertTime = "08:00",
+    [string]$AlertEveningTime = "20:00"
 )
 
 $ErrorActionPreference = "Stop"
@@ -125,6 +126,11 @@ if ($Action -eq "Uninstall") {
         Write-Host "  Tarea '$taskAlertName' no estaba registrada." -ForegroundColor Gray
     }
 
+    if (Get-TaskInfo -TaskName "$taskAlertName-Noche") {
+        Unregister-ScheduledTask -TaskName "$taskAlertName-Noche" -Confirm:$false
+        Write-Host "[OK] Tarea '$taskAlertName-Noche' eliminada exitosamente." -ForegroundColor Green
+    }
+
     Write-Host ""
     Write-Host "Desinstalacion completada." -ForegroundColor Green
     Write-Host ""
@@ -166,18 +172,22 @@ if ($Action -eq "Install") {
         Invoke-Expression $schCmd
     }
 
-    # 3. Registrar Tarea de Alertas por Telegram (08:00 AM)
-    Write-Host "3. Creando tarea '$taskAlertName' ($AlertTime diario)..." -ForegroundColor DarkCyan
-    $actionAlert = New-ScheduledTaskAction -Execute $powershellExe -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$alertScript`"" -WorkingDirectory $repoRoot
-    $triggerAlert = New-ScheduledTaskTrigger -Daily -At $AlertTime
+    # 3. Registrar Tarea de Alertas por Telegram en Modo Daily (08:00 AM y 20:00 PM)
+    Write-Host "3. Creando tarea '$taskAlertName' ($AlertTime y $AlertEveningTime diario)..." -ForegroundColor DarkCyan
+    $actionAlert = New-ScheduledTaskAction -Execute $powershellExe -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$alertScript`" -Mode daily" -WorkingDirectory $repoRoot
+    $triggerAlert1 = New-ScheduledTaskTrigger -Daily -At $AlertTime
+    $triggerAlert2 = New-ScheduledTaskTrigger -Daily -At $AlertEveningTime
+    $triggersAlert = @($triggerAlert1, $triggerAlert2)
 
     try {
-        Register-ScheduledTask -TaskName $taskAlertName -Action $actionAlert -Trigger $triggerAlert -Settings $settingsCommon -Principal $principal -Description "Verificacion diaria de salud del sistema TOCINETA y notificaciones remotas via Telegram." -Force | Out-Null
-        Write-Host "  [OK] '$taskAlertName' registrada exitosamente a las $AlertTime." -ForegroundColor Green
+        Register-ScheduledTask -TaskName $taskAlertName -Action $actionAlert -Trigger $triggersAlert -Settings $settingsCommon -Principal $principal -Description "Verificacion diaria de salud (modo daily) del sistema TOCINETA y notificaciones remotas via Telegram a las 08:00 y 20:00." -Force | Out-Null
+        Write-Host "  [OK] '$taskAlertName' registrada exitosamente a las $AlertTime y $AlertEveningTime." -ForegroundColor Green
     } catch {
         Write-Host "  [AVISO] No se pudo registrar via Register-ScheduledTask, intentando via schtasks.exe: $($_.Exception.Message)" -ForegroundColor Yellow
-        $schCmd = "schtasks.exe /create /tn `"$taskAlertName`" /tr `"$powershellExe -ExecutionPolicy Bypass -WindowStyle Hidden -File \`"$alertScript\`"`" /sc daily /st $AlertTime /f"
-        Invoke-Expression $schCmd
+        $schCmd1 = "schtasks.exe /create /tn `"$taskAlertName`" /tr `"$powershellExe -ExecutionPolicy Bypass -WindowStyle Hidden -File \`"$alertScript\`" -Mode daily`" /sc daily /st $AlertTime /f"
+        $schCmd2 = "schtasks.exe /create /tn `"$taskAlertName-Noche`" /tr `"$powershellExe -ExecutionPolicy Bypass -WindowStyle Hidden -File \`"$alertScript\`" -Mode daily`" /sc daily /st $AlertEveningTime /f"
+        Invoke-Expression $schCmd1
+        Invoke-Expression $schCmd2
     }
 
     Write-Host ""
@@ -186,7 +196,7 @@ if ($Action -eq "Install") {
     Write-Host "=================================================================" -ForegroundColor Green
     Write-Host "- Actualizador Automatico:   $UpdateTime (Diario)" -ForegroundColor Gray
     Write-Host "- Respaldo Cifrado a Drive: $BackupTime (Diario)" -ForegroundColor Gray
-    Write-Host "- Alertas de Salud Telegram: $AlertTime (Diario)" -ForegroundColor Gray
+    Write-Host "- Alertas de Salud Telegram: $AlertTime y $AlertEveningTime (Diario, modo daily)" -ForegroundColor Gray
     Write-Host "Para verificar su ejecucion o administrarlas, abra 'taskschd.msc' en Windows." -ForegroundColor DarkGray
     Write-Host ""
 }

@@ -115,8 +115,8 @@ Para garantizar la ejecución desatendida y continua en producción, se programa
 | Tarea | Script | Horario Sugerido | Descripción |
 | :--- | :--- | :--- | :--- |
 | **`Tocineta-Actualizador-Automatico`** | `scripts/actualizar.ps1` | **05:00 AM** (Diario) | Búsqueda de releases en GitHub, verificación SHA-256, migración y rollback automático (R3). |
-| **`Tocineta-Respaldo-Drive`** | `scripts/respaldo-drive.ps1` | **05:30 AM** (Diario) | Generación de snapshot en caliente, cifrado Age y envío directo a Telegram vía sendDocument (R4). |
-| **`Tocineta-Alertas-Telegram`** | `scripts/alertas-telegram.ps1` | **08:00 AM** (Diario) | Chequeo de salud del servidor y base de datos, reporte diario a Telegram (R2). |
+| **`Tocineta-Respaldo-Drive`** | `scripts/respaldo-drive.ps1` | **05:30 AM** (Diario) | Generación de snapshot en caliente, cifrado Age y envío directo a Telegram vía sendDocument (R4). Registra resultado en `data/backup-status.json`. |
+| **`Tocineta-Alertas-Telegram`** | `scripts/alertas-telegram.ps1 -Mode daily` | **08:00 AM y 20:00 PM** (Diario) | Diagnóstico local en solo lectura (`scripts/health-report.ts`) y chequeo del servicio. Reporte diario de salud (V-1). |
 
 ---
 
@@ -137,11 +137,22 @@ Verificar que:
 ### 5.2. Probar las Alertas de Telegram (Simulación)
 Ejecutar en PowerShell con la bandera `-DryRun`:
 ```powershell
+# Modo daily (reporte de salud programado a las 08:00 y 20:00)
+powershell -ExecutionPolicy Bypass -File scripts\alertas-telegram.ps1 -Mode daily -DryRun
+
+# Modo check (alerta inmediata)
 powershell -ExecutionPolicy Bypass -File scripts\alertas-telegram.ps1 -DryRun
 ```
 Verificar que el mensaje generado cumpla el formato oficial:
-- En estado normal: `"TOCINETA Sano: [Fecha]. Último respaldo: [Fecha]. Errores en 24h: [Cantidad]"`
-- En estado crítico: `"ALERTA INMEDIATA - TOCINETA CRITICO ..."`
+- En modo daily (servidor activo): `"TOCINETA activo. Versión X. Jornadas cerradas: N. Último respaldo: fecha y estado. Errores 24 h: N. Disco libre: X GB"`
+- En modo daily (servidor no responde): `"TOCINETA NO RESPONDE"` junto al estado del servicio de Windows (`TocinetaSonrieServer`) y `logsRecientes`.
+- En modo check normal: `"TOCINETA Sano: [Fecha]. Último respaldo: [Fecha]. Errores en 24h: [Cantidad]"`
+- En modo check crítico: `"ALERTA INMEDIATA - TOCINETA CRITICO ..."`
+
+### 5.3. Validación de Destinatario Seguro (Prevención de Auto-Envío)
+Tanto `backup-drive-runner.ts` como `alertas-telegram.ps1` validan el destino con la API `getMe` de Telegram antes de emitir transmisiones. Si `TELEGRAM_CHAT_ID` coincide con el identificador del bot o está vacío, la operación aborta de inmediato con el mensaje:
+`"El destino de avisos apunta a un bot; use su ID personal"`
+y asienta el registro en `logs/avisos.log`. Adicionalmente, cada intento de respaldo actualiza el estado en `data/backup-status.json` con `{ atMs, ok, error? }`.
 
 ---
 
