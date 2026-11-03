@@ -14,6 +14,7 @@ import {
   Package
 } from 'lucide-react';
 import { Icon } from '../ui/Icon.js';
+import { Button } from '../ui/Button.js';
 import { LoadBoundary } from '../ui/LoadBoundary.js';
 import { useLoadState } from '../ui/useLoadState.js';
 import { apiFetch } from '../api/client.js';
@@ -742,12 +743,6 @@ export const MenuAdminView: React.FC = () => {
                           Estación: {p.station}
                         </span>
                       </div>
-                      <button
-                        onClick={() => openEditModal(p)}
-                        className="text-xs bg-surface-alt hover:bg-surface border border-border text-ink px-2 py-1 rounded-md cursor-pointer"
-                      >
-                        Editar
-                      </button>
                     </div>
 
                     <div className="mt-3 flex items-center justify-between text-xs">
@@ -882,6 +877,19 @@ export const MenuAdminView: React.FC = () => {
                         {p.isAvailable ? '● Disponible' : '○ Agotado'}
                       </button>
                     )}
+                  </div>
+
+                  <div className="mt-3">
+                    <Button
+                      variant="secondary"
+                      size="md"
+                      leftIcon="Edit3"
+                      fullWidth
+                      aria-label={`Editar ${p.name}`}
+                      onClick={() => openEditModal(p)}
+                    >
+                      Editar
+                    </Button>
                   </div>
                 </div>
               );
