@@ -114,18 +114,34 @@ export const MenuAdminView: React.FC = () => {
       const res = await apiFetch('/api/menu/admin', {
         headers: { authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Error al consultar catálogo de administración');
+      if (!res.ok) {
+        let msg = 'Error al consultar catálogo de administración';
+        try {
+          const body = await res.json();
+          if (body?.error) msg = body.error;
+          else if (body?.message) msg = body.message;
+        } catch {}
+        const err: any = new Error(msg);
+        err.status = res.status;
+        throw err;
+      }
       return res.json();
     },
     enabled: Boolean(token),
-    retry: 1
+    retry: (failureCount, err: any) => {
+      if (failureCount >= 2) return false;
+      const status = err?.status;
+      if (status === 401 || status === 403) return false;
+      return true;
+    },
+    retryDelay: 800
   });
 
   const menuLoadState = useLoadState({
     isLoading,
     isError,
     error,
-    timeoutMs: 3500
+    timeoutMs: 15000
   });
 
   // Mutación: Toggle Disponibilidad Producto (Agotado/Disponible)
@@ -504,7 +520,7 @@ export const MenuAdminView: React.FC = () => {
         isEmpty={!menuLoadState.isLoading && !menuLoadState.isError && !adminMenu}
         loadingMessage="Cargando Gestor de Menú y Catálogo Admin..."
         emptyMessage="Catálogo de administración no disponible"
-        timeoutMs={3500}
+        timeoutMs={15000}
         onRetry={() => refetch()}
       >
         <div />

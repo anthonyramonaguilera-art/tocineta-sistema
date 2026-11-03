@@ -30,7 +30,7 @@ export const LoadBoundary: React.FC<LoadBoundaryProps> = ({
   emptyDescription = 'Cuando se agreguen datos al sistema, aparecerán aquí.',
   emptyIcon = 'Inbox',
   onRetry,
-  timeoutMs = 8000,
+  timeoutMs = 15000,
   children
 }) => {
   const state = useLoadState({
@@ -56,7 +56,9 @@ export const LoadBoundary: React.FC<LoadBoundaryProps> = ({
         <div className="w-12 h-12 mx-auto rounded-full bg-danger/10 text-danger flex items-center justify-center">
           <Icon name="AlertTriangle" size={24} />
         </div>
-        <h3 className="text-base font-black text-ink">Error de Conexión</h3>
+        <h3 className="text-base font-black text-ink">
+          {state.hasTimedOut ? 'Tiempo de Espera Agotado' : 'Error del Servidor'}
+        </h3>
         <p className="text-xs text-ink-muted max-w-sm mx-auto">
           {errorMessage || state.errorMessage}
         </p>
@@ -64,7 +66,8 @@ export const LoadBoundary: React.FC<LoadBoundaryProps> = ({
           <div className="pt-2">
             <Button
               variant="secondary"
-              size="sm"
+              size="md"
+              className="min-h-[48px]"
               onClick={onRetry}
               leftIcon={<Icon name="RotateCcw" size={14} />}
             >
@@ -85,7 +88,7 @@ export const LoadBoundary: React.FC<LoadBoundaryProps> = ({
           description={emptyDescription}
           action={
             onRetry ? (
-              <Button variant="secondary" size="sm" onClick={onRetry}>
+              <Button variant="secondary" size="md" className="min-h-[48px]" onClick={onRetry}>
                 Actualizar
               </Button>
             ) : undefined

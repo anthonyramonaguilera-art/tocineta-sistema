@@ -16,14 +16,14 @@ export interface UseLoadStateReturn {
 }
 
 /**
- * Hook para gestionar estados de carga con tiempo máximo (8 segundos por defecto).
+ * Hook para gestionar estados de carga con tiempo máximo (15 segundos por defecto).
  * Si la carga excede el tiempo límite, conmuta a estado de error con mensaje accionable.
  */
 export function useLoadState({
   isLoading,
   isError = false,
   error = null,
-  timeoutMs = 8000,
+  timeoutMs = 15000,
   onTimeout
 }: UseLoadStateOptions): UseLoadStateReturn {
   const [hasTimedOut, setHasTimedOut] = useState(false);
@@ -43,13 +43,14 @@ export function useLoadState({
   }, [isLoading, timeoutMs, onTimeout]);
 
   const effectiveError = isError || hasTimedOut;
+  const maxSec = Math.round(timeoutMs / 1000);
   const errorMessage = hasTimedOut
-    ? 'Tiempo de espera agotado al conectar con el servidor (máximo 8 segundos).'
+    ? `Tiempo de espera agotado al conectar con el servidor (máximo ${maxSec} segundos).`
     : error instanceof Error
     ? error.message
     : typeof error === 'string'
     ? error
-    : 'Error al consultar los datos del sistema';
+    : (error as any)?.message || (error as any)?.error || 'Error al consultar los datos del servidor';
 
   return {
     isLoading: isLoading && !hasTimedOut,
