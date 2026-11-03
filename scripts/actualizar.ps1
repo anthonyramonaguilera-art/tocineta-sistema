@@ -26,6 +26,8 @@
     URL de verificacion de salud (por defecto http://localhost:PORT/api/health).
 .PARAMETER LocalZip
     Ruta a un archivo .zip local para actualizacion o pruebas locales.
+.PARAMETER Source
+    Origen o medio de la actualizacion (GitHub, Telegram, Local).
 .PARAMETER ExpectedHash
     Hash SHA-256 esperado (opcional para sobrescribir o validar manualmente).
 .PARAMETER Force
@@ -60,6 +62,9 @@ param (
     [string]$LocalZip,
 
     [Parameter(Mandatory = $false)]
+    [string]$Source = "GitHub",
+
+    [Parameter(Mandatory = $false)]
     [string]$ExpectedHash,
 
     [Parameter(Mandatory = $false)]
@@ -80,6 +85,23 @@ Set-Location $repoRoot
 $taskName = "Tocineta-Actualizador-Automatico"
 $powershellExe = (Get-Command powershell.exe -ErrorAction SilentlyContinue).Source
 if (-not $powershellExe) { $powershellExe = "powershell.exe" }
+
+function Log-Actualizacion {
+    param(
+        [string]$Message,
+        [string]$Level = "INFO"
+    )
+    try {
+        $logsDir = Join-Path $repoRoot "logs"
+        if (-not (Test-Path $logsDir)) {
+            New-Item -ItemType Directory -Path $logsDir -Force | Out-Null
+        }
+        $logFile = Join-Path $logsDir "actualizaciones.log"
+        $ts = (Get-Date).ToString("yyyy-MM-dd HH:mm:ss")
+        $entry = "[$ts] [$Level] $Message"
+        Add-Content -Path $logFile -Value $entry -Encoding utf8
+    } catch {}
+}
 
 # ==============================================================================
 # GESTION DE TAREA PROGRAMADA EN WINDOWS (Task Scheduler)
@@ -416,12 +438,18 @@ $backupDir = $null
 
 try {
     if ($LocalZip) {
-        Write-Host "Utilizando archivo de release local: $LocalZip" -ForegroundColor Cyan
+        Write-Host "Utilizando archivo de release local: $LocalZip (Origen: $Source)" -ForegroundColor Cyan
         if (-not (Test-Path $LocalZip)) {
             throw "El archivo ZIP local especificado no existe: $LocalZip"
         }
         $downloadedZip = (Resolve-Path $LocalZip).Path
-        $targetVersion = "local-release"
+        $targetZipLeaf = Split-Path $downloadedZip -Leaf
+        if ($targetZipLeaf -match "^tocineta-(.+)\.zip$") {
+            $targetVersion = $matches[1]
+        } else {
+            $targetVersion = "local-release"
+        }
+        Log-Actualizacion -Message "Iniciando despliegue de actualizacion desde $Source con paquete: $targetZipLeaf (Version: $targetVersion)"
     } else {
         if (-not $Repository) {
             throw "No se definio el repositorio de GitHub (GITHUB_REPO) ni se pudo inferir del control de versiones."
@@ -690,6 +718,8 @@ try {
     # Limpieza de temporales
     Remove-Item $tempDir -Recurse -Force -ErrorAction SilentlyContinue
 
+    Log-Actualizacion -Message "Actualizacion completada exitosamente a la version $targetVersion (Origen: $Source)."
+
     Write-Host ""
     Write-Host "=================================================================" -ForegroundColor Green
     Write-Host "    ACTUALIZACION COMPLETADA EXITOSAMENTE                        " -ForegroundColor Green
@@ -703,6 +733,7 @@ try {
     $failureReason = $_.Exception.Message
     Write-Host ""
     Write-Host "[ERROR DETECTADO] $failureReason" -ForegroundColor Red
+    Log-Actualizacion -Message "Fallo en actualizacion: $failureReason (Origen: $Source)." -Level "ERROR"
 
     # Si se creo un respaldo preventivo y no estamos en modo DryRun, ejecutar Rollback
     if ($backupDir -and (Test-Path $backupDir) -and -not $DryRun) {

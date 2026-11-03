@@ -117,6 +117,7 @@ Para garantizar la ejecución desatendida y continua en producción, se programa
 | **`Tocineta-Actualizador-Automatico`** | `scripts/actualizar.ps1` | **05:00 AM** (Diario) | Búsqueda de releases en GitHub, verificación SHA-256, migración y rollback automático (R3). |
 | **`Tocineta-Respaldo-Drive`** | `scripts/respaldo-drive.ps1` | **05:30 AM** (Diario) | Generación de snapshot en caliente, cifrado Age y envío directo a Telegram vía sendDocument (R4). Registra resultado en `data/backup-status.json`. |
 | **`Tocineta-Alertas-Telegram`** | `scripts/alertas-telegram.ps1 -Mode daily` | **08:00 AM y 20:00 PM** (Diario) | Diagnóstico local en solo lectura (`scripts/health-report.ts`) y chequeo del servicio. Reporte diario de salud (V-1). |
+| **`Tocineta-Actualizador-Telegram`** | `scripts/actualizar-telegram.ps1` | **Cada 15 minutos** | Sondeo de paquetes firmados y comandos de diagnóstico por Telegram con validación Ed25519 y ventana segura (V-3). |
 
 ---
 
@@ -267,3 +268,50 @@ En la máquina de desarrollo, para generar una actualización firmada:
    - Verifica estrictamente la ausencia de `node_modules`, bases de datos en `data/` o secretos `.env`.
    - Comprueba que el archivo `.zip` pese estrictamente menos de 19 MB (para permitir su descarga a través de los límites de bots de Telegram).
    - Genera el manifiesto canónico `ReleaseManifest` y lo firma digitalmente con Ed25519, produciendo `tocineta-X.Y.Z.sig`.
+
+---
+
+## 9. Receptor Desatendido de Actualizaciones y Comandos por Telegram (V-3)
+
+Para permitir despliegues de software y diagnósticos remotos seguros sin exponer puertos entrantes a internet, el sistema incluye un receptor desatendido que sondea la API de Telegram periódicamente mediante `scripts/actualizar-telegram.ps1` y `scripts/update-receiver.ts`.
+
+### 9.1. Reglas Criptográficas y de Control de Acceso
+
+1. **Autorización Estricta de Remitentes (`TELEGRAM_ADMIN_IDS`):**
+   - Únicamente los IDs de usuario presentes en la lista `TELEGRAM_ADMIN_IDS` configurada en `.env` son procesados.
+   - Cualquier interacción de usuarios no autorizados es descartada silenciosamente para evitar vectores de saturación o ingeniería social.
+
+2. **Verificación Ed25519 Antes de Tocar Disco:**
+   - La firma digital contenida en `tocineta-X.Y.Z.sig` se valida contra `config/update-public-key.pem` (o `UPDATE_PUBLIC_KEY` en `.env`) en memoria.
+   - Si la firma es inválida, el paquete se rechaza inmediatamente sin crear ni almacenar ningún archivo en disco.
+
+3. **Verificación de Integridad SHA-256:**
+   - Se calcula el hash SHA-256 del archivo `.zip` recibido y se compara con el hash certificado en el manifiesto firmado. Si difiere, la actualización se rechaza con alerta de integridad.
+
+4. **Prevención de Downgrade y Replay (SemVer Estricto):**
+   - La versión candidata `X.Y.Z` debe ser estrictamente mayor que la versión instalada en el `package.json` raíz. No se permite la reinstalación de la misma versión ni retrocesos de versión.
+
+### 9.2. Ventana Segura de Operación (Jornada Activa)
+
+- Antes de aplicar una actualización aprobada, el receptor consulta el endpoint local `http://localhost:$PORT/api/jornadas/current`.
+- **Si hay una jornada abierta:**  
+  La actualización NO se aplica de inmediato para evitar interrumpir las operaciones de venta del restaurante.  
+  El paquete queda en estado `DEFERRED_OPEN_JORNADA` en `data/updates/pending/` y el bot responde al administrador:  
+  `"Actualización X.Y.Z verificada y en espera: se aplicará automáticamente al cerrar la jornada"`.
+- **Al cerrar la jornada:**  
+  En la siguiente corrida periódica (cada 15 minutos), el receptor detecta el cierre y ejecuta automáticamente:  
+  `powershell -ExecutionPolicy Bypass -File scripts/actualizar.ps1 -LocalZip <ruta_zip> -Source Telegram`.
+
+### 9.3. Comandos de Diagnóstico Admitidos
+
+Está **terminantemente prohibido** interpretar texto libre recibido como comandos del sistema operativo. Solo se admiten dos comandos exactos:
+
+| Comando | Acción | Respuesta |
+| :--- | :--- | :--- |
+| **`/estado`** | Consulta `/api/health` o estado SQLite en solo lectura. | Mensaje de salud: versión activa, estado de jornada, último respaldo y errores. |
+| **`/diag`** | Invoca `scripts/diagnostico.ps1` sanitizado. | Envío de archivo `diagnostico-tocineta-<timestamp>.zip` al chat mediante `sendDocument`. |
+
+### 9.4. Persistencia y Auditoría
+
+- **Offset de Telegram:** Se mantiene en `data/telegram-offset.txt` con el último `update_id` procesado.
+- **Bitácora de Actualizaciones:** Cada verificación, rechazo, comando o despliegue se documenta cronológicamente en `logs/actualizaciones.log`.

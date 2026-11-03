@@ -46,10 +46,12 @@ if (-not $powershellExe) {
 $taskUpdateName = "Tocineta-Actualizador-Automatico"
 $taskBackupName = "Tocineta-Respaldo-Drive"
 $taskAlertName = "Tocineta-Alertas-Telegram"
+$taskTelegramName = "Tocineta-Actualizador-Telegram"
 
 $updateScript = Join-Path $repoRoot "scripts\actualizar.ps1"
 $backupScript = Join-Path $repoRoot "scripts\respaldo-drive.ps1"
 $alertScript = Join-Path $repoRoot "scripts\alertas-telegram.ps1"
+$telegramScript = Join-Path $repoRoot "scripts\actualizar-telegram.ps1"
 
 Write-Host ""
 Write-Host "=================================================================" -ForegroundColor Cyan
@@ -97,6 +99,13 @@ if ($Action -eq "Status") {
         Write-Host "  -> $taskAlertName : [NO ENCONTRADA]" -ForegroundColor DarkGray
     }
 
+    $t3 = Get-TaskInfo -TaskName $taskTelegramName
+    if ($t3) {
+        Write-Host "  -> $taskTelegramName : [REGISTRADA] Estado: $($t3.State)" -ForegroundColor Green
+    } else {
+        Write-Host "  -> $taskTelegramName : [NO ENCONTRADA]" -ForegroundColor DarkGray
+    }
+
     Write-Host ""
     exit 0
 }
@@ -129,6 +138,13 @@ if ($Action -eq "Uninstall") {
     if (Get-TaskInfo -TaskName "$taskAlertName-Noche") {
         Unregister-ScheduledTask -TaskName "$taskAlertName-Noche" -Confirm:$false
         Write-Host "[OK] Tarea '$taskAlertName-Noche' eliminada exitosamente." -ForegroundColor Green
+    }
+
+    if (Get-TaskInfo -TaskName $taskTelegramName) {
+        Unregister-ScheduledTask -TaskName $taskTelegramName -Confirm:$false
+        Write-Host "[OK] Tarea '$taskTelegramName' eliminada exitosamente." -ForegroundColor Green
+    } else {
+        Write-Host "  Tarea '$taskTelegramName' no estaba registrada." -ForegroundColor Gray
     }
 
     Write-Host ""
@@ -190,6 +206,22 @@ if ($Action -eq "Install") {
         Invoke-Expression $schCmd2
     }
 
+    # 4. Registrar Tarea de Receptor de Actualizaciones y Comandos por Telegram (cada 15 minutos)
+    Write-Host "4. Creando tarea '$taskTelegramName' (cada 15 minutos)..." -ForegroundColor DarkCyan
+    $actionTelegram = New-ScheduledTaskAction -Execute $powershellExe -Argument "-ExecutionPolicy Bypass -WindowStyle Hidden -File `"$telegramScript`"" -WorkingDirectory $repoRoot
+    $triggerTelegram = New-ScheduledTaskTrigger -Daily -At "00:00"
+    $triggerTelegram.RepetitionInterval = (New-TimeSpan -Minutes 15)
+    $triggerTelegram.RepetitionDuration = (New-TimeSpan -Days 3650)
+
+    try {
+        Register-ScheduledTask -TaskName $taskTelegramName -Action $actionTelegram -Trigger $triggerTelegram -Settings $settingsCommon -Principal $principal -Description "Receptor desatendido de actualizaciones y comandos de diagnostico por Telegram para TOCINETA (cada 15 minutos)." -Force | Out-Null
+        Write-Host "  [OK] '$taskTelegramName' registrada exitosamente para ejecutarse cada 15 minutos." -ForegroundColor Green
+    } catch {
+        Write-Host "  [AVISO] No se pudo registrar via Register-ScheduledTask, intentando via schtasks.exe: $($_.Exception.Message)" -ForegroundColor Yellow
+        $schCmd3 = "schtasks.exe /create /tn `"$taskTelegramName`" /tr `"$powershellExe -ExecutionPolicy Bypass -WindowStyle Hidden -File \`"$telegramScript\`"`" /sc minute /mo 15 /f"
+        Invoke-Expression $schCmd3
+    }
+
     Write-Host ""
     Write-Host "=================================================================" -ForegroundColor Green
     Write-Host "   TAREAS PROGRAMADAS CONFIGURADAS EXITOSAMENTE                 " -ForegroundColor Green
@@ -197,6 +229,7 @@ if ($Action -eq "Install") {
     Write-Host "- Actualizador Automatico:   $UpdateTime (Diario)" -ForegroundColor Gray
     Write-Host "- Respaldo Cifrado a Drive: $BackupTime (Diario)" -ForegroundColor Gray
     Write-Host "- Alertas de Salud Telegram: $AlertTime y $AlertEveningTime (Diario, modo daily)" -ForegroundColor Gray
+    Write-Host "- Actualizador Telegram:    Cada 15 minutos" -ForegroundColor Gray
     Write-Host "Para verificar su ejecucion o administrarlas, abra 'taskschd.msc' en Windows." -ForegroundColor DarkGray
     Write-Host ""
 }
