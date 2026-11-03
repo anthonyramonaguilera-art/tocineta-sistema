@@ -74,6 +74,7 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
   }, [categories]);
 
   const handleProductClick = (product: PosProduct) => {
+    if (product.isAvailable === false) return;
     if (product.isCombo) {
       onOpenCombo(product);
     } else {
@@ -83,6 +84,7 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
 
   const handleOpenCustomizeModal = (e: React.MouseEvent, product: PosProduct) => {
     e.stopPropagation();
+    if (product.isAvailable === false) return;
     if (product.isCombo) {
       onOpenCombo(product);
     } else {
@@ -140,14 +142,20 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
       {/* 2. Grilla de 2 Columnas de Productos */}
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 sm:gap-4">
         {filteredProducts.map((product) => {
+          const soldOut = product.isAvailable === false;
           const inCartQty = cartQtyByProduct.get(product.id) || 0;
           return (
             <Card
               key={product.id}
-              variant={inCartQty > 0 ? 'interactive' : 'surface'}
+              variant={soldOut ? 'surface' : inCartQty > 0 ? 'interactive' : 'surface'}
               onClick={() => handleProductClick(product)}
-              className={`p-2.5 sm:p-3 flex flex-col justify-between rounded-2xl border-2 transition-all cursor-pointer relative group ${
-                inCartQty > 0 ? 'border-primary shadow-sm bg-primary/5' : 'border-border hover:border-primary/50'
+              aria-disabled={soldOut ? 'true' : undefined}
+              className={`p-2.5 sm:p-3 flex flex-col justify-between rounded-2xl border-2 transition-all relative group ${
+                soldOut
+                  ? 'border-border/60 opacity-60 cursor-not-allowed select-none'
+                  : inCartQty > 0
+                  ? 'border-primary shadow-sm bg-primary/5 cursor-pointer'
+                  : 'border-border hover:border-primary/50 cursor-pointer'
               }`}
             >
               {/* Foto 4:3 o Fondo de Marca */}
@@ -159,8 +167,13 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
                   className="w-full"
                 />
 
-                {/* Badge de Combo */}
-                {product.isCombo ? (
+                {/* Badge de Combo o Agotado */}
+                {soldOut ? (
+                  <span className="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-danger-subtle text-danger border border-danger/30 text-[10px] font-black uppercase shadow-xs flex items-center gap-1">
+                    <Icon name="PowerOff" size={11} />
+                    <span>Agotado</span>
+                  </span>
+                ) : product.isCombo ? (
                   <span className="absolute top-2 left-2 px-2 py-0.5 rounded-lg bg-primary text-primary-ink text-[10px] font-black uppercase shadow-xs">
                     Combo
                   </span>
@@ -170,8 +183,11 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
                 <button
                   type="button"
                   onClick={(e) => handleOpenCustomizeModal(e, product)}
-                  title="Personalizar ingredientes"
-                  className="absolute bottom-2 right-2 p-1.5 rounded-xl bg-surface/90 text-ink hover:bg-surface border border-border shadow-xs backdrop-blur-xs transition-transform active:scale-90"
+                  disabled={soldOut}
+                  title={soldOut ? 'Producto agotado' : 'Personalizar ingredientes'}
+                  className={`absolute bottom-2 right-2 p-1.5 rounded-xl bg-surface/90 text-ink border border-border shadow-xs backdrop-blur-xs transition-transform ${
+                    soldOut ? 'opacity-40 cursor-not-allowed' : 'hover:bg-surface active:scale-90'
+                  }`}
                 >
                   <Icon name="Sliders" size={14} />
                 </button>
@@ -200,7 +216,16 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
                   </div>
 
                   {/* Controles Táctiles − y + si ya está en el pedido */}
-                  {inCartQty > 0 ? (
+                  {soldOut ? (
+                    <button
+                      type="button"
+                      disabled
+                      aria-label="Producto agotado"
+                      className="w-7 h-7 rounded-xl bg-surface-alt border border-border text-ink-muted/40 flex items-center justify-center cursor-not-allowed"
+                    >
+                      <Icon name="PowerOff" size={13} />
+                    </button>
+                  ) : inCartQty > 0 ? (
                     <div
                       className="flex items-center gap-1 bg-surface rounded-xl border border-border p-0.5 shadow-xs"
                       onClick={(e) => e.stopPropagation()}

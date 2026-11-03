@@ -74,6 +74,14 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
 
   // Acciones sobre el carrito
   const addProduct = useCallback((product: PosProduct, quantity = 1, modifiers: CustomizationModifier[] = [], customInstructions?: string, comboChildren?: any[]) => {
+    if (product.isAvailable === false) {
+      setStatusNotification({
+        type: 'error',
+        message: `${product.name} está agotado`
+      });
+      return;
+    }
+
     setCart((prev) => {
       // Si el ítem no tiene modificadores ni instrucciones ni es combo, intentamos agrupar
       if (!product.isCombo && modifiers.length === 0 && !customInstructions) {
