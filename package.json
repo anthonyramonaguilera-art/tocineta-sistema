@@ -1,6 +1,6 @@
 {
   "name": "tocineta-sonrie-os",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "description": "Sistema Operativo Local Tocineta Sonrie - Monorepo de Produccion",
   "type": "module",
