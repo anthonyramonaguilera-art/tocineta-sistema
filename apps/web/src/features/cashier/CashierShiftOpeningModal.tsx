@@ -21,6 +21,7 @@ export const CashierShiftOpeningModal: React.FC<CashierShiftOpeningModalProps> =
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return;
     setIsSubmitting(true);
     setErrorMessage(null);
 
@@ -38,9 +39,9 @@ export const CashierShiftOpeningModal: React.FC<CashierShiftOpeningModalProps> =
         })
       });
 
-      const data = await res.json();
-      if (!res.ok || !data.success) {
-        throw new Error(data.error || 'Error al abrir turno de caja');
+      const data = await res.json().catch(() => null);
+      if (!res.ok || !data?.success) {
+        throw new Error(data?.message || data?.error || 'Error al abrir turno de caja');
       }
 
       onSuccess();
@@ -56,7 +57,10 @@ export const CashierShiftOpeningModal: React.FC<CashierShiftOpeningModalProps> =
     <Modal isOpen={isOpen} onClose={onClose} title="Apertura de Turno de Caja">
       <form onSubmit={handleSubmit} className="space-y-4">
         {errorMessage && (
-          <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl text-xs font-bold text-danger flex items-center gap-2">
+          <div
+            role="alert"
+            className="bg-danger-subtle text-danger border border-danger/30 rounded-lg p-3 text-sm flex items-center gap-2"
+          >
             <Icon name="AlertTriangle" className="w-4 h-4 shrink-0 text-danger" />
             <span>{errorMessage}</span>
           </div>
@@ -100,8 +104,15 @@ export const CashierShiftOpeningModal: React.FC<CashierShiftOpeningModalProps> =
           <Button variant="ghost" size="md" onClick={onClose} disabled={isSubmitting}>
             Cancelar
           </Button>
-          <Button variant="primary" size="md" type="submit" loading={isSubmitting} leftIcon="Lock">
-            Confirmar Apertura
+          <Button
+            variant="primary"
+            size="md"
+            type="submit"
+            isLoading={isSubmitting}
+            disabled={isSubmitting}
+            leftIcon="Lock"
+          >
+            {isSubmitting ? 'Abriendo caja...' : 'Confirmar Apertura'}
           </Button>
         </div>
       </form>
