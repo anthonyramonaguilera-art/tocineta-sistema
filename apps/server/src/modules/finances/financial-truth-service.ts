@@ -27,6 +27,7 @@ import {
   normalizePaymentMethod,
   calculateDeduplicatedWaste
 } from './financial-truth-helpers.js';
+import { isBankBsChangeMethod } from '../cashier/change-bucket.js';
 
 /**
  * Servicio Central de Verdad Financiera
@@ -185,12 +186,20 @@ export function getFinancialTruth(
     }
 
     let changeDeliveredUsd = 0;
-    let changeDeliveredBs = 0;
+    let changeDeliveredBsCash = 0;
+    let changeDeliveredBsBank = 0;
 
     for (const c of changes) {
       changeDeliveredUsd += c.change_usd_cents || 0;
-      changeDeliveredBs += c.change_bs_cents || 0;
+      const bs = c.change_bs_cents || 0;
+      if (isBankBsChangeMethod(c.method)) {
+        changeDeliveredBsBank += bs;
+      } else {
+        changeDeliveredBsCash += bs;
+      }
     }
+
+    const changeDeliveredBs = changeDeliveredBsCash;
 
     if (methodMap.has('EFECTIVO_USD')) {
       const item = methodMap.get('EFECTIVO_USD')!;
@@ -353,6 +362,18 @@ export function getFinancialTruth(
         netCashUsdCents: netCashUsd,
         netCashBsCents: netCashBs
       },
+      changeDelivered: Object.defineProperties(
+        {
+          usdCents: changeDeliveredUsd,
+          bsCashCents: changeDeliveredBsCash,
+          bsBankCents: changeDeliveredBsBank
+        },
+        {
+          changeUsdCents: { get() { return this.usdCents; }, enumerable: false },
+          changeBsCashCents: { get() { return this.bsCashCents; }, enumerable: false },
+          changeBsBankCents: { get() { return this.bsBankCents; }, enumerable: false }
+        }
+      ),
       cogsTheoretical,
       cogsConfigured,
       waste: {
@@ -428,6 +449,7 @@ export function getFinancialTruth(
     orders: overallMetrics.orders,
     collectedByMethod: overallMetrics.collectedByMethod,
     expectedCash: overallMetrics.expectedCash,
+    changeDelivered: overallMetrics.changeDelivered,
     cogsTheoretical: overallMetrics.cogsTheoretical,
     cogsConfigured: overallMetrics.cogsConfigured,
     waste: overallMetrics.waste,

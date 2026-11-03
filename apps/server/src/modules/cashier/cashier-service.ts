@@ -15,6 +15,7 @@ import { enqueueOrderPrintJobs } from '../printing/worker.js';
 import { deductInventoryForOrder, revertInventoryForOrder } from '../profitability/recipes-service.js';
 import { resolveLocationId } from '../profitability/locations-service.js';
 import { AppError } from '../../lib/app-error.js';
+import { isBankBsChangeMethod } from './change-bucket.js';
 
 export interface OpenJornadaInput {
   openedByUserId: string;
@@ -711,7 +712,7 @@ export function processOrderPayment(
 
     if (changeBs > 0) {
       const changeBsEquivUsd = Math.round((changeBs * 1_000_000) / rateMicroBs);
-      const changeBucket = (input.changeOutputs?.method || '').toLowerCase().includes('pago_movil') ? 'BANK_BS' : 'CASH_BS';
+      const changeBucket = isBankBsChangeMethod(input.changeOutputs?.method) ? 'BANK_BS' : 'CASH_BS';
       insertLedger.run(
         `led_${generateUuidV7()}`,
         jornada.id,

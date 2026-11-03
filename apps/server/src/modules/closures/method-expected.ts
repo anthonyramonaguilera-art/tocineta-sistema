@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import { isBankBsChangeMethod } from '../cashier/change-bucket.js';
 
 export type CanonicalPaymentMethod =
   | 'EFECTIVO_USD'
@@ -124,20 +125,23 @@ export function computeExpectedByMethod(
 
   // 2. Vueltos entregados en órdenes válidas de la sesión
   const changes = rawDb.prepare(`
-    SELECT cd.change_usd_cents, cd.change_bs_cents
+    SELECT cd.change_usd_cents, cd.change_bs_cents, cd.method
     FROM change_deliveries cd
     JOIN orders o ON cd.order_id = o.id
     WHERE o.cash_session_id = ? AND o.payment_status NOT IN ('reembolsado', 'anulado')
   `).all(sessionId) as Array<{
     change_usd_cents: number;
     change_bs_cents: number;
+    method?: string | null;
   }>;
 
   let cashUsdOutflow = 0;
   let cashBsOutflow = 0;
   for (const c of changes) {
     cashUsdOutflow += c.change_usd_cents || 0;
-    cashBsOutflow += c.change_bs_cents || 0;
+    if (!isBankBsChangeMethod(c.method)) {
+      cashBsOutflow += c.change_bs_cents || 0;
+    }
   }
 
   // 3. Gastos operativos en efectivo de la sesión

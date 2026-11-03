@@ -70,6 +70,11 @@ export interface FinancialTruthResult {
     deliveryFeesUsdCents: number;
   };
   collectedByMethod: MethodBreakdown[];
+  changeDelivered: {
+    usdCents: number;
+    bsCashCents: number;
+    bsBankCents: number;
+  };
   expectedCash: ExpectedCashBreakdown;
   cogsTheoretical: number;
   cogsConfigured: boolean;
