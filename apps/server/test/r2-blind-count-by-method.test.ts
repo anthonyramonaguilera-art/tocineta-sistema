@@ -10,7 +10,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { buildServer } from '../src/server.js';
-import { loginAs, ensureTestSupervisor } from './test-helpers.js';
+import { loginAs, ensureTestSupervisor, activateLegacyFixtureProducts } from './test-helpers.js';
 import {
   getJornadaReportData,
   generateJornadaExcelReport,
@@ -37,6 +37,7 @@ describe('T-05a: Arqueo Ciego Multimétodo y Migración 0040 (@tocineta/server)'
     await runMigrations(rawDb, { dbPath: tempDb });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
     ensureTestSupervisor(rawDb);
 
     app = await buildServer({ disableStatic: true });

@@ -108,7 +108,7 @@ import {
   calculateJornadaNetProfit
 } from '../src/modules/profitability/net-profit.js';
 import { generateMenuEngineeringReport } from '../src/modules/profitability/menu-engineering.js';
-import { loginAs } from './test-helpers.js';
+import { loginAs, activateLegacyFixtureProducts } from './test-helpers.js';
 
 describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de Aceptación)', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_m15_acceptance_${Date.now()}`);
@@ -141,6 +141,7 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
     await runMigrations(rawDb, { dbPath: tempDbPath });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
     seedCriticalSuppliesAndRecipes(rawDb);
 
     ephemeralIdentity = await generateIdentity();

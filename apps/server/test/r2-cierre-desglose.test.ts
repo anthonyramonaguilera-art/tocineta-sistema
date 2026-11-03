@@ -9,7 +9,7 @@ import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { buildServer } from '../src/server.js';
 import type { FastifyInstance } from 'fastify';
-import { loginAs, ensureTestSupervisor } from './test-helpers.js';
+import { loginAs, ensureTestSupervisor, activateLegacyFixtureProducts } from './test-helpers.js';
 import { getFinancialTruth } from '../src/modules/finances/financial-truth-service.js';
 import { buildZReportTicketIR } from '../src/modules/printing/templates.js';
 
@@ -29,6 +29,7 @@ describe('G-CLI-8: Desglose del cierre Z por todos los métodos de pago', () => 
     await runMigrations(rawDb, { dbPath: tempDb });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
     ensureTestSupervisor(rawDb);
 
     app = await buildServer({ disableStatic: true });

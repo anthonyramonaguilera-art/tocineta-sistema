@@ -9,7 +9,7 @@ import { initSqlite, getDatabaseContext } from '../src/db/connection.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
-import { loginAs, ensureTestSupervisor } from './test-helpers.js';
+import { loginAs, ensureTestSupervisor, activateLegacyFixtureProducts } from './test-helpers.js';
 import { getFinancialTruth } from '../src/modules/finances/financial-truth-service.js';
 import { performBlindCount } from '../src/modules/closures/closures-service.js';
 import { _resetAuthorizerGuardState } from '../src/modules/auth/authorizer-guard.js';
@@ -34,6 +34,7 @@ describe('T-02: Reversión de ticket/venta por método y PIN obligatorio al anul
     await runMigrations(rawDb);
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
     ensureTestSupervisor(rawDb);
     rawDb.prepare('UPDATE users SET must_change_pin = 0').run();
 

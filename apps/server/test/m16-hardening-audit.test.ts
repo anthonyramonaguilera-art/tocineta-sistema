@@ -14,6 +14,7 @@ import { getDatabaseContext } from '../src/db/connection.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
+import { activateLegacyFixtureProducts } from './test-helpers.js';
 
 // Módulos bajo prueba
 import { getKdsOrders, updateKdsLineStatus } from '../src/modules/kds/kds-service.js';
@@ -54,6 +55,7 @@ describe('HITO M16 — Suite Forense de Endurecimiento y Compatibilidad Dual Win
     await runMigrations(rawDb);
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
 
     // Asegurar jornada de prueba abierta
     rawDb.prepare(`

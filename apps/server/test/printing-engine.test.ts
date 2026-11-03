@@ -17,7 +17,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { renderTicketToEscPos, type TicketIR } from '@tocineta/shared';
-import { loginAs } from './test-helpers.js';
+import { loginAs, activateLegacyFixtureProducts } from './test-helpers.js';
 
 describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/server)', () => {
   let app: FastifyInstance;
@@ -37,6 +37,7 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
     runMigrations(rawDb, path.join(__dirname, '../src/db/migrations'));
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
 
     app = await buildServer({ logger: false, disableStatic: true });
     await app.ready();

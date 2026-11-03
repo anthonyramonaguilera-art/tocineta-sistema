@@ -83,3 +83,13 @@ export async function loginAs(
   const data = JSON.parse(res.payload);
   return { token: data.token, user: data.user, headers: { authorization: `Bearer ${data.token}` } };
 }
+
+export const LEGACY_FIXTURE_PRODUCT_IDS = [
+  'prod_classic_dog', 'prod_doble_salchicha_dog', 'prod_smash_clasica', 'prod_doble_smash',
+  'prod_kids_burger', 'prod_papas_fritas_tradicionales', 'prod_papas_queso_tocineta', 'prod_nuggets_pollo_6'
+];
+
+export function activateLegacyFixtureProducts(rawDb: Database.Database): void {
+  const ph = LEGACY_FIXTURE_PRODUCT_IDS.map(() => '?').join(',');
+  rawDb.prepare(`UPDATE products SET is_active = 1, is_available = 1 WHERE id IN (${ph})`).run(...LEGACY_FIXTURE_PRODUCT_IDS);
+}

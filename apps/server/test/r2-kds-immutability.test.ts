@@ -15,7 +15,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { deductInventoryForOrder } from '../src/modules/profitability/recipes-service.js';
-import { loginAs, ensureTestSupervisor } from './test-helpers.js';
+import { loginAs, ensureTestSupervisor, activateLegacyFixtureProducts } from './test-helpers.js';
 
 describe('P3-B — Inmutabilidad de órdenes en cocina (BUG-08) (@tocineta/server)', () => {
   let app: FastifyInstance;
@@ -35,6 +35,7 @@ describe('P3-B — Inmutabilidad de órdenes en cocina (BUG-08) (@tocineta/serve
     await runMigrations(rawDb, { migrationsDir: path.join(__dirname, '../src/db/migrations') });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
     ensureTestSupervisor(rawDb);
 
     // Configurar insumo y receta para prod_smash_clasica para verificar deducción en inventario

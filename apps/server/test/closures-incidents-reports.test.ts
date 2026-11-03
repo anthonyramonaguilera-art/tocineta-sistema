@@ -10,7 +10,7 @@ import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { buildServer } from '../src/server.js';
 import type { FastifyInstance } from 'fastify';
-import { loginAs, ensureTestSupervisor } from './test-helpers.js';
+import { loginAs, ensureTestSupervisor, activateLegacyFixtureProducts } from './test-helpers.js';
 
 describe('Hito M8 - Arqueo Ciego, Cierre Z, Incidentes (Re-fire vs Refund) y Reportes Locales (@tocineta/server)', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_m8_test_${Date.now()}`);
@@ -38,6 +38,7 @@ describe('Hito M8 - Arqueo Ciego, Cierre Z, Incidentes (Re-fire vs Refund) y Rep
     await runMigrations(rawDb, { dbPath: tempDb });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
     ensureTestSupervisor(rawDb);
 
     // Inicializar servidor Fastify de pruebas

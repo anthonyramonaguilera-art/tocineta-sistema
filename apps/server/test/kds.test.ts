@@ -16,7 +16,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { createRefirePrintJob } from '../src/modules/printing/worker.js';
-import { loginAs, ensureTestSupervisor } from './test-helpers.js';
+import { loginAs, ensureTestSupervisor, activateLegacyFixtureProducts } from './test-helpers.js';
 
 describe('Hito M7 - Pantalla de Cocina (KDS) y Ensamble Automático (@tocineta/server)', () => {
   let app: FastifyInstance;
@@ -36,6 +36,7 @@ describe('Hito M7 - Pantalla de Cocina (KDS) y Ensamble Automático (@tocineta/s
     await runMigrations(rawDb, { migrationsDir: path.join(__dirname, '../src/db/migrations') });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
     ensureTestSupervisor(rawDb);
 
     app = await buildServer({ logger: false, disableStatic: true });

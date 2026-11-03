@@ -9,7 +9,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { buildServer } from '../src/server.js';
-import { loginAs, ensureTestSupervisor } from './test-helpers.js';
+import { loginAs, ensureTestSupervisor, activateLegacyFixtureProducts } from './test-helpers.js';
 import { getFinancialTruth } from '../src/modules/finances/financial-truth-service.js';
 import { getJornadaReportData } from '../src/modules/reports/reports-service.js';
 
@@ -32,6 +32,7 @@ describe('T-07 FASE A: Diagnóstico quirúrgico de pagos multimétodo, verdad fi
     await runMigrations(rawDb, { dbPath: tempDb });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
     ensureTestSupervisor(rawDb);
 
     app = await buildServer({ disableStatic: true, logger: false });

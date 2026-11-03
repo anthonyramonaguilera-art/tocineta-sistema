@@ -51,7 +51,7 @@ import {
 } from '../src/modules/backups/backup-service.js';
 import { restoreAndVerifyDatabase } from '../src/modules/backups/restore-engine.js';
 import { appendAuditEvent, verifyAuditChain } from '../src/modules/audit/audit-service.js';
-import { loginAs } from './test-helpers.js';
+import { loginAs, activateLegacyFixtureProducts } from './test-helpers.js';
 
 describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de Aceptación)', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_m10_3_${Date.now()}`);
@@ -82,6 +82,7 @@ describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de 
     await runMigrations(rawDb, { dbPath: tempDbPath });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
 
     // Claves efímeras para prueba de age
     ephemeralIdentity = await generateIdentity();
