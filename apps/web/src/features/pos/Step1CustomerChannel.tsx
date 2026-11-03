@@ -63,8 +63,8 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
   motorizadoId,
   setMotorizadoId,
   askTableOnOrder = false,
-  canPay = false,
-  onQuickPay
+  canPay: _canPay = false,
+  onQuickPay: _onQuickPay
 }) => {
   // Consultar clientes previos para autocompletado
   const { data: customersData } = useQuery<{ customers: Array<{ name: string; phone?: string; address?: string }> }>({
@@ -127,21 +127,6 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
-      {/* Barra de Acceso Rápido / Cobro Directo para Cajera */}
-      {canPay && onQuickPay && (
-        <div className="flex items-center justify-between bg-surface-alt px-3 py-2 rounded-xl border border-border">
-          <span className="text-xs font-bold text-ink-muted">Caja y Cobro Directo</span>
-          <button
-            type="button"
-            onClick={onQuickPay}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-primary text-primary-ink text-xs font-black min-h-[44px] cursor-pointer hover:brightness-95 transition-all shadow-xs"
-          >
-            <Icon name="DollarSign" size={16} />
-            <span>Cobrar</span>
-          </button>
-        </div>
-      )}
-
       {/* 1. Nombre del Cliente */}
       <Card variant="surface" className="p-3 sm:p-4 border border-border space-y-2">
         <div className="flex items-center justify-between">
