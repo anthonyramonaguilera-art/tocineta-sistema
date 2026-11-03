@@ -5,12 +5,14 @@ import { OnboardingWizardModal } from './OnboardingWizardModal.js';
 import { OperationalManualsModal } from './OperationalManualsModal.js';
 import { InventoryModeCard } from './InventoryModeCard.js';
 import { PrintersPanel } from './PrintersPanel.js';
+import { AboutSystemCard } from './AboutSystemCard.js';
 import { useAuth } from '../../context/AuthContext.js';
 import type { BusinessSettings, BusinessLocation } from './types.js';
-import { apiFetch } from '../../api/client';
+import { apiFetch } from '../../api/client.js';
 
 export const BusinessSettingsView: React.FC = () => {
-  const { token } = useAuth();
+  const { token, user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const queryClient = useQueryClient();
 
   const { data, isLoading, refetch } = useQuery<{
@@ -51,23 +53,22 @@ export const BusinessSettingsView: React.FC = () => {
   const [isSavedBanner, setIsSavedBanner] = useState(false);
 
   useEffect(() => {
-    if (settings) {
-      setBusinessName(settings.business_name || '');
-      setSlogan(settings.slogan || '');
-      setRif(settings.rif || '');
-      setPhone(settings.phone || '');
-      setAddress(settings.address || '');
-      setPrimaryColor(settings.primary_color || '#EAB308');
-      setRateChangeHour(settings.rate_change_hour || '13:00');
-      setTicketHeader(settings.ticket_header_message || '¡BIENVENIDOS!');
-      setTicketFooter(settings.ticket_footer_message || '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga');
-      setIvaEnabled(Boolean(settings.iva_enabled));
-      setIgtfEnabled(Boolean(settings.igtf_enabled));
-      setPartnersEnabled(Boolean(settings.partners_module_enabled));
-      setEventsQuoteEnabled(Boolean(settings.events_quote_enabled));
-      setAskTableOnOrder(Boolean(settings.ask_table_on_order));
-      setInventoryMode(settings.inventory_operation_mode || 'free');
-    }
+    if (!settings) return;
+    setBusinessName(settings.business_name || '');
+    setSlogan(settings.slogan || '');
+    setRif(settings.rif || '');
+    setPhone(settings.phone || '');
+    setAddress(settings.address || '');
+    setPrimaryColor(settings.primary_color || '#EAB308');
+    setRateChangeHour(settings.rate_change_hour || '13:00');
+    setTicketHeader(settings.ticket_header_message || '¡BIENVENIDOS!');
+    setTicketFooter(settings.ticket_footer_message || '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga');
+    setIvaEnabled(Boolean(settings.iva_enabled));
+    setIgtfEnabled(Boolean(settings.igtf_enabled));
+    setPartnersEnabled(Boolean(settings.partners_module_enabled));
+    setEventsQuoteEnabled(Boolean(settings.events_quote_enabled));
+    setAskTableOnOrder(Boolean(settings.ask_table_on_order));
+    setInventoryMode(settings.inventory_operation_mode || 'free');
   }, [settings]);
 
   const saveMutation = useMutation({
@@ -152,6 +153,9 @@ export const BusinessSettingsView: React.FC = () => {
         </div>
       )}
 
+      {/* Acerca del sistema (Visible solo para Admin) */}
+      {isAdmin && <AboutSystemCard />}
+
       <form onSubmit={handleSave} className="space-y-6">
         {/* Inventory Mode Card */}
         <InventoryModeCard
@@ -175,53 +179,24 @@ export const BusinessSettingsView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
               <label className="block text-[11px] font-bold text-ink-muted mb-1">Nombre Comercial de la Marca *</label>
-              <input
-                type="text"
-                required
-                value={businessName}
-                onChange={(e) => setBusinessName(e.target.value)}
-                placeholder="TOCINETA"
-                className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-black uppercase"
-              />
+              <input type="text" required value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="TOCINETA" className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-black uppercase" />
             </div>
 
             <div>
               <label className="block text-[11px] font-bold text-ink-muted mb-1">Registro de Información Fiscal (RIF)</label>
-              <input
-                type="text"
-                value={rif}
-                onChange={(e) => setRif(e.target.value)}
-                placeholder="V-17040918-0"
-                className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-mono font-bold"
-              />
+              <input type="text" value={rif} onChange={(e) => setRif(e.target.value)} placeholder="V-17040918-0" className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-mono font-bold" />
             </div>
 
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-ink-muted mb-1">Eslogan Oficial</label>
-              <input
-                type="text"
-                value={slogan}
-                onChange={(e) => setSlogan(e.target.value)}
-                placeholder="Cocinamos con amor y servimos como mereces"
-                className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-medium"
-              />
+              <input type="text" value={slogan} onChange={(e) => setSlogan(e.target.value)} placeholder="Cocinamos con amor y servimos como mereces" className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-medium" />
             </div>
 
             <div>
               <label className="block text-[11px] font-bold text-ink-muted mb-1">Color Corporativo</label>
               <div className="flex items-center gap-3">
-                <input
-                  type="color"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="w-11 h-11 rounded-xl border border-border cursor-pointer bg-surface p-1"
-                />
-                <input
-                  type="text"
-                  value={primaryColor}
-                  onChange={(e) => setPrimaryColor(e.target.value)}
-                  className="w-28 min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs font-mono font-bold text-ink"
-                />
+                <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-11 h-11 rounded-xl border border-border cursor-pointer bg-surface p-1" />
+                <input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-28 min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs font-mono font-bold text-ink" />
               </div>
             </div>
           </div>
@@ -239,13 +214,7 @@ export const BusinessSettingsView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
               <label className="block text-[11px] font-bold text-ink-muted mb-1">Teléfono / WhatsApp Oficial</label>
-              <input
-                type="text"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="04249728209"
-                className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-mono font-bold"
-              />
+              <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="04249728209" className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-mono font-bold" />
             </div>
 
             <div>
@@ -258,12 +227,7 @@ export const BusinessSettingsView: React.FC = () => {
 
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-ink-muted mb-1">Dirección Física para Tickets y Despacho</label>
-              <textarea
-                rows={2}
-                value={address}
-                onChange={(e) => setAddress(e.target.value)}
-                className="w-full rounded-xl border border-border bg-surface p-2.5 text-xs text-ink outline-none focus:border-primary resize-none font-medium"
-              />
+              <textarea rows={2} value={address} onChange={(e) => setAddress(e.target.value)} className="w-full rounded-xl border border-border bg-surface p-2.5 text-xs text-ink outline-none focus:border-primary resize-none font-medium" />
             </div>
           </div>
         </Card>
@@ -280,32 +244,17 @@ export const BusinessSettingsView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
             <div>
               <label className="block text-[11px] font-bold text-ink-muted mb-1">Hora de Notificación de Cambio de Tasa BCV</label>
-              <input
-                type="time"
-                value={rateChangeHour}
-                onChange={(e) => setRateChangeHour(e.target.value)}
-                className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-mono font-bold"
-              />
+              <input type="time" value={rateChangeHour} onChange={(e) => setRateChangeHour(e.target.value)} className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-mono font-bold" />
             </div>
 
             <div>
               <label className="block text-[11px] font-bold text-ink-muted mb-1">Mensaje de Cabecera en Comanda</label>
-              <input
-                type="text"
-                value={ticketHeader}
-                onChange={(e) => setTicketHeader(e.target.value)}
-                className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-bold"
-              />
+              <input type="text" value={ticketHeader} onChange={(e) => setTicketHeader(e.target.value)} className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-bold" />
             </div>
 
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-ink-muted mb-1">Mensaje de Agradecimiento (Pie de Ticket)</label>
-              <input
-                type="text"
-                value={ticketFooter}
-                onChange={(e) => setTicketFooter(e.target.value)}
-                className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary"
-              />
+              <input type="text" value={ticketFooter} onChange={(e) => setTicketFooter(e.target.value)} className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary" />
             </div>
           </div>
         </Card>
@@ -320,7 +269,6 @@ export const BusinessSettingsView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            {/* IVA */}
             <div className="p-3.5 rounded-xl bg-surface-alt/50 border border-border flex items-center justify-between">
               <div>
                 <span className="font-extrabold text-ink block">Módulo IVA (16%)</span>
@@ -329,7 +277,6 @@ export const BusinessSettingsView: React.FC = () => {
               <input type="checkbox" checked={ivaEnabled} onChange={(e) => setIvaEnabled(e.target.checked)} className="w-5 h-5 rounded cursor-pointer accent-primary" />
             </div>
 
-            {/* IGTF */}
             <div className="p-3.5 rounded-xl bg-surface-alt/50 border border-border flex items-center justify-between">
               <div>
                 <span className="font-extrabold text-ink block">Módulo IGTF (3%)</span>
@@ -338,7 +285,6 @@ export const BusinessSettingsView: React.FC = () => {
               <input type="checkbox" checked={igtfEnabled} onChange={(e) => setIgtfEnabled(e.target.checked)} className="w-5 h-5 rounded cursor-pointer accent-primary" />
             </div>
 
-            {/* Socios */}
             <div className="p-3.5 rounded-xl bg-surface-alt/50 border border-border flex items-center justify-between">
               <div>
                 <span className="font-extrabold text-ink block">Módulo de Socios</span>
@@ -347,7 +293,6 @@ export const BusinessSettingsView: React.FC = () => {
               <input type="checkbox" checked={partnersEnabled} onChange={(e) => setPartnersEnabled(e.target.checked)} className="w-5 h-5 rounded cursor-pointer accent-primary" />
             </div>
 
-            {/* Cotizador */}
             <div className="p-3.5 rounded-xl bg-surface-alt/50 border border-border flex items-center justify-between">
               <div>
                 <span className="font-extrabold text-ink block">Cotizador de Eventos</span>
@@ -356,7 +301,6 @@ export const BusinessSettingsView: React.FC = () => {
               <input type="checkbox" checked={eventsQuoteEnabled} onChange={(e) => setEventsQuoteEnabled(e.target.checked)} className="w-5 h-5 rounded cursor-pointer accent-primary" />
             </div>
 
-            {/* Solicitar mesa al tomar pedido */}
             <div className="p-3.5 rounded-xl bg-surface-alt/50 border border-border flex items-center justify-between sm:col-span-2">
               <div>
                 <span className="font-extrabold text-ink block">Solicitar mesa al tomar pedido</span>
