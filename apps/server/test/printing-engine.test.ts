@@ -50,11 +50,12 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
     // Login Cocinero
     cocineroToken = (await loginAs(app, 'plancha', rawDb)).token;
 
+    // Actualizado por T-04a (D11): una sola sesión de caja abierta por jornada y sede.
     // Abrir jornada con tasa 36.60
     await app.inject({
       method: 'POST',
       url: '/api/jornadas/open',
-      headers: { authorization: `Bearer ${supervisorToken}` },
+      headers: { authorization: `Bearer ${cajeraToken}` },
       payload: {
         rateStr: '36.60',
         initialCashUsdCents: 5000,
@@ -63,7 +64,7 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
     });
 
     // Abrir sesión de cajera
-    await app.inject({
+    const openSess = await app.inject({
       method: 'POST',
       url: '/api/cash-sessions/open',
       headers: { authorization: `Bearer ${cajeraToken}` },
@@ -72,7 +73,8 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
         openingCashBsCents: 183000
       }
     });
-  });
+    expect(openSess.statusCode).toBe(200);
+  }, 30000);
 
   afterAll(async () => {
     if (app) await app.close();

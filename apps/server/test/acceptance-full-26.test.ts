@@ -155,11 +155,12 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
     cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
     mesoneroToken = (await loginAs(app, 'mesero', rawDb)).token;
 
+    // Actualizado por T-04a (D11): una sola sesión de caja abierta por jornada y sede.
     // Abrir Jornada de prueba
     const openJor = await app.inject({
       method: 'POST',
       url: '/api/jornadas/open',
-      headers: { authorization: `Bearer ${adminToken}` },
+      headers: { authorization: `Bearer ${cajeraToken}` },
       payload: {
         rateMicroBs: 40_000_000,
         rateStr: '40.00',
@@ -181,8 +182,9 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
         openingCashBsCents: 200000
       }
     });
+    expect(openSess.statusCode).toBe(200);
     currentSessionId = openSess.json().cashSession?.id || openSess.json().session?.id;
-  });
+  }, 30000);
 
   afterAll(async () => {
     _resetSupportStateForTesting();

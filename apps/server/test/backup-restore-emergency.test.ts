@@ -64,7 +64,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
     adminToken = (await loginAs(app, 'admin', rawDb)).token;
     supervisorToken = (await loginAs(app, 'supervisor', rawDb)).token;
     cajeraToken = (await loginAs(app, 'cajera', rawDb)).token;
-  });
+  }, 30000);
 
   afterAll(async () => {
     // Higiene de claves: limpiar variables de claves privadas en RAM
@@ -326,20 +326,22 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
     });
 
     it('Transcribe una comanda física diferida con hora real y marca auditoría como deferred_paper_entry', async () => {
+      // Actualizado por T-04a (D11): una sola sesión de caja abierta por jornada y sede.
       // 1. Abrir jornada y sesión de caja para permitir cobro
       await app.inject({
         method: 'POST',
         url: '/api/jornadas/open',
-        headers: { authorization: `Bearer ${adminToken}` },
-        payload: { openedByUserId: 'usr_admin', initialCashUsdCents: 5000, initialCashBsCents: 100000 }
+        headers: { authorization: `Bearer ${cajeraToken}` },
+        payload: { openedByUserId: 'usr_cajera', initialCashUsdCents: 5000, initialCashBsCents: 100000 }
       });
 
-      await app.inject({
+      const openSess = await app.inject({
         method: 'POST',
         url: '/api/cash-sessions/open',
         headers: { authorization: `Bearer ${cajeraToken}` },
         payload: { userId: 'usr_cajera', openingCashUsdCents: 2000, openingCashBsCents: 50000 }
       });
+      expect(openSess.statusCode).toBe(200);
 
       // Obtener un producto activo del catálogo
       const prod = rawDb.prepare('SELECT id, price_usd_cents FROM products WHERE is_combo = 0 LIMIT 1').get() as any;
