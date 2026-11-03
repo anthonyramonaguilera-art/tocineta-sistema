@@ -43,7 +43,8 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(status).send({
         success: false,
         error: err.message,
-        code: err.code
+        code: err.code,
+        unavailable: err.unavailable
       });
     }
   });
@@ -198,7 +199,9 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(status).send({
         success: false,
         error: err.message,
-        serverVersion: err.serverVersion
+        serverVersion: err.serverVersion,
+        code: err.code,
+        unavailable: err.unavailable
       });
     }
   });
