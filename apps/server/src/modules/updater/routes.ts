@@ -1,4 +1,7 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import type { FastifyPluginAsync } from 'fastify';
+import { getProjectRoot } from '../../config/paths.js';
 import { getDatabaseContext } from '../../db/connection.js';
 import { getSessionUser } from '../auth/session.js';
 import {
@@ -18,7 +21,19 @@ export const updaterRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. Consultar versión actual del sistema y ventana de mantenimiento
   fastify.get('/api/updater/version', async (_request, reply) => {
     const dbCtx = getDatabaseContext();
-    const version = getCurrentSystemVersion(dbCtx.rawDb);
+    let version = '1.0.0';
+    try {
+      const rootPath = getProjectRoot();
+      const pkgPath = path.join(rootPath, 'package.json');
+      if (fs.existsSync(pkgPath)) {
+        const pkgJson = JSON.parse(fs.readFileSync(pkgPath, 'utf-8'));
+        if (pkgJson.version) {
+          version = pkgJson.version;
+        }
+      }
+    } catch {
+      version = getCurrentSystemVersion(dbCtx.rawDb);
+    }
     const inSalesWindow = isSalesHours();
 
     return reply.status(200).send({

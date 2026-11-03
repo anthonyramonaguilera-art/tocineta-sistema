@@ -229,3 +229,41 @@ Para restaurar cualquier respaldo `.db.age` recibido por Telegram o recuperado d
    powershell -ExecutionPolicy Bypass -File scripts\restore-backup.ps1 -BackupPath "C:\ruta\al\tocineta-backup.db.age"
    ```
 3. El script solicitará la clave privada de recuperación de la Administración, validará la integridad de SQLite y comprobará la cadena inmutable de auditoría antes de restablecer los datos de producción.
+
+---
+
+## 8. Empaquetado y Firma Digital de Actualizaciones (V-2)
+
+Para garantizar la integridad y autenticidad del software en los despliegues de producción, las actualizaciones del Sistema TOCINETA utilizan firma digital criptográfica **Ed25519** junto a hashes individuales **SHA-256** para cada archivo ejecutable y migración.
+
+### 8.1. Generación y Aprovisionamiento del Par de Claves Ed25519
+
+1. **Generación de claves de producción:**
+   Se pueden generar las claves de forma segura con `scripts/provision-production-keys.ts` o mediante Node.js en la máquina de desarrollo segura:
+   ```bash
+   node -e "const { generateKeyPairSync } = require('crypto'); const { publicKey, privateKey } = generateKeyPairSync('ed25519', { publicKeyEncoding: { type: 'spki', format: 'pem' }, privateKeyEncoding: { type: 'pkcs8', format: 'pem' } }); require('fs').writeFileSync('update-private-key.pem', privateKey); require('fs').writeFileSync('update-public-key.pem', publicKey);"
+   ```
+2. **Custodia de la Clave Privada:**
+   - La clave privada (`update-private-key.pem`) **JAMÁS** se sube al repositorio Git ni se copia en la computadora del restaurante.
+   - Se mantiene únicamente en la estación de desarrollo/CI del release manager.
+3. **Instalación de la Clave Pública en el Restaurante:**
+   - En la PC del restaurante, copiar el archivo `update-public-key.pem` en `config/update-public-key.pem` (o configurar su contenido en la variable `UPDATE_PUBLIC_KEY` del archivo `.env`).
+   - El servidor de TOCINETA utilizará esta clave pública para validar cada paquete antes de aplicarlo.
+
+### 8.2. Empaquetado y Firma Oficial (`pnpm run release`)
+
+En la máquina de desarrollo, para generar una actualización firmada:
+1. Asegurar que no existan cambios pendientes en Git (`git status --porcelain` limpio).
+2. Definir la ruta a la clave privada en la variable de entorno:
+   ```powershell
+   $env:RELEASE_PRIVATE_KEY_PATH = "C:\claves\update-private-key.pem"
+   pnpm run release
+   ```
+3. El proceso automatizado:
+   - Valida reglas de diseño (`pnpm run guard`).
+   - Valida TypeScript del backend (`pnpm --filter @tocineta/server run lint`).
+   - Compila todo el monorepo en producción (`pnpm -r run build`).
+   - Empaqueta en `tocineta-X.Y.Z.zip` **únicamente** los artefactos de ejecución: `apps/server/dist`, `apps/web/dist`, `apps/server/src/db/migrations`, `scripts`, `package.json` y `pnpm-lock.yaml`.
+   - Verifica estrictamente la ausencia de `node_modules`, bases de datos en `data/` o secretos `.env`.
+   - Comprueba que el archivo `.zip` pese estrictamente menos de 19 MB (para permitir su descarga a través de los límites de bots de Telegram).
+   - Genera el manifiesto canónico `ReleaseManifest` y lo firma digitalmente con Ed25519, produciendo `tocineta-X.Y.Z.sig`.

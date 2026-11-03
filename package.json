@@ -1,6 +1,6 @@
 {
   "name": "tocineta-sonrie-os",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "Sistema Operativo Local Tocineta Sonrie - Monorepo de Produccion",
   "type": "module",
@@ -8,6 +8,7 @@
     "build": "pnpm --filter @tocineta/shared run build && pnpm --filter @tocineta/server run build && pnpm --filter @tocineta/web run build",
     "test": "pnpm -r run test",
     "guard": "node scripts/ui-guard.mjs",
+    "release": "node scripts/release.mjs",
     "import:photos": "node scripts/import-photos.mjs",
     "lint": "pnpm -r run lint && node scripts/ui-guard.mjs",
     "db:migrate": "pnpm --filter @tocineta/server run db:migrate",
