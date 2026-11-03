@@ -106,27 +106,12 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     });
   };
 
-  // 3. Conmutador [Modo Básico] / [Modo Pro]
-  const [uiMode, setUiMode] = useState<'basico' | 'pro'>(() => {
+  // 3. Limpieza de conmutador obsoleto "Modo Básico" / "Modo Pro"
+  useEffect(() => {
     try {
-      const saved = localStorage.getItem('tocineta_ui_mode');
-      if (saved === 'pro' || saved === 'basico') return saved;
+      localStorage.removeItem('tocineta_ui_mode');
     } catch {}
-    return 'basico';
-  });
-
-  const handleToggleUiMode = (newMode: 'basico' | 'pro') => {
-    setUiMode(newMode);
-    try {
-      localStorage.setItem('tocineta_ui_mode', newMode);
-    } catch {}
-    if (newMode === 'basico') {
-      const adminTabs: TabType[] = ['menu-admin', 'staff', 'profitability', 'health', 'emergency', 'qr-menu'];
-      if (adminTabs.includes(currentTab)) {
-        onTabChange('pos');
-      }
-    }
-  };
+  }, []);
 
   // 4. Logout
   const handleLogout = async () => {
@@ -169,9 +154,6 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           if (!mustChangePin) onTabChange(tab);
         }}
         allowedTabs={allowedTabs}
-        uiMode={uiMode}
-        onToggleUiMode={handleToggleUiMode}
-        isAdmin={isAdmin}
         theme={theme}
         onToggleTheme={handleToggleTheme}
         activeSede={activeSede}
