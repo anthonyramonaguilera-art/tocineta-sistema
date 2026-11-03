@@ -724,7 +724,7 @@ export function loadOrderReceiptDataFromDb(
   const lineRows = rawDb.prepare(`
     SELECT 
       ol.id as line_id,
-      p.name as product_name,
+      COALESCE(ol.custom_name, p.name) as product_name,
       ol.quantity,
       ol.subtotal_usd_cents as price_usd_cents,
       ol.flavor_choice

@@ -39,9 +39,11 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
         order
       });
     } catch (err: any) {
-      return reply.status(400).send({
+      const status = err.statusCode || 400;
+      return reply.status(status).send({
         success: false,
-        error: err.message
+        error: err.message,
+        code: err.code
       });
     }
   });

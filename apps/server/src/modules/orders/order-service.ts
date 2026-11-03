@@ -89,6 +89,9 @@ export interface OrderLineInput {
   customInstructions?: string;
   modifiers?: OrderModifierInput[];
   comboChildren?: ComboChildInput[];
+  customName?: string;
+  customPriceUsdCents?: number;
+  station?: 'hot_dogs' | 'hamburguesas' | 'caja_bebidas';
 }
 
 export interface CreateOrderInput {
@@ -197,6 +200,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
       flavorChoice: string | null;
       customInstructions: string | null;
       snapshotJson: string;
+      customName: string | null;
       modifiers: NormalizedOrderModifier[];
     }
 
@@ -204,6 +208,92 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
 
     for (let i = 0; i < input.lines.length; i++) {
       const lineInput = input.lines[i];
+      // Validación de campos exclusivos de prod_libre y autorización D16
+      if (lineInput.productId !== 'prod_libre') {
+        if (lineInput.customName !== undefined || lineInput.customPriceUsdCents !== undefined || lineInput.station !== undefined) {
+          const err: any = new Error('FREE_ITEM_FIELDS_NOT_ALLOWED: customName, customPriceUsdCents y station solo están permitidos para el producto prod_libre');
+          err.statusCode = 400;
+          err.code = 'FREE_ITEM_FIELDS_NOT_ALLOWED';
+          throw err;
+        }
+      } else {
+        const userRow = rawDb.prepare('SELECT role, permissions_json FROM users WHERE id = ?').get(input.createdByUserId) as any;
+        let isAuthorized = false;
+        if (userRow) {
+          if (userRow.role === 'admin') {
+            isAuthorized = true;
+          } else {
+            let perms: any = undefined;
+            if (userRow.permissions_json) {
+              try {
+                perms = typeof userRow.permissions_json === 'string' ? JSON.parse(userRow.permissions_json) : userRow.permissions_json;
+              } catch {
+                perms = undefined;
+              }
+            }
+            let canAddFreeItem: boolean | undefined = undefined;
+            if (Array.isArray(perms)) {
+              if (perms.includes('canAddFreeItem')) canAddFreeItem = true;
+            } else if (typeof perms === 'object' && perms !== null) {
+              canAddFreeItem = perms.canAddFreeItem;
+            }
+
+            if (canAddFreeItem === true) {
+              isAuthorized = true;
+            } else if (canAddFreeItem === false) {
+              isAuthorized = false;
+            } else {
+              if (userRow.role === 'supervisor' || userRow.role === 'cajera') {
+                isAuthorized = true;
+              } else {
+                isAuthorized = false;
+              }
+            }
+          }
+        }
+        if (!isAuthorized) {
+          const err: any = new Error('FREE_ITEM_FORBIDDEN: Usuario no autorizado para agregar ítems libres');
+          err.statusCode = 403;
+          err.code = 'FREE_ITEM_FORBIDDEN';
+          throw err;
+        }
+
+        if (!lineInput.customName || typeof lineInput.customName !== 'string' || lineInput.customName.trim().length < 1 || lineInput.customName.trim().length > 60) {
+          const err: any = new Error('customName es requerido y debe tener entre 1 y 60 caracteres');
+          err.statusCode = 400;
+          err.code = 'INVALID_FREE_ITEM_NAME';
+          throw err;
+        }
+
+        if (lineInput.customPriceUsdCents === undefined || !Number.isInteger(lineInput.customPriceUsdCents) || lineInput.customPriceUsdCents < 1 || lineInput.customPriceUsdCents > 50000) {
+          const err: any = new Error('customPriceUsdCents debe ser un entero entre 1 y 50000 ($0.01 a $500.00)');
+          err.statusCode = 400;
+          err.code = 'INVALID_FREE_ITEM_PRICE';
+          throw err;
+        }
+
+        if (lineInput.quantity === undefined || !Number.isInteger(lineInput.quantity) || lineInput.quantity < 1 || lineInput.quantity > 99) {
+          const err: any = new Error('quantity debe ser un entero entre 1 y 99');
+          err.statusCode = 400;
+          err.code = 'INVALID_FREE_ITEM_QUANTITY';
+          throw err;
+        }
+
+        if (lineInput.comboChildren && lineInput.comboChildren.length > 0) {
+          const err: any = new Error('Ítem libre no admite comboChildren');
+          err.statusCode = 400;
+          err.code = 'FREE_ITEM_NO_COMBO_CHILDREN';
+          throw err;
+        }
+
+        if (lineInput.station && !['hot_dogs', 'hamburguesas', 'caja_bebidas'].includes(lineInput.station)) {
+          const err: any = new Error('Estación no válida para ítem libre');
+          err.statusCode = 400;
+          err.code = 'INVALID_STATION';
+          throw err;
+        }
+      }
+
       const prod = rawDb.prepare('SELECT * FROM products WHERE id = ?').get(lineInput.productId) as any;
       if (!prod) {
         throw new Error(`Producto '${lineInput.productId}' no existe en el catálogo`);
@@ -243,6 +333,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
           flavorChoice: lineInput.flavorChoice || null,
           customInstructions: lineInput.customInstructions || null,
           snapshotJson: parentSnapshot,
+          customName: null,
           modifiers: lineMods
         });
 
@@ -300,19 +391,25 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
               flavorChoice: cp.childInput.flavorChoice || null,
               customInstructions: cp.childInput.customInstructions || null,
               snapshotJson: childSnapshot,
+              customName: null,
               modifiers: childMods
             });
           }
         }
       } else {
         // --- PRODUCTO REGULAR ---
-        const unitPrice = prod.price_usd_cents + extraPriceMods;
+        const isFreeItem = prod.id === 'prod_libre';
+        const effectiveBasePrice = isFreeItem ? lineInput.customPriceUsdCents! : prod.price_usd_cents;
+        const unitPrice = effectiveBasePrice + extraPriceMods;
         const subtotal = unitPrice * qty;
         grossFoodSubtotalUsdCents += subtotal;
 
+        const effectiveName = isFreeItem ? lineInput.customName!.trim() : prod.name;
+        const effectiveStation = isFreeItem ? (lineInput.station || 'caja_bebidas') : prod.station;
+
         const snapshot = JSON.stringify({
-          productName: prod.name,
-          basePrice: prod.price_usd_cents,
+          productName: effectiveName,
+          basePrice: effectiveBasePrice,
           modifiers: lineMods
         });
 
@@ -325,12 +422,30 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
           unitPriceUsdCents: unitPrice,
           proratedUnitPriceUsdCents: unitPrice,
           subtotalUsdCents: subtotal,
-          station: prod.station,
+          station: effectiveStation,
           flavorChoice: lineInput.flavorChoice || null,
           customInstructions: lineInput.customInstructions || null,
           snapshotJson: snapshot,
+          customName: isFreeItem ? effectiveName : null,
           modifiers: lineMods
         });
+
+        if (isFreeItem) {
+          appendAuditEvent(rawDb, {
+            actorUserId: input.createdByUserId,
+            action: 'FREE_ITEM_ADDED',
+            entityType: 'order_line',
+            entityId: lineId,
+            payload: {
+              orderId,
+              lineId,
+              customName: effectiveName,
+              customPriceUsdCents: effectiveBasePrice,
+              quantity: qty,
+              station: effectiveStation
+            }
+          });
+        }
       }
     }
 
@@ -357,6 +472,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
             flavorChoice: null,
             customInstructions: null,
             snapshotJson: JSON.stringify({ productName: courtProd.name, courtesy: true }),
+            customName: null,
             modifiers: []
           });
         }
@@ -450,8 +566,8 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
       INSERT INTO order_lines (
         id, order_id, product_id, line_role, parent_line_id, quantity,
         unit_price_usd_cents, prorated_unit_price_usd_cents, subtotal_usd_cents,
-        station, flavor_choice, custom_instructions, snapshot_json, created_at_ms
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        station, flavor_choice, custom_instructions, snapshot_json, custom_name, created_at_ms
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `);
 
     const insertModStmt = rawDb.prepare(`
@@ -476,6 +592,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
         pl.flavorChoice,
         pl.customInstructions,
         pl.snapshotJson,
+        pl.customName || null,
         now
       );
 
@@ -527,7 +644,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
  */
 export function hydrateOrderLines(rawDb: Database.Database, orderId: string, options?: { forCashier?: boolean }) {
   const allLines = rawDb.prepare(`
-    SELECT ol.*, p.name as product_name
+    SELECT ol.*, COALESCE(ol.custom_name, p.name) as product_name
     FROM order_lines ol
     JOIN products p ON ol.product_id = p.id
     WHERE ol.order_id = ?
@@ -673,16 +790,19 @@ export function updateOrder(
         const lineQty = line.quantity ?? (line as any).qty ?? 1;
         const prod = rawDb.prepare('SELECT price_usd_cents, station, name FROM products WHERE id = ?').get(prodId) as any;
         const lineId = `line_${generateUuidV7()}`;
-        const unitPrice = prod?.price_usd_cents || 0;
+        const isFreeItem = prodId === 'prod_libre';
+        const customName = isFreeItem ? (line.customName?.trim() || null) : null;
+        const unitPrice = isFreeItem ? (line.customPriceUsdCents ?? prod?.price_usd_cents ?? 0) : (prod?.price_usd_cents || 0);
         const subtotal = unitPrice * lineQty;
         grossSubtotal += subtotal;
+        const station = isFreeItem ? (line.station || 'caja_bebidas') : (prod?.station || 'hot_dogs');
 
         rawDb.prepare(`
           INSERT INTO order_lines (
             id, order_id, product_id, line_role, quantity,
             unit_price_usd_cents, prorated_unit_price_usd_cents, subtotal_usd_cents,
-            station, flavor_choice, custom_instructions, snapshot_json, created_at_ms
-          ) VALUES (?, ?, ?, 'STANDARD', ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            station, flavor_choice, custom_instructions, snapshot_json, custom_name, created_at_ms
+          ) VALUES (?, ?, ?, 'STANDARD', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `).run(
           lineId,
           orderId,
@@ -691,10 +811,11 @@ export function updateOrder(
           unitPrice,
           unitPrice,
           subtotal,
-          prod?.station || 'hot_dogs',
+          station,
           line.flavorChoice || (line as any).flavor_choice || null,
           line.customInstructions || (line as any).custom_instructions || null,
-          JSON.stringify({ name: prod?.name, price: unitPrice }),
+          JSON.stringify({ name: isFreeItem ? customName : prod?.name, price: unitPrice }),
+          customName,
           now
         );
 

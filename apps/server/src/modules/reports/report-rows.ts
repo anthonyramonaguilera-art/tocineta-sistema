@@ -21,6 +21,67 @@ export interface PaymentSectionData {
   totalCollectedUsdCents?: number;
   driverDirectDeliveryUsdCents?: number;
   reconciliationDiffUsdCents?: number;
+  freeItemsUsdCents?: number;
+}
+
+export interface FinancialSectionData {
+  rateMicroBs: number;
+  netFoodSalesUsdCents: number;
+  deliveryFeesUsdCents: number;
+  discountUsdCents: number;
+  totalCollectedUsdCents: number;
+  freeItemsUsdCents?: number;
+}
+
+export interface FinancialSectionRow {
+  label: string;
+  usd: string;
+  bs: string;
+  isInfoOnly?: boolean;
+}
+
+/**
+ * Construye en orden las filas de la sección 1 del reporte de Jornada (Resumen Financiero y Ventas).
+ * Muestra el renglón informativo de ítems libres si existen en la jornada.
+ */
+export function buildFinancialSectionRows(data: FinancialSectionData): FinancialSectionRow[] {
+  const rate = data.rateMicroBs || 40_000_000;
+  const rows: FinancialSectionRow[] = [];
+
+  rows.push({
+    label: 'Venta Neta de Alimentos',
+    usd: `$${(data.netFoodSalesUsdCents / 100).toFixed(2)}`,
+    bs: `Bs ${((data.netFoodSalesUsdCents * rate) / 100_000_000).toFixed(2)}`
+  });
+
+  if ((data.freeItemsUsdCents || 0) > 0) {
+    rows.push({
+      label: 'Items libres (incluidos en ventas)',
+      usd: `$${((data.freeItemsUsdCents || 0) / 100).toFixed(2)}`,
+      bs: `Bs ${(((data.freeItemsUsdCents || 0) * rate) / 100_000_000).toFixed(2)}`,
+      isInfoOnly: true
+    });
+  }
+
+  rows.push({
+    label: 'Fondo Delivery Terceros (Motorizados)',
+    usd: `$${(data.deliveryFeesUsdCents / 100).toFixed(2)}`,
+    bs: `Bs ${((data.deliveryFeesUsdCents * rate) / 100_000_000).toFixed(2)}`
+  });
+
+  rows.push({
+    label: 'Descuentos / Cupones Aplicados',
+    usd: `-$${(data.discountUsdCents / 100).toFixed(2)}`,
+    bs: `-Bs ${((data.discountUsdCents * rate) / 100_000_000).toFixed(2)}`
+  });
+
+  rows.push({
+    label: 'TOTAL RECAUDADO EN CAJA Y BANCOS',
+    usd: `$${(data.totalCollectedUsdCents / 100).toFixed(2)}`,
+    bs: `Bs ${((data.totalCollectedUsdCents * rate) / 100_000_000).toFixed(2)}`
+  });
+
+  return rows;
 }
 
 export interface PaymentSectionRow {

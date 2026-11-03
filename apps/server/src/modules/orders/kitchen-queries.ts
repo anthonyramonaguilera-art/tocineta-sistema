@@ -55,7 +55,7 @@ export function getKitchenBuildableLines(
     SELECT 
       ol.id as line_id,
       ol.product_id,
-      p.name as product_name,
+      COALESCE(ol.custom_name, p.name) as product_name,
       ol.line_role,
       ol.quantity,
       ol.station,

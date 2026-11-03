@@ -361,6 +361,17 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
   `).get(jornada.id) as any;
   const reconciliationToleranceCents = (bsPaymentsRow?.count || 0) * 1;
 
+  const freeItemsRow = rawDb.prepare(`
+    SELECT COALESCE(SUM(ol.subtotal_usd_cents), 0) as freeItems
+    FROM order_lines ol
+    JOIN orders o ON ol.order_id = o.id
+    WHERE o.jornada_id = ?
+      AND o.fulfillment_status NOT IN ('anulado', 'cancelado')
+      AND o.payment_status = 'pagado'
+      AND ol.product_id = 'prod_libre'
+  `).get(jornada.id) as any;
+  const freeItemsUsdCents = freeItemsRow?.freeItems || 0;
+
   return {
     jornada,
     rateMicroBs: ft.rateMicroBs,
@@ -369,6 +380,7 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
     discountUsdCents: ft.orders.discountsUsdCents,
     deliveryFeesUsdCents: ft.orders.deliveryFeesUsdCents,
     totalCollectedUsdCents: ft.orders.netSalesUsdCents + ft.orders.deliveryFeesUsdCents,
+    freeItemsUsdCents,
     cashUsdCents: cashUsdMethod?.grossUsdCents || 0,
     cashBsCents: cashBsMethod?.grossBsCents || 0,
     pagoMovilBsCents: pagoMovilMethod?.grossBsCents || 0,
@@ -475,6 +487,14 @@ export async function generateJornadaExcelReport(
     valBs: ((data.netFoodSalesUsdCents * data.rateMicroBs) / 100_000_000).toFixed(2),
     notes: 'Ventas de comida sin delivery'
   });
+  if ((data.freeItemsUsdCents || 0) > 0) {
+    summarySheet.addRow({
+      concept: 'Items libres (incluidos en ventas)',
+      valUsd: ((data.freeItemsUsdCents || 0) / 100).toFixed(2),
+      valBs: (((data.freeItemsUsdCents || 0) * data.rateMicroBs) / 100_000_000).toFixed(2),
+      notes: 'Renglón informativo de ítems libres'
+    });
+  }
   summarySheet.addRow({
     concept: 'Fondo Delivery (Motorizados)',
     valUsd: (data.deliveryFeesUsdCents / 100).toFixed(2),
@@ -706,6 +726,9 @@ export function generateJornadaPdfReport(
       };
 
       renderRow('Venta Neta de Alimentos', `$${(data.netFoodSalesUsdCents / 100).toFixed(2)}`, `Bs ${((data.netFoodSalesUsdCents * data.rateMicroBs) / 100_000_000).toFixed(2)}`);
+      if ((data.freeItemsUsdCents || 0) > 0) {
+        renderRow('Items libres (incluidos en ventas)', `$${((data.freeItemsUsdCents || 0) / 100).toFixed(2)}`, `Bs ${(((data.freeItemsUsdCents || 0) * data.rateMicroBs) / 100_000_000).toFixed(2)}`);
+      }
       renderRow('Fondo Delivery Terceros (Motorizados)', `$${(data.deliveryFeesUsdCents / 100).toFixed(2)}`, `Bs ${((data.deliveryFeesUsdCents * data.rateMicroBs) / 100_000_000).toFixed(2)}`);
       renderRow('Descuentos / Cupones Aplicados', `-$${(data.discountUsdCents / 100).toFixed(2)}`, `-Bs ${((data.discountUsdCents * data.rateMicroBs) / 100_000_000).toFixed(2)}`);
       doc.moveTo(45, doc.y).lineTo(565, doc.y).stroke('#cccccc');
