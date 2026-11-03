@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { canUserProcessPayments } from '@tocineta/shared';
 import { useAuth } from '../context/AuthContext.js';
 import { queryClient, ALLOWED_TABS_BY_ROLE, type TabType } from '../App.js';
+import { apiFetch } from '../api/client.js';
 import { AppHeader } from './AppHeader.js';
 import { AppSidebar } from './AppSidebar.js';
 import { PrintAttentionModal } from '../features/cashier/PrintAttentionModal.js';
@@ -113,7 +115,23 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     } catch {}
   }, []);
 
-  // 4. Logout
+  // 4. Modo de Operación de Inventario desde businessSettings
+  const { data: settingsData } = useQuery<{
+    success: boolean;
+    settings?: { inventory_operation_mode?: string; inventoryOperationMode?: string };
+  }>({
+    queryKey: ['businessSettings'],
+    queryFn: async () => {
+      const res = await apiFetch('/api/business-settings');
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 60000
+  });
+
+  const inventoryMode = settingsData?.settings?.inventory_operation_mode || settingsData?.settings?.inventoryOperationMode || 'free';
+
+  // 5. Logout
   const handleLogout = async () => {
     queryClient.clear();
     onTabChange('pos');
@@ -154,6 +172,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
           if (!mustChangePin) onTabChange(tab);
         }}
         allowedTabs={allowedTabs}
+        inventoryMode={inventoryMode}
         theme={theme}
         onToggleTheme={handleToggleTheme}
         activeSede={activeSede}

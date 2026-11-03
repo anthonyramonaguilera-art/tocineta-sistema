@@ -120,6 +120,22 @@ const MainNavigator: React.FC = () => {
 
   const [routeHash, setRouteHash] = useState<string>(() => window.location.hash || window.location.pathname);
 
+  // Modo de operación de inventario
+  const { data: settingsData } = useQuery<{
+    success: boolean;
+    settings?: { inventory_operation_mode?: string; inventoryOperationMode?: string };
+  }>({
+    queryKey: ['businessSettings'],
+    queryFn: async () => {
+      const res = await apiFetch('/api/business-settings');
+      if (!res.ok) return null;
+      return res.json();
+    },
+    staleTime: 60000
+  });
+
+  const inventoryMode = settingsData?.settings?.inventory_operation_mode || settingsData?.settings?.inventoryOperationMode || 'free';
+
   useEffect(() => {
     const handleHashChange = () => {
       const hashStr = window.location.hash || window.location.pathname;
@@ -170,6 +186,13 @@ const MainNavigator: React.FC = () => {
       setCurrentTab(fallback);
     }
   }, [currentTab, user]);
+
+  // Guardia activa: Si intentan entrar a inventario en modo libre, redirigir a 'home'
+  React.useEffect(() => {
+    if (currentTab === 'profitability' && inventoryMode === 'free') {
+      setCurrentTab('home');
+    }
+  }, [currentTab, inventoryMode]);
 
   const { data: menuData } = useQuery<{ formattedRate?: string }>({
     queryKey: ['posMenu'],

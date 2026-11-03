@@ -2,29 +2,44 @@ import React from 'react';
 import type { TabType } from '../App.js';
 import { Icon, type IconName } from '../ui/index.js';
 
+export type MenuSection = 'operacion' | 'gestion' | 'sistema';
+
 interface MenuItem {
   tab: TabType;
   label: string;
   icon: IconName;
+  section: MenuSection;
+  requiresInventory?: boolean;
   isImplemented: boolean;
 }
 
 const MENU_ITEMS: MenuItem[] = [
-  { tab: 'home', label: 'Inicio', icon: 'LayoutDashboard', isImplemented: true },
-  { tab: 'pos', label: 'Tomar Pedido', icon: 'ShoppingBag', isImplemented: true },
-  { tab: 'kds', label: 'Plancha y Cocina', icon: 'Flame', isImplemented: true },
-  { tab: 'cashier', label: 'Caja y Cierre', icon: 'DollarSign', isImplemented: true },
-  { tab: 'profitability', label: 'Inventario Rápido', icon: 'Package', isImplemented: true },
-  { tab: 'finances', label: 'Finanzas', icon: 'CircleDollarSign', isImplemented: true },
-  { tab: 'owner', label: 'Panel Dueña', icon: 'TrendingUp', isImplemented: true },
-  { tab: 'menu-admin', label: 'Carta y Precios', icon: 'Utensils', isImplemented: true },
-  { tab: 'staff', label: 'Personal y Permisos', icon: 'Users', isImplemented: true },
-  { tab: 'health', label: 'Salud y Hardware', icon: 'Cpu', isImplemented: true },
-  { tab: 'emergency', label: 'Talonario Contingencia', icon: 'FileText', isImplemented: true },
-  { tab: 'qr-menu', label: 'Menú Digital QR', icon: 'QrCode', isImplemented: true },
-  { tab: 'quotes', label: 'Cotizador Eventos', icon: 'Calculator', isImplemented: true },
-  { tab: 'partners', label: 'Socios', icon: 'Handshake', isImplemented: true },
-  { tab: 'settings', label: 'Configuración Negocio', icon: 'Settings', isImplemented: true }
+  // SECCIÓN OPERACIÓN
+  { tab: 'home', label: 'Inicio', icon: 'LayoutDashboard', section: 'operacion', isImplemented: true },
+  { tab: 'pos', label: 'Tomar Pedido', icon: 'ShoppingBag', section: 'operacion', isImplemented: true },
+  { tab: 'kds', label: 'Plancha y Cocina', icon: 'Flame', section: 'operacion', isImplemented: true },
+  { tab: 'cashier', label: 'Caja y Cierre', icon: 'DollarSign', section: 'operacion', isImplemented: true },
+
+  // SECCIÓN GESTIÓN
+  { tab: 'profitability', label: 'Inventario', icon: 'Package', section: 'gestion', requiresInventory: true, isImplemented: true },
+  { tab: 'menu-admin', label: 'Carta y Precios', icon: 'Utensils', section: 'gestion', isImplemented: true },
+  { tab: 'staff', label: 'Personal y Permisos', icon: 'Users', section: 'gestion', isImplemented: true },
+  { tab: 'finances', label: 'Finanzas', icon: 'CircleDollarSign', section: 'gestion', isImplemented: true },
+  { tab: 'owner', label: 'Panel Dueña', icon: 'TrendingUp', section: 'gestion', isImplemented: true },
+  { tab: 'quotes', label: 'Cotizador Eventos', icon: 'Calculator', section: 'gestion', isImplemented: true },
+  { tab: 'partners', label: 'Socios', icon: 'Handshake', section: 'gestion', isImplemented: true },
+
+  // SECCIÓN SISTEMA
+  { tab: 'health', label: 'Salud y Hardware', icon: 'Cpu', section: 'sistema', isImplemented: true },
+  { tab: 'emergency', label: 'Talonario Contingencia', icon: 'FileText', section: 'sistema', isImplemented: true },
+  { tab: 'qr-menu', label: 'Menú Digital QR', icon: 'QrCode', section: 'sistema', isImplemented: true },
+  { tab: 'settings', label: 'Configuración Negocio', icon: 'Settings', section: 'sistema', isImplemented: true }
+];
+
+const SECTIONS: { id: MenuSection; label: string }[] = [
+  { id: 'operacion', label: 'Operación' },
+  { id: 'gestion', label: 'Gestión' },
+  { id: 'sistema', label: 'Sistema' }
 ];
 
 export interface AppSidebarProps {
@@ -33,6 +48,7 @@ export interface AppSidebarProps {
   currentTab: TabType;
   onSelectTab: (tab: TabType) => void;
   allowedTabs: TabType[];
+  inventoryMode?: string;
   theme: 'light' | 'dark';
   onToggleTheme: () => void;
   activeSede: 'sede_a' | 'sede_b';
@@ -49,6 +65,7 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
   currentTab,
   onSelectTab,
   allowedTabs,
+  inventoryMode = 'free',
   theme,
   onToggleTheme,
   activeSede,
@@ -60,10 +77,11 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
 }) => {
   if (!isOpen) return null;
 
-  // Filtrar solo items implementados y permitidos para el rol
+  // Filtrar solo items implementados y permitidos para el rol, ocultando requiresInventory si es modo free
   const visibleItems = MENU_ITEMS.filter((item) => {
     if (!item.isImplemented) return false;
     if (!allowedTabs.includes(item.tab)) return false;
+    if (inventoryMode === 'free' && item.requiresInventory) return false;
     return true;
   });
 
@@ -100,33 +118,41 @@ export const AppSidebar: React.FC<AppSidebarProps> = ({
           </button>
         </div>
 
-        {/* Lista de Módulos */}
-        <div className="flex-1 overflow-y-auto p-3 space-y-1">
-          <div className="px-2 py-1 text-[10px] font-black text-ink-muted uppercase tracking-wider">
-            Módulos Operativos
-          </div>
+        {/* Lista de Módulos dividida en 3 Secciones */}
+        <div className="flex-1 overflow-y-auto p-3 space-y-4">
+          {SECTIONS.map((sec) => {
+            const items = visibleItems.filter((item) => item.section === sec.id);
+            if (items.length === 0) return null;
 
-          {visibleItems.map((item) => {
-            const isActive = currentTab === item.tab;
             return (
-              <button
-                key={item.tab}
-                type="button"
-                onClick={() => {
-                  onSelectTab(item.tab);
-                  onClose();
-                }}
-                className={`w-full min-h-[48px] px-3 rounded-xl flex items-center justify-between gap-3 text-xs font-bold transition-all cursor-pointer ${
-                  isActive
-                    ? 'bg-primary text-primary-ink shadow-sm'
-                    : 'text-ink hover:bg-surface-alt'
-                }`}
-              >
-                <div className="flex items-center gap-2.5">
-                  <Icon name={item.icon} size={18} />
-                  <span>{item.label}</span>
+              <div key={sec.id} className="space-y-1">
+                <div className="px-2 py-1 text-[10px] font-black text-ink-muted uppercase tracking-wider">
+                  {sec.label}
                 </div>
-              </button>
+                {items.map((item) => {
+                  const isActive = currentTab === item.tab;
+                  return (
+                    <button
+                      key={item.tab}
+                      type="button"
+                      onClick={() => {
+                        onSelectTab(item.tab);
+                        onClose();
+                      }}
+                      className={`w-full min-h-[48px] px-3 rounded-xl flex items-center justify-between gap-3 text-xs font-bold transition-all cursor-pointer ${
+                        isActive
+                          ? 'bg-primary text-primary-ink shadow-sm'
+                          : 'text-ink hover:bg-surface-alt'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Icon name={item.icon} size={18} />
+                        <span>{item.label}</span>
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
             );
           })}
         </div>
