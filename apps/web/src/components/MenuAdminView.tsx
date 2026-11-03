@@ -797,7 +797,7 @@ export const MenuAdminView: React.FC = () => {
                             }}
                             className="w-12 px-1 py-0.5 text-center text-xs font-mono font-bold bg-surface border border-border rounded text-ink"
                           />
-                          <span className="text-[10px] font-bold text-slate-400">%</span>
+                          <span className="text-[10px] font-bold text-ink-muted">%</span>
                         </div>
                       </div>
 
@@ -886,8 +886,8 @@ export const MenuAdminView: React.FC = () => {
                         }
                         className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
                           p.isAvailable
-                            ? 'bg-emerald-500/20 text-success font-bold border border-emerald-500/40'
-                            : 'bg-red-500/20 text-red-400 border border-red-500/40'
+                            ? 'bg-success-subtle text-success font-bold border border-success/40'
+                            : 'bg-danger-subtle text-danger border border-danger/40'
                         }`}
                       >
                         {p.isAvailable ? '● Disponible' : '○ Agotado'}
@@ -982,7 +982,7 @@ export const MenuAdminView: React.FC = () => {
                         <td className="p-3 font-mono font-black text-primary-ink text-sm">
                           ${suggestedPrice.toFixed(2)}
                         </td>
-                        <td className="p-3 font-mono text-slate-300">
+                        <td className="p-3 font-mono text-ink-muted">
                           ${currentPrice.toFixed(2)}
                         </td>
                         <td className="p-3 font-mono text-success font-bold font-bold">
@@ -1054,7 +1054,7 @@ export const MenuAdminView: React.FC = () => {
                         <td className="p-3 font-bold text-ink">{s.name}</td>
                         <td className="p-3 text-ink-muted uppercase text-[10px] font-mono">{s.category}</td>
                         <td className="p-3 text-ink-muted font-mono">{s.unitMeasure || s.unit_measure || 'und'}</td>
-                        <td className="p-3 font-mono text-slate-400">${prevCost.toFixed(2)}</td>
+                        <td className="p-3 font-mono text-ink-muted">${prevCost.toFixed(2)}</td>
                         <td className="p-3 font-mono font-bold text-ink">${currCost.toFixed(2)}</td>
                         <td className="p-3 font-mono">
                           {didIncrease ? (
@@ -1062,12 +1062,12 @@ export const MenuAdminView: React.FC = () => {
                               <Icon name="TrendingUp" size={12} className="inline mr-1" /> Subió +{diffPct.toFixed(1)}%
                             </span>
                           ) : (
-                            <span className="px-2 py-0.5 rounded-md bg-emerald-500/20 text-success font-bold border border-emerald-500/30 text-[10px] font-bold">
+                            <span className="px-2 py-0.5 rounded-md bg-success-subtle text-success font-bold border border-success/30 text-[10px] font-bold">
                               ✓ Estable
                             </span>
                           )}
                         </td>
-                        <td className="p-3 font-mono font-bold text-slate-300">
+                        <td className="p-3 font-mono font-bold text-ink-muted">
                           {s.currentStockUnits ?? s.current_stock_units ?? 0} {s.unitMeasure || 'und'}
                         </td>
                       </tr>
@@ -1231,7 +1231,7 @@ export const MenuAdminView: React.FC = () => {
                             onClick={() => toggleCouponMutation.mutate(c.id)}
                             className={`px-3 py-1 rounded-full text-xs font-bold border transition-all ${
                               c.is_active
-                                ? 'bg-emerald-500/20 text-success font-bold border-emerald-500/40'
+                                ? 'bg-success-subtle text-success font-bold border-success/40'
                                 : 'bg-danger-subtle text-danger border-danger/30'
                             }`}
                           >
@@ -1335,7 +1335,7 @@ export const MenuAdminView: React.FC = () => {
       {/* MODAL EDITOR / CREADOR DE PRODUCTO CON SUBIDA DE FOTO               */}
       {/* -------------------------------------------------------------------- */}
       {isCreatingProduct && (
-        <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain">
+        <div className="fixed inset-0 z-50 bg-ink/80 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain">
           <div className="bg-surface border border-border rounded-2xl p-6 max-w-lg w-full shadow-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <h3 className="text-base font-extrabold text-ink">
@@ -1439,7 +1439,7 @@ export const MenuAdminView: React.FC = () => {
                   type="file"
                   accept="image/png, image/jpeg, image/webp"
                   onChange={handlePhotoSelect}
-                  className="w-full text-xs text-ink-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border file:border-border file:bg-surface file:text-white file:text-xs hover:file:border-tocineta-yellow cursor-pointer"
+                  className="w-full text-xs text-ink-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border file:border-border file:bg-surface file:text-ink file:text-xs hover:file:border-tocineta-yellow cursor-pointer"
                 />
                 {photoBase64 && (
                   <div className="mt-2 text-[10px] text-success flex items-center gap-1 font-semibold">
@@ -1470,7 +1470,7 @@ export const MenuAdminView: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleRemoveIngredient(ing)}
-                          className="text-ink-muted hover:text-red-400 font-bold ml-1"
+                          className="text-ink-muted hover:text-danger font-bold ml-1"
                           title="Quitar ingrediente"
                         >
                           ✕
@@ -1549,7 +1549,7 @@ export const MenuAdminView: React.FC = () => {
 
       {/* MODAL NUEVA CATEGORÍA */}
       {isCategoryModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain">
+        <div className="fixed inset-0 z-50 bg-ink/80 backdrop-blur-sm flex items-center justify-center p-4 overscroll-contain">
           <div className="bg-surface border border-border rounded-2xl p-6 max-w-sm w-full shadow-2xl">
             <div className="flex items-center justify-between pb-3 border-b border-border">
               <h3 className="text-base font-bold text-ink">Nueva Categoría</h3>

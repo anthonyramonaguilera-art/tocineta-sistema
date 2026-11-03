@@ -171,7 +171,7 @@ export const PaymentWizardStep3: React.FC<PaymentWizardStep3Props> = ({
               type="button"
               className={`p-2 rounded-xl text-xs font-bold border transition-colors ${
                 splitMode === 'all_usd'
-                  ? 'bg-primary text-white border-primary'
+                  ? 'bg-primary text-primary-ink border-primary'
                   : 'bg-surface text-ink border-border hover:bg-surface-hover'
               }`}
               onClick={handleSelectAllUsd}
@@ -182,7 +182,7 @@ export const PaymentWizardStep3: React.FC<PaymentWizardStep3Props> = ({
               type="button"
               className={`p-2 rounded-xl text-xs font-bold border transition-colors ${
                 splitMode === 'all_bs'
-                  ? 'bg-primary text-white border-primary'
+                  ? 'bg-primary text-primary-ink border-primary'
                   : 'bg-surface text-ink border-border hover:bg-surface-hover'
               }`}
               onClick={handleSelectAllBs}
@@ -193,7 +193,7 @@ export const PaymentWizardStep3: React.FC<PaymentWizardStep3Props> = ({
               type="button"
               className={`p-2 rounded-xl text-xs font-bold border transition-colors ${
                 splitMode === 'mixed'
-                  ? 'bg-primary text-white border-primary'
+                  ? 'bg-primary text-primary-ink border-primary'
                   : 'bg-surface text-ink border-border hover:bg-surface-hover'
               }`}
               onClick={handleSelectMixed}

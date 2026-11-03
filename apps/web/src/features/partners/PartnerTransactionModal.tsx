@@ -70,7 +70,7 @@ export const PartnerTransactionModal: React.FC<PartnerTransactionModalProps> = (
               type="button"
               onClick={() => setType('APORTE')}
               className={`min-h-[44px] rounded-lg font-extrabold flex items-center justify-center gap-1.5 transition-all ${
-                type === 'APORTE' ? 'bg-success text-white shadow-xs' : 'text-ink-muted hover:text-ink'
+                type === 'APORTE' ? 'bg-success text-success-ink shadow-xs' : 'text-ink-muted hover:text-ink'
               }`}
             >
               <Icon name="PlusCircle" size={15} /> Aporte Capital

@@ -114,7 +114,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
   const hasActiveCoupon = Boolean(currentCouponId) || currentDiscountCents > 0 || hasCourtesyLine;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in">
+    <div className="fixed inset-0 z-50 bg-ink/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in">
       <div className="bg-tocineta-card border border-tocineta-border rounded-3xl p-6 max-w-lg w-full shadow-2xl space-y-5">
         
         {/* Cabecera */}
@@ -122,7 +122,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
           <div className="flex items-center gap-2">
             <Icon name="Gift" size={24} className="text-tocineta-yellow" />
             <div>
-              <h3 className="font-black text-base text-white">
+              <h3 className="font-black text-base text-ink">
                 Cupones para ti • Orden #{orderNumber}
               </h3>
               <p className="text-xs text-tocineta-muted">
@@ -133,7 +133,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-tocineta-bg text-tocineta-muted hover:text-white flex items-center justify-center font-bold"
+            className="w-8 h-8 rounded-xl bg-tocineta-bg text-tocineta-muted hover:text-ink flex items-center justify-center font-bold"
           >
             ✕
           </button>
@@ -141,13 +141,13 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
 
         {/* Notificaciones */}
         {errorMsg && (
-          <div className="p-3 rounded-2xl bg-red-500/15 border border-red-500/40 text-red-300 text-xs font-bold flex items-center gap-2">
-            <Icon name="AlertTriangle" size={16} className="text-red-400 shrink-0" />
+          <div className="p-3 rounded-2xl bg-danger-subtle border border-danger/40 text-danger text-xs font-bold flex items-center gap-2">
+            <Icon name="AlertTriangle" size={16} className="text-danger shrink-0" />
             <span>{errorMsg}</span>
           </div>
         )}
         {successMsg && (
-          <div className="p-3 rounded-2xl bg-emerald-500/15 border border-emerald-500/40 text-emerald-300 text-xs font-bold flex items-center gap-2">
+          <div className="p-3 rounded-2xl bg-success-subtle border border-success/40 text-success text-xs font-bold flex items-center gap-2">
             <span>✓</span>
             <span>{successMsg}</span>
           </div>
@@ -160,7 +160,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
               <span className="text-[10px] font-bold uppercase tracking-wider text-tocineta-yellow block">
                 Cupón Actualmente Aplicado
               </span>
-              <span className="text-sm font-black text-white">
+              <span className="text-sm font-black text-ink">
                 {currentDiscountCents > 0 ? `Descuento: -$${(currentDiscountCents / 100).toFixed(2)}` : 'Ítem de Cortesía [OBSEQUIO CUPÓN - $0.00]'}
               </span>
             </div>
@@ -168,7 +168,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
               type="button"
               disabled={isLoading}
               onClick={handleRemoveCoupon}
-              className="px-3 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 text-xs font-bold transition-all disabled:opacity-50"
+              className="px-3 py-1.5 rounded-xl bg-danger-subtle hover:bg-danger-subtle/80 text-danger border border-danger/40 text-xs font-bold transition-all disabled:opacity-50"
             >
               {isLoading ? 'Quitando...' : '✕ Quitar Cupón'}
             </button>
@@ -193,7 +193,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
               type="button"
               disabled={isLoading || !couponCodeInput.trim()}
               onClick={() => handleApplyCoupon(couponCodeInput)}
-              className="min-h-[48px] px-5 rounded-xl bg-tocineta-yellow text-tocineta-bg font-black text-xs hover:bg-tocineta-yellow-hover active:scale-95 transition-all disabled:opacity-40 shrink-0"
+              className="min-h-[48px] px-5 rounded-xl bg-tocineta-yellow text-primary-ink font-black text-xs hover:bg-tocineta-yellow-hover active:scale-95 transition-all disabled:opacity-40 shrink-0"
             >
               {isLoading ? 'Validando...' : 'Aplicar'}
             </button>
@@ -236,7 +236,7 @@ export const ApplyCouponModal: React.FC<ApplyCouponModalProps> = ({
           <button
             type="button"
             onClick={onClose}
-            className="min-h-[44px] px-5 rounded-xl bg-tocineta-bg border border-tocineta-border text-white text-xs font-bold hover:border-white transition-all"
+            className="min-h-[44px] px-5 rounded-xl bg-tocineta-bg border border-tocineta-border text-ink text-xs font-bold hover:border-border-subtle transition-all"
           >
             Cerrar
           </button>

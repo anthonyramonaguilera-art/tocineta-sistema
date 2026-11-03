@@ -63,21 +63,21 @@ export const SupportBanner: React.FC = () => {
   };
 
   return (
-    <div className="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white shadow-lg border-b-2 border-amber-300/40 px-4 py-2 flex flex-wrap items-center justify-between gap-3 animate-pulse z-50">
+    <div className="w-full bg-warning text-warning-ink shadow-lg border-b-2 border-warning/40 px-4 py-2 flex flex-wrap items-center justify-between gap-3 animate-pulse z-50">
       <div className="flex items-center gap-3">
-        <div className="p-1.5 bg-black/20 rounded-lg">
-          <Wrench className="w-5 h-5 text-amber-200" />
+        <div className="p-1.5 bg-ink/20 rounded-lg">
+          <Wrench className="w-5 h-5 text-warning-ink" />
         </div>
         <div>
           <div className="text-xs sm:text-sm font-black tracking-wide uppercase flex items-center gap-2">
             <span>MODO SOPORTE TÉCNICO ACTIVO — SESIÓN AUDITADA</span>
             {support.quickAssistLaunched && (
-              <span className="hidden md:inline-flex items-center gap-1 text-[10px] bg-black/30 px-2 py-0.5 rounded-full font-mono text-emerald-200">
+              <span className="hidden md:inline-flex items-center gap-1 text-[10px] bg-ink/30 px-2 py-0.5 rounded-full font-mono text-success">
                 <CheckCircle2 className="w-3 h-3" /> Quick Assist
               </span>
             )}
           </div>
-          <div className="text-[11px] text-amber-100 flex items-center gap-3">
+          <div className="text-[11px] text-warning-ink/90 flex items-center gap-3">
             <span>Autorizado por: <strong>{support.startedByName || 'Administrador'}</strong></span>
             <span>•</span>
             <span className="flex items-center gap-1 font-mono font-bold">
@@ -93,7 +93,7 @@ export const SupportBanner: React.FC = () => {
             type="button"
             disabled={isStopping}
             onClick={handleStopSupport}
-            className="px-3 py-1 bg-black/40 hover:bg-black/60 active:scale-95 text-white border border-white/30 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
+            className="px-3 py-1 bg-ink/40 hover:bg-ink/60 active:scale-95 text-warning-ink border border-warning-ink/30 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 shadow-sm disabled:opacity-50"
           >
             <X className="w-3.5 h-3.5" />
             <span>{isStopping ? 'Cerrando...' : 'Finalizar Soporte'}</span>
@@ -172,13 +172,13 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in">
-      <div className="bg-tocineta-card border border-amber-500/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
+    <div className="fixed inset-0 z-50 bg-ink/80 backdrop-blur-sm flex items-center justify-center p-3 animate-in fade-in">
+      <div className="bg-tocineta-card border border-warning/40 rounded-3xl p-6 max-w-md w-full shadow-2xl space-y-4">
         <div className="flex items-center justify-between border-b border-tocineta-border pb-3">
           <div className="flex items-center gap-2">
-            <Wrench className="w-6 h-6 text-amber-400 shrink-0" />
+            <Wrench className="w-6 h-6 text-warning shrink-0" />
             <div>
-              <h3 className="font-black text-sm text-white uppercase tracking-tight">
+              <h3 className="font-black text-sm text-ink uppercase tracking-tight">
                 Iniciar Asistencia Técnica Remota
               </h3>
               <p className="text-[11px] text-tocineta-muted">
@@ -189,14 +189,14 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-xl bg-tocineta-bg text-tocineta-muted hover:text-white flex items-center justify-center font-bold"
+            className="w-8 h-8 rounded-xl bg-tocineta-bg text-tocineta-muted hover:text-ink flex items-center justify-center font-bold"
           >
             ✕
           </button>
         </div>
 
         {errorMsg && (
-          <div className="p-3 rounded-2xl bg-red-500/15 border border-red-500/40 text-red-300 text-xs font-bold flex items-center gap-2">
+          <div className="p-3 rounded-2xl bg-danger-subtle border border-danger/40 text-danger text-xs font-bold flex items-center gap-2">
             <ShieldAlert className="w-4 h-4 shrink-0" />
             <span>{errorMsg}</span>
           </div>
@@ -204,12 +204,12 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
 
         {fallbackRequired ? (
           <div className="space-y-3 py-2 animate-in fade-in">
-            <div className="p-3 bg-amber-500/15 border border-amber-500/40 rounded-2xl text-amber-200 text-xs font-semibold">
+            <div className="p-3 bg-warning-subtle border border-warning/40 rounded-2xl text-warning text-xs font-semibold">
               <p className="font-bold flex items-center gap-1.5">
-                <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
+                <ShieldAlert className="w-4 h-4 text-warning shrink-0" />
                 Quick Assist no se inició automáticamente.
               </p>
-              <p className="text-[11px] mt-1 text-amber-300/80">Seleccione una de las alternativas autorizadas por Soporte Técnico:</p>
+              <p className="text-[11px] mt-1 text-warning/80">Seleccione una de las alternativas autorizadas por Soporte Técnico:</p>
             </div>
             <div className="space-y-2">
               {fallbackOptions.map(opt => (
@@ -217,17 +217,17 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
                   key={opt}
                   type="button"
                   onClick={() => handleSelectFallback(opt)}
-                  className="w-full text-left p-3 rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-amber-400 text-xs font-bold text-white transition-all flex items-center justify-between group hover:bg-amber-500/10"
+                  className="w-full text-left p-3 rounded-xl bg-tocineta-bg border border-tocineta-border hover:border-warning text-xs font-bold text-ink transition-all flex items-center justify-between group hover:bg-warning-subtle"
                 >
                   <span>{opt}</span>
-                  <span className="text-amber-400 opacity-0 group-hover:opacity-100 transition-opacity">➔</span>
+                  <span className="text-warning opacity-0 group-hover:opacity-100 transition-opacity">➔</span>
                 </button>
               ))}
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="w-full min-h-[40px] rounded-xl bg-tocineta-bg border border-tocineta-border text-tocineta-muted hover:text-white font-bold text-xs mt-2"
+              className="w-full min-h-[40px] rounded-xl bg-tocineta-bg border border-tocineta-border text-tocineta-muted hover:text-ink font-bold text-xs mt-2"
             >
               Cerrar
             </button>
@@ -245,7 +245,7 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
                 value={adminPin}
                 onChange={e => setAdminPin(e.target.value.replace(/\D/g, ''))}
                 placeholder="••••••"
-                className="w-full min-h-[48px] bg-tocineta-bg border border-tocineta-border rounded-xl px-4 text-center font-mono font-black text-xl text-amber-400 tracking-widest outline-none focus:border-amber-400"
+                className="w-full min-h-[48px] bg-tocineta-bg border border-tocineta-border rounded-xl px-4 text-center font-mono font-black text-xl text-warning tracking-widest outline-none focus:border-warning"
               />
             </div>
 
@@ -258,7 +258,7 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
                 value={notes}
                 onChange={e => setNotes(e.target.value)}
                 placeholder="Ej: Mantenimiento preventivo, revisión de impresoras..."
-                className="w-full min-h-[44px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-white outline-none focus:border-amber-400"
+                className="w-full min-h-[44px] bg-tocineta-bg border border-tocineta-border rounded-xl px-3 text-xs text-ink outline-none focus:border-warning"
               />
             </div>
 
@@ -266,14 +266,14 @@ export const StartSupportModal: React.FC<StartSupportModalProps> = ({ isOpen, on
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 min-h-[46px] rounded-xl bg-tocineta-bg border border-tocineta-border text-tocineta-muted hover:text-white font-bold text-xs"
+                className="flex-1 min-h-[46px] rounded-xl bg-tocineta-bg border border-tocineta-border text-tocineta-muted hover:text-ink font-bold text-xs"
               >
                 Cancelar
               </button>
               <button
                 type="submit"
                 disabled={isSubmitting || adminPin.length !== 6}
-                className="flex-1 min-h-[46px] rounded-xl bg-amber-500 hover:bg-amber-400 text-black font-black text-xs active:scale-95 transition-all disabled:opacity-40"
+                className="flex-1 min-h-[46px] rounded-xl bg-warning hover:opacity-90 text-warning-ink font-black text-xs active:scale-95 transition-all disabled:opacity-40"
               >
                 {isSubmitting ? 'Iniciando...' : 'Iniciar Modo Soporte'}
               </button>

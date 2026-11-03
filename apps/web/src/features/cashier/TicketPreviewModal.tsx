@@ -55,46 +55,46 @@ export const TicketPreviewModal: React.FC<TicketPreviewModalProps> = ({ jobId, o
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
-      <div className="bg-[#12141A] border border-tocineta-border rounded-3xl max-w-md w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-ink/80 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in">
+      <div className="bg-surface border border-border rounded-3xl max-w-md w-full max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
         
         {/* HEADER MODAL */}
-        <div className="p-4 border-b border-tocineta-border flex items-center justify-between bg-black/40">
+        <div className="p-4 border-b border-border flex items-center justify-between bg-surface-alt">
           <div className="flex items-center gap-2">
             <Icon name="Receipt" size={20} />
             <div>
-              <h3 className="text-sm font-black text-white">Vista Previa de Ticket Térmico</h3>
+              <h3 className="text-sm font-black text-ink">Vista Previa de Ticket Térmico</h3>
               <p className="text-[10px] text-tocineta-muted">Representación idéntica al cabezal 58mm</p>
             </div>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center text-sm font-bold transition-all"
+            className="w-8 h-8 rounded-full bg-surface hover:bg-surface-hover text-ink flex items-center justify-center text-sm font-bold transition-all border border-border"
           >
             ✕
           </button>
         </div>
 
         {/* CONTENIDO DEL TICKET */}
-        <div className="p-4 overflow-y-auto flex-1 bg-[#1a1d24] flex items-center justify-center">
+        <div className="p-4 overflow-y-auto flex-1 bg-surface-alt flex items-center justify-center">
           {isLoading ? (
             <div className="p-8 text-center text-tocineta-muted text-xs">Cargando ticket...</div>
           ) : data?.html ? (
             <div
-              className="ticket-html-wrapper"
+              className="ticket-html-wrapper bg-surface text-ink p-4 rounded-xl border border-border shadow-md"
               dangerouslySetInnerHTML={{ __html: data.html }}
             />
           ) : (
-            <div className="p-8 text-center text-red-400 text-xs">No se encontró contenido para este ticket.</div>
+            <div className="p-8 text-center text-danger text-xs">No se encontró contenido para este ticket.</div>
           )}
         </div>
 
         {/* FORMULARIO DE REIMPRESIÓN O BOTONES */}
-        <div className="p-4 border-t border-tocineta-border bg-black/40 space-y-3">
+        <div className="p-4 border-t border-border bg-surface-alt space-y-3">
           {actionMessage && (
             <div className={`p-2.5 rounded-xl text-xs font-bold text-center ${
-              actionMessage.startsWith('✓') ? 'bg-emerald-500/20 text-emerald-300' : 'bg-red-500/20 text-red-300'
+              actionMessage.startsWith('✓') ? 'bg-success-subtle text-success' : 'bg-danger-subtle text-danger'
             }`}>
               {actionMessage}
             </div>
@@ -102,7 +102,7 @@ export const TicketPreviewModal: React.FC<TicketPreviewModalProps> = ({ jobId, o
 
           {showReprintForm ? (
             <form onSubmit={handleReprint} className="space-y-3 animate-in fade-in">
-              <div className="text-xs font-bold text-white">Autorizar Reimpresión Manual</div>
+              <div className="text-xs font-bold text-ink">Autorizar Reimpresión Manual</div>
               
               <input
                 type="password"
@@ -110,7 +110,7 @@ export const TicketPreviewModal: React.FC<TicketPreviewModalProps> = ({ jobId, o
                 value={pin}
                 onChange={(e) => setPin(e.target.value)}
                 placeholder="PIN Cajera o Supervisor (4-6 dígitos)"
-                className="w-full bg-black/60 border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 outline-none focus:border-tocineta-yellow font-mono"
+                className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-ink placeholder-ink-muted outline-none focus:border-primary font-mono"
                 required
               />
 
@@ -119,7 +119,7 @@ export const TicketPreviewModal: React.FC<TicketPreviewModalProps> = ({ jobId, o
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
                 placeholder="Motivo (ej. Atasco de papel, cliente solicita copia)"
-                className="w-full bg-black/60 border border-tocineta-border rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 outline-none focus:border-tocineta-yellow"
+                className="w-full bg-surface border border-border rounded-xl px-3 py-2 text-xs text-ink placeholder-ink-muted outline-none focus:border-primary"
                 required
               />
 
@@ -127,14 +127,14 @@ export const TicketPreviewModal: React.FC<TicketPreviewModalProps> = ({ jobId, o
                 <button
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 min-h-[44px] rounded-xl bg-tocineta-yellow text-tocineta-bg font-black text-xs hover:bg-tocineta-yellow-hover active:scale-95 transition-all shadow-md disabled:opacity-50"
+                  className="flex-1 min-h-[44px] rounded-xl bg-tocineta-yellow text-primary-ink font-black text-xs hover:bg-tocineta-yellow-hover active:scale-95 transition-all shadow-md disabled:opacity-50"
                 >
                   {isSubmitting ? 'Encolando...' : 'Confirmar Reimpresión'}
                 </button>
                 <button
                   type="button"
                   onClick={() => setShowReprintForm(false)}
-                  className="px-4 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all"
+                  className="px-4 rounded-xl bg-surface hover:bg-surface-hover text-ink font-bold text-xs transition-all border border-border"
                 >
                   Cancelar
                 </button>
@@ -145,14 +145,14 @@ export const TicketPreviewModal: React.FC<TicketPreviewModalProps> = ({ jobId, o
               <button
                 type="button"
                 onClick={() => setShowReprintForm(true)}
-                className="flex-1 min-h-[44px] rounded-xl bg-tocineta-yellow text-tocineta-bg font-black text-xs hover:bg-tocineta-yellow-hover active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
+                className="flex-1 min-h-[44px] rounded-xl bg-tocineta-yellow text-primary-ink font-black text-xs hover:bg-tocineta-yellow-hover active:scale-95 transition-all shadow-md flex items-center justify-center gap-2"
               >
                 <Icon name="Printer" size={16} /> Solicitar Reimpresión
               </button>
               <button
                 type="button"
                 onClick={onClose}
-                className="px-5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs transition-all"
+                className="px-5 rounded-xl bg-surface hover:bg-surface-hover text-ink font-bold text-xs transition-all border border-border"
               >
                 Cerrar
               </button>

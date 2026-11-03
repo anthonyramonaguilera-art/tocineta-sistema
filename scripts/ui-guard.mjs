@@ -143,6 +143,13 @@ scanDir(WEB_SRC, file => {
         report(file, idx + 1, 'Prohibido "bg-black" fuera de src/ui/. Use tokens semánticos (bg-surface, bg-surface-alt, etc.).');
       }
     }
+
+    // Check for fixed palette colors outside src/ui/
+    if (!isInsideUi) {
+      if (/\b(bg|text|border)-(red|blue|green|emerald|amber|yellow|orange|gray|slate|zinc)-\d{2,3}\b/.test(l)) {
+        report(file, idx + 1, 'Color de paleta fija: usa tokens semanticos');
+      }
+    }
   });
 });
 

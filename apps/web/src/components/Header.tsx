@@ -18,7 +18,7 @@ export const Header: React.FC<HeaderProps> = ({ localTimeCaracas, isOnline }) =>
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-black text-lg sm:text-xl tracking-tight text-white uppercase">
+              <h1 className="font-black text-lg sm:text-xl tracking-tight text-ink uppercase">
                 TOCINETA
               </h1>
               <span className="bg-tocineta-yellow text-black text-[11px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
@@ -35,14 +35,14 @@ export const Header: React.FC<HeaderProps> = ({ localTimeCaracas, isOnline }) =>
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-2 bg-tocineta-card px-3 py-1.5 rounded-lg border border-tocineta-border">
             <Clock className="w-3.5 h-3.5 text-tocineta-yellow" />
-            <span className="font-mono text-white font-semibold">
+            <span className="font-mono text-ink font-semibold">
               {localTimeCaracas || 'Cargando hora...'}
             </span>
           </div>
 
           <div className="flex items-center gap-2 bg-tocineta-card px-3 py-1.5 rounded-lg border border-tocineta-border">
             <span className={`w-2 h-2 rounded-full ${isOnline ? 'bg-tocineta-green animate-pulse' : 'bg-tocineta-red'}`} />
-            <span className="font-semibold text-white">
+            <span className="font-semibold text-ink">
               {isOnline ? 'EN VIVO (LAN)' : 'DESCONECTADO'}
             </span>
           </div>

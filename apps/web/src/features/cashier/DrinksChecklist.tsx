@@ -36,19 +36,19 @@ export const DrinksChecklist: React.FC<DrinksChecklistProps> = ({ lines }) => {
   const allDelivered = drinkLines.every(l => checkedIds.has(l.id));
 
   return (
-    <div className="bg-blue-500/10 border-2 border-blue-500/30 rounded-3xl p-4 space-y-3">
+    <div className="bg-info-subtle border-2 border-info/30 rounded-3xl p-4 space-y-3">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Icon name="Coffee" size={24} className="text-blue-400" />
+          <Icon name="Coffee" size={24} className="text-info" />
           <div>
-            <h4 className="text-sm font-black text-white">Despacho de Bebidas Frías (Nevera Caja)</h4>
-            <p className="text-[11px] text-blue-200/80">
+            <h4 className="text-sm font-black text-ink">Despacho de Bebidas Frías (Nevera Caja)</h4>
+            <p className="text-[11px] text-info/80">
               Entrega inmediata por la cajera mientras cocina prepara los platos
             </p>
           </div>
         </div>
         {allDelivered && (
-          <span className="text-xs px-2.5 py-1 rounded-full bg-emerald-500 text-white font-bold animate-pulse">
+          <span className="text-xs px-2.5 py-1 rounded-full bg-success text-success-ink font-bold animate-pulse">
             ✓ Bebidas Entregadas
           </span>
         )}
@@ -64,13 +64,13 @@ export const DrinksChecklist: React.FC<DrinksChecklistProps> = ({ lines }) => {
               onClick={() => toggleCheck(drink.id)}
               className={`min-h-[52px] p-3 rounded-2xl border text-left transition-all flex items-center justify-between gap-3 active:scale-98 ${
                 isDone
-                  ? 'bg-emerald-500/15 border-emerald-500/50 text-emerald-300'
-                  : 'bg-tocineta-bg border-tocineta-border hover:border-blue-400 text-white shadow'
+                  ? 'bg-success-subtle border-success/50 text-success'
+                  : 'bg-surface border-border hover:border-info text-ink shadow-xs'
               }`}
             >
               <div className="flex items-center gap-2.5">
                 <span className={`w-7 h-7 rounded-lg flex items-center justify-center font-bold text-sm ${
-                  isDone ? 'bg-emerald-500 text-white' : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted'
+                  isDone ? 'bg-success text-success-ink' : 'bg-surface-alt border border-border text-ink-muted'
                 }`}>
                   {isDone ? '✓' : ''}
                 </span>

@@ -316,21 +316,21 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
               <button
                 type="button"
                 onClick={handleQuickSinPan}
-                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-amber-500/15 border border-amber-500/40 text-ink hover:bg-amber-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
+                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-warning-subtle border border-warning/40 text-ink hover:bg-warning-subtle/80 active:scale-95 transition-all text-center flex items-center justify-center"
               >
                 Sin Pan / Envuelta en Lechuga
               </button>
               <button
                 type="button"
                 onClick={handleQuickPocaSalsa}
-                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-blue-500/15 border border-blue-500/40 text-ink hover:bg-blue-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
+                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-info-subtle border border-info/40 text-ink hover:bg-info-subtle/80 active:scale-95 transition-all text-center flex items-center justify-center"
               >
                 Poca Salsa
               </button>
               <button
                 type="button"
                 onClick={handleQuickSinSalsas}
-                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-red-500/15 border border-red-500/40 text-ink hover:bg-red-500/25 active:scale-95 transition-all text-center flex items-center justify-center"
+                className="min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold bg-danger-subtle border border-danger/40 text-ink hover:bg-danger-subtle/80 active:scale-95 transition-all text-center flex items-center justify-center"
               >
                 Sin Salsas
               </button>
@@ -420,7 +420,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                       onClick={() => toggleBarraLibre(bl.id)}
                       className={`min-h-[48px] px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between border ${
                         isChecked
-                          ? 'bg-emerald-500/20 border-success text-ink shadow-md'
+                          ? 'bg-success-subtle border-success text-ink shadow-md'
                           : 'bg-tocineta-bg border-tocineta-border text-tocineta-muted hover:text-ink'
                       }`}
                     >
@@ -511,11 +511,11 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                   key={idx}
                   className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border ${
                     t.type === 'sin'
-                      ? 'bg-red-500/15 border-red-500/40 text-ink'
+                      ? 'bg-danger-subtle border-danger/40 text-ink'
                       : t.type === 'poco'
-                      ? 'bg-blue-500/15 border-blue-500/40 text-ink'
+                      ? 'bg-info-subtle border-info/40 text-ink'
                       : t.type === 'barra'
-                      ? 'bg-emerald-500/15 border-emerald-500/40 text-ink'
+                      ? 'bg-success-subtle border-success/40 text-ink'
                       : 'bg-tocineta-yellow/15 border-tocineta-yellow/40 text-tocineta-yellow'
                   }`}
                 >
@@ -545,7 +545,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
             >
               <span>Guardar Personalización</span>
               {totalExtraCents > 0 && (
-                <span className="px-2 py-0.5 rounded-lg bg-black/20 text-xs font-mono">
+                <span className="px-2 py-0.5 rounded-lg bg-ink/10 text-xs font-mono">
                   +${(totalExtraCents / 100).toFixed(2)}
                 </span>
               )}

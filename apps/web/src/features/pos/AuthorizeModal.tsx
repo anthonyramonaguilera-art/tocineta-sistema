@@ -77,7 +77,7 @@ export const AuthorizeModal: React.FC<AuthorizeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm animate-in fade-in duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-ink/60 backdrop-blur-sm animate-in fade-in duration-150">
       <div className="bg-surface border border-border rounded-3xl w-full max-w-sm flex flex-col shadow-2xl overflow-hidden">
         
         {/* Cabecera */}
@@ -98,9 +98,9 @@ export const AuthorizeModal: React.FC<AuthorizeModalProps> = ({
         </div>
 
         {/* Mensaje de advertencia */}
-        <div className="p-4 bg-amber-500/10 border-b border-amber-500/30 text-amber-900 dark:text-amber-200 text-xs space-y-1">
+        <div className="p-4 bg-warning-subtle border-b border-warning/30 text-warning text-xs space-y-1">
           <p className="font-bold flex items-center gap-1.5">
-            <Icon name="AlertTriangle" size={16} className="text-amber-600 dark:text-amber-400" />
+            <Icon name="AlertTriangle" size={16} className="text-warning" />
             <span>Envío Inmediato a Cocina con Deuda Abierta</span>
           </p>
           <p className="text-ink-muted">

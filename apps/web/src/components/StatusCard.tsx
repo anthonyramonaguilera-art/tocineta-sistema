@@ -14,7 +14,7 @@ export const StatusCard: React.FC<StatusCardProps> = ({ title, icon, badge, chil
   const badgeClasses = {
     success: 'bg-success-subtle text-success border-success/30',
     warning: 'bg-warning-subtle text-warning border-warning/30',
-    info: 'bg-blue-500/10 text-blue-700 dark:text-blue-300 border-blue-500/30',
+    info: 'bg-info-subtle text-info border-info/30',
     yellow: 'bg-primary text-primary-ink border-border font-black'
   };
 

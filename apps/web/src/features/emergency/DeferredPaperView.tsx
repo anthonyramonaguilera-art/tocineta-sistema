@@ -216,7 +216,7 @@ export const DeferredPaperView: React.FC = () => {
             href="/api/emergency/slips-pdf?count=200"
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2.5 bg-tocineta-bg border border-tocineta-yellow/50 text-tocineta-yellow hover:bg-tocineta-yellow hover:text-tocineta-bg rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm"
+            className="px-4 py-2.5 bg-surface border border-primary/50 text-primary hover:bg-primary hover:text-primary-ink rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm"
           >
             <Printer className="w-4 h-4" />
             <span>Descargar 200 Comandas (PDF)</span>
@@ -225,7 +225,7 @@ export const DeferredPaperView: React.FC = () => {
           {/* Botón Respaldar Ahora */}
           <button
             onClick={handleBackupNow}
-            className="px-4 py-2.5 bg-tocineta-green/20 border border-tocineta-green/50 text-tocineta-green hover:bg-tocineta-green hover:text-tocineta-bg rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm"
+            className="px-4 py-2.5 bg-success-subtle border border-success/50 text-success hover:bg-success hover:text-success-ink rounded-xl font-bold text-xs flex items-center gap-2 transition-all shadow-sm"
           >
             <ShieldCheck className="w-4 h-4" />
             <span>Respaldar Ahora (age USB)</span>
@@ -244,7 +244,7 @@ export const DeferredPaperView: React.FC = () => {
           className={`p-4 rounded-xl text-sm font-bold flex items-center justify-between ${
             statusMessage.type === 'success'
               ? 'bg-tocineta-green/20 border border-tocineta-green text-tocineta-green'
-              : 'bg-red-500/20 border border-red-500 text-danger'
+              : 'bg-danger-subtle border border-danger/40 text-danger'
           }`}
         >
           <span>{statusMessage.text}</span>

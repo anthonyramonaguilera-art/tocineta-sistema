@@ -411,7 +411,7 @@ export const SystemHealthDashboard: React.FC = () => {
           }}
         >
           {data.usbVault?.warning && (
-            <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded-lg text-xs text-amber-300 font-bold mb-2 flex items-center gap-2">
+            <div className="p-2.5 bg-warning-subtle border border-warning/30 rounded-lg text-xs text-warning font-bold mb-2 flex items-center gap-2">
               <AlertTriangle className="w-4 h-4 flex-shrink-0" />
               <span>{data.usbVault.warning}</span>
             </div>
