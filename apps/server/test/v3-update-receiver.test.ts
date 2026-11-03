@@ -14,6 +14,7 @@ import {
   isStrictlyGreaterSemver,
   verifyAndProcessUpdatePackage,
   processPendingUpdateIfJornadaClosed,
+  assertSafeZipName,
   type VerifyAndApplyPackageOptions
 } from '../../scripts/update-receiver.js';
 
@@ -309,6 +310,150 @@ describe('V-3: Receptor seguro de actualizaciones y comandos por Telegram', () =
       for (const cmd of dangerousCommands) {
         expect(['/estado', '/diag']).not.toContain(cmd);
       }
+    });
+  });
+  describe('6. Hardening de nombres de archivo y ejecución segura (S-2)', () => {
+    const invalidZipNames = [
+      'a" & calc & ".zip',
+      '..\\x.zip',
+      '%PATH%.zip',
+      'ok.zip.exe',
+      'x'.repeat(200) + '.zip'
+    ];
+
+    it('assertSafeZipName valida caracteres, longitud y extensión', () => {
+      expect(assertSafeZipName('TOCINETA-1.2.3.zip')).toBe('TOCINETA-1.2.3.zip');
+      for (const bad of invalidZipNames) {
+        expect(() => assertSafeZipName(bad)).toThrow();
+      }
+    });
+
+    it('nombres no seguros devuelven REJECTED_INVALID_FILENAME y NO invocan applyUpdateFn', async () => {
+      const candidateVersion = '1.2.0';
+      const zipContent = Buffer.from('mock-zip-payload-1.2.0');
+      const zipSha = computeSha256(zipContent);
+
+      const manifest: ReleaseManifest = {
+        version: candidateVersion,
+        createdAtMs: Date.now(),
+        files: [{ path: 'payload.zip', sha256: zipSha }]
+      };
+      const { manifestJson, signatureBase64 } = signManifest(manifest, keyPair.privateKeyPem);
+      const sigPayload = JSON.stringify({
+        version: candidateVersion,
+        manifestJson,
+        signatureBase64,
+        manifest
+      });
+
+      for (const badName of invalidZipNames) {
+        let applyCalled = false;
+        const result = await verifyAndProcessUpdatePackage({
+          sigBuffer: sigPayload,
+          zipBuffer: zipContent,
+          zipFileName: badName,
+          publicKeyPem: keyPair.publicKeyPem,
+          currentVersion: '1.0.0',
+          rootDir: testRootDir,
+          checkJornadaFn: async () => false,
+          applyUpdateFn: () => {
+            applyCalled = true;
+          }
+        });
+
+        expect(result.status).toBe('REJECTED_INVALID_FILENAME');
+        expect(applyCalled).toBe(false);
+      }
+    });
+
+    it('processPendingUpdateIfJornadaClosed con meta.zipFileName inválido devuelve REJECTED_INVALID_FILENAME', async () => {
+      const pendingMetaPath = path.join(testRootDir, 'data', 'updates', 'pending', 'pending-update.json');
+      fs.mkdirSync(path.dirname(pendingMetaPath), { recursive: true });
+      fs.writeFileSync(
+        pendingMetaPath,
+        JSON.stringify({ version: '1.2.0', zipFileName: '..\\malicious.zip', savedAtMs: Date.now() }),
+        'utf-8'
+      );
+
+      let applyCalled = false;
+      const res = await processPendingUpdateIfJornadaClosed(
+        testRootDir,
+        async () => false,
+        () => {
+          applyCalled = true;
+        }
+      );
+
+      expect(res?.status).toBe('REJECTED_INVALID_FILENAME');
+      expect(applyCalled).toBe(false);
+    });
+
+    it('TOCINETA-1.2.3.zip válido y bien firmado sigue aplicándose', async () => {
+      const candidateVersion = '1.2.3';
+      const zipContent = Buffer.from('mock-zip-payload-1.2.3');
+      const zipFileName = 'TOCINETA-1.2.3.zip';
+      const zipSha = computeSha256(zipContent);
+
+      const manifest: ReleaseManifest = {
+        version: candidateVersion,
+        createdAtMs: Date.now(),
+        files: [{ path: zipFileName, sha256: zipSha }]
+      };
+      const { manifestJson, signatureBase64 } = signManifest(manifest, keyPair.privateKeyPem);
+      const sigPayload = JSON.stringify({
+        version: candidateVersion,
+        manifestJson,
+        signatureBase64,
+        manifest
+      });
+
+      let appliedPath = '';
+      const result = await verifyAndProcessUpdatePackage({
+        sigBuffer: sigPayload,
+        zipBuffer: zipContent,
+        zipFileName,
+        publicKeyPem: keyPair.publicKeyPem,
+        currentVersion: '1.0.0',
+        rootDir: testRootDir,
+        checkJornadaFn: async () => false,
+        applyUpdateFn: (p) => {
+          appliedPath = p;
+        }
+      });
+
+      expect(result.status).toBe('APPLIED_UPDATE');
+      expect(result.version).toBe(candidateVersion);
+      expect(appliedPath).toContain(zipFileName);
+    });
+
+    it('versión igual o menor -> rechaza con REJECTED_DOWNGRADE o REJECTED_NOT_NEWER', async () => {
+      const candidateVersion = '1.0.0';
+      const zipContent = Buffer.from('mock-zip-payload-1.0.0');
+      const zipSha = computeSha256(zipContent);
+
+      const manifest: ReleaseManifest = {
+        version: candidateVersion,
+        createdAtMs: Date.now(),
+        files: [{ path: 'tocineta-1.0.0.zip', sha256: zipSha }]
+      };
+      const { manifestJson, signatureBase64 } = signManifest(manifest, keyPair.privateKeyPem);
+      const sigPayload = JSON.stringify({
+        version: candidateVersion,
+        manifestJson,
+        signatureBase64,
+        manifest
+      });
+
+      const result = await verifyAndProcessUpdatePackage({
+        sigBuffer: sigPayload,
+        zipBuffer: zipContent,
+        zipFileName: 'tocineta-1.0.0.zip',
+        publicKeyPem: keyPair.publicKeyPem,
+        currentVersion: '1.0.0',
+        rootDir: testRootDir
+      });
+
+      expect(['REJECTED_DOWNGRADE', 'REJECTED_NOT_NEWER']).toContain(result.status);
     });
   });
 });

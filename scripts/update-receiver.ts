@@ -11,7 +11,7 @@
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import DatabaseConstructor from 'better-sqlite3';
 import { verifyManifestSignature, computeSha256 } from '../apps/server/src/modules/updater/signer.js';
@@ -24,6 +24,8 @@ export type ProcessResultStatus =
   | 'REJECTED_INVALID_SIGNATURE'
   | 'REJECTED_INVALID_HASH'
   | 'REJECTED_DOWNGRADE'
+  | 'REJECTED_NOT_NEWER'
+  | 'REJECTED_INVALID_FILENAME'
   | 'DEFERRED_OPEN_JORNADA'
   | 'APPLIED_UPDATE'
   | 'COMMAND_EXECUTED'
@@ -60,6 +62,19 @@ export function isStrictlyGreaterSemver(candidate: string, current: string): boo
   if (cMaj !== curMaj) return cMaj > curMaj;
   if (cMin !== curMin) return cMin > curMin;
   return cPat > curPat;
+}
+
+
+export function assertSafeZipName(name: string): string {
+  if (
+    typeof name !== 'string' ||
+    name.includes('..') ||
+    path.basename(name) !== name ||
+    !/^[A-Za-z0-9._-]{1,100}\.zip$/.test(name)
+  ) {
+    throw new Error('REJECTED_INVALID_FILENAME');
+  }
+  return name;
 }
 
 export function isAuthorizedAdmin(fromId: number | string | undefined, adminIdsConfig: string | string[]): boolean {
@@ -143,6 +158,13 @@ export async function verifyAndProcessUpdatePackage(options: VerifyAndApplyPacka
   const rootDir = options.rootDir || PROJECT_ROOT;
   const currentVersion = options.currentVersion || loadCurrentInstalledVersion(rootDir);
   const pendingDir = path.join(rootDir, 'data', 'updates', 'pending');
+  try {
+    assertSafeZipName(options.zipFileName);
+  } catch {
+    logActualizacion(`Paquete rechazado: nombre de archivo inválido "${options.zipFileName}".`, 'ERROR', rootDir);
+    return { status: 'REJECTED_INVALID_FILENAME', message: `Nombre de archivo zip inválido: ${options.zipFileName}` };
+  }
+
 
   let sigData: any;
   try {
@@ -214,7 +236,7 @@ export async function verifyAndProcessUpdatePackage(options: VerifyAndApplyPacka
     options.applyUpdateFn(localZipPath);
   } else {
     const actScript = path.join(PROJECT_ROOT, 'scripts', 'actualizar.ps1');
-    execSync(`powershell -ExecutionPolicy Bypass -File "${actScript}" -LocalZip "${localZipPath}" -Source Telegram`, { cwd: rootDir, stdio: 'pipe' });
+    execFileSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', actScript, '-LocalZip', localZipPath, '-Source', 'Telegram'], { cwd: rootDir, stdio: 'pipe' });
   }
 
   return { status: 'APPLIED_UPDATE', version: candidateVersion, message: `Actualizacion ${candidateVersion} aplicada exitosamente.` };
@@ -230,6 +252,12 @@ export async function processPendingUpdateIfJornadaClosed(
 
   try {
     const meta = JSON.parse(fs.readFileSync(pendingMetaPath, 'utf-8'));
+    try {
+      assertSafeZipName(meta.zipFileName);
+    } catch {
+      logActualizacion(`Paquete pendiente rechazado: meta.zipFileName inválido "${meta.zipFileName}".`, 'ERROR', rootDir);
+      return { status: 'REJECTED_INVALID_FILENAME', version: meta.version, message: `Nombre de archivo zip inválido: ${meta.zipFileName}` };
+    }
     const isJornadaOpen = checkJornadaFn ? await checkJornadaFn() : await checkOpenJornada();
     if (isJornadaOpen) {
       return { status: 'DEFERRED_OPEN_JORNADA', version: meta.version, message: `Actualización ${meta.version} verificada y en espera: se aplicará automáticamente al cerrar la jornada` };
@@ -242,7 +270,7 @@ export async function processPendingUpdateIfJornadaClosed(
         applyUpdateFn(zipPath);
       } else {
         const actScript = path.join(PROJECT_ROOT, 'scripts', 'actualizar.ps1');
-        execSync(`powershell -ExecutionPolicy Bypass -File "${actScript}" -LocalZip "${zipPath}" -Source Telegram`, { cwd: rootDir, stdio: 'pipe' });
+        execFileSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', actScript, '-LocalZip', zipPath, '-Source', 'Telegram'], { cwd: rootDir, stdio: 'pipe' });
       }
       try { fs.unlinkSync(pendingMetaPath); } catch {}
       return { status: 'APPLIED_UPDATE', version: meta.version, message: `Actualizacion ${meta.version} aplicada tras cierre de jornada.` };
@@ -345,7 +373,7 @@ export async function runUpdateReceiver(explicitRootDir = PROJECT_ROOT): Promise
     if (text === '/diag') {
       try {
         const diagScript = path.join(PROJECT_ROOT, 'scripts', 'diagnostico.ps1');
-        const out = execSync(`powershell -ExecutionPolicy Bypass -File "${diagScript}"`, { cwd: rootDir, encoding: 'utf-8' });
+        const out = execFileSync('powershell', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', diagScript], { cwd: rootDir, encoding: 'utf-8' });
         const lastLine = out.trim().split(/\r?\n/).pop()?.trim() || '';
         if (fs.existsSync(lastLine) && lastLine.endsWith('.zip')) {
           await sendTelegramDocument(botToken, chatId, lastLine, 'TOCINETA — Paquete de Diagnóstico Forense');
