@@ -107,7 +107,8 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
       const session = openCashSession(dbCtx.rawDb, {
         userId: user.id,
         openingCashUsdCents: body.openingCashUsdCents || 0,
-        openingCashBsCents: body.openingCashBsCents || 0
+        openingCashBsCents: body.openingCashBsCents || 0,
+        locationId: body.locationId
       });
 
       return reply.status(200).send({
@@ -117,7 +118,9 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
     } catch (err: any) {
       return reply.status(err.httpStatus || err.statusCode || 400).send({
         success: false,
-        error: err.message
+        code: err.code,
+        error: err.message,
+        message: err.message
       });
     }
   });

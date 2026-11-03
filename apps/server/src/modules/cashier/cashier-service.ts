@@ -23,12 +23,14 @@ export interface OpenJornadaInput {
   initialCashUsdCents: number;
   initialCashBsCents: number;
   notes?: string;
+  locationId?: string;
 }
 
 export interface OpenCashSessionInput {
   userId: string;
   openingCashUsdCents: number;
   openingCashBsCents: number;
+  locationId?: string;
 }
 
 export type ClassifiedTender = {
@@ -143,18 +145,28 @@ export function openJornada(rawDb: Database.Database, input: OpenJornadaInput) {
 
   // D1: Crear automáticamente la sesión de caja de la persona que abre la jornada
   const sessionId = `cs_${generateUuidV7()}`;
+  let candidateLocId = input.locationId;
+  if (!candidateLocId) {
+    try {
+      const ul = rawDb.prepare("SELECT location_id FROM user_locations WHERE user_id = ? LIMIT 1").get(input.openedByUserId) as any;
+      if (ul?.location_id) candidateLocId = ul.location_id;
+    } catch {}
+  }
+  const resolvedLocationId = resolveLocationId(rawDb, candidateLocId, input.openedByUserId);
+
   rawDb.prepare(`
     INSERT INTO cash_sessions (
       id, jornada_id, user_id, opened_at_ms, status,
-      opening_cash_usd_cents, opening_cash_bs_cents
-    ) VALUES (?, ?, ?, ?, 'abierta', ?, ?)
+      opening_cash_usd_cents, opening_cash_bs_cents, location_id
+    ) VALUES (?, ?, ?, ?, 'abierta', ?, ?, ?)
   `).run(
     sessionId,
     jornadaId,
     input.openedByUserId,
     now,
     input.initialCashUsdCents || 0,
-    input.initialCashBsCents || 0
+    input.initialCashBsCents || 0,
+    resolvedLocationId
   );
 
   appendAuditEvent(rawDb, {
@@ -193,67 +205,123 @@ export function openJornada(rawDb: Database.Database, input: OpenJornadaInput) {
 export function openCashSession(rawDb: Database.Database, input: OpenCashSessionInput) {
   const now = Date.now();
 
+  let candidateLocationId = input.locationId;
+  if (!candidateLocationId) {
+    try {
+      const ul = rawDb.prepare("SELECT location_id FROM user_locations WHERE user_id = ? LIMIT 1").get(input.userId) as any;
+      if (ul?.location_id) candidateLocationId = ul.location_id;
+    } catch {}
+  }
+  const resolvedLocationId = resolveLocationId(rawDb, candidateLocationId, input.userId);
+
   // Asegurar jornada abierta global (D1 / P2-A)
   let jornada = rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
   if (!jornada) {
     jornada = openJornada(rawDb, {
       openedByUserId: input.userId,
       initialCashUsdCents: input.openingCashUsdCents,
-      initialCashBsCents: input.openingCashBsCents
+      initialCashBsCents: input.openingCashBsCents,
+      locationId: resolvedLocationId
     });
   }
 
-  // Verificar si el usuario ya tiene sesión abierta
-  const existing = rawDb.prepare(`
-    SELECT * FROM cash_sessions 
-    WHERE user_id = ? AND status = 'abierta'
-  `).get(input.userId) as any;
+  const tx = rawDb.transaction(() => {
+    // Si el mismo userId ya tiene una sesión con status = 'abierta' en la jornada activa, devuélvela como hasta ahora
+    const existing = rawDb.prepare(`
+      SELECT * FROM cash_sessions 
+      WHERE user_id = ? AND status = 'abierta'
+    `).get(input.userId) as any;
 
-  if (existing) {
-    return existing;
-  }
-
-  const sessionId = `cs_${generateUuidV7()}`;
-  rawDb.prepare(`
-    INSERT INTO cash_sessions (
-      id, jornada_id, user_id, opened_at_ms, status,
-      opening_cash_usd_cents, opening_cash_bs_cents
-    ) VALUES (?, ?, ?, ?, 'abierta', ?, ?)
-  `).run(
-    sessionId,
-    jornada.id,
-    input.userId,
-    now,
-    input.openingCashUsdCents || 0,
-    input.openingCashBsCents || 0
-  );
-
-  appendAuditEvent(rawDb, {
-    actorUserId: input.userId,
-    action: 'CASH_SESSION_OPENED',
-    entityType: 'cash_session',
-    entityId: sessionId,
-    payload: {
-      jornadaId: jornada.id,
-      openingCashUsdCents: input.openingCashUsdCents,
-      openingCashBsCents: input.openingCashBsCents
+    if (existing) {
+      return existing;
     }
+
+    // Antes de insertar una nueva sesión, consulta si existe otra fila en cash_sessions
+    // con jornada_id = activeJornada.id, location_id = resolvedLocationId, status = 'abierta' y user_id != userId
+    // (haciendo LEFT JOIN users ON users.id = cash_sessions.user_id)
+    const otherOpenSession = rawDb.prepare(`
+      SELECT cs.*, u.name as user_name
+      FROM cash_sessions cs
+      LEFT JOIN users u ON u.id = cs.user_id
+      WHERE cs.jornada_id = ?
+        AND cs.location_id = ?
+        AND cs.status = 'abierta'
+        AND cs.user_id != ?
+      LIMIT 1
+    `).get(jornada.id, resolvedLocationId, input.userId) as any;
+
+    if (otherOpenSession) {
+      const otherUserName = otherOpenSession.user_name || 'otro usuario';
+      const err: any = new AppError(
+        'CASH_SESSION_ALREADY_OPEN',
+        409,
+        `La caja ya está abierta por ${otherUserName}. Debe cerrarse antes de abrir otra.`
+      );
+      err.statusCode = 409;
+      throw err;
+    }
+
+    const sessionId = `cs_${generateUuidV7()}`;
+    rawDb.prepare(`
+      INSERT INTO cash_sessions (
+        id, jornada_id, user_id, opened_at_ms, status,
+        opening_cash_usd_cents, opening_cash_bs_cents, location_id
+      ) VALUES (?, ?, ?, ?, 'abierta', ?, ?, ?)
+    `).run(
+      sessionId,
+      jornada.id,
+      input.userId,
+      now,
+      input.openingCashUsdCents || 0,
+      input.openingCashBsCents || 0,
+      resolvedLocationId
+    );
+
+    appendAuditEvent(rawDb, {
+      actorUserId: input.userId,
+      action: 'CASH_SESSION_OPENED',
+      entityType: 'cash_session',
+      entityId: sessionId,
+      payload: {
+        jornadaId: jornada.id,
+        locationId: resolvedLocationId,
+        openingCashUsdCents: input.openingCashUsdCents,
+        openingCashBsCents: input.openingCashBsCents
+      }
+    });
+
+    return {
+      id: sessionId,
+      jornada_id: jornada.id,
+      user_id: input.userId,
+      location_id: resolvedLocationId,
+      opened_at_ms: now,
+      status: 'abierta',
+      opening_cash_usd_cents: input.openingCashUsdCents || 0,
+      opening_cash_bs_cents: input.openingCashBsCents || 0
+    };
   });
 
-  return {
-    id: sessionId,
-    jornada_id: jornada.id,
-    user_id: input.userId,
-    opened_at_ms: now,
-    status: 'abierta',
-    opening_cash_usd_cents: input.openingCashUsdCents || 0,
-    opening_cash_bs_cents: input.openingCashBsCents || 0
-  };
+  return tx.immediate();
 }
 
 /**
- * Obtener jornada abierta actual
+ * Cuenta cuántas parejas (jornada_id, location_id) tienen más de 1 sesión abierta (T-04a).
  */
+export function countDuplicateOpenSessions(rawDb: Database.Database): number {
+  const row = rawDb.prepare(`
+    SELECT COUNT(*) as cnt FROM (
+      SELECT jornada_id, location_id, COUNT(*) as session_count
+      FROM cash_sessions
+      WHERE status = 'abierta'
+      GROUP BY jornada_id, location_id
+      HAVING session_count > 1
+    )
+  `).get() as { cnt: number } | undefined;
+
+  return row?.cnt ?? 0;
+}
+
 export function getCurrentJornada(rawDb: Database.Database) {
   const current = rawDb.prepare("SELECT * FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
   if (!current) return null;

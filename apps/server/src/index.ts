@@ -10,6 +10,7 @@ import { seedInitialUsers, ensureCorporateUsersNonDestructive } from './modules/
 import { seedCatalog } from './db/seed-catalog.js';
 import { seedProductPhotos } from './modules/menu/photo-seed.js';
 import { ensureOfficialLocations } from './modules/profitability/locations-service.js';
+import { countDuplicateOpenSessions } from './modules/cashier/cashier-service.js';
 
 export function describeAuthMode(env: { ENFORCE_AUTH?: string } = process.env): string {
   return env.ENFORCE_AUTH === 'true'
@@ -120,6 +121,11 @@ async function bootstrap() {
 
   // 2.1 Asegurar sedes oficiales (Sede A: Los Olivos, Sede B: Alta Vista)
   ensureOfficialLocations(dbContext.rawDb);
+
+  const duplicateOpenSessions = countDuplicateOpenSessions(dbContext.rawDb);
+  if (duplicateOpenSessions > 0) {
+    console.warn(`⚠️ [ADVERTENCIA]: Se detectaron ${duplicateOpenSessions} parejas (jornada, sede) con múltiples sesiones de caja abiertas.`);
+  }
 
   // 3. Saneamiento y sincronización de perfiles corporativos limpios (PRD v2.0)
   const userCountRow = dbContext.rawDb.prepare('SELECT COUNT(*) as cnt FROM users').get() as { cnt: number };
