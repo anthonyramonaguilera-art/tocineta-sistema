@@ -53,7 +53,8 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
   const subtotalUsdCents = useMemo(() => {
     return cart.reduce((sum, item) => {
       const itemModifiersPrice = (item.modifiers || []).reduce((mSum, m) => mSum + (m.extraPriceUsdCents || 0), 0);
-      return sum + (item.unitPriceUsdCents + itemModifiersPrice) * item.quantity;
+      const effectivePrice = item.customPriceUsdCents !== undefined ? item.customPriceUsdCents : item.unitPriceUsdCents;
+      return sum + (effectivePrice + itemModifiersPrice) * item.quantity;
     }, 0);
   }, [cart]);
 
@@ -100,6 +101,24 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
         modifiers,
         customInstructions,
         comboChildren
+      };
+      return [...prev, newItem];
+    });
+  }, []);
+
+  const addFreeItem = useCallback((name: string, priceUsdCents: number, quantity = 1, station = 'hamburguesas') => {
+    setCart((prev) => {
+      const newItem: CartItem = {
+        clientLineId: generateUuidV7(),
+        productId: 'prod_libre',
+        productName: name.trim(),
+        customName: name.trim(),
+        station,
+        quantity,
+        unitPriceUsdCents: priceUsdCents,
+        customPriceUsdCents: priceUsdCents,
+        isCombo: false,
+        modifiers: []
       };
       return [...prev, newItem];
     });
@@ -174,7 +193,10 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
       quantity: item.quantity,
       modifiers: item.modifiers || [],
       customInstructions: item.customInstructions || undefined,
-      comboChildren: item.comboChildren || undefined
+      comboChildren: item.comboChildren || undefined,
+      ...(item.customName ? { customName: item.customName } : {}),
+      ...(item.customPriceUsdCents !== undefined ? { customPriceUsdCents: item.customPriceUsdCents } : {}),
+      ...(item.productId === 'prod_libre' && item.station ? { station: item.station } : {})
     }));
 
     const orderPayload = {
@@ -356,6 +378,7 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
     subtotalBsCents,
     totalBsCents,
     addProduct,
+    addFreeItem,
     decrementProduct,
     removeItem,
     updateItemQuantity,

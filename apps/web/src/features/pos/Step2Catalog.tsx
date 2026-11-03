@@ -1,8 +1,10 @@
 import React, { useState, useMemo } from 'react';
 import type { PosProduct, PosCategory } from '../../types/menu.js';
 import type { CartItem } from './types.js';
-import { Card, Input, Money, Icon, Chips } from '../../ui/index.js';
+import { Card, Input, Money, Icon, Chips, Button } from '../../ui/index.js';
 import { ProductImagePlaceholder } from '../../components/ProductImagePlaceholder.js';
+import { useAuth } from '../../context/AuthContext.js';
+import { FreeItemModal } from './FreeItemModal.js';
 
 interface Step2CatalogProps {
   categories: PosCategory[];
@@ -13,6 +15,7 @@ interface Step2CatalogProps {
   onOpenCustomize: (product: PosProduct) => void;
   onOpenCombo: (product: PosProduct) => void;
   formattedRate: string;
+  onAddFreeItem?: (name: string, priceUsdCents: number, quantity: number, station: string) => void;
 }
 
 export const Step2Catalog: React.FC<Step2CatalogProps> = ({
@@ -23,10 +26,20 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
   onDecrementProduct,
   onOpenCustomize,
   onOpenCombo,
-  formattedRate
+  formattedRate,
+  onAddFreeItem
 }) => {
+  const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [isFreeItemModalOpen, setIsFreeItemModalOpen] = useState(false);
+
+  const canAddFree = Boolean(
+    user?.role === 'admin' ||
+    (Array.isArray(user?.permissions) && user.permissions.includes('canAddFreeItem')) ||
+    ((user as any)?.permissions_json?.canAddFreeItem === true) ||
+    (user?.role && ['cajera', 'supervisor'].includes(user.role) && !user?.permissions?.includes('canAddFreeItem') && (user as any)?.permissions_json?.canAddFreeItem !== false)
+  );
 
   // Filtrado de productos por categoría y búsqueda
   const filteredProducts = useMemo(() => {
@@ -81,23 +94,38 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
     <div className="space-y-4 pb-6 max-w-4xl mx-auto">
       {/* 1. Barra de Búsqueda y Filtros */}
       <div className="space-y-2 sticky top-14 bg-surface-alt/95 backdrop-blur-xs py-2 z-10">
-        <Input
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder="Buscar plato, ingrediente o combo..."
-          leftIcon={<Icon name="Search" size={18} />}
-          rightIcon={
-            searchTerm ? (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="text-ink-muted hover:text-ink p-1"
-              >
-                <Icon name="X" size={16} />
-              </button>
-            ) : undefined
-          }
-        />
+        <div className="flex gap-2 items-center">
+          <div className="flex-1 min-w-0">
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder="Buscar plato, ingrediente o combo..."
+              leftIcon={<Icon name="Search" size={18} />}
+              rightIcon={
+                searchTerm ? (
+                  <button
+                    type="button"
+                    onClick={() => setSearchTerm('')}
+                    className="text-ink-muted hover:text-ink p-1"
+                  >
+                    <Icon name="X" size={16} />
+                  </button>
+                ) : undefined
+              }
+            />
+          </div>
+          {canAddFree && (
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsFreeItemModalOpen(true)}
+              leftIcon={<Icon name="Plus" size={16} />}
+              className="min-h-[48px] shrink-0 font-bold whitespace-nowrap"
+            >
+              Ítem libre
+            </Button>
+          )}
+        </div>
 
         {/* Chips Desplazables de Categoría */}
         <div className="pt-1">
@@ -215,6 +243,16 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
           <h4 className="font-bold text-sm text-ink">No se encontraron productos</h4>
           <p className="text-xs text-ink-muted">Prueba buscando con otro término o categoría.</p>
         </div>
+      )}
+
+      {canAddFree && (
+        <FreeItemModal
+          isOpen={isFreeItemModalOpen}
+          onClose={() => setIsFreeItemModalOpen(false)}
+          onAdd={(name, priceUsdCents, quantity, station) => {
+            onAddFreeItem?.(name, priceUsdCents, quantity, station);
+          }}
+        />
       )}
 
     </div>

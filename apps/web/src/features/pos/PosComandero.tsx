@@ -245,6 +245,7 @@ export const PosComandero: React.FC = () => {
               onOpenCustomize={(p) => setCustomizingProduct(p)}
               onOpenCombo={(p) => setComboWizardProduct(p)}
               formattedRate={formattedRate}
+              onAddFreeItem={posCart.addFreeItem}
             />
           </div>
         )}

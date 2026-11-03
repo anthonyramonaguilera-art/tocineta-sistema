@@ -20,7 +20,7 @@ export interface CartItem {
   clientLineId: string;
   productId: string;
   productName: string;
-  station: string;
+  station?: string;
   quantity: number;
   unitPriceUsdCents: number;
   isCombo: boolean;
@@ -28,6 +28,8 @@ export interface CartItem {
   flavorChoice?: string;
   customInstructions?: string;
   comboChildren?: ComboChildLine[];
+  customName?: string;
+  customPriceUsdCents?: number;
 }
 
 export interface OutboxOrder {

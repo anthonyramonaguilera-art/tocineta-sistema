@@ -47,6 +47,12 @@ const AVAILABLE_PERMISSIONS: Array<{ key: string; label: string; iconName: IconN
     label: 'Tomar Pedidos (POS)',
     iconName: 'Utensils',
     desc: 'Permite abrir órdenes y despachar a cocina'
+  },
+  {
+    key: 'canAddFreeItem',
+    label: 'Permitir agregar Ítem Libre en pedidos',
+    iconName: 'PlusCircle',
+    desc: 'Permite agregar productos libres o fuera de carta directamente en el pedido'
   }
 ];
 
@@ -96,7 +102,7 @@ export const PermissionsModal: React.FC<PermissionsModalProps> = ({
       maxWidth="md"
     >
       <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
-        {AVAILABLE_PERMISSIONS.map((p) => {
+        {AVAILABLE_PERMISSIONS.filter((p) => !(staffUser.role === 'admin' && p.key === 'canAddFreeItem')).map((p) => {
           const isChecked = selectedPerms.includes(p.key);
           return (
             <div
