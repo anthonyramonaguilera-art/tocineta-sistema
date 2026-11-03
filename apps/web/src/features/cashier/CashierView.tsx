@@ -8,6 +8,7 @@ import { CashierOrdersTab } from './CashierOrdersTab.js';
 import { CashierSalesTab } from './CashierSalesTab.js';
 import { CashierClosureWizard } from './CashierClosureWizard.js';
 import { CashierShiftOpeningModal } from './CashierShiftOpeningModal.js';
+import { ClosureHistoryView } from './ClosureHistoryView.js';
 import { Tabs, Button, Card, Badge, Icon } from '../../ui/index.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
 import { apiFetch } from '../../api/client.js';
@@ -17,7 +18,7 @@ export const CashierView: React.FC = () => {
   const queryClient = useQueryClient();
   const { isBlocked, takeControl } = useMultiTabCashierGuard();
 
-  const [activeTab, setActiveTab] = useState<'cobro' | 'ultimas_ventas' | 'cierre_dia'>('cobro');
+  const [activeTab, setActiveTab] = useState<'cobro' | 'ultimas_ventas' | 'cierre_dia' | 'historial'>('cobro');
   const [wizardKey, setWizardKey] = useState<number>(0);
   const [showShiftOpening, setShowShiftOpening] = useState<boolean>(false);
   const [showSedeBreakdown, setShowSedeBreakdown] = useState<boolean>(false);
@@ -253,7 +254,8 @@ export const CashierView: React.FC = () => {
         tabs={[
           { id: 'cobro', label: `Por cobrar (${orders.length})`, icon: 'CreditCard' },
           { id: 'ultimas_ventas', label: `Ventas del día (${sales.length})`, icon: 'Receipt' },
-          { id: 'cierre_dia', label: 'Cierre de caja', icon: 'Lock' }
+          { id: 'cierre_dia', label: 'Cierre de caja', icon: 'Lock' },
+          { id: 'historial', label: 'Historial', icon: 'History' }
         ]}
         activeTab={activeTab}
         onChange={tab => setActiveTab(tab as any)}
@@ -291,6 +293,10 @@ export const CashierView: React.FC = () => {
       )}
 
       {/* Modal de Fondo Inicial / Apertura */}
+      {activeTab === 'historial' && (
+        <ClosureHistoryView />
+      )}
+
       <CashierShiftOpeningModal
         isOpen={showShiftOpening}
         onClose={() => setShowShiftOpening(false)}
