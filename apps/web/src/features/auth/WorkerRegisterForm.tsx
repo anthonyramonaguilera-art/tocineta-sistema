@@ -12,13 +12,14 @@ export const WorkerRegisterForm: React.FC<WorkerRegisterFormProps> = ({ onBack }
   const [regCedula, setRegCedula] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regPassword, setRegPassword] = useState('');
+  const [regPin, setRegPin] = useState('');
   const [regLoading, setRegLoading] = useState(false);
   const [regError, setRegError] = useState<string | null>(null);
 
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!regName.trim() || !regCedula.trim() || !regPassword.trim()) {
-      setRegError('Por favor completa tu nombre, cédula y contraseña.');
+    if (!regName.trim() || !regCedula.trim() || !regPassword.trim() || !regPin.trim()) {
+      setRegError('Por favor completa tu nombre, cédula, contraseña y PIN de 4 dígitos.');
       return;
     }
     setRegLoading(true);
@@ -31,7 +32,8 @@ export const WorkerRegisterForm: React.FC<WorkerRegisterFormProps> = ({ onBack }
           name: regName.trim(),
           cedula: regCedula.trim(),
           phone: regPhone.trim(),
-          password: regPassword.trim()
+          password: regPassword.trim(),
+          pin: regPin.trim()
         })
       });
       const resData = await res.json();
@@ -97,6 +99,18 @@ export const WorkerRegisterForm: React.FC<WorkerRegisterFormProps> = ({ onBack }
           value={regPassword}
           onChange={(e) => setRegPassword(e.target.value)}
           placeholder="Mínimo 4 caracteres"
+          required
+        />
+      </Field>
+      <Field label="PIN de Acceso (4 dígitos)" required>
+        <Input
+          type="password"
+          inputMode="numeric"
+          maxLength={4}
+          value={regPin}
+          onChange={(e) => setRegPin(e.target.value.replace(/\D/g, '').slice(0, 4))}
+          placeholder="Ej: 5824"
+          className="min-h-[48px]"
           required
         />
       </Field>

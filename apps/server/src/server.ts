@@ -32,6 +32,7 @@ import { PrintingWorker } from './modules/printing/worker.js';
 import { getDatabaseContext } from './db/connection.js';
 import { websocketPlugin } from './plugins/websocket.js';
 import { staticPlugin } from './plugins/static.js';
+import { publicRateLimitPlugin } from './plugins/public-rate-limit.js';
 import { idempotencyPlugin } from './modules/idempotency/idempotency-plugin.js';
 import { seedInitialUsersDetailed } from './modules/auth/seed-users.js';
 import { recoverStuckUpdatesOnBoot } from './modules/updater/updater-service.js';
@@ -140,7 +141,49 @@ export async function buildServer(options: BuildServerOptions = {}): Promise<Fas
   });
 
   // Registro de Plugins
-  await server.register(cors, { origin: '*', methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE'] });
+  await server.register(cors, {
+    origin: (origin, callback) => {
+      if (!origin) {
+        return callback(null, true);
+      }
+      try {
+        const parsedUrl = new URL(origin);
+        const host = parsedUrl.hostname;
+
+        if (host === 'localhost' || host === '127.0.0.1' || host === '[::1]' || host === '::1') {
+          return callback(null, true);
+        }
+
+        // Rangos privados: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16
+        const parts = host.split('.');
+        if (parts.length === 4) {
+          const octets = parts.map((p) => Number(p));
+          if (octets.every((n) => !isNaN(n) && Number.isInteger(n) && n >= 0 && n <= 255)) {
+            const [a, b] = octets;
+            if (a === 10) return callback(null, true);
+            if (a === 172 && b >= 16 && b <= 31) return callback(null, true);
+            if (a === 192 && b === 168) return callback(null, true);
+          }
+        }
+
+        // Orígenes permitidos por variable de entorno
+        const envOrigins = (process.env.CORS_ALLOWED_ORIGINS || '')
+          .split(',')
+          .map((item) => item.trim())
+          .filter(Boolean);
+
+        if (envOrigins.includes(origin) || envOrigins.includes(host)) {
+          return callback(null, true);
+        }
+
+        return callback(null, false);
+      } catch {
+        return callback(null, false);
+      }
+    },
+    methods: ['GET', 'POST', 'PATCH', 'PUT', 'DELETE']
+  });
+  await server.register(publicRateLimitPlugin);
   await server.register(idempotencyPlugin);
   await server.register(websocketPlugin);
 

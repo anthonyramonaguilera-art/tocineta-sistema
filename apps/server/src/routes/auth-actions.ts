@@ -28,12 +28,34 @@ export const authActionsRoutes: FastifyPluginAsync = async (fastify) => {
     const cedula = body?.cedula?.trim() || null;
     const phone = body?.phone?.trim() || null;
     const password = body?.password?.trim() || '';
-    const pin = body?.pin?.trim() || '';
+    const pin = typeof body?.pin === 'string' ? body.pin.trim() : (typeof body?.pin === 'number' ? String(body.pin).trim() : '');
 
-    if (!name || (!password && !pin)) {
+    if (!name) {
       return reply.status(400).send({
         success: false,
-        error: 'Debe especificar su nombre completo y una contraseña o PIN'
+        error: 'Debe especificar su nombre completo'
+      });
+    }
+
+    if (!pin) {
+      return reply.status(400).send({
+        success: false,
+        error: 'Debe especificar un PIN de 4 dígitos'
+      });
+    }
+
+    const pinFormat = validatePinFormat(pin, 'mesonero');
+    if (!pinFormat.valid) {
+      return reply.status(400).send({
+        success: false,
+        error: pinFormat.error || 'El PIN debe ser un valor numérico de 4 dígitos'
+      });
+    }
+
+    if (isTrivialPin(pin)) {
+      return reply.status(400).send({
+        success: false,
+        error: 'El PIN no puede ser trivial ni predecible (evite números consecutivos o repetidos)'
       });
     }
 
@@ -53,15 +75,7 @@ export const authActionsRoutes: FastifyPluginAsync = async (fastify) => {
     const salt = crypto.randomBytes(16).toString('hex');
     const passwordHash = password ? crypto.scryptSync(password, salt, 64).toString('hex') : null;
 
-    let effectivePin = '0000';
-    if (pin && /^\d{4}$/.test(pin)) {
-      effectivePin = pin;
-    } else if (password && /^\d{4}$/.test(password)) {
-      effectivePin = password;
-    } else if (cedula && /\d{4}$/.test(cedula)) {
-      effectivePin = cedula.slice(-4);
-    }
-    const { hash: pinHash, salt: pinSalt } = hashPin(effectivePin);
+    const { hash: pinHash, salt: pinSalt } = hashPin(pin);
 
     dbCtx.rawDb.prepare(`
       INSERT INTO users (
