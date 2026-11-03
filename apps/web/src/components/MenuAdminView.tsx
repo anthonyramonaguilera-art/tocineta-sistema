@@ -539,6 +539,28 @@ export const MenuAdminView: React.FC = () => {
     );
   }, [adminMenu?.categories]);
 
+  const normalizedQuery = normalizeSearch(searchQuery.trim());
+
+  const filteredProducts = useMemo(() => {
+    const products = adminMenu?.products ?? [];
+    const list = products.filter((p) => {
+      if (selectedCategory !== 'all' && p.category_id !== selectedCategory) return false;
+      if (!showHiddenProducts && !p.isActive) return false;
+      if (!normalizedQuery) return true;
+      const catName = categoryMap.get(p.category_id) || '';
+      const matchName = normalizeSearch(p.name).includes(normalizedQuery);
+      const matchDesc = normalizeSearch(p.description || '').includes(normalizedQuery);
+      const matchCat = normalizeSearch(catName).includes(normalizedQuery);
+      return matchName || matchDesc || matchCat;
+    });
+    return list.slice().sort((a, b) => {
+      const aHidden = !a.isActive;
+      const bHidden = !b.isActive;
+      if (aHidden !== bHidden) return aHidden ? 1 : -1;
+      return 0;
+    });
+  }, [adminMenu?.products, selectedCategory, showHiddenProducts, normalizedQuery, categoryMap]);
+
   if (menuLoadState.isLoading || menuLoadState.isError || !adminMenu) {
     return (
       <LoadBoundary
@@ -556,38 +578,12 @@ export const MenuAdminView: React.FC = () => {
     );
   }
 
-  const normalizedQuery = normalizeSearch(searchQuery.trim());
-
-  const filteredProducts = useMemo(() => {
-    const list = adminMenu.products.filter(p => {
-      if (selectedCategory !== 'all' && p.category_id !== selectedCategory) {
-        return false;
-      }
-      if (!showHiddenProducts && !p.isActive) {
-        return false;
-      }
-      if (!normalizedQuery) return true;
-      const catName = categoryMap.get(p.category_id) || '';
-      const matchName = normalizeSearch(p.name).includes(normalizedQuery);
-      const matchDesc = normalizeSearch(p.description || '').includes(normalizedQuery);
-      const matchCat = normalizeSearch(catName).includes(normalizedQuery);
-      return matchName || matchDesc || matchCat;
-    });
-
-    return list.slice().sort((a, b) => {
-      const aHidden = !a.isActive;
-      const bHidden = !b.isActive;
-      if (aHidden !== bHidden) return aHidden ? 1 : -1;
-      return 0;
-    });
-  }, [adminMenu.products, selectedCategory, showHiddenProducts, normalizedQuery, categoryMap]);
-
   return (
     <div className="space-y-6">
       {/* Guía Rápida Pedagógica */}
       <PedagogicalGuideBanner
         title="Guía Rápida de la Carta"
-        description="Aquí puedes agregar nuevos platos o cambiar precios. Si un producto se acaba en la noche, toca el botón verde 'Disponible' para apagarlo al instante."
+        description="Aquí puedes agregar nuevos platos o cambiar precios. Si un producto se acaba en la noche, toca 'Agotar' para marcarlo como agotado, o 'Ocultar del POS' para quitarlo del menú de pedidos."
         storageKey="tocineta_guide_menu"
       />
 
