@@ -150,11 +150,58 @@ export function getNextOrderNumber(rawDb: Database.Database, jornadaId: string):
   return (row?.max_num ?? 0) + 1;
 }
 
+export function assertProductsSellable(rawDb: Database.Database, productIds: string[]): void {
+  const ids = Array.from(new Set(productIds)).filter((id) => id && id !== 'prod_libre');
+  if (ids.length === 0) return;
+  const placeholders = ids.map(() => '?').join(',');
+  const rows = rawDb
+    .prepare(`SELECT id, name, is_active, is_available FROM products WHERE id IN (${placeholders})`)
+    .all(...ids) as Array<{ id: string; name: string; is_active: number; is_available: number }>;
+  const bad = rows
+    .filter((r) => r.is_available === 0 || r.is_active === 0)
+    .map((r) => ({ productId: r.id, name: r.name, reason: r.is_active === 0 ? 'oculto' : 'agotado' }));
+  if (bad.length > 0) {
+    const err: any = new Error(`Producto agotado: ${bad.map((b) => b.name).join(', ')}`);
+    err.statusCode = 409;
+    err.code = 'PRODUCT_UNAVAILABLE';
+    err.unavailable = bad;
+    throw err;
+  }
+}
+
 /**
  * Crea un pedido en estado 'sin_pago' y 'enviado' a caja (NO envía a cocina aún).
  * Aplica prorrateo Hamilton en combos y guarda snapshot_json.
  */
 export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
+  // Validación de campos exclusivos de prod_libre y autorización D16
+  if (input.lines && Array.isArray(input.lines)) {
+    for (let i = 0; i < input.lines.length; i++) {
+      const lineInput = input.lines[i];
+      if (lineInput.productId !== 'prod_libre') {
+        if (lineInput.customName !== undefined || lineInput.customPriceUsdCents !== undefined || lineInput.station !== undefined) {
+          const err: any = new Error('FREE_ITEM_FIELDS_NOT_ALLOWED: customName, customPriceUsdCents y station solo están permitidos para el producto prod_libre');
+          err.statusCode = 400;
+          err.code = 'FREE_ITEM_FIELDS_NOT_ALLOWED';
+          throw err;
+        }
+      }
+    }
+  }
+
+  const allProductIds: string[] = [];
+  if (input.lines && Array.isArray(input.lines)) {
+    for (const line of input.lines) {
+      if (line.productId) allProductIds.push(line.productId);
+      if (line.comboChildren && Array.isArray(line.comboChildren)) {
+        for (const child of line.comboChildren) {
+          if (child.productId) allProductIds.push(child.productId);
+        }
+      }
+    }
+  }
+  assertProductsSellable(rawDb, allProductIds);
+
   const orderId = input.orderId || `ord_${generateUuidV7()}`;
   const now = Date.now();
   const rateMicroBs = getCurrentExchangeRate(rawDb);
@@ -781,6 +828,26 @@ export function updateOrder(
   const updateTx = rawDb.transaction(() => {
     // Si se enviaron nuevas líneas, recrear líneas de la orden
     if (input.lines && input.lines.length > 0) {
+      const existingProductRows = rawDb.prepare('SELECT DISTINCT product_id FROM order_lines WHERE order_id = ?').all(orderId) as Array<{ product_id: string }>;
+      const existingProductIds = new Set(existingProductRows.map(r => r.product_id));
+
+      const newProductIds: string[] = [];
+      for (const line of input.lines) {
+        const prodId = line.productId || (line as any).product_id;
+        if (prodId && !existingProductIds.has(prodId)) {
+          newProductIds.push(prodId);
+        }
+        if (line.comboChildren && Array.isArray(line.comboChildren)) {
+          for (const child of line.comboChildren) {
+            const childProdId = child.productId || (child as any).product_id;
+            if (childProdId && !existingProductIds.has(childProdId)) {
+              newProductIds.push(childProdId);
+            }
+          }
+        }
+      }
+      assertProductsSellable(rawDb, newProductIds);
+
       rawDb.prepare('DELETE FROM order_lines WHERE order_id = ?').run(orderId);
 
       // Re-procesar totales y líneas idéntico a createOrder
