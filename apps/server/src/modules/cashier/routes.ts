@@ -61,7 +61,7 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         jornada
       });
     } catch (err: any) {
-      return reply.status(err.statusCode || 400).send({
+      return reply.status(err.httpStatus || err.statusCode || 400).send({
         success: false,
         error: err.message
       });
@@ -115,7 +115,7 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         cashSession: session
       });
     } catch (err: any) {
-      return reply.status(err.statusCode || 400).send({
+      return reply.status(err.httpStatus || err.statusCode || 400).send({
         success: false,
         error: err.message
       });
@@ -252,7 +252,7 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         ...result
       });
     } catch (err: any) {
-      return reply.status(err.statusCode || 400).send({
+      return reply.status(err.httpStatus || err.statusCode || 400).send({
         success: false,
         code: err.code || 'PAYMENT_FAILED',
         error: err.message,
@@ -286,7 +286,7 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         message: result.message
       });
     } catch (err: any) {
-      return reply.status(err.statusCode || 400).send({
+      return reply.status(err.httpStatus || err.statusCode || 400).send({
         success: false,
         code: err.code,
         error: err.message,
@@ -367,7 +367,7 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
           error: err.message
         });
       }
-      return reply.status(err.statusCode || 400).send({
+      return reply.status(err.httpStatus || err.statusCode || 400).send({
         success: false,
         code: err.code || 'EXPENSE_FAILED',
         error: err.message

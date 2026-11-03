@@ -490,4 +490,161 @@ describe('T-02: Reversión de ticket/venta por método y PIN obligatorio al anul
     expect(Math.abs((blindCount.session?.expectedCashUsdCents || 0) - ft.expectedCash.netCashUsdCents)).toBe(0);
     expect(Math.abs(totalCollectedTruth - zSummary.totalCollectedUsdCents)).toBe(0);
   });
+
+  it('6. Orden pagada con ZELLE: tras anular, el bucket BANK_USD netea exactamente a 0', async () => {
+    const resOrder = await app.inject({
+      method: 'POST',
+      url: '/api/orders',
+      headers: { authorization: `Bearer ${cajeraToken}` },
+      payload: {
+        tableNumber: 'Mesa Zelle',
+        fulfillmentType: 'salon',
+        lines: [{ productId: 'prod_street_dog', quantity: 1 }] // $2.50 = 250c
+      }
+    });
+    expect(resOrder.statusCode).toBe(201);
+    const order = resOrder.json().order;
+
+    const resPay = await app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.id}/pay`,
+      headers: { authorization: `Bearer ${cajeraToken}` },
+      payload: {
+        tenders: [
+          { method: 'zelle', amountCents: 250, referenceCode: `ZELLE-${Date.now()}` }
+        ]
+      }
+    });
+    expect(resPay.statusCode).toBe(200);
+
+    const resVoid = await app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.id}/void`,
+      headers: { authorization: `Bearer ${cajeraToken}` },
+      payload: {
+        supervisorPin: ADMIN_PIN,
+        reason: 'ANULACION_ZELLE'
+      }
+    });
+    expect(resVoid.statusCode).toBe(200);
+    expect(resVoid.json().success).toBe(true);
+
+    const ledgerAfter = rawDb.prepare('SELECT account_bucket, debit_usd_cents, credit_usd_cents FROM ledger_entries WHERE order_id = ?').all(order.id) as any[];
+    const bankUsdEntries = ledgerAfter.filter(l => l.account_bucket === 'BANK_USD');
+    const bankUsdDebit = bankUsdEntries.reduce((acc, l) => acc + l.debit_usd_cents, 0);
+    const bankUsdCredit = bankUsdEntries.reduce((acc, l) => acc + l.credit_usd_cents, 0);
+
+    expect(bankUsdEntries.length).toBe(2); // Débito original y Crédito de reversión
+    expect(bankUsdDebit).toBe(250);
+    expect(bankUsdCredit).toBe(250);
+    expect(bankUsdDebit - bankUsdCredit).toBe(0);
+  });
+
+  it('7. Intentar anular por segunda vez una orden ya anulada responde 409 con code ORDER_ALREADY_ANNULLED y no inserta filas adicionales en ledger_entries', async () => {
+    const resOrder = await app.inject({
+      method: 'POST',
+      url: '/api/orders',
+      headers: { authorization: `Bearer ${cajeraToken}` },
+      payload: {
+        tableNumber: 'Mesa Idempotencia',
+        fulfillmentType: 'salon',
+        lines: [{ productId: 'prod_street_dog', quantity: 1 }]
+      }
+    });
+    expect(resOrder.statusCode).toBe(201);
+    const order = resOrder.json().order;
+
+    const resPay = await app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.id}/pay`,
+      headers: { authorization: `Bearer ${cajeraToken}` },
+      payload: {
+        tenders: [{ method: 'cash_usd', amountCents: 250 }]
+      }
+    });
+    expect(resPay.statusCode).toBe(200);
+
+    // Primera anulación -> 200 OK
+    const resVoid1 = await app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.id}/void`,
+      headers: { authorization: `Bearer ${cajeraToken}` },
+      payload: {
+        supervisorPin: ADMIN_PIN,
+        reason: 'PRIMERA_ANULACION'
+      }
+    });
+    expect(resVoid1.statusCode).toBe(200);
+    expect(resVoid1.json().success).toBe(true);
+
+    const ledgerCountAfterFirstVoid = (rawDb.prepare('SELECT count(*) as cnt FROM ledger_entries WHERE order_id = ?').get(order.id) as any).cnt;
+    expect(ledgerCountAfterFirstVoid).toBeGreaterThan(0);
+
+    // Segunda anulación -> 409 Conflict
+    const resVoid2 = await app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.id}/void`,
+      headers: { authorization: `Bearer ${cajeraToken}` },
+      payload: {
+        supervisorPin: ADMIN_PIN,
+        reason: 'SEGUNDA_ANULACION'
+      }
+    });
+    expect(resVoid2.statusCode).toBe(409);
+    const body2 = resVoid2.json();
+    expect(body2.success).toBe(false);
+    expect(body2.code).toBe('ORDER_ALREADY_ANNULLED');
+
+    // No debe insertar filas adicionales en ledger_entries
+    const ledgerCountAfterSecondVoid = (rawDb.prepare('SELECT count(*) as cnt FROM ledger_entries WHERE order_id = ?').get(order.id) as any).cnt;
+    expect(ledgerCountAfterSecondVoid).toBe(ledgerCountAfterFirstVoid);
+  });
+
+  it('8. Anular una orden NO pagada (sin_pago) sin PIN responde 200 y deja 0 filas en ledger_entries', async () => {
+    const resOrder = await app.inject({
+      method: 'POST',
+      url: '/api/orders',
+      headers: { authorization: `Bearer ${cajeraToken}` },
+      payload: {
+        tableNumber: 'Mesa Sin Pago',
+        fulfillmentType: 'salon',
+        lines: [{ productId: 'prod_street_dog', quantity: 1 }]
+      }
+    });
+    expect(resOrder.statusCode).toBe(201);
+    const order = resOrder.json().order;
+    expect(order.payment_status).toBe('sin_pago');
+
+    // Anulación limpia sin PIN de supervisor
+    const resVoid = await app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.id}/void`,
+      headers: { authorization: `Bearer ${cajeraToken}` },
+      payload: {
+        reason: 'CLIENTE_DESISTIO'
+      }
+    });
+    expect(resVoid.statusCode).toBe(200);
+    expect(resVoid.json().success).toBe(true);
+
+    const updatedOrder = rawDb.prepare('SELECT * FROM orders WHERE id = ?').get(order.id) as any;
+    expect(updatedOrder.payment_status).toBe('anulado');
+    expect(updatedOrder.fulfillment_status).toBe('anulado');
+
+    // Cero filas en ledger_entries para órdenes no pagadas
+    const ledgerCount = (rawDb.prepare('SELECT count(*) as cnt FROM ledger_entries WHERE order_id = ?').get(order.id) as any).cnt;
+    expect(ledgerCount).toBe(0);
+
+    // Intentar anular de nuevo la orden no pagada también responde 409
+    const resVoidAgain = await app.inject({
+      method: 'POST',
+      url: `/api/orders/${order.id}/void`,
+      headers: { authorization: `Bearer ${cajeraToken}` },
+      payload: {
+        reason: 'REINTENTO_DESISTIO'
+      }
+    });
+    expect(resVoidAgain.statusCode).toBe(409);
+    expect(resVoidAgain.json().code).toBe('ORDER_ALREADY_ANNULLED');
+  });
 });

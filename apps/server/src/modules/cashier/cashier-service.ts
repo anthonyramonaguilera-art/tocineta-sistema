@@ -14,6 +14,7 @@ import { getCurrentExchangeRate } from '../menu/menu-service.js';
 import { enqueueOrderPrintJobs } from '../printing/worker.js';
 import { deductInventoryForOrder, revertInventoryForOrder } from '../profitability/recipes-service.js';
 import { resolveLocationId } from '../profitability/locations-service.js';
+import { AppError } from '../../lib/app-error.js';
 
 export interface OpenJornadaInput {
   openedByUserId: string;
@@ -792,6 +793,17 @@ export function annulOrderInCashier(
     throw err;
   }
 
+  // Paso 1 (Idempotencia): Al inicio, si la orden ya está anulada o reembolsada
+  if (
+    order.payment_status === 'reembolsado' ||
+    order.payment_status === 'anulado' ||
+    order.fulfillment_status === 'anulado'
+  ) {
+    const err: any = new AppError('ORDER_ALREADY_ANNULLED', 409, `La orden '${orderId}' ya ha sido anulada o reembolsada previamente`);
+    err.statusCode = 409;
+    throw err;
+  }
+
   // 1. Resolución estricta de sede sin fallbacks silenciosos (P2-A)
   const locationId = resolveLocationId(rawDb, order.location_id, input.actorUserId);
   const isPaid = order.payment_status === 'pagado';
@@ -822,9 +834,21 @@ export function annulOrderInCashier(
     // 2. Revertir inventario si hubo movimientos previos (sin lanzar 500 si no hay receta)
     revertInventoryForOrder(rawDb, orderId, locationId, reason, input.actorUserId || 'usr_cajera');
 
-    // 3. Revertir ledger si estaba pagada: reversión espejo exacta por método y vueltos
+    // Paso 3 (Reversión por Espejo Exacto): Dentro de la transacción, si isPaid,
+    // sustituye la reconstrucción manual del ledger por la lectura de TODAS las filas existentes de ledger_entries
+    // para esa orden (SELECT * FROM ledger_entries WHERE order_id = ? ORDER BY seq ASC).
+    // Por cada fila original, inserta su espejo exacto:
+    // - mismo jornada_id
+    // - mismo order_id
+    // - mismo account_bucket
+    // - mismo rate_micro_bs
+    // - debit_usd_cents = original.credit_usd_cents y credit_usd_cents = original.debit_usd_cents (intercambiados)
+    // - description = 'REVERSIÓN: ' + original.description + ' (' + input.reason + ')'
     if (isPaid) {
-      const rateMicroBs = order.rate_micro_bs || 40_000_000;
+      const originalEntries = rawDb.prepare(
+        'SELECT * FROM ledger_entries WHERE order_id = ? ORDER BY seq ASC'
+      ).all(orderId) as any[];
+
       const insertLedger = rawDb.prepare(`
         INSERT INTO ledger_entries (
           entry_id, jornada_id, order_id, account_bucket,
@@ -832,133 +856,19 @@ export function annulOrderInCashier(
         ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
       `);
 
-      // A. Reversión de venta neta de alimentos
-      if (order.net_food_sales_usd_cents > 0) {
+      const effectiveReason = input.reason || reason;
+      for (const original of originalEntries) {
         insertLedger.run(
           `led_${generateUuidV7()}`,
-          order.jornada_id,
-          orderId,
-          'FOOD_SALES',
-          order.net_food_sales_usd_cents,
-          0,
-          rateMicroBs,
-          `Reversión Venta Alimentos #${order.order_number} (${reason})`,
+          original.jornada_id,
+          original.order_id,
+          original.account_bucket,
+          original.credit_usd_cents,
+          original.debit_usd_cents,
+          original.rate_micro_bs,
+          'REVERSIÓN: ' + original.description + ' (' + effectiveReason + ')',
           now
         );
-      }
-
-      // B. Reversión de fondo delivery si existía
-      if (order.delivery_fee_usd_cents > 0) {
-        insertLedger.run(
-          `led_${generateUuidV7()}`,
-          order.jornada_id,
-          orderId,
-          'MOTORIZADO_FUND',
-          order.delivery_fee_usd_cents,
-          0,
-          rateMicroBs,
-          `Reversión Fondo Delivery #${order.order_number} (${reason})`,
-          now
-        );
-      }
-
-      // C. Reversión espejo por cada pago registrado en la orden (mismo bucket, invertido débito -> crédito)
-      const orderPayments = rawDb.prepare('SELECT * FROM payments WHERE order_id = ?').all(orderId) as any[];
-      for (const p of orderPayments) {
-        let bucket;
-        const m = (p.method || '').toUpperCase();
-        if (m === 'EFECTIVO_USD' || m === 'CASH_USD') {
-          bucket = 'CASH_USD';
-        } else if (m === 'EFECTIVO_BS' || m === 'CASH_BS') {
-          bucket = 'CASH_BS';
-        } else if (p.currency === 'BS' || m === 'PAGO_MOVIL' || m === 'PUNTO_DE_VENTA' || m === 'UBII' || m === 'TRANSFERENCIA') {
-          bucket = 'BANK_BS';
-        } else {
-          bucket = 'BANK_USD';
-        }
-
-        const creditCents = p.usd_equivalent_cents || (p.currency === 'USD' ? p.amount_cents : Math.round((p.amount_cents * 1_000_000) / (p.rate_micro_bs || rateMicroBs)));
-
-        insertLedger.run(
-          `led_${generateUuidV7()}`,
-          order.jornada_id,
-          orderId,
-          bucket,
-          0,
-          creditCents,
-          p.rate_micro_bs || rateMicroBs,
-          `Reversión Pago #${order.order_number} (${p.method})`,
-          now
-        );
-      }
-
-      // D. Reversión espejo por cada vuelto entregado en la orden (crédito original -> débito)
-      const orderChanges = rawDb.prepare('SELECT * FROM change_deliveries WHERE order_id = ?').all(orderId) as any[];
-      for (const cd of orderChanges) {
-        if (cd.change_usd_cents > 0) {
-          insertLedger.run(
-            `led_${generateUuidV7()}`,
-            order.jornada_id,
-            orderId,
-            'CASH_USD',
-            cd.change_usd_cents,
-            0,
-            cd.rate_micro_bs || rateMicroBs,
-            `Reversión Vuelto Efectivo USD #${order.order_number}`,
-            now
-          );
-        }
-        if (cd.change_bs_cents > 0) {
-          const changeRate = cd.rate_micro_bs || rateMicroBs;
-          const changeBsEquivUsd = Math.round((cd.change_bs_cents * 1_000_000) / changeRate);
-          const changeBucket = (cd.method || '').toLowerCase().includes('pago_movil') ? 'BANK_BS' : 'CASH_BS';
-          insertLedger.run(
-            `led_${generateUuidV7()}`,
-            order.jornada_id,
-            orderId,
-            changeBucket,
-            changeBsEquivUsd,
-            0,
-            changeRate,
-            `Reversión Vuelto Bolívares #${order.order_number}`,
-            now
-          );
-        }
-      }
-
-      // E. Reversión de ajustes de redondeo, propinas o gastos por sobrepago de la orden original
-      const existingEntries = rawDb.prepare(`
-        SELECT account_bucket, debit_usd_cents, credit_usd_cents, rate_micro_bs
-        FROM ledger_entries
-        WHERE order_id = ? AND account_bucket IN ('ROUNDING_ADJUSTMENT', 'TIP_IN', 'OPERATING_EXPENSE', 'MARKETING_COURTESY')
-      `).all(orderId) as any[];
-
-      for (const entry of existingEntries) {
-        if (entry.debit_usd_cents > 0) {
-          insertLedger.run(
-            `led_${generateUuidV7()}`,
-            order.jornada_id,
-            orderId,
-            entry.account_bucket,
-            0,
-            entry.debit_usd_cents,
-            entry.rate_micro_bs || rateMicroBs,
-            `Reversión Ajuste #${order.order_number} (${entry.account_bucket})`,
-            now
-          );
-        } else if (entry.credit_usd_cents > 0) {
-          insertLedger.run(
-            `led_${generateUuidV7()}`,
-            order.jornada_id,
-            orderId,
-            entry.account_bucket,
-            entry.credit_usd_cents,
-            0,
-            entry.rate_micro_bs || rateMicroBs,
-            `Reversión Ajuste #${order.order_number} (${entry.account_bucket})`,
-            now
-          );
-        }
       }
     }
 
