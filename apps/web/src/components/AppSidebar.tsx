@@ -17,6 +17,7 @@ const MENU_ITEMS: MenuItem[] = [
   // SECCIÓN OPERACIÓN
   { tab: 'home', label: 'Inicio', icon: 'LayoutDashboard', section: 'operacion', isImplemented: true },
   { tab: 'pos', label: 'Tomar Pedido', icon: 'ShoppingBag', section: 'operacion', isImplemented: true },
+  { tab: 'availability', label: 'Disponibilidad', icon: 'Power', section: 'operacion', isImplemented: true },
   { tab: 'kds', label: 'Plancha y Cocina', icon: 'Flame', section: 'operacion', isImplemented: true },
   { tab: 'cashier', label: 'Caja y Cierre', icon: 'DollarSign', section: 'operacion', isImplemented: true },
 

@@ -37,7 +37,8 @@ export const VIEW_TITLES: Record<TabType, string> = {
   finances: 'Finanzas',
   quotes: 'Cotizador',
   partners: 'Socios',
-  settings: 'Ajustes'
+  settings: 'Ajustes',
+  availability: 'Disponibilidad'
 };
 
 export const AppLayout: React.FC<AppLayoutProps> = ({

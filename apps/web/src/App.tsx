@@ -27,16 +27,17 @@ const FinancesDashboardView = React.lazy(() => import('./features/finances/Finan
 const EventQuotesView = React.lazy(() => import('./features/quotes/EventQuotesView.js').then(m => ({ default: m.EventQuotesView })));
 const PartnersManagementView = React.lazy(() => import('./features/partners/PartnersManagementView.js').then(m => ({ default: m.PartnersManagementView })));
 const BusinessSettingsView = React.lazy(() => import('./features/settings/BusinessSettingsView.js').then(m => ({ default: m.BusinessSettingsView })));
+const AvailabilityView = React.lazy(() => import('./features/availability/AvailabilityView.js').then(m => ({ default: m.AvailabilityView })));
 
-export type TabType = 'home' | 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability' | 'staff' | 'qr-menu' | 'owner' | 'finances' | 'quotes' | 'partners' | 'settings';
+export type TabType = 'home' | 'pos' | 'cashier' | 'kds' | 'menu-admin' | 'health' | 'emergency' | 'profitability' | 'staff' | 'qr-menu' | 'owner' | 'finances' | 'quotes' | 'partners' | 'settings' | 'availability';
 
 // Mapa canónico de pestañas permitidas y por defecto por rol (Hito M18/M20 RBAC + F1 + F7)
 export const ALLOWED_TABS_BY_ROLE: Record<string, TabType[]> = {
   mesonero: ['pos', 'kds', 'health'],
-  cocinero: ['kds', 'health'],
-  cajera: ['cashier', 'pos', 'kds', 'emergency', 'health'],
-  supervisor: ['home', 'pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu', 'owner', 'finances', 'quotes', 'partners', 'settings'],
-  admin: ['home', 'pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu', 'owner', 'finances', 'quotes', 'partners', 'settings']
+  cocinero: ['kds', 'health', 'availability'],
+  cajera: ['cashier', 'pos', 'kds', 'emergency', 'health', 'availability'],
+  supervisor: ['home', 'pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu', 'owner', 'finances', 'quotes', 'partners', 'settings', 'availability'],
+  admin: ['home', 'pos', 'cashier', 'kds', 'menu-admin', 'staff', 'health', 'emergency', 'profitability', 'qr-menu', 'owner', 'finances', 'quotes', 'partners', 'settings', 'availability']
 };
 
 export const DEFAULT_TAB_BY_ROLE: Record<string, TabType> = {
@@ -147,7 +148,7 @@ const MainNavigator: React.FC = () => {
           localStorage.setItem('tocineta_profit_subtab', 'wizard');
           window.dispatchEvent(new CustomEvent('switch-profitability-subtab', { detail: 'wizard' }));
         } catch {}
-      } else if (['home', 'pos', 'cashier', 'kds', 'profitability', 'menu-admin', 'staff', 'health', 'emergency', 'qr-menu', 'owner', 'finances', 'quotes', 'partners', 'settings'].includes(cleanTab)) {
+      } else if (['home', 'pos', 'cashier', 'kds', 'profitability', 'menu-admin', 'staff', 'health', 'emergency', 'qr-menu', 'owner', 'finances', 'quotes', 'partners', 'settings', 'availability'].includes(cleanTab)) {
         setCurrentTab(cleanTab as TabType);
       }
     };
@@ -278,6 +279,7 @@ const MainNavigator: React.FC = () => {
             {currentTab === 'quotes' && <EventQuotesView />}
             {currentTab === 'partners' && <PartnersManagementView />}
             {currentTab === 'settings' && <BusinessSettingsView />}
+            {currentTab === 'availability' && <AvailabilityView />}
           </Suspense>
         </ViewErrorBoundary>
       )}
