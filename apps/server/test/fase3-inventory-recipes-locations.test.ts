@@ -286,6 +286,9 @@ describe('FASE 3 — Sedes, Inventario, Recetas, Compras, Costos y Mermas', () =
     const supplyId = 'sup_carne_smash';
     const prodId = 'prod_americana_deluxe';
 
+    // Aislamiento de estado: restaurar precio base de catálogo para evitar arrastre acumulativo de ejecuciones previas
+    rawDb.prepare('UPDATE products SET price_usd_cents = 1300 WHERE id = ?').run(prodId);
+
     const prodBefore = rawDb.prepare('SELECT price_usd_cents FROM products WHERE id = ?').get(prodId) as any;
     const initialPrice = prodBefore.price_usd_cents;
 
@@ -294,7 +297,8 @@ describe('FASE 3 — Sedes, Inventario, Recetas, Compras, Costos y Mermas', () =
       locationId: 'loc_alta_vista',
       paymentCondition: 'CONTADO',
       createdBy: 'usr_admin',
-      items: [{ supplyId, purchaseQuantity: 50, unitCostUsdCents: 500 }] // Sube carne de 75c a 500c
+      // Aislamiento de costo: se usa 800c (superior a base) para que el nuevo WAC supere a initialPrice
+      items: [{ supplyId, purchaseQuantity: 50, unitCostUsdCents: 800 }]
     });
 
     // Verificar que la compra detectó el impacto en Americana Deluxe

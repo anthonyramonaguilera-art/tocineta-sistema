@@ -874,6 +874,23 @@ export function annulOrderInCashier(
   }
 
   // 1. Resolución estricta de sede sin fallbacks silenciosos (P2-A)
+  // Guardia de período cerrado (Decisión D17): Una orden pagada no puede anularse si su jornada o sesión de caja ya cerró
+  if (order.payment_status === 'pagado') {
+    const period = rawDb.prepare(
+      'SELECT j.status AS jstatus, cs.status AS sstatus FROM orders o LEFT JOIN jornadas j ON j.id = o.jornada_id LEFT JOIN cash_sessions cs ON cs.id = o.cash_session_id WHERE o.id = ?'
+    ).get(orderId) as { jstatus?: string | null; sstatus?: string | null } | undefined;
+
+    if (period && (period.jstatus === 'cerrada' || period.sstatus === 'cerrada')) {
+      const err: any = new AppError(
+        'ORDER_IN_CLOSED_PERIOD',
+        409,
+        'La venta pertenece a un turno o jornada ya cerrados y no puede anularse desde caja. Solicita un ajuste a administracion.'
+      );
+      err.statusCode = 409;
+      throw err;
+    }
+  }
+
   const locationId = resolveLocationId(rawDb, order.location_id, input.actorUserId);
   const isPaid = order.payment_status === 'pagado';
   const newPaymentStatus = isPaid ? 'reembolsado' : 'anulado';
