@@ -15,7 +15,7 @@ import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { createIdempotencyKey } from '@tocineta/shared';
-import { loginAs } from './test-helpers.js';
+import { loginAs, activateLegacyFixtureProducts } from './test-helpers.js';
 
 function readWebSource(relPath: string): string {
   const candidates = [
@@ -46,6 +46,7 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
     await runMigrations(rawDb, { migrationsDir: path.join(__dirname, '../src/db/migrations') });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
 
     rawDb.prepare(`
       INSERT INTO exchange_rates (id, rate_micro_bs, source, created_at_ms, is_current)

@@ -38,7 +38,7 @@ import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
 import { syncBcvRateFromInternet } from '../src/modules/menu/bcv-auto-sync.js';
 import { createIdempotencyKey } from '@tocineta/shared';
-import { loginAs } from './test-helpers.js';
+import { loginAs, activateLegacyFixtureProducts } from './test-helpers.js';
 
 function readWebSource(relPath: string): string {
   const candidates = [
@@ -68,6 +68,7 @@ describe('Hito M19 — Suite de Pruebas Operativas Críticas', () => {
     await runMigrations(rawDb, { migrationsDir: path.join(__dirname, '../src/db/migrations') });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
 
     // Sembrar tasa de cambio inicial para pruebas (40.00 Bs/$)
     rawDb.prepare(`

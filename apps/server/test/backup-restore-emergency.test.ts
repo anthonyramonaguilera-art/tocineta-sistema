@@ -16,7 +16,7 @@ import { decryptWithAge } from '../src/modules/backups/age-service.js';
 import { generateIdentity, identityToRecipient } from 'age-encryption';
 import { restoreAndVerifyDatabase } from '../src/modules/backups/restore-engine.js';
 import { generateEmergencySlipsPdf, formatSlipNumber } from '../src/modules/emergency/slips-generator.js';
-import { loginAs } from './test-helpers.js';
+import { loginAs, activateLegacyFixtureProducts } from './test-helpers.js';
 
 describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y Modo Emergencia (@tocineta/server)', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_m9_test_${Date.now()}`);
@@ -57,6 +57,7 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
     await runMigrations(rawDb, { dbPath: tempDb });
     seedInitialUsers(rawDb);
     seedCatalog(rawDb);
+    activateLegacyFixtureProducts(rawDb);
 
     app = await buildServer({ disableStatic: true });
 
