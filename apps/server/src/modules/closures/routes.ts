@@ -4,6 +4,7 @@ import { findAuthorizerByPin } from '../auth/authorizer-guard.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { canUserProcessPayments } from '@tocineta/shared';
 import { performBlindCount, closeJornadaZ, type BlindCountInput, type UserContext } from './closures-service.js';
+import { getClosureHistory } from './history-service.js';
 
 export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
   const getUserFromRequest = (req: any, supervisorPin?: string, _body?: any): UserContext => {
@@ -109,5 +110,54 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
         remainingMs: err.remainingMs
       });
     }
+  });
+
+  // 3. Historial de Cierres de Jornadas (GET /api/jornadas/history)
+  fastify.get('/api/jornadas/history', async (request, reply) => {
+    const user = request.user as any;
+    if (!user) {
+      return reply.status(401).send({
+        success: false,
+        error: 'No autenticado'
+      });
+    }
+
+    const query = (request.query || {}) as Record<string, any>;
+    let limit: number | undefined = undefined;
+    let before: number | undefined = undefined;
+
+    if (query.limit !== undefined && query.limit !== '') {
+      const rawLimit = Number(query.limit);
+      if (!Number.isInteger(rawLimit) || isNaN(rawLimit) || rawLimit <= 0) {
+        return reply.status(400).send({
+          success: false,
+          error: 'Parámetro limit inválido'
+        });
+      }
+      limit = rawLimit;
+    }
+
+    if (query.before !== undefined && query.before !== '') {
+      const rawBefore = Number(query.before);
+      if (!Number.isInteger(rawBefore) || isNaN(rawBefore) || rawBefore <= 0) {
+        return reply.status(400).send({
+          success: false,
+          error: 'Parámetro before inválido'
+        });
+      }
+      before = rawBefore;
+    }
+
+    const dbCtx = getDatabaseContext();
+    const result = getClosureHistory(dbCtx.rawDb, {
+      user: {
+        id: user.id,
+        role: user.role
+      },
+      limit,
+      before
+    });
+
+    return reply.status(200).send(result);
   });
 };
