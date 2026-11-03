@@ -59,7 +59,52 @@ $resolvedEnv = if ([System.IO.Path]::IsPathRooted($EnvFile)) {
     Join-Path $repoRoot $EnvFile
 }
 
+# Señal para el receptor: ruta del .env (por si algún módulo la usa)
 $env:ENV_FILE = $resolvedEnv
+
+# === NUEVO ===
+# Cargar .env al ambiente del proceso para que update-receiver.ts lo vea
+if (-not (Test-Path $resolvedEnv)) {
+    Log-TelegramRunner -Message "Archivo .env no encontrado en: $resolvedEnv" -Level "ERROR"
+    Write-Host "[ERROR] No se encuentra .env en: $resolvedEnv" -ForegroundColor Red
+    exit 1
+}
+
+$loadedCount = 0
+$skippedCount = 0
+try {
+    Get-Content $resolvedEnv -Encoding UTF8 | ForEach-Object {
+        $line = $_.Trim()
+        # Ignorar vacías y comentarios
+        if ([string]::IsNullOrWhiteSpace($line)) { return }
+        if ($line.StartsWith('#')) { return }
+
+        # Parsear KEY=VALUE
+        if ($line -match '^([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$') {
+            $key = $matches[1]
+            $value = $matches[2].Trim()
+
+            # Quitar comillas envolventes si existen
+            if ($value.Length -ge 2 -and (
+                ($value.StartsWith('"') -and $value.EndsWith('"')) -or
+                ($value.StartsWith("'") -and $value.EndsWith("'"))
+            )) {
+                $value = $value.Substring(1, $value.Length - 2)
+            }
+
+            [System.Environment]::SetEnvironmentVariable($key, $value, 'Process')
+            $loadedCount++
+        } else {
+            $skippedCount++
+        }
+    }
+    Log-TelegramRunner -Message "Variables del .env cargadas al ambiente: $loadedCount OK, $skippedCount ignoradas (ENV_FILE=$resolvedEnv)" -Level "INFO"
+} catch {
+    Log-TelegramRunner -Message "Error cargando .env: $($_.Exception.Message)" -Level "ERROR"
+    Write-Host "[ERROR] Fallo al cargar .env: $($_.Exception.Message)" -ForegroundColor Red
+    exit 1
+}
+# === FIN NUEVO ===
 
 $nodeCmd = Get-Command node -ErrorAction SilentlyContinue
 if (-not $nodeCmd) {
@@ -75,12 +120,12 @@ if ($DryRun) {
 
 try {
     Write-Host "Ejecutando receptor de actualizaciones por Telegram..." -ForegroundColor Cyan
-    $output = & npx tsx @receiverArgs 2>&1
+    $output = & pnpm exec tsx @receiverArgs 2>&1
     $exitCode = $LASTEXITCODE
 
     if ($exitCode -ne 0) {
         $errSummary = ($output | Out-String).Trim()
-        Log-TelegramRunner -Message "Receptor finalizo con codigo de error $exitCode: $errSummary" -Level "WARN"
+        Log-TelegramRunner -Message "Receptor finalizo con codigo de error ${exitCode}: $errSummary" -Level "WARN"
         Write-Host "[AVISO] update-receiver finalizo con codigo $exitCode" -ForegroundColor Yellow
         exit $exitCode
     }
