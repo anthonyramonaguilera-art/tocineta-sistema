@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext.js';
 import type { AdminMenuResponse, AdminProduct, AdminProductIngredient, Station } from '../types/menu.js';
 import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
 import { ProductImagePlaceholder } from './ProductImagePlaceholder.js';
+import { ProductStatusControls } from '../features/menu-admin/ProductStatusControls.js';
+import { DeleteProductDialog } from '../features/menu-admin/DeleteProductDialog.js';
 import {
   ClipboardList,
   Plus,
@@ -30,6 +32,9 @@ export const MenuAdminView: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [editingProduct, setEditingProduct] = useState<AdminProduct | null>(null);
+  const [productToDelete, setProductToDelete] = useState<AdminProduct | null>(null);
+  const [showHiddenProducts, setShowHiddenProducts] = useState(false);
+  const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [customMargins, setCustomMargins] = useState<Record<string, number>>({});
@@ -206,8 +211,8 @@ export const MenuAdminView: React.FC = () => {
             description: formDescription
           })
         });
-        const d = await res.json();
-        if (!d.success) throw new Error(d.error);
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok || !d.success) throw new Error(d.error || 'Error al actualizar producto');
       } else {
         // Crear
         const res = await apiFetch('/api/menu/products', {
@@ -225,9 +230,9 @@ export const MenuAdminView: React.FC = () => {
             description: formDescription
           })
         });
-        const d = await res.json();
-        if (!d.success) throw new Error(d.error);
-        savedProductId = d.product.id;
+        const d = await res.json().catch(() => ({}));
+        if (!res.ok || !d.success) throw new Error(d.error || 'Error al crear producto');
+        savedProductId = d.product?.id;
       }
 
       // Si se cargó foto, subirla
@@ -244,8 +249,12 @@ export const MenuAdminView: React.FC = () => {
     },
     onSuccess: () => {
       closeProductModal();
+      setFeedbackMessage({ type: 'success', text: 'Producto guardado exitosamente' });
       queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
       queryClient.invalidateQueries({ queryKey: ['posMenu'] });
+    },
+    onError: (err: any) => {
+      setFeedbackMessage({ type: 'error', text: err?.message || 'Error al guardar producto' });
     }
   });
 
@@ -380,10 +389,15 @@ export const MenuAdminView: React.FC = () => {
     return Array.from(map.entries()).map(([id, name]) => ({ id, name }));
   }, [adminMenu]);
 
+  const defaultCreateCategoryId = useMemo(() => {
+    const firstValid = adminMenu?.categories.find(c => c.is_active === 1 && c.is_internal === 0);
+    return firstValid ? firstValid.id : '';
+  }, [adminMenu?.categories]);
+
   const openCreateModal = () => {
     setEditingProduct(null);
     setFormName('');
-    setFormCategoryId(adminMenu?.categories[0]?.id || 'cat_hot_dogs');
+    setFormCategoryId(defaultCreateCategoryId);
     setFormPriceUsd('');
     setFormCostUsd('');
     setFormStation('hot_dogs');
@@ -544,18 +558,29 @@ export const MenuAdminView: React.FC = () => {
 
   const normalizedQuery = normalizeSearch(searchQuery.trim());
 
-  const filteredProducts = adminMenu.products.filter(p => {
-    if (selectedCategory !== 'all' && p.category_id !== selectedCategory) {
-      return false;
-    }
-    if (!normalizedQuery) return true;
-    const catName = categoryMap.get(p.category_id) || '';
-    const matchName = normalizeSearch(p.name).includes(normalizedQuery);
-    const matchDesc = normalizeSearch(p.description || '').includes(normalizedQuery);
-    const matchCat = normalizeSearch(catName).includes(normalizedQuery);
-    return matchName || matchDesc || matchCat;
+  const filteredProducts = useMemo(() => {
+    const list = adminMenu.products.filter(p => {
+      if (selectedCategory !== 'all' && p.category_id !== selectedCategory) {
+        return false;
+      }
+      if (!showHiddenProducts && !p.isActive) {
+        return false;
+      }
+      if (!normalizedQuery) return true;
+      const catName = categoryMap.get(p.category_id) || '';
+      const matchName = normalizeSearch(p.name).includes(normalizedQuery);
+      const matchDesc = normalizeSearch(p.description || '').includes(normalizedQuery);
+      const matchCat = normalizeSearch(catName).includes(normalizedQuery);
+      return matchName || matchDesc || matchCat;
+    });
 
-  });
+    return list.slice().sort((a, b) => {
+      const aHidden = !a.isActive;
+      const bHidden = !b.isActive;
+      if (aHidden !== bHidden) return aHidden ? 1 : -1;
+      return 0;
+    });
+  }, [adminMenu.products, selectedCategory, showHiddenProducts, normalizedQuery, categoryMap]);
 
   return (
     <div className="space-y-6">
@@ -565,6 +590,33 @@ export const MenuAdminView: React.FC = () => {
         description="Aquí puedes agregar nuevos platos o cambiar precios. Si un producto se acaba en la noche, toca el botón verde 'Disponible' para apagarlo al instante."
         storageKey="tocineta_guide_menu"
       />
+
+      {feedbackMessage && (
+        <div
+          role="alert"
+          className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 text-xs font-bold ${
+            feedbackMessage.type === 'success'
+              ? 'bg-success-subtle border-success/40 text-success'
+              : 'bg-danger-subtle border-danger/40 text-danger'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            <Icon
+              name={feedbackMessage.type === 'success' ? 'CheckCircle2' : 'AlertCircle'}
+              size={18}
+            />
+            <span>{feedbackMessage.text}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setFeedbackMessage(null)}
+            className="p-1 text-ink-muted hover:text-ink cursor-pointer"
+            aria-label="Cerrar notificación"
+          >
+            ×
+          </button>
+        </div>
+      )}
 
       {/* -------------------------------------------------------------------- */}
       {/* 1. SECCIÓN CATEGORÍAS DE LA CARTA                                    */}
@@ -686,12 +738,28 @@ export const MenuAdminView: React.FC = () => {
               ))}
             </div>
 
-            <button
-              onClick={openCreateModal}
-              className="px-4 py-2 rounded-xl bg-primary text-primary-ink text-xs font-extrabold uppercase tracking-wider hover:opacity-90 transition-all shrink-0 shadow-md cursor-pointer"
-            >
-              + Nuevo Producto
-            </button>
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                type="button"
+                onClick={() => setShowHiddenProducts(prev => !prev)}
+                className={`min-h-[48px] px-3.5 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-2 cursor-pointer ${
+                  showHiddenProducts
+                    ? 'bg-warning-subtle text-warning border-warning/40 shadow-xs'
+                    : 'bg-surface border-border text-ink-muted hover:text-ink'
+                }`}
+                aria-pressed={showHiddenProducts}
+              >
+                <Icon name={showHiddenProducts ? 'Eye' : 'EyeOff'} size={16} />
+                <span>Mostrar ocultos</span>
+              </button>
+
+              <button
+                onClick={openCreateModal}
+                className="min-h-[48px] px-4 py-2 rounded-xl bg-primary text-primary-ink text-xs font-extrabold uppercase tracking-wider hover:opacity-90 transition-all shrink-0 shadow-md cursor-pointer"
+              >
+                + Nuevo Producto
+              </button>
+            </div>
           </div>
 
           {/* Buscador en Carta y Precios */}
@@ -737,7 +805,11 @@ export const MenuAdminView: React.FC = () => {
                 <div
                   key={p.id}
                   className={`bg-surface border rounded-2xl p-4 flex flex-col justify-between shadow-md transition-all ${
-                    p.isAvailable ? 'border-border' : 'border-danger/30 bg-danger-subtle'
+                    !p.isActive
+                      ? 'border-warning/40 bg-warning-subtle/10'
+                      : p.isAvailable
+                        ? 'border-border'
+                        : 'border-danger/30 bg-danger-subtle'
                   }`}
                 >
                   <div>
@@ -859,40 +931,15 @@ export const MenuAdminView: React.FC = () => {
                     )}
                   </div>
 
-                  {/* Switch Rápido Disponible / Agotado */}
-                  <div className="mt-4 pt-3 border-t border-border flex items-center justify-between">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-ink-muted">
-                        Estado Operativo:
-                      </span>
-                      {!p.isActive && (
-                        <span className="text-[10px] text-warning font-bold font-bold">
-                          Guardado (No visible para mesoneros)
-                        </span>
-                      )}
-                    </div>
-                    {isCategoryInactive && p.isAvailable ? (
-                      <span className="px-3 py-1 rounded-full text-xs font-bold border bg-warning-subtle text-warning border-warning/30">
-                        Oculto en POS (categoría inactiva)
-                      </span>
-                    ) : (
-                      <button
-                        onClick={() =>
-                          toggleAvailabilityMutation.mutate({
-                            productId: p.id,
-                            isAvailable: !p.isAvailable
-                          })
-                        }
-                        className={`px-3 py-1 rounded-full text-xs font-bold transition-all cursor-pointer ${
-                          p.isAvailable
-                            ? 'bg-success-subtle text-success font-bold border border-success/40'
-                            : 'bg-danger-subtle text-danger border border-danger/40'
-                        }`}
-                      >
-                        {p.isAvailable ? '● Disponible' : '○ Agotado'}
-                      </button>
-                    )}
-                  </div>
+                  {/* Controles de Estado y Publicación */}
+                  <ProductStatusControls
+                    product={p}
+                    isCategoryInactive={isCategoryInactive}
+                    categoryId={p.category_id}
+                    toggleAvailabilityMutation={toggleAvailabilityMutation}
+                    onDeleteClick={() => setProductToDelete(p)}
+                    onError={(err) => setFeedbackMessage({ type: 'error', text: err })}
+                  />
 
                   <div className="mt-3">
                     <Button
@@ -1364,12 +1411,22 @@ export const MenuAdminView: React.FC = () => {
                     onChange={e => setFormCategoryId(e.target.value)}
                     className="w-full bg-surface-alt border border-border rounded-xl px-3 py-2 text-xs text-ink"
                   >
-                    {adminMenu.categories.map(c => (
-                      <option key={c.id} value={c.id}>
-                        {c.name}{(!c.is_active || c.is_active === 0) ? ' (Inactiva: oculta en POS)' : ''}
-                      </option>
-                    ))}
+                    {adminMenu.categories
+                      .filter(c => c.is_internal === 0)
+                      .map(c => {
+                        const isInactive = !c.is_active || c.is_active === 0;
+                        return (
+                          <option key={c.id} value={c.id} disabled={isInactive}>
+                            {c.name}{isInactive ? ' (inactiva)' : ''}
+                          </option>
+                        );
+                      })}
                   </select>
+                  {!formCategoryId && (
+                    <span className="text-[11px] text-danger font-bold mt-1 block">
+                      No hay categorías activas disponibles. Active una categoría para guardar.
+                    </span>
+                  )}
                 </div>
               )}
 
@@ -1536,7 +1593,7 @@ export const MenuAdminView: React.FC = () => {
               </button>
               <button
                 onClick={() => saveProductMutation.mutate()}
-                disabled={saveProductMutation.isPending || !formName || !formPriceUsd}
+                disabled={saveProductMutation.isPending || !formName || !formPriceUsd || (!editingProduct && !formCategoryId)}
                 className="flex-1 py-2.5 rounded-xl bg-primary text-primary-ink text-xs font-extrabold uppercase hover:opacity-90 disabled:opacity-50 shadow-md cursor-pointer"
               >
                 {saveProductMutation.isPending ? 'Guardando...' : 'Guardar Producto'}
@@ -1612,6 +1669,14 @@ export const MenuAdminView: React.FC = () => {
           </div>
         </div>
       )}
+      {/* DIÁLOGO DE CONFIRMACIÓN PARA ELIMINAR/ARCHIVAR PRODUCTO */}
+      <DeleteProductDialog
+        product={productToDelete}
+        isOpen={Boolean(productToDelete)}
+        onClose={() => setProductToDelete(null)}
+        onSuccessMessage={(msg) => setFeedbackMessage({ type: 'success', text: msg })}
+        onError={(err) => setFeedbackMessage({ type: 'error', text: err })}
+      />
     </div>
   );
 };
