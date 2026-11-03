@@ -147,7 +147,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
 
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-black/85 backdrop-blur-sm animate-in fade-in duration-150">
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-3 bg-ink/60 backdrop-blur-sm animate-in fade-in duration-150">
         <div className="bg-tocineta-card border border-tocineta-border rounded-3xl w-full max-w-2xl max-h-[92vh] flex flex-col shadow-2xl overflow-hidden">
           
           {/* Cabecera */}
@@ -156,7 +156,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
               <div className="flex items-center gap-2">
                 <Icon name="Sparkles" size={20} className="text-tocineta-yellow" />
                 <h2 className="text-lg font-black text-tocineta-text">{combo.name}</h2>
-                <span className="text-sm px-2.5 py-0.5 rounded-full bg-tocineta-yellow text-tocineta-bg font-mono font-black">
+                <span className="text-sm px-2.5 py-0.5 rounded-full bg-tocineta-yellow text-primary-ink font-mono font-black">
                   ${(combo.priceUsdCents / 100).toFixed(2)}
                 </span>
               </div>
@@ -166,7 +166,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
             </div>
             <button
               onClick={onClose}
-              className="w-12 h-12 flex items-center justify-center rounded-2xl bg-tocineta-card hover:bg-tocineta-border text-tocineta-muted hover:text-white transition-all text-xl font-bold"
+              className="w-12 h-12 flex items-center justify-center rounded-2xl bg-tocineta-card hover:bg-tocineta-border text-tocineta-muted hover:text-ink transition-all text-xl font-bold"
               aria-label="Cerrar modal"
             >
               ✕
@@ -180,41 +180,41 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
               onClick={() => setCurrentStep(1)}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                 currentStep === 1
-                  ? 'bg-tocineta-yellow text-tocineta-bg shadow'
-                  : 'text-tocineta-muted hover:text-white'
+                  ? 'bg-tocineta-yellow text-primary-ink shadow'
+                  : 'text-tocineta-muted hover:text-ink'
               }`}
             >
-              <span className="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center text-[10px]">1</span>
+              <span className="w-5 h-5 rounded-full bg-ink/10 flex items-center justify-center text-[10px]">1</span>
               <span>{isComboParaTi ? 'Hamburguesa 1' : 'Perro 1'}</span>
             </button>
 
-            <span className="text-tocineta-border">→</span>
+            <span className="text-tocineta-border"><Icon name="ArrowRight" size={16} /></span>
 
             <button
               type="button"
               onClick={() => setCurrentStep(2)}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                 currentStep === 2
-                  ? 'bg-tocineta-yellow text-tocineta-bg shadow'
-                  : 'text-tocineta-muted hover:text-white'
+                  ? 'bg-tocineta-yellow text-primary-ink shadow'
+                  : 'text-tocineta-muted hover:text-ink'
               }`}
             >
-              <span className="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center text-[10px]">2</span>
+              <span className="w-5 h-5 rounded-full bg-ink/10 flex items-center justify-center text-[10px]">2</span>
               <span>{isComboParaTi ? 'Hamburguesa 2' : 'Perro 2'}</span>
             </button>
 
-            <span className="text-tocineta-border">→</span>
+            <span className="text-tocineta-border"><Icon name="ArrowRight" size={16} /></span>
 
             <button
               type="button"
               onClick={() => setCurrentStep(3)}
               className={`flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all ${
                 currentStep === 3
-                  ? 'bg-tocineta-yellow text-tocineta-bg shadow'
-                  : 'text-tocineta-muted hover:text-white'
+                  ? 'bg-tocineta-yellow text-primary-ink shadow'
+                  : 'text-tocineta-muted hover:text-ink'
               }`}
             >
-              <span className="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center text-[10px]">3</span>
+              <span className="w-5 h-5 rounded-full bg-ink/10 flex items-center justify-center text-[10px]">3</span>
               <span>Bebida</span>
             </button>
           </div>
@@ -245,11 +245,14 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                         }}
                         className={`min-h-[52px] p-3 rounded-2xl border text-left transition-all flex flex-col justify-between ${
                           isSelected
-                            ? 'bg-tocineta-yellow/15 border-tocineta-yellow text-white shadow-md'
-                            : 'bg-tocineta-bg border-tocineta-border text-tocineta-muted hover:text-white hover:border-tocineta-border-light'
+                            ? 'bg-primary-subtle border-ink ring-2 ring-primary text-ink shadow-md'
+                            : 'bg-surface border-border text-ink-muted hover:text-ink hover:border-border-subtle'
                         }`}
                       >
-                        <span className="font-bold text-sm text-white">{opt.name}</span>
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-bold text-sm text-ink">{opt.name}</span>
+                          {isSelected && <Icon name="Check" size={16} />}
+                        </div>
                         <span className="text-[10px] text-tocineta-muted">Precio regular: ${(opt.priceUsdCents / 100).toFixed(2)}</span>
                       </button>
                     );
@@ -259,7 +262,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                 {/* Personalizar Ítem 1 */}
                 <div className="p-4 bg-tocineta-bg border border-tocineta-border rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <span className="text-xs font-bold text-white block">
+                    <span className="text-xs font-bold text-ink block">
                       Personalización de: <span className="text-tocineta-yellow">{selectedProduct1?.name}</span>
                     </span>
                     <div className="flex flex-wrap gap-1 mt-1">
@@ -271,10 +274,10 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                             key={idx}
                             className={`text-[10px] px-2 py-0.5 rounded font-bold ${
                               m.modifierType === 'SIN_INGREDIENTE'
-                                ? 'bg-red-500/20 text-red-300'
+                                ? 'bg-danger-subtle text-danger'
                                 : m.modifierType === 'POCO_INGREDIENTE'
-                                ? 'bg-blue-500/20 text-blue-300'
-                                : 'bg-emerald-500/20 text-emerald-300'
+                                ? 'bg-warning-subtle text-warning'
+                                : 'bg-success-subtle text-success'
                             }`}
                           >
                             {m.modifierType === 'SIN_INGREDIENTE' ? `Sin ${m.ingredientName}` : m.ingredientName}
@@ -287,7 +290,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setCustomizingStep(1)}
-                    className="min-h-[48px] px-4 rounded-xl bg-tocineta-card border border-tocineta-yellow/60 text-tocineta-yellow hover:bg-tocineta-yellow hover:text-tocineta-bg font-bold text-xs transition-all flex items-center justify-center gap-1.5 shrink-0"
+                    className="min-h-[48px] px-4 rounded-xl bg-tocineta-card border border-tocineta-yellow/60 text-tocineta-yellow hover:bg-tocineta-yellow hover:text-primary-ink font-bold text-xs transition-all flex items-center justify-center gap-1.5 shrink-0"
                   >
                     <Icon name="Sliders" size={14} />
                     <span>Personalizar Ingredientes</span>
@@ -319,11 +322,14 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                         }}
                         className={`min-h-[52px] p-3 rounded-2xl border text-left transition-all flex flex-col justify-between ${
                           isSelected
-                            ? 'bg-tocineta-yellow/15 border-tocineta-yellow text-white shadow-md'
-                            : 'bg-tocineta-bg border-tocineta-border text-tocineta-muted hover:text-white hover:border-tocineta-border-light'
+                            ? 'bg-primary-subtle border-ink ring-2 ring-primary text-ink shadow-md'
+                            : 'bg-surface border-border text-ink-muted hover:text-ink hover:border-border-subtle'
                         }`}
                       >
-                        <span className="font-bold text-sm text-white">{opt.name}</span>
+                        <div className="flex items-center justify-between gap-1">
+                          <span className="font-bold text-sm text-ink">{opt.name}</span>
+                          {isSelected && <Icon name="Check" size={16} />}
+                        </div>
                         <span className="text-[10px] text-tocineta-muted">Precio regular: ${(opt.priceUsdCents / 100).toFixed(2)}</span>
                       </button>
                     );
@@ -333,7 +339,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                 {/* Personalizar Ítem 2 */}
                 <div className="p-4 bg-tocineta-bg border border-tocineta-border rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
-                    <span className="text-xs font-bold text-white block">
+                    <span className="text-xs font-bold text-ink block">
                       Personalización de: <span className="text-tocineta-yellow">{selectedProduct2?.name}</span>
                     </span>
                     <div className="flex flex-wrap gap-1 mt-1">
@@ -345,10 +351,10 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                             key={idx}
                             className={`text-[10px] px-2 py-0.5 rounded font-bold ${
                               m.modifierType === 'SIN_INGREDIENTE'
-                                ? 'bg-red-500/20 text-red-300'
+                                ? 'bg-danger-subtle text-danger'
                                 : m.modifierType === 'POCO_INGREDIENTE'
-                                ? 'bg-blue-500/20 text-blue-300'
-                                : 'bg-emerald-500/20 text-emerald-300'
+                                ? 'bg-warning-subtle text-warning'
+                                : 'bg-success-subtle text-success'
                             }`}
                           >
                             {m.modifierType === 'SIN_INGREDIENTE' ? `Sin ${m.ingredientName}` : m.ingredientName}
@@ -361,7 +367,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                   <button
                     type="button"
                     onClick={() => setCustomizingStep(2)}
-                    className="min-h-[48px] px-4 rounded-xl bg-tocineta-card border border-tocineta-yellow/60 text-tocineta-yellow hover:bg-tocineta-yellow hover:text-tocineta-bg font-bold text-xs transition-all flex items-center justify-center gap-1.5 shrink-0"
+                    className="min-h-[48px] px-4 rounded-xl bg-tocineta-card border border-tocineta-yellow/60 text-tocineta-yellow hover:bg-tocineta-yellow hover:text-primary-ink font-bold text-xs transition-all flex items-center justify-center gap-1.5 shrink-0"
                   >
                     <Icon name="Sliders" size={14} />
                     <span>Personalizar Ingredientes</span>
@@ -382,8 +388,8 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
 
                 {isComboParaTi ? (
                   <div className="space-y-3">
-                    <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-2xl">
-                      <span className="text-sm font-bold text-white block">Refresco 1 Lt Oficial Pepsi</span>
+                    <div className="p-3 bg-surface-alt border border-border rounded-2xl">
+                      <span className="text-sm font-bold text-ink block">Refresco 1 Lt Oficial Pepsi</span>
                       <span className="text-xs text-tocineta-muted">Selecciona uno de los 6 sabores disponibles:</span>
                     </div>
 
@@ -397,12 +403,12 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                             onClick={() => setSodaFlavor(flavor)}
                             className={`min-h-[48px] p-3 rounded-2xl border font-bold text-sm transition-all flex items-center justify-between ${
                               isSelected
-                                ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
-                                : 'bg-tocineta-bg border-tocineta-border text-tocineta-muted hover:text-white'
+                                ? 'bg-tocineta-yellow text-primary-ink shadow-md'
+                                : 'bg-tocineta-bg border-tocineta-border text-tocineta-muted hover:text-ink'
                             }`}
                           >
                             <span>{flavor}</span>
-                            <span>{isSelected ? '✓' : ''}</span>
+                            <span>{isSelected ? <Icon name="Check" size={16} /> : null}</span>
                           </button>
                         );
                       })}
@@ -411,9 +417,9 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
                 ) : (
                   <div className="p-5 bg-tocineta-bg border border-tocineta-border rounded-2xl text-center space-y-2">
                     <Icon name="Coffee" size={36} className="mx-auto text-tocineta-yellow" />
-                    <h4 className="text-base font-bold text-white">1 Malta Lata 250 ml</h4>
+                    <h4 className="text-base font-bold text-ink">1 Malta Lata 250 ml</h4>
                     <p className="text-xs text-tocineta-muted">Bebida oficial fría incluida en este combo</p>
-                    <span className="inline-block text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 px-3 py-1 rounded-full border border-emerald-500/30">
+                    <span className="inline-block text-xs font-mono font-bold text-success bg-success-subtle px-3 py-1 rounded-full border border-success/30">
                       Incluida ($0.00 Adicional)
                     </span>
                   </div>
@@ -429,7 +435,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
               <button
                 type="button"
                 onClick={() => setCurrentStep(prev => prev - 1)}
-                className="w-1/3 min-h-[52px] rounded-2xl bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white font-bold text-sm transition-all flex items-center justify-center active:scale-95"
+                className="w-1/3 min-h-[52px] rounded-2xl bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-ink font-bold text-sm transition-all flex items-center justify-center active:scale-95"
               >
                 ← Anterior
               </button>
@@ -437,7 +443,7 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
               <button
                 type="button"
                 onClick={onClose}
-                className="w-1/3 min-h-[52px] rounded-2xl bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-white font-bold text-sm transition-all flex items-center justify-center active:scale-95"
+                className="w-1/3 min-h-[52px] rounded-2xl bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-ink font-bold text-sm transition-all flex items-center justify-center active:scale-95"
               >
                 Cancelar
               </button>
@@ -447,19 +453,22 @@ export const ComboWizardModal: React.FC<ComboWizardModalProps> = ({
               <button
                 type="button"
                 onClick={() => setCurrentStep(prev => prev + 1)}
-                className="w-2/3 min-h-[52px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base transition-all flex items-center justify-center gap-2 hover:bg-tocineta-yellow-hover active:scale-95 shadow-xl"
+                className="w-2/3 min-h-[52px] rounded-2xl bg-tocineta-yellow text-primary-ink font-black text-base transition-all flex items-center justify-center gap-2 hover:bg-tocineta-yellow-hover active:scale-95 shadow-xl"
               >
                 <span>Continuar al Paso {currentStep + 1}</span>
-                <span>→</span>
+                <Icon name="ArrowRight" size={16} />
               </button>
             ) : (
               <button
                 type="button"
                 onClick={handleFinalize}
-                className="w-2/3 min-h-[52px] rounded-2xl bg-emerald-500 text-white font-black text-base transition-all flex items-center justify-center gap-2 hover:bg-emerald-600 active:scale-95 shadow-xl"
+                className="w-2/3 min-h-[52px] rounded-2xl bg-success text-success-ink hover:bg-success/90 font-black text-base transition-all flex items-center justify-center gap-2 active:scale-95 shadow-xl"
               >
-                <span>✓ Agregar Combo al Pedido</span>
-                <span className="px-2 py-0.5 rounded-lg bg-black/20 text-xs font-mono">
+                <span className="flex items-center gap-1.5">
+                  <Icon name="Check" size={16} />
+                  <span>Agregar Combo al Pedido</span>
+                </span>
+                <span className="px-2 py-0.5 rounded-lg bg-ink/10 text-xs font-mono">
                   ${(combo.priceUsdCents / 100).toFixed(2)}
                 </span>
               </button>

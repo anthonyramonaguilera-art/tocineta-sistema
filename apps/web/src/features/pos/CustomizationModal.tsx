@@ -366,7 +366,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                         onClick={() => setIngredientState(ing.id, 'normal')}
                         className={`min-h-[48px] px-4 rounded-xl text-xs font-bold transition-all flex items-center justify-center ${
                           state === 'normal'
-                            ? 'bg-tocineta-yellow text-tocineta-bg shadow-md'
+                            ? 'bg-tocineta-yellow text-primary-ink shadow-md'
                             : 'bg-tocineta-card border border-tocineta-border text-tocineta-muted hover:text-ink'
                         }`}
                       >
@@ -473,7 +473,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                       <button
                         type="button"
                         onClick={() => changeExtraCount(extra.id, 1)}
-                        className="w-12 h-12 rounded-xl bg-tocineta-yellow text-tocineta-bg font-black text-lg flex items-center justify-center hover:bg-tocineta-yellow-hover active:scale-95 shadow-md"
+                        className="w-12 h-12 rounded-xl bg-tocineta-yellow text-primary-ink font-black text-lg flex items-center justify-center hover:bg-tocineta-yellow-hover active:scale-95 shadow-md"
                       >
                         +
                       </button>
@@ -541,7 +541,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
             <button
               type="button"
               onClick={handleSave}
-              className="w-2/3 min-h-[52px] rounded-2xl bg-tocineta-yellow text-tocineta-bg font-black text-base transition-all flex items-center justify-center gap-2 hover:bg-tocineta-yellow-hover active:scale-95 shadow-xl"
+              className="w-2/3 min-h-[52px] rounded-2xl bg-tocineta-yellow text-primary-ink font-black text-base transition-all flex items-center justify-center gap-2 hover:bg-tocineta-yellow-hover active:scale-95 shadow-xl"
             >
               <span>Guardar Personalización</span>
               {totalExtraCents > 0 && (
