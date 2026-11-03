@@ -237,6 +237,71 @@ describe('T-01: No resetear credenciales ni hashes de usuarios en arranque de se
       await app.close();
     }
   });
+
+  it('no sobreescribe nombres de usuarios, repartidores ni clientes reales tras arranques repetidos', () => {
+    simulateServerBootstrap(dbCtx.rawDb);
+
+    // Inserta un usuario real { id: 'usr_real_1', name: 'Miguel Torres', username: 'mtorres', role: 'mesonero' }
+    const { hash, salt } = hashPin('3344');
+    const now = Date.now();
+    dbCtx.rawDb.prepare(`
+      INSERT INTO users (id, name, username, role, pin_hash, pin_salt, pin_length, is_active, created_at_ms, updated_at_ms)
+      VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?)
+    `).run('usr_real_1', 'Miguel Torres', 'mtorres', 'mesonero', hash, salt, 4, now, now);
+
+    // un repartidor { id: 'drv_real_1', name: 'José Pérez' }
+    dbCtx.rawDb.prepare(`
+      INSERT INTO delivery_drivers (id, name, phone, is_active, created_at_ms, updated_at_ms)
+      VALUES (?, ?, ?, 1, ?, ?)
+    `).run('drv_real_1', 'José Pérez', '04141234567', now, now);
+
+    // y un cliente { id: 'cust_real_1', name: 'Carlos Pérez' }
+    dbCtx.rawDb.prepare(`
+      INSERT INTO customers (id, name, phone, created_at_ms)
+      VALUES (?, ?, ?, ?)
+    `).run('cust_real_1', 'Carlos Pérez', '04149876543', now);
+
+    // Ejecuta ensureCorporateUsersNonDestructive(rawDb) dos veces
+    ensureCorporateUsersNonDestructive(dbCtx.rawDb);
+    ensureCorporateUsersNonDestructive(dbCtx.rawDb);
+
+    // Verifica que los 3 conservan exactamente sus nombres originales
+    const user = dbCtx.rawDb.prepare('SELECT name, username FROM users WHERE id = ?').get('usr_real_1') as any;
+    expect(user).toBeDefined();
+    expect(user.name).toBe('Miguel Torres');
+    expect(user.username).toBe('mtorres');
+
+    const driver = dbCtx.rawDb.prepare('SELECT name FROM delivery_drivers WHERE id = ?').get('drv_real_1') as any;
+    expect(driver).toBeDefined();
+    expect(driver.name).toBe('José Pérez');
+
+    const customer = dbCtx.rawDb.prepare('SELECT name FROM customers WHERE id = ?').get('cust_real_1') as any;
+    expect(customer).toBeDefined();
+    expect(customer.name).toBe('Carlos Pérez');
+  });
+
+  it('preserva business_name configurado por el administrador tras el arranque no destructivo', () => {
+    simulateServerBootstrap(dbCtx.rawDb);
+
+    // Asegurar que exista el registro default de business_settings
+    dbCtx.rawDb.prepare(`
+      INSERT OR IGNORE INTO business_settings (id, business_name, updated_at_ms)
+      VALUES ('default', 'TOCINETA', ?)
+    `).run(Date.now());
+
+    // Actualiza business_settings SET business_name = 'Mi Negocio Real'
+    dbCtx.rawDb.prepare(`
+      UPDATE business_settings SET business_name = 'Mi Negocio Real' WHERE id = 'default'
+    `).run();
+
+    // Ejecuta ensureCorporateUsersNonDestructive(rawDb)
+    ensureCorporateUsersNonDestructive(dbCtx.rawDb);
+
+    // verifica que business_name sigue siendo 'Mi Negocio Real'
+    const settings = dbCtx.rawDb.prepare("SELECT business_name FROM business_settings WHERE id = 'default'").get() as any;
+    expect(settings).toBeDefined();
+    expect(settings.business_name).toBe('Mi Negocio Real');
+  });
   describe('PASO B — Refuerzo de rutas y advertencias de producción', () => {
     it('getProjectRoot encuentra la raíz del proyecto con pnpm-workspace.yaml', () => {
       const root = getProjectRoot();

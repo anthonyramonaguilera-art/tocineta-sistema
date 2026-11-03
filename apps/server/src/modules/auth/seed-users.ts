@@ -385,22 +385,45 @@ export function ensureCorporateUsersNonDestructive(rawDb: Database.Database): vo
   // must_change_pin, failed_attempts, lockout_stage, locked_until_ms ni is_active.
   try {
     rawDb.exec(`
-      UPDATE users SET name = 'ADMIN', username = 'admin' WHERE LOWER(name) LIKE '%anthony%' OR LOWER(name) LIKE '%olinelcys%' OR id IN ('usr_admin', 'usr_admin_olinelcys', 'admin');
-      UPDATE users SET name = 'MESERO', username = 'mesero' WHERE LOWER(name) LIKE '%carlos%' OR LOWER(name) LIKE '%andrea%' OR id IN ('usr_mesero', 'usr_mesonero_carlos', 'usr_mesonero_andrea', 'mesero');
-      UPDATE users SET name = 'PLANCHA', username = 'plancha' WHERE LOWER(name) LIKE '%jose%' OR LOWER(name) LIKE '%josé%' OR id IN ('usr_plancha', 'usr_cocina_plancha', 'plancha');
-      UPDATE users SET name = 'DESPACHO', username = 'despacho' WHERE LOWER(name) LIKE '%miguel%' OR id IN ('usr_despacho', 'usr_cocina_perros', 'despacho');
+      UPDATE users SET name = 'ADMIN', username = 'admin' WHERE id IN ('usr_admin', 'usr_admin_olinelcys', 'admin');
+      UPDATE users SET name = 'MESERO', username = 'mesero' WHERE id IN ('usr_mesero', 'usr_mesonero_carlos', 'usr_mesonero_andrea', 'mesero');
+      UPDATE users SET name = 'PLANCHA', username = 'plancha' WHERE id IN ('usr_plancha', 'usr_cocina_plancha', 'plancha');
+      UPDATE users SET name = 'DESPACHO', username = 'despacho' WHERE id IN ('usr_despacho', 'usr_cocina_perros', 'despacho');
       UPDATE users SET name = 'CAJERA', username = 'cajera' WHERE id IN ('usr_cajera', 'usr_cajera_principal', 'cajera');
     `);
+  } catch {
+    // Si la tabla users no existe aún, ignorar
+  }
+
+  try {
     rawDb.exec(`
-      UPDATE delivery_drivers SET name = 'REPARTIDOR 1' WHERE id = 'drv_carlos_mora' OR name LIKE '%Carlos%';
-      UPDATE delivery_drivers SET name = 'REPARTIDOR 2' WHERE id = 'drv_jose_ramirez' OR name LIKE '%José%' OR name LIKE '%Jose%';
-      UPDATE delivery_drivers SET name = 'REPARTIDOR 3' WHERE id = 'drv_miguel_perez' OR name LIKE '%Miguel%';
-      UPDATE customers SET name = 'Socio Director', address = 'TOCINETA' WHERE id = 'cust_partner_olinelcys' OR name LIKE '%Olinelcys%';
-      UPDATE customers SET name = 'Cliente Frecuente 1' WHERE id = 'cust_vip_carlos' OR name LIKE '%Carlos%';
-      UPDATE business_settings SET business_name = 'TOCINETA' WHERE id = 'default';
+      UPDATE delivery_drivers SET name = 'REPARTIDOR 1' WHERE id = 'drv_carlos_mora';
+      UPDATE delivery_drivers SET name = 'REPARTIDOR 2' WHERE id = 'drv_jose_ramirez';
+      UPDATE delivery_drivers SET name = 'REPARTIDOR 3' WHERE id = 'drv_miguel_perez';
     `);
   } catch {
-    // Si alguna tabla no existe aún, ignorar
+    // Si delivery_drivers no existe aún, ignorar
+  }
+
+  try {
+    rawDb.exec(`
+      UPDATE customers SET name = 'Socio Director', address = 'TOCINETA' WHERE id = 'cust_partner_olinelcys';
+      UPDATE customers SET name = 'Cliente Frecuente 1' WHERE id = 'cust_vip_carlos';
+    `);
+  } catch {
+    // Si customers no existe aún, ignorar
+  }
+
+  try {
+    const settings = rawDb.prepare('SELECT id, business_name FROM business_settings').all() as Array<{ id: string; business_name: string | null }>;
+    const forbiddenPattern = /(olinelcys|anthony|carlos|andrea|miguel|jos[eé]|valery|treinta|sonr[ií]e|god mode|modo dios|varons)/i;
+    for (const s of settings) {
+      if (!s.business_name || s.business_name.trim() === '' || forbiddenPattern.test(s.business_name)) {
+        rawDb.prepare('UPDATE business_settings SET business_name = ? WHERE id = ?').run('TOCINETA', s.id);
+      }
+    }
+  } catch {
+    // Si business_settings no existe aún, ignorar
   }
 
   // 3. Insertar con INSERT OR IGNORE los usuarios canónicos que falten
