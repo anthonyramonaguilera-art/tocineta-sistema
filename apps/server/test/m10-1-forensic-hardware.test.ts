@@ -171,7 +171,7 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
       createdByUserId: testUserId,
       customerName: 'Cliente Pago Movil',
       fulfillmentType: 'salon',
-      lines: [{ productId: prod.id, quantity: 1 }]
+      lines: [{ productId: prod.id, customName: 'Ítem de prueba', customPriceUsdCents: 350, quantity: 1 }]
     });
     const orderId = orderRes.id;
 

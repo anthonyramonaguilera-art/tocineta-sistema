@@ -366,9 +366,9 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
     });
 
     it('MenuAdminView.tsx ya no muestra "FEATURE FLAG" y usa "Guardado"', () => {
-      const source = readWebSource('components/MenuAdminView.tsx');
+      const source = readWebSource('features/menu-admin/ProductStatusControls.tsx');
       expect(source).not.toContain('FEATURE FLAG');
-      expect(source).toContain('Guardado (No visible para mesoneros)');
+      expect(source).toContain('Oculto en POS');
     });
 
     it('KdsView.tsx contiene botón Forzar Despacho Total y reemplaza jerga Orden Compuesta', () => {
