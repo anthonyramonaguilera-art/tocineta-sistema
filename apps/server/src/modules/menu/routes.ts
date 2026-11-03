@@ -12,6 +12,7 @@ import {
   setFlavorAvailability,
   createProduct,
   updateProduct,
+  deleteProduct,
   saveProductPhoto,
   addProductIngredient,
   removeProductIngredient,
@@ -253,6 +254,21 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
       return reply.status(200).send({ success: true, product: updated });
     } catch (err: any) {
       return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
+
+  // DELETE /api/menu/products/:id
+  fastify.delete('/api/menu/products/:id', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const user = requireRoles(request, reply, dbCtx.rawDb, ['admin']);
+    if (!user) return;
+
+    const { id } = request.params as { id: string };
+    try {
+      const result = deleteProduct(dbCtx.rawDb, id, user.userId);
+      return reply.status(200).send({ success: true, mode: result.mode });
+    } catch (err: any) {
+      return reply.status(err.statusCode ?? 400).send({ success: false, error: err.message });
     }
   });
 

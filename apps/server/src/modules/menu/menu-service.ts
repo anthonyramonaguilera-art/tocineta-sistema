@@ -527,6 +527,11 @@ export function createProduct(
   },
   actorUserId: string
 ) {
+  const cat = rawDb.prepare('SELECT id, is_active, is_internal FROM categories WHERE id = ?').get(data.categoryId) as any;
+  if (!cat) throw new Error('La categoría no existe');
+  if (cat.is_internal === 1) throw new Error('No se pueden crear productos en una categoría interna');
+  if (cat.is_active === 0) throw new Error('La categoría está inactiva: actívala antes de agregar productos');
+
   const productId = data.id || `prod_${data.name.toLowerCase().replace(/[^a-z0-9]/g, '_')}_${Date.now()}`;
   const now = Date.now();
 
@@ -841,3 +846,52 @@ export function setExchangeRate(
     formattedRate: formatMicroBsToRate(rateMicroBs)
   };
 }
+
+export function deleteProduct(
+  rawDb: Database.Database,
+  productId: string,
+  actorUserId: string
+): { mode: 'deleted' | 'archived'; name: string } {
+  const prod = rawDb.prepare(
+    `SELECT p.id, p.name, c.is_internal FROM products p JOIN categories c ON c.id = p.category_id WHERE p.id = ?`
+  ).get(productId) as { id: string; name: string; is_internal: number } | undefined;
+  if (!prod) {
+    const e: any = new Error('Producto no encontrado');
+    e.statusCode = 404;
+    throw e;
+  }
+  if (prod.id === 'prod_libre' || prod.is_internal === 1) {
+    const e: any = new Error('Producto protegido del sistema');
+    e.statusCode = 403;
+    throw e;
+  }
+  const sold = rawDb.prepare('SELECT 1 FROM order_lines WHERE product_id = ? LIMIT 1').get(productId);
+  let mode: 'deleted' | 'archived' = 'archived';
+  if (!sold) {
+    try {
+      rawDb.transaction(() => {
+        rawDb.prepare('DELETE FROM products WHERE id = ?').run(productId);
+      })();
+      mode = 'deleted';
+    } catch (err: any) {
+      if (!String(err?.code ?? '').startsWith('SQLITE_CONSTRAINT')) throw err;
+    }
+  }
+  if (mode === 'archived') {
+    rawDb.prepare('UPDATE products SET is_active = 0, updated_at_ms = ? WHERE id = ?').run(Date.now(), productId);
+  }
+  appendAuditEvent(rawDb, {
+    actorUserId,
+    action: mode === 'deleted' ? 'PRODUCT_DELETED' : 'PRODUCT_ARCHIVED',
+    entityType: 'product',
+    entityId: productId,
+    payload: { name: prod.name, mode }
+  });
+  publishDomainEvent(rawDb, {
+    eventType: 'PRODUCT_UPDATED',
+    entityId: productId,
+    payload: { productId, name: prod.name }
+  });
+  return { mode, name: prod.name };
+}
+
