@@ -52,6 +52,11 @@ export default {
           ink: 'var(--color-warning-ink)',
           subtle: 'var(--color-warning-subtle)'
         },
+        info: {
+          DEFAULT: 'var(--color-info)',
+          ink: 'var(--color-info-ink)',
+          subtle: 'var(--color-info-subtle)'
+        },
         focus: {
           DEFAULT: 'var(--color-focus)',
           ring: 'var(--color-focus-ring)'

@@ -44,6 +44,10 @@ html:not(.dark),
   --color-warning-ink: #FFFFFF;
   --color-warning-subtle: #FEF3C7;
 
+  --color-info: #0369A1;
+  --color-info-ink: #FFFFFF;
+  --color-info-subtle: #E0F2FE;
+
   --color-focus: #FFE600;
   --color-focus-ring: #111111;
 
@@ -100,6 +104,10 @@ html.dark,
   --color-warning: #F59E0B;
   --color-warning-ink: #111111;
   --color-warning-subtle: #451A03;
+
+  --color-info: #38BDF8;
+  --color-info-ink: #111111;
+  --color-info-subtle: #082F49;
 
   --color-focus: #FFE600;
   --color-focus-ring: #FFE600;

@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Button, Badge, Money, Icon } from '../../ui/index.js';
 import { apiFetch } from '../../api/client.js';
 import type { TabType } from '../../App.js';
+import { useHomeCounters } from './useHomeCounters.js';
 
 interface HomeViewProps {
   onNavigate: (tab: TabType) => void;
@@ -55,6 +56,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
 
   const orders = ordersRes?.orders || [];
   const zSummary = summaryRes?.summary;
+  const counters = useHomeCounters(orders);
 
   // Cálculos reales sin inventar datos
   const totalOrders = zSummary?.ordersCount ?? orders.length;
@@ -96,18 +98,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <Card
             variant="surface"
             onClick={() => onNavigate('pos')}
-            className="p-5 flex flex-col justify-between min-h-[140px] hover:border-primary transition-all group border-2"
+            className={`p-5 flex flex-col justify-between min-h-[140px] hover:border-primary transition-all group border-2 border-info/40 ${
+              counters.pedido > 0 ? 'ring-2 ring-info' : ''
+            }`}
           >
             <div className="flex items-start justify-between">
-              <div className="p-3 rounded-2xl bg-primary/20 border border-primary/30 text-ink group-hover:scale-105 transition-transform">
+              <div className="p-3 rounded-2xl bg-info text-info-ink group-hover:scale-105 transition-transform">
                 <Icon name="ShoppingBag" size={26} />
               </div>
-              <Badge variant="neutral">Comandero</Badge>
+              <div className="flex items-center gap-1.5">
+                {counters.pedido > 0 && (
+                  <span
+                    className="bg-danger text-danger-ink text-xs font-bold px-2 py-0.5 rounded-full motion-safe:animate-pulse"
+                    aria-label={`${counters.pedido} pedidos listos para entregar`}
+                  >
+                    {counters.pedido}
+                  </span>
+                )}
+                <Badge variant="neutral">Comandero</Badge>
+              </div>
             </div>
             <div>
               <h3 className="font-black text-base text-ink mt-3">Tomar Pedido</h3>
               <p className="text-xs text-ink-muted mt-0.5">
-                Mostrador, Mesas y Delivery con catálogo visual
+                {counters.pedido > 0
+                  ? `${counters.pedido} listos para entregar`
+                  : 'Mostrador, Mesas y Delivery con catálogo visual'}
               </p>
             </div>
           </Card>
@@ -116,18 +132,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <Card
             variant="surface"
             onClick={() => onNavigate('kds')}
-            className="p-5 flex flex-col justify-between min-h-[140px] hover:border-primary transition-all group border-2"
+            className={`p-5 flex flex-col justify-between min-h-[140px] hover:border-primary transition-all group border-2 border-tocineta-red/40 ${
+              counters.cocina > 0 ? 'ring-2 ring-tocineta-red' : ''
+            }`}
           >
             <div className="flex items-start justify-between">
-              <div className="p-3 rounded-2xl bg-brand-orange/20 border border-brand-orange/30 text-ink group-hover:scale-105 transition-transform">
+              <div className="p-3 rounded-2xl bg-tocineta-red text-brand-red-ink group-hover:scale-105 transition-transform">
                 <Icon name="Flame" size={26} />
               </div>
-              <Badge variant="neutral">KDS</Badge>
+              <div className="flex items-center gap-1.5">
+                {counters.cocina > 0 && (
+                  <span
+                    className="bg-danger text-danger-ink text-xs font-bold px-2 py-0.5 rounded-full motion-safe:animate-pulse"
+                    aria-label={`${counters.cocina} nuevos en cocina`}
+                  >
+                    {counters.cocina}
+                  </span>
+                )}
+                <Badge variant="neutral">KDS</Badge>
+              </div>
             </div>
             <div>
               <h3 className="font-black text-base text-ink mt-3">Plancha y Cocina</h3>
               <p className="text-xs text-ink-muted mt-0.5">
-                Comandas en tiempo real y despacho de órdenes
+                {counters.cocina > 0
+                  ? `${counters.cocina} nuevos en cocina`
+                  : 'Comandas en tiempo real y despacho de órdenes'}
               </p>
             </div>
           </Card>
@@ -136,18 +166,32 @@ export const HomeView: React.FC<HomeViewProps> = ({
           <Card
             variant="surface"
             onClick={() => onNavigate('cashier')}
-            className="p-5 flex flex-col justify-between min-h-[140px] hover:border-primary transition-all group border-2"
+            className={`p-5 flex flex-col justify-between min-h-[140px] hover:border-primary transition-all group border-2 border-success/40 ${
+              counters.caja > 0 ? 'ring-2 ring-success' : ''
+            }`}
           >
             <div className="flex items-start justify-between">
-              <div className="p-3 rounded-2xl bg-success/20 border border-success/30 text-ink group-hover:scale-105 transition-transform">
+              <div className="p-3 rounded-2xl bg-success text-success-ink group-hover:scale-105 transition-transform">
                 <Icon name="DollarSign" size={26} />
               </div>
-              <Badge variant="neutral">Caja</Badge>
+              <div className="flex items-center gap-1.5">
+                {counters.caja > 0 && (
+                  <span
+                    className="bg-danger text-danger-ink text-xs font-bold px-2 py-0.5 rounded-full motion-safe:animate-pulse"
+                    aria-label={`${counters.caja} pedidos por cobrar`}
+                  >
+                    {counters.caja}
+                  </span>
+                )}
+                <Badge variant="neutral">Caja</Badge>
+              </div>
             </div>
             <div>
               <h3 className="font-black text-base text-ink mt-3">Caja y Cierre</h3>
               <p className="text-xs text-ink-muted mt-0.5">
-                Cobros mixtos, vuelto y arqueo de jornada Z
+                {counters.caja > 0
+                  ? `${counters.caja} por cobrar`
+                  : 'Cobros mixtos, vuelto y arqueo de jornada Z'}
               </p>
             </div>
           </Card>
@@ -157,7 +201,7 @@ export const HomeView: React.FC<HomeViewProps> = ({
       {/* Números del Día */}
       <div>
         <h2 className="text-xs font-black text-ink-muted uppercase tracking-wider mb-3 px-1">
-          Números del Día (Datos Reales)
+          Números del día
         </h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
           {/* Ventas de Hoy */}
