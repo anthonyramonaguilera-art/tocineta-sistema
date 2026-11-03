@@ -15,6 +15,7 @@ import ExcelJS from 'exceljs';
 import PDFDocument from 'pdfkit';
 import { getFinancialTruth } from '../finances/financial-truth-service.js';
 import { getPaymentMethodHumanLabel } from '../printing/templates.js';
+import { buildPaymentSectionRows } from './report-rows.js';
 
 export interface WorkerPerformanceMetrics {
   userId: string;
@@ -274,6 +275,92 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
   const zelleMethod = ft.collectedByMethod.find(m => m.method === 'ZELLE');
   const otrosMethod = ft.collectedByMethod.find(m => m.method === 'OTROS');
 
+  let changeUsdCents = 0;
+  let changeBsCashCents = 0;
+  let changeBsBankCents = 0;
+
+  if ((ft as any).changeDelivered) {
+    changeUsdCents = (ft as any).changeDelivered.changeUsdCents ?? 0;
+    changeBsCashCents = (ft as any).changeDelivered.changeBsCashCents ?? 0;
+    changeBsBankCents = (ft as any).changeDelivered.changeBsBankCents ?? 0;
+  } else {
+    const changes = rawDb.prepare(`
+      SELECT cd.change_usd_cents, cd.change_bs_cents, cd.method
+      FROM change_deliveries cd
+      JOIN orders o ON cd.order_id = o.id
+      WHERE o.jornada_id = ?
+        AND o.fulfillment_status NOT IN ('anulado', 'cancelado')
+        AND o.payment_status = 'pagado'
+    `).all(jornada.id) as any[];
+
+    for (const c of changes) {
+      changeUsdCents += c.change_usd_cents || 0;
+      const bs = c.change_bs_cents || 0;
+      if (bs > 0) {
+        const isBank = (c.method || '').toLowerCase().includes('pago_movil') || (c.method || '').toLowerCase().includes('bank');
+        if (isBank) {
+          changeBsBankCents += bs;
+        } else {
+          changeBsCashCents += bs;
+        }
+      }
+    }
+  }
+
+  let driverDirectDeliveryUsdCents = 0;
+  try {
+    const ordersCols = rawDb.prepare("PRAGMA table_info(orders)").all() as any[];
+    const hasOrderDriverCol = ordersCols.some(c => c.name === 'cash_collected_by_driver');
+    const driverDeliveryRow = rawDb.prepare(`
+      SELECT COALESCE(SUM(o.delivery_fee_usd_cents), 0) as driverDirectDelivery
+      FROM orders o
+      LEFT JOIN deliveries d ON o.id = d.order_id
+      WHERE o.jornada_id = ?
+        AND o.fulfillment_status NOT IN ('anulado', 'cancelado')
+        AND o.payment_status = 'pagado'
+        AND (${hasOrderDriverCol ? 'o.cash_collected_by_driver = 1 OR ' : ''}d.cash_collected_by_driver = 1)
+    `).get(jornada.id) as any;
+    driverDirectDeliveryUsdCents = driverDeliveryRow?.driverDirectDelivery || 0;
+  } catch {
+    driverDirectDeliveryUsdCents = 0;
+  }
+
+  const totalGrossUsdEquivCents = ft.collectedByMethod.reduce((acc, m) => acc + (m.grossUsdCents || 0), 0);
+  const changeBsEquivUsdCents = Math.round(((changeBsCashCents + changeBsBankCents) * 1_000_000) / ft.rateMicroBs);
+  const methodsNetUsdEquivCents = totalGrossUsdEquivCents - changeUsdCents - changeBsEquivUsdCents;
+
+  const totalCollectedUsdCents = ft.orders.netSalesUsdCents + ft.orders.deliveryFeesUsdCents;
+  const surplusUsdCents = methodsNetUsdEquivCents - (totalCollectedUsdCents - driverDirectDeliveryUsdCents);
+
+  const ledgerSurplusRow = rawDb.prepare(`
+    SELECT COALESCE(SUM(
+      CASE 
+        WHEN le.account_bucket = 'TIP_IN' THEN (le.credit_usd_cents - le.debit_usd_cents)
+        WHEN le.account_bucket = 'ROUNDING_ADJUSTMENT' THEN (le.credit_usd_cents - le.debit_usd_cents)
+        WHEN le.account_bucket = 'OPERATING_EXPENSE' AND le.description LIKE '%Excedente%' THEN (le.credit_usd_cents - le.debit_usd_cents)
+        ELSE 0
+      END
+    ), 0) as surplus
+    FROM ledger_entries le
+    LEFT JOIN orders o ON le.order_id = o.id
+    WHERE le.jornada_id = ?
+      AND (o.id IS NULL OR (o.fulfillment_status NOT IN ('anulado', 'cancelado') AND o.payment_status = 'pagado'))
+  `).get(jornada.id) as any;
+  const ledgerSurplusUsdCents = ledgerSurplusRow?.surplus || 0;
+
+  const reconciliationDiffUsdCents = surplusUsdCents - ledgerSurplusUsdCents;
+
+  const bsPaymentsRow = rawDb.prepare(`
+    SELECT COUNT(*) as count
+    FROM payments p
+    JOIN orders o ON p.order_id = o.id
+    WHERE o.jornada_id = ?
+      AND o.fulfillment_status NOT IN ('anulado', 'cancelado')
+      AND o.payment_status = 'pagado'
+      AND p.currency = 'BS'
+  `).get(jornada.id) as any;
+  const reconciliationToleranceCents = (bsPaymentsRow?.count || 0) * 1;
+
   return {
     jornada,
     rateMicroBs: ft.rateMicroBs,
@@ -293,6 +380,15 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
     binanceUsdCents: binanceMethod?.grossUsdCents || 0,
     zelleUsdCents: zelleMethod?.grossUsdCents || 0,
     otrosUsdCents: otrosMethod?.grossUsdCents || 0,
+    changeUsdCents,
+    changeBsCashCents,
+    changeBsBankCents,
+    driverDirectDeliveryUsdCents,
+    methodsNetUsdEquivCents,
+    surplusUsdCents,
+    ledgerSurplusUsdCents,
+    reconciliationDiffUsdCents,
+    reconciliationToleranceCents,
     expensesUsdCents: ft.operatingExpensesUsdCents,
     mermasUsdCents: ft.waste.totalUsdCents,
     ordersCount: ft.orders.totalCount,
@@ -623,18 +719,20 @@ export function generateJornadaPdfReport(
       doc.fillColor('#000000').font('Helvetica-Bold').fontSize(10).text('2. DESGLOSE DE MEDIOS DE PAGO Y CONCILIACIÓN UBII', 45, doc.y + 4);
       doc.moveDown(1);
 
-      renderRow('Efectivo Dólares (USD)', `$${(data.cashUsdCents / 100).toFixed(2)}`);
-      renderRow('Efectivo Bolívares (Bs)', `$${((data.cashBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2)}`, `Bs ${(data.cashBsCents / 100).toFixed(2)}`);
-      renderRow('Pago Móvil (Banesco)', `$${((data.pagoMovilBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2)}`, `Bs ${(data.pagoMovilBsCents / 100).toFixed(2)}`);
-      renderRow('Punto de Venta (Bs)', `$${((data.puntoDeVentaBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2)}`, `Bs ${(data.puntoDeVentaBsCents / 100).toFixed(2)}`);
-      renderRow('Punto de Venta Ubii (Bruto)', '', `Bs ${(data.ubiiGrossBsCents / 100).toFixed(2)}`);
-      renderRow(' - Comisión Punto Ubii (0.75%)', '', `-Bs ${(data.ubiiFeeBsCents / 100).toFixed(2)}`);
-      renderRow(' - Neto Bancario Ubii Esperado', `$${((data.ubiiNetBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2)}`, `Bs ${(data.ubiiNetBsCents / 100).toFixed(2)}`);
-      renderRow('Transferencia Bancaria (Bs)', `$${((data.transferenciaBsCents * 1_000_000) / (data.rateMicroBs * 100)).toFixed(2)}`, `Bs ${(data.transferenciaBsCents / 100).toFixed(2)}`);
-      renderRow('Binance Pay (USDT)', `$${(data.binanceUsdCents / 100).toFixed(2)}`);
-      renderRow('Zelle (USD)', `$${(data.zelleUsdCents / 100).toFixed(2)}`);
-      renderRow('Otros Métodos (USD)', `$${(data.otrosUsdCents / 100).toFixed(2)}`);
-
+      const paymentRows = buildPaymentSectionRows(data);
+      for (const row of paymentRows) {
+        const isCommission = row.label.includes('Comisión');
+        const formatPdfVal = (val: string, symbol: string) => {
+          if (!val) return '';
+          if (val.startsWith('-')) {
+            return `-${symbol}${val.slice(1)}`;
+          }
+          return `${symbol}${val}`;
+        };
+        const valUsd = isCommission ? `-$${row.usd}` : formatPdfVal(row.usd, '$');
+        const valBs = isCommission ? `-Bs ${row.bs}` : formatPdfVal(row.bs, 'Bs ');
+        renderRow(row.label, valUsd, valBs);
+      }
       doc.moveDown(1);
 
       // Sección 3: Gastos y Mermas
