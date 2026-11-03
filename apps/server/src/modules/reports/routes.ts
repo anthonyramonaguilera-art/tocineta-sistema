@@ -8,6 +8,12 @@ import {
   getJornadaReportData
 } from './reports-service.js';
 import { getCurrentJornada } from '../cashier/cashier-service.js';
+import {
+  redactSummaryForBlindCashier,
+  isBlindActive,
+  canCashierDownload
+} from './blind-redaction.js';
+import { appendAuditEvent } from '../audit/audit-service.js';
 
 export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
   const getUserIdFromRequest = (req: any): string => {
@@ -65,9 +71,26 @@ export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/reports/jornada/:id/excel', async (request, reply) => {
     const dbCtx = getDatabaseContext();
     const { id } = request.params as { id: string };
+    const user = request.user as any;
+
+    if (user?.role === 'cajera' && !canCashierDownload(dbCtx.rawDb, user, id)) {
+      return reply.status(403).send({
+        success: false,
+        code: 'REPORT_FORBIDDEN_FOR_ROLE',
+        error: 'Solo puedes descargar el reporte de tu turno despues de cerrarlo'
+      });
+    }
 
     try {
       const buffer = await generateJornadaExcelReport(dbCtx.rawDb, id);
+
+      appendAuditEvent(dbCtx.rawDb, {
+        actorUserId: user?.id || null,
+        action: 'REPORT_DOWNLOADED',
+        entityType: 'jornada',
+        entityId: id,
+        payload: { format: 'excel', endpoint: '/api/reports/jornada/:id/excel' }
+      });
 
       return reply
         .header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
@@ -86,9 +109,26 @@ export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/reports/jornada/:id/pdf', async (request, reply) => {
     const dbCtx = getDatabaseContext();
     const { id } = request.params as { id: string };
+    const user = request.user as any;
+
+    if (user?.role === 'cajera' && !canCashierDownload(dbCtx.rawDb, user, id)) {
+      return reply.status(403).send({
+        success: false,
+        code: 'REPORT_FORBIDDEN_FOR_ROLE',
+        error: 'Solo puedes descargar el reporte de tu turno despues de cerrarlo'
+      });
+    }
 
     try {
       const buffer = await generateJornadaPdfReport(dbCtx.rawDb, id);
+
+      appendAuditEvent(dbCtx.rawDb, {
+        actorUserId: user?.id || null,
+        action: 'REPORT_DOWNLOADED',
+        entityType: 'jornada',
+        entityId: id,
+        payload: { format: 'pdf', endpoint: '/api/reports/jornada/:id/pdf' }
+      });
 
       return reply
         .header('Content-Type', 'application/pdf')
@@ -114,9 +154,14 @@ export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
     }
     try {
       const summary = getJornadaReportData(dbCtx.rawDb, jornadaId);
+      const targetJornadaId = summary.jornada?.id || jornadaId;
+      const finalSummary = isBlindActive(dbCtx.rawDb, request.user, targetJornadaId)
+        ? redactSummaryForBlindCashier(summary)
+        : summary;
+
       return reply.status(200).send({
         success: true,
-        summary
+        summary: finalSummary
       });
     } catch (err: any) {
       return reply.status(err.statusCode || 400).send({ success: false, error: err.message });
@@ -132,8 +177,27 @@ export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!jornadaId) {
       return reply.status(404).send({ success: false, error: 'No hay jornada abierta' });
     }
+
+    const user = request.user as any;
+    if (user?.role === 'cajera' && !canCashierDownload(dbCtx.rawDb, user, jornadaId)) {
+      return reply.status(403).send({
+        success: false,
+        code: 'REPORT_FORBIDDEN_FOR_ROLE',
+        error: 'Solo puedes descargar el reporte de tu turno despues de cerrarlo'
+      });
+    }
+
     try {
       const buffer = await generateJornadaPdfReport(dbCtx.rawDb, jornadaId);
+
+      appendAuditEvent(dbCtx.rawDb, {
+        actorUserId: user?.id || null,
+        action: 'REPORT_DOWNLOADED',
+        entityType: 'jornada',
+        entityId: jornadaId,
+        payload: { format: 'pdf', endpoint: '/api/reports/z-report/pdf' }
+      });
+
       return reply
         .header('Content-Type', 'application/pdf')
         .header('Content-Disposition', `inline; filename="cierre_z_${jornadaId}.pdf"`)
@@ -153,8 +217,27 @@ export const reportsRoutes: FastifyPluginAsync = async (fastify) => {
     if (!jornadaId) {
       return reply.status(404).send({ success: false, error: 'No hay jornada abierta' });
     }
+
+    const user = request.user as any;
+    if (user?.role === 'cajera' && !canCashierDownload(dbCtx.rawDb, user, jornadaId)) {
+      return reply.status(403).send({
+        success: false,
+        code: 'REPORT_FORBIDDEN_FOR_ROLE',
+        error: 'Solo puedes descargar el reporte de tu turno despues de cerrarlo'
+      });
+    }
+
     try {
       const buffer = await generateJornadaExcelReport(dbCtx.rawDb, jornadaId);
+
+      appendAuditEvent(dbCtx.rawDb, {
+        actorUserId: user?.id || null,
+        action: 'REPORT_DOWNLOADED',
+        entityType: 'jornada',
+        entityId: jornadaId,
+        payload: { format: 'excel', endpoint: '/api/reports/z-report/excel' }
+      });
+
       return reply
         .header('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
         .header('Content-Disposition', `attachment; filename="cierre_z_${jornadaId}.xlsx"`)

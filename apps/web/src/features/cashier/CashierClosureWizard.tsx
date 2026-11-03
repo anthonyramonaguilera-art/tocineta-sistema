@@ -32,16 +32,6 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   const [recountMessage, setRecountMessage] = useState<string | null>(null);
   const [closureResult, setClosureResult] = useState<any | null>(null);
 
-  const { data: settingsData } = useQuery({
-    queryKey: ['business-settings'],
-    queryFn: async () => {
-      const res = await apiFetch('/api/business-settings');
-      if (!res.ok) return { success: false, settings: { blindClosureEnabled: false } };
-      return res.json();
-    }
-  });
-  const isBlindClosure = Boolean(settingsData?.settings?.blindClosureEnabled);
-
   const { data: sessionData } = useQuery({
     queryKey: ['current-cash-session'],
     queryFn: async () => {
@@ -132,14 +122,7 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
     }
   }
 
-  const summary = summaryData?.summary || {
-    totalOrders: 0,
-    grossSalesUsdCents: 0,
-    expectedCashUsdCents: 0,
-    expectedCashBsCents: 0,
-    byMethod: [],
-    bySede: []
-  };
+  const summary = summaryData?.summary;
 
   const handleExecuteClosure = async () => {
     if (isSubmitting) return;
@@ -267,44 +250,64 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
         <div className="space-y-4">
           {step === 1 && (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-black text-ink uppercase tracking-tight">Totales de la Jornada</h3>
-                  <p className="text-xs text-ink-muted">Resumen consolidado de ventas por método de pago</p>
-                </div>
-                {isBlindClosure ? <Badge variant="warning">Arqueo Ciego Activo</Badge> : <Badge variant="primary">Arqueo Guiado</Badge>}
-              </div>
-
-              <div className="p-3 bg-surface-alt rounded-xl border border-border text-xs text-ink-muted flex items-center gap-2">
-                <Icon name="Info" className="w-4 h-4 text-primary shrink-0" />
-                <span><strong>Fórmula de efectivo esperado:</strong> Apertura + cobros en efectivo − vueltos − gastos en efectivo</span>
-              </div>
-
-              {!isBlindClosure && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <Card variant="surface" className="p-4 border-border">
-                    <span className="text-xs font-bold text-ink-muted uppercase block">Efectivo USD Esperado</span>
-                    <span className="text-2xl font-black text-primary font-mono block mt-1">${((summary.expectedCashUsdCents || 0) / 100).toFixed(2)}</span>
-                  </Card>
-                  <Card variant="surface" className="p-4 border-border">
-                    <span className="text-xs font-bold text-ink-muted uppercase block">Efectivo Bs Esperado</span>
-                    <span className="text-2xl font-black text-ink font-mono block mt-1">{((summary.expectedCashBsCents || 0) / 100).toFixed(2)} Bs</span>
-                  </Card>
-                </div>
-              )}
-
-              <ClosurePaymentMethodsTable byMethod={summary.byMethod} receivablesUsdCents={summary.receivablesUsdCents} />
-
-              {summary.bySede && summary.bySede.length > 0 && (
-                <Card variant="surface" className="p-4 space-y-2 border-border">
-                  <span className="text-xs font-bold uppercase tracking-wider text-ink-muted block">Ventas por sede</span>
-                  {summary.bySede.map((s: any, idx: number) => (
-                    <div key={idx} className="flex justify-between items-center text-sm py-1 border-b border-border/40 last:border-0">
-                      <span className="text-ink font-medium">{s.locationName || s.locationId} ({s.totalOrders ?? 0} órdenes)</span>
-                      <span className="font-mono font-bold text-ink">${(s.netSalesUsdCents / 100).toFixed(2)}</span>
+              {!summary?.byMethod ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-black text-ink uppercase tracking-tight">Turno de Caja</h3>
+                      <p className="text-xs text-ink-muted">
+                        Total de órdenes: <span className="font-bold text-ink">{summary?.ordersCount ?? summary?.totalOrders ?? 0}</span>
+                      </p>
                     </div>
-                  ))}
-                </Card>
+                    <Badge variant="warning">Arqueo Ciego Activo</Badge>
+                  </div>
+
+                  <Card variant="surface" className="p-4 border-border">
+                    <p className="text-sm text-ink-muted">
+                      Cuenta el efectivo y los medios de pago de tu turno; en el siguiente paso los registras
+                    </p>
+                  </Card>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-lg font-black text-ink uppercase tracking-tight">Totales de la Jornada</h3>
+                      <p className="text-xs text-ink-muted">Resumen consolidado de ventas por método de pago</p>
+                    </div>
+                    <Badge variant="primary">Arqueo Guiado</Badge>
+                  </div>
+
+                  <div className="p-3 bg-surface-alt rounded-xl border border-border text-xs text-ink-muted flex items-center gap-2">
+                    <Icon name="Info" className="w-4 h-4 text-primary shrink-0" />
+                    <span><strong>Fórmula de efectivo esperado:</strong> Apertura + cobros en efectivo − vueltos − gastos en efectivo</span>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <Card variant="surface" className="p-4 border-border">
+                      <span className="text-xs font-bold text-ink-muted uppercase block">Efectivo USD Esperado</span>
+                      <span className="text-2xl font-black text-primary font-mono block mt-1">${((summary.expectedCashUsdCents || 0) / 100).toFixed(2)}</span>
+                    </Card>
+                    <Card variant="surface" className="p-4 border-border">
+                      <span className="text-xs font-bold text-ink-muted uppercase block">Efectivo Bs Esperado</span>
+                      <span className="text-2xl font-black text-ink font-mono block mt-1">{((summary.expectedCashBsCents || 0) / 100).toFixed(2)} Bs</span>
+                    </Card>
+                  </div>
+
+                  <ClosurePaymentMethodsTable byMethod={summary.byMethod} receivablesUsdCents={summary.receivablesUsdCents} />
+
+                  {summary.bySede && summary.bySede.length > 0 && (
+                    <Card variant="surface" className="p-4 space-y-2 border-border">
+                      <span className="text-xs font-bold uppercase tracking-wider text-ink-muted block">Ventas por sede</span>
+                      {summary.bySede.map((s: any, idx: number) => (
+                        <div key={idx} className="flex justify-between items-center text-sm py-1 border-b border-border/40 last:border-0">
+                          <span className="text-ink font-medium">{s.locationName || s.locationId} ({s.totalOrders ?? 0} órdenes)</span>
+                          <span className="font-mono font-bold text-ink">${(s.netSalesUsdCents / 100).toFixed(2)}</span>
+                        </div>
+                      ))}
+                    </Card>
+                  )}
+                </div>
               )}
             </div>
           )}
