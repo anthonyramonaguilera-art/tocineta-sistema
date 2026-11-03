@@ -230,6 +230,36 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
     ORDER BY wi.created_at_ms ASC
   `).all(jornadaId) as any[];
 
+  // Tabla de arqueo por método leída de cash_session_method_counts (último attempt de cada sesión)
+  let sessionMethodCounts: Array<{
+    id: string;
+    cash_session_id: string;
+    method: string;
+    currency: 'USD' | 'BS';
+    expected_cents: number;
+    counted_cents: number;
+    diff_cents: number;
+    attempt: number;
+    created_at_ms: number;
+  }> = [];
+
+  try {
+    sessionMethodCounts = rawDb.prepare(`
+      SELECT csmc.*
+      FROM cash_session_method_counts csmc
+      JOIN cash_sessions cs ON csmc.cash_session_id = cs.id
+      WHERE cs.jornada_id = ?
+        AND csmc.attempt = (
+          SELECT MAX(inner_csmc.attempt)
+          FROM cash_session_method_counts inner_csmc
+          WHERE inner_csmc.cash_session_id = csmc.cash_session_id
+        )
+      ORDER BY cs.opened_at_ms ASC, csmc.method ASC
+    `).all(jornadaId) as any[];
+  } catch {
+    sessionMethodCounts = [];
+  }
+
   const ubiiMethod = ft.collectedByMethod.find(m => m.method === 'UBII');
   const ubiiGrossBsCents = ubiiMethod?.grossBsCents || 0;
   const ubiiFeeBsCents = Math.round((ubiiGrossBsCents * 75) / 10000); // 0.75%
@@ -269,6 +299,7 @@ export function getJornadaReportData(rawDb: Database.Database, jornadaId: string
     auditHeadHash,
     ledgerEntries,
     incidents,
+    sessionMethodCounts,
     // Claves R2 requeridas por CashierClosureWizard y contratos Zod compartidos
     expectedCashUsdCents: ft.expectedCash.netCashUsdCents,
     expectedCashBsCents: ft.expectedCash.netCashBsCents,
@@ -492,6 +523,32 @@ export async function generateJornadaExcelReport(
     });
   }
 
+  // Hoja 4: Arqueo por Método (último attempt de cada sesión)
+  const blindCountSheet = workbook.addWorksheet('Arqueo por Método');
+  blindCountSheet.columns = [
+    { header: 'SESIÓN ID', key: 'sessionId', width: 25 },
+    { header: 'MÉTODO', key: 'method', width: 25 },
+    { header: 'MONEDA', key: 'currency', width: 10 },
+    { header: 'ESPERADO', key: 'expected', width: 16 },
+    { header: 'CONTADO', key: 'counted', width: 16 },
+    { header: 'DIFERENCIA', key: 'diff', width: 16 },
+    { header: 'INTENTO', key: 'attempt', width: 10 }
+  ];
+
+  for (const mc of (data.sessionMethodCounts || [])) {
+    const isUsd = mc.currency === 'USD';
+    const prefix = isUsd ? '$' : 'Bs ';
+    blindCountSheet.addRow({
+      sessionId: mc.cash_session_id,
+      method: getPaymentMethodHumanLabel(mc.method),
+      currency: mc.currency,
+      expected: `${prefix}${(mc.expected_cents / 100).toFixed(2)}`,
+      counted: `${prefix}${(mc.counted_cents / 100).toFixed(2)}`,
+      diff: `${prefix}${(mc.diff_cents / 100).toFixed(2)}`,
+      attempt: mc.attempt
+    });
+  }
+
   const arrayBuffer = await workbook.xlsx.writeBuffer();
   return Buffer.from(arrayBuffer);
 }
@@ -590,7 +647,51 @@ export function generateJornadaPdfReport(
 
       doc.moveDown(1.5);
 
-      // Sección 4: Bloque Criptográfico de Auditoría SHA-256
+      // Sección 4: Arqueo por Método (Sesiones de Caja)
+      if (data.sessionMethodCounts && data.sessionMethodCounts.length > 0) {
+        if (doc.y > 520) {
+          doc.addPage();
+        }
+        doc.rect(40, doc.y, 532, 18).fill('#eeeeee');
+        doc.fillColor('#000000').font('Helvetica-Bold').fontSize(10).text('4. ARQUEO POR MÉTODO (SESIONES DE CAJA)', 45, doc.y + 4);
+        doc.moveDown(1);
+
+        const yHead = doc.y;
+        doc.font('Helvetica-Bold').fontSize(8);
+        doc.text('MÉTODO', 45, yHead);
+        doc.text('MONEDA', 170, yHead);
+        doc.text('ESPERADO', 230, yHead, { width: 75, align: 'right' });
+        doc.text('CONTADO', 315, yHead, { width: 75, align: 'right' });
+        doc.text('DIFERENCIA', 400, yHead, { width: 75, align: 'right' });
+        doc.text('INTENTO', 485, yHead, { width: 50, align: 'right' });
+        doc.moveDown(0.3);
+        doc.moveTo(45, doc.y).lineTo(565, doc.y).stroke('#cccccc');
+        doc.moveDown(0.3);
+
+        doc.font('Helvetica').fontSize(8);
+        for (const mc of data.sessionMethodCounts) {
+          if (doc.y > 700) {
+            doc.addPage();
+          }
+          const isUsd = mc.currency === 'USD';
+          const symbol = isUsd ? '$' : 'Bs ';
+          const y = doc.y;
+          doc.text(getPaymentMethodHumanLabel(mc.method), 45, y);
+          doc.text(mc.currency, 170, y);
+          doc.text(`${symbol}${(mc.expected_cents / 100).toFixed(2)}`, 230, y, { width: 75, align: 'right' });
+          doc.text(`${symbol}${(mc.counted_cents / 100).toFixed(2)}`, 315, y, { width: 75, align: 'right' });
+          doc.text(`${symbol}${(mc.diff_cents / 100).toFixed(2)}`, 400, y, { width: 75, align: 'right' });
+          doc.text(String(mc.attempt), 485, y, { width: 50, align: 'right' });
+          doc.moveDown(0.2);
+        }
+        doc.moveDown(1);
+      }
+
+      if (doc.y > 670) {
+        doc.addPage();
+      }
+
+      // Sección 5: Bloque Criptográfico de Auditoría SHA-256
       doc.rect(40, doc.y, 532, 45).fill('#f7f7f7');
       doc.fillColor('#000000').font('Helvetica-Bold').fontSize(9).text('SELLO CRIPTOGRÁFICO DE AUDITORÍA (SHA-256 HEAD HASH)', 45, doc.y + 6);
       doc.font('Courier').fontSize(8).text(data.auditHeadHash, 45, doc.y + 4);

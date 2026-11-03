@@ -60,11 +60,21 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
+    let counts: Array<{ method: string; countedCents: number }> | undefined = undefined;
+    if (Array.isArray(body.counts)) {
+      counts = body.counts.map((c: any) => ({
+        method: String(c.method || ''),
+        countedCents: Math.round(Number(c.countedCents ?? c.counted_cents ?? 0))
+      }));
+    }
+
     const input: BlindCountInput = {
-      cashUsdCents: body.cash_usd_cents ?? body.cashUsdCents ?? 0,
-      cashBsCents: body.cash_bs_cents ?? body.cashBsCents ?? 0,
-      ubiiVoucherBsCents: body.ubii_voucher_bs_cents ?? body.ubiiVoucherBsCents ?? 0,
-      notes: body.notes
+      cashUsdCents: body.cash_usd_cents ?? body.cashUsdCents,
+      cashBsCents: body.cash_bs_cents ?? body.cashBsCents,
+      ubiiVoucherBsCents: body.ubii_voucher_bs_cents ?? body.ubiiVoucherBsCents,
+      notes: body.notes,
+      counts,
+      confirmEmpty: Boolean(body.confirmEmpty ?? body.confirm_empty ?? false)
     };
 
     try {

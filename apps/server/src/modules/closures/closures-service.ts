@@ -6,12 +6,29 @@ import { buildZReportTicketIR, getPaymentMethodHumanLabel, type ZReportData } fr
 import { getPrinterConfig } from '../printing/worker.js';
 import { createEncryptedBackup } from '../backups/backup-service.js';
 import { getFinancialTruth } from '../finances/financial-truth-service.js';
+import { computeExpectedByMethod, normalizeCanonicalMethod } from './method-expected.js';
+
+export interface MethodCountInput {
+  method: string;
+  countedCents: number;
+}
+
+export interface MethodCountDetail {
+  method: string;
+  label: string;
+  currency: 'USD' | 'BS';
+  expectedCents: number;
+  countedCents: number;
+  diffCents: number;
+}
 
 export interface BlindCountInput {
-  cashUsdCents: number;
-  cashBsCents: number;
-  ubiiVoucherBsCents: number;
+  cashUsdCents?: number;
+  cashBsCents?: number;
+  ubiiVoucherBsCents?: number;
   notes?: string;
+  counts?: MethodCountInput[];
+  confirmEmpty?: boolean;
 }
 
 export interface UserContext {
@@ -24,6 +41,7 @@ export interface UserContext {
 export interface BlindCountResult {
   status: 'RECOUNT_REQUIRED' | 'CLOSED';
   message: string;
+  methodCounts?: MethodCountDetail[];
   session?: {
     id: string;
     jornadaId: string;
@@ -39,6 +57,7 @@ export interface BlindCountResult {
     diffUsdCents?: number;
     diffBsCents?: number;
     diffUbiiBsCents?: number;
+    methodCounts?: MethodCountDetail[];
     ubiiLiquidation?: {
       grossBsCents: number;
       feeBsCents: number;
@@ -70,83 +89,90 @@ export function performBlindCount(
     throw err;
   }
 
-  // 1. Calcular montos esperados en efectivo USD, Bs y Ubii para esta sesión
-  // REGLA UNIFICADA T-02: Las órdenes con payment_status='reembolsado' (o diferente de 'pagado')
-  // no suman como ingreso del turno ni sus vueltos como egreso (se excluyen de la recaudación neta).
-  const payments = rawDb.prepare(`
-    SELECT p.method, p.amount_cents, p.usd_equivalent_cents
-    FROM payments p
-    JOIN orders o ON p.order_id = o.id
-    WHERE o.cash_session_id = ? AND o.payment_status = 'pagado'
-  `).all(sessionId) as Array<{
-    method: string;
-    amount_cents: number;
-    usd_equivalent_cents: number;
-  }>;
+  // 1. Calcular montos esperados para los 9 métodos canónicos
+  const expectedList = computeExpectedByMethod(rawDb, sessionId);
 
-  // Suma de vueltos entregados en las órdenes cobradas válidas de esta sesión
-  const changes = rawDb.prepare(`
-    SELECT cd.change_usd_cents, cd.change_bs_cents
-    FROM change_deliveries cd
-    JOIN orders o ON cd.order_id = o.id
-    WHERE o.cash_session_id = ? AND o.payment_status = 'pagado'
-  `).all(sessionId) as Array<{
-    change_usd_cents: number;
-    change_bs_cents: number;
-  }>;
+  // 2. Resolver conteos recibidos (soportando retrocompatibilidad)
+  let rawCounts: MethodCountInput[];
+  if (Array.isArray(input.counts) && input.counts.length > 0) {
+    rawCounts = input.counts;
+  } else {
+    rawCounts = [
+      { method: 'EFECTIVO_USD', countedCents: input.cashUsdCents ?? 0 },
+      { method: 'EFECTIVO_BS', countedCents: input.cashBsCents ?? 0 },
+      { method: 'UBII', countedCents: input.ubiiVoucherBsCents ?? 0 }
+    ];
+  }
 
-  let cashUsdInflow = 0;
-  let cashBsInflow = 0;
-  let ubiiGrossBs = 0;
-
-  for (const p of payments) {
-    const m = p.method.toUpperCase();
-    if (m === 'CASH_USD' || m === 'EFECTIVO_USD') {
-      cashUsdInflow += p.amount_cents;
-    } else if (m === 'CASH_BS' || m === 'EFECTIVO_BS') {
-      cashBsInflow += p.amount_cents;
-    } else if (m === 'UBII' || m === 'PUNTO_DE_VENTA') {
-      ubiiGrossBs += p.amount_cents;
+  // 3. Emparejar cada método canónico con su conteo
+  const methodCounts: MethodCountDetail[] = expectedList.map(exp => {
+    let countedCents = 0;
+    let found = false;
+    for (const c of rawCounts) {
+      if (normalizeCanonicalMethod(c.method) === exp.method) {
+        countedCents += Math.round(Number(c.countedCents) || 0);
+        found = true;
+      }
     }
+    const finalCounted = found ? countedCents : 0;
+    const diffCents = finalCounted - exp.expectedCents;
+    return {
+      method: exp.method,
+      label: getPaymentMethodHumanLabel(exp.method),
+      currency: exp.currency,
+      expectedCents: exp.expectedCents,
+      countedCents: finalCounted,
+      diffCents
+    };
+  });
+
+  // 4. Regla D13 (Prohibido cerrar en cero con ventas)
+  const sumExpected = expectedList.reduce((acc, m) => acc + (m.expectedCents > 0 ? m.expectedCents : 0), 0);
+  const allCountedZero = methodCounts.every(m => m.countedCents === 0);
+
+  if (sumExpected > 0 && allCountedZero) {
+    const err: any = new Error('No se puede cerrar en cero cuando hubo movimientos o saldo esperado en el turno');
+    err.statusCode = 400;
+    err.code = 'BLIND_COUNT_ALL_ZERO';
+    throw err;
   }
 
-  let cashUsdOutflow = 0;
-  let cashBsOutflow = 0;
-  for (const c of changes) {
-    cashUsdOutflow += c.change_usd_cents;
-    cashBsOutflow += c.change_bs_cents;
+  if (sumExpected === 0 && allCountedZero && !input.confirmEmpty) {
+    const err: any = new Error('Se requiere confirmación para cerrar un turno sin movimientos en cero');
+    err.statusCode = 400;
+    err.code = 'CONFIRM_EMPTY_REQUIRED';
+    throw err;
   }
 
-  // Gastos en efectivo pagados durante esta sesión
-  const cashExpensesRow = rawDb.prepare(`
-    SELECT 
-      COALESCE(SUM(CASE WHEN payment_method IN ('EFECTIVO_USD', 'USD') THEN amount_usd_cents ELSE 0 END), 0) as exp_usd,
-      COALESCE(SUM(CASE WHEN payment_method IN ('EFECTIVO_BS', 'BS') THEN amount_bs_cents ELSE 0 END), 0) as exp_bs
-    FROM operating_expenses
-    WHERE jornada_id = ? AND category != 'MERMAS_DESPERDICIOS'
-      AND (authorized_by_user_id = ? OR location_id = ?)
-      AND created_at_ms >= ? AND created_at_ms <= ?
-  `).get(session.jornada_id, session.user_id, session.location_id || 'loc_alta_vista', session.opened_at_ms, session.closed_at_ms || Date.now()) as any;
+  // 5. Regla anti-tanteo (D12)
+  const attempt = session.recount_used === 0 ? 1 : 2;
+  const hasDiscrepancy = methodCounts.some(m => m.diffCents !== 0);
 
-  const cashExpUsd = cashExpensesRow?.exp_usd || 0;
-  const cashExpBs = cashExpensesRow?.exp_bs || 0;
-
-  const expectedCashUsdCents = session.opening_cash_usd_cents + cashUsdInflow - cashUsdOutflow - cashExpUsd;
-  const expectedCashBsCents = session.opening_cash_bs_cents + cashBsInflow - cashBsOutflow - cashExpBs;
-  const expectedUbiiGrossBsCents = ubiiGrossBs;
-
-  // Diferencias
-  const diffUsdCents = input.cashUsdCents - expectedCashUsdCents;
-  const diffBsCents = input.cashBsCents - expectedCashBsCents;
-  const diffUbiiBsCents = input.ubiiVoucherBsCents - expectedUbiiGrossBsCents;
-
-  const hasDiscrepancy = diffUsdCents !== 0 || diffBsCents !== 0 || diffUbiiBsCents !== 0;
-
-  // 2. REGLA ANTI-TANTEO:
-  // Si hay descuadre y aún no ha usado el reconteo (recount_used === 0):
-  // Da exactamente UNA oportunidad de reconteo a ciegas, sin indicar si falta o sobra ni montos.
-  if (hasDiscrepancy && session.recount_used === 0) {
+  if (attempt === 1 && hasDiscrepancy) {
+    const now = Date.now();
     rawDb.prepare('UPDATE cash_sessions SET recount_used = 1 WHERE id = ?').run(sessionId);
+
+    const insertStmt = rawDb.prepare(`
+      INSERT INTO cash_session_method_counts (
+        id, cash_session_id, method, currency,
+        expected_cents, counted_cents, diff_cents,
+        attempt, created_at_ms
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const mc of methodCounts) {
+      insertStmt.run(
+        `csmc_${generateUuidV7()}`,
+        sessionId,
+        mc.method,
+        mc.currency,
+        mc.expectedCents,
+        mc.countedCents,
+        mc.diffCents,
+        1,
+        now
+      );
+    }
 
     appendAuditEvent(rawDb, {
       actorUserId: user.id,
@@ -164,10 +190,37 @@ export function performBlindCount(
     };
   }
 
-  // 3. CIERRE DEFINITIVO DE SESIÓN (En el segundo conteo o si cuadró exacto)
+  // 6. CIERRE DEFINITIVO DE SESIÓN (En el segundo conteo o si cuadró exacto)
   const now = Date.now();
-  const ubiiFeeBsCents = Math.round((expectedUbiiGrossBsCents * 75) / 10000); // 0.75%
-  const ubiiNetExpectedBsCents = expectedUbiiGrossBsCents - ubiiFeeBsCents;
+
+  const insertStmt = rawDb.prepare(`
+    INSERT INTO cash_session_method_counts (
+      id, cash_session_id, method, currency,
+      expected_cents, counted_cents, diff_cents,
+      attempt, created_at_ms
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+  `);
+
+  for (const mc of methodCounts) {
+    insertStmt.run(
+      `csmc_${generateUuidV7()}`,
+      sessionId,
+      mc.method,
+      mc.currency,
+      mc.expectedCents,
+      mc.countedCents,
+      mc.diffCents,
+      attempt,
+      now
+    );
+  }
+
+  const cashUsdCount = methodCounts.find(m => m.method === 'EFECTIVO_USD')!;
+  const cashBsCount = methodCounts.find(m => m.method === 'EFECTIVO_BS')!;
+  const ubiiCount = methodCounts.find(m => m.method === 'UBII')!;
+
+  const ubiiFeeBsCents = Math.round((ubiiCount.expectedCents * 75) / 10000); // 0.75%
+  const ubiiNetExpectedBsCents = ubiiCount.expectedCents - ubiiFeeBsCents;
 
   rawDb.prepare(`
     UPDATE cash_sessions
@@ -186,15 +239,15 @@ export function performBlindCount(
     WHERE id = ?
   `).run(
     now,
-    input.cashUsdCents,
-    input.cashBsCents,
-    input.ubiiVoucherBsCents,
-    expectedCashUsdCents,
-    expectedCashBsCents,
-    expectedUbiiGrossBsCents,
-    diffUsdCents,
-    diffBsCents,
-    diffUbiiBsCents,
+    cashUsdCount.countedCents,
+    cashBsCount.countedCents,
+    ubiiCount.countedCents,
+    cashUsdCount.expectedCents,
+    cashBsCount.expectedCents,
+    ubiiCount.expectedCents,
+    cashUsdCount.diffCents,
+    cashBsCount.diffCents,
+    ubiiCount.diffCents,
     input.notes || null,
     sessionId
   );
@@ -206,48 +259,53 @@ export function performBlindCount(
     entityId: sessionId,
     payload: {
       hasDiscrepancy,
-      diffUsdCents,
-      diffBsCents,
-      diffUbiiBsCents,
-      recountUsed: session.recount_used
+      diffUsdCents: cashUsdCount.diffCents,
+      diffBsCents: cashBsCount.diffCents,
+      diffUbiiBsCents: ubiiCount.diffCents,
+      recountUsed: session.recount_used,
+      attempt
     }
   });
 
   // 4. RETORNO SEGREGADO POR ROL:
-  // Si es cajera: NO recibe números esperados ni descuadres (anti-tanteo garantizado).
-  // Si es admin o supervisor: recibe el desglose completo y conciliación.
+  // Si es cajera: NO recibe números esperados ni descuadres (anti-tanteo garantizado),
+  // pero recibe methodCounts con el desglose auditado.
+  // Si es admin o supervisor: recibe además session con conciliación completa.
   const isPrivileged = user.role === 'admin' || user.role === 'supervisor';
 
   if (!isPrivileged) {
     return {
       status: 'CLOSED',
-      message: 'Sesión de caja cerrada exitosamente.'
+      message: 'Sesión de caja cerrada exitosamente.',
+      methodCounts
     };
   }
 
   return {
     status: 'CLOSED',
     message: 'Sesión de caja cerrada y auditada con éxito.',
+    methodCounts,
     session: {
       id: sessionId,
       jornadaId: session.jornada_id,
       userId: session.user_id,
       openedAtMs: session.opened_at_ms,
       closedAtMs: now,
-      closingCashUsdCents: input.cashUsdCents,
-      closingCashBsCents: input.cashBsCents,
-      closingUbiiVoucherBsCents: input.ubiiVoucherBsCents,
-      expectedCashUsdCents,
-      expectedCashBsCents,
-      expectedUbiiGrossBsCents,
-      diffUsdCents,
-      diffBsCents,
-      diffUbiiBsCents,
+      closingCashUsdCents: cashUsdCount.countedCents,
+      closingCashBsCents: cashBsCount.countedCents,
+      closingUbiiVoucherBsCents: ubiiCount.countedCents,
+      expectedCashUsdCents: cashUsdCount.expectedCents,
+      expectedCashBsCents: cashBsCount.expectedCents,
+      expectedUbiiGrossBsCents: ubiiCount.expectedCents,
+      diffUsdCents: cashUsdCount.diffCents,
+      diffBsCents: cashBsCount.diffCents,
+      diffUbiiBsCents: ubiiCount.diffCents,
+      methodCounts,
       ubiiLiquidation: {
-        grossBsCents: expectedUbiiGrossBsCents,
+        grossBsCents: ubiiCount.expectedCents,
         feeBsCents: ubiiFeeBsCents,
         netBsCents: ubiiNetExpectedBsCents,
-        voucherDiffBsCents: diffUbiiBsCents
+        voucherDiffBsCents: ubiiCount.diffCents
       }
     }
   };

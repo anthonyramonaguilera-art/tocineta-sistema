@@ -349,11 +349,17 @@ describe('Hito M8 - Arqueo Ciego, Cierre Z, Incidentes (Re-fire vs Refund) y Rep
     let incidentJornadaId = '';
 
     beforeAll(async () => {
+      // Actualizado T-05a: T-04a (D11) impide dos cajas abiertas por sede.
+      // La cajera abre la jornada+caja directamente, o el admin cierra su sesión antes.
       const resJ = await app.inject({
         method: 'POST',
         url: '/api/jornadas/open',
-        headers: { authorization: `Bearer ${adminToken}` },
-        payload: { rateMicroBs: 40_000_000 }
+        headers: { authorization: `Bearer ${cajeraToken}` },
+        payload: {
+          rateMicroBs: 40_000_000,
+          initialCashUsdCents: 5000,
+          initialCashBsCents: 0
+        }
       });
       incidentJornadaId = resJ.json().jornada.id;
 
