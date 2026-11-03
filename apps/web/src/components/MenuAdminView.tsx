@@ -511,6 +511,20 @@ export const MenuAdminView: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  const categoryMap = useMemo(() => {
+    const map = new Map<string, string>();
+    adminMenu?.categories.forEach(c => map.set(c.id, c.name));
+    return map;
+  }, [adminMenu?.categories]);
+
+  const inactiveCategoryIds = useMemo(() => {
+    return new Set(
+      adminMenu?.categories
+        .filter(c => !c.is_active || c.is_active === 0)
+        .map(c => c.id)
+    );
+  }, [adminMenu?.categories]);
+
   if (menuLoadState.isLoading || menuLoadState.isError || !adminMenu) {
     return (
       <LoadBoundary
@@ -527,21 +541,6 @@ export const MenuAdminView: React.FC = () => {
       </LoadBoundary>
     );
   }
-
-
-  const categoryMap = useMemo(() => {
-    const map = new Map<string, string>();
-    adminMenu?.categories.forEach(c => map.set(c.id, c.name));
-    return map;
-  }, [adminMenu?.categories]);
-
-  const inactiveCategoryIds = useMemo(() => {
-    return new Set(
-      adminMenu?.categories
-        .filter(c => !c.is_active || c.is_active === 0)
-        .map(c => c.id)
-    );
-  }, [adminMenu?.categories]);
 
   const normalizedQuery = normalizeSearch(searchQuery.trim());
 
