@@ -30,3 +30,18 @@ export function formatTableLabel(value?: string | null): string {
   // Si dice p. ej. "Barra Food Truck", "Para Llevar", "Delivery", etc.
   return trimmed;
 }
+
+/**
+ * Formatea una cantidad monetaria en centavos a una cadena decimal con 2 decimales (ej. 5000 -> "50.00").
+ * Implementado estrictamente con aritmética entera para evitar inconsistencias de coma flotante.
+ */
+export function formatCents(cents: number): string {
+  const safeCents = Number.isFinite(cents) ? Math.round(cents) : 0;
+  const isNegative = safeCents < 0;
+  const absCents = Math.abs(safeCents);
+  const units = Math.floor(absCents / 100);
+  const remainder = absCents % 100;
+  const remainderStr = remainder < 10 ? `0${remainder}` : `${remainder}`;
+  return `${isNegative ? '-' : ''}${units}.${remainderStr}`;
+}
+

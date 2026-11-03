@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { CashierOrder, CashierTender } from './types.js';
 import type { CashierPaymentMethod } from './payment-labels.js';
@@ -9,6 +9,7 @@ import { PaymentWizardStep3 } from './PaymentWizardStep3.js';
 import { formatTableLabel } from '../../lib/format.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
 import { apiFetch } from '../../api/client.js';
+import { resolveChangeState } from './change-state.js';
 
 export interface PaymentWizardProps {
   order: CashierOrder;
@@ -35,8 +36,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
   const [referenceInput, setReferenceInput] = useState<string>('');
 
   // Vuelto mixto y sobrepago
-  const [givenUsdCents, setGivenUsdCents] = useState<number>(0);
-  const [givenBsCents, setGivenBsCents] = useState<number>(0);
+  const [changeOverride, setChangeOverride] = useState<{ usdCents: number; bsCents: number } | null>(null);
   const [changeBsMethod, setChangeBsMethod] = useState<string>('cash_bs');
   const [changeBsReference, setChangeBsReference] = useState<string>('');
   const [overpaymentDisposition, setOverpaymentDisposition] = useState<'tip_in' | 'adjustment'>('tip_in');
@@ -74,15 +74,14 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
   const totalChangeUsdCents = Math.max(0, totalPaidUsdEquivalentCents - totalUsdCents);
   const totalChangeBsCents = totalChangeUsdCents > 0 ? usdToBsCents(totalChangeUsdCents, safeRate) : 0;
 
-  useEffect(() => {
-    if (totalChangeUsdCents > 0 && givenUsdCents === 0 && givenBsCents === 0) {
-      setGivenUsdCents(totalChangeUsdCents);
-      setGivenBsCents(0);
-    }
-  }, [totalChangeUsdCents, givenUsdCents, givenBsCents]);
-
-  const changeDeliveredBsEquivalentUsdCents = givenBsCents > 0 ? Math.round((givenBsCents * 1_000_000) / safeRate) : 0;
-  const unreturnedSurplusUsdCents = Math.max(0, totalChangeUsdCents - givenUsdCents - changeDeliveredBsEquivalentUsdCents);
+  const { givenUsdCents, givenBsCents, unreturnedSurplusUsdCents } = useMemo(() => {
+    return resolveChangeState({
+      totalUsdCents,
+      tenders,
+      rateMicroBs: safeRate,
+      override: changeOverride
+    });
+  }, [totalUsdCents, tenders, safeRate, changeOverride]);
 
   const handleAddTender = (customAmountCents?: number, customMethod?: CashierPaymentMethod) => {
     const method = customMethod || selectedMethod;
@@ -113,6 +112,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
       }
     ]);
 
+    setChangeOverride(null);
     setAmountInput('');
     setReferenceInput('');
     setErrorMessage(null);
@@ -190,7 +190,10 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
         currentStep={step}
         totalSteps={3}
         stepTitle={step === 1 ? 'Resumen de Orden' : step === 2 ? 'Método de Pago' : 'Vuelto y Cierre'}
-        onBack={step > 1 ? () => setStep((step - 1) as any) : onCancel}
+        onBack={step > 1 ? () => {
+          setChangeOverride(null);
+          setStep((step - 1) as any);
+        } : onCancel}
         onNext={
           step === 1
             ? () => setStep(2)
@@ -260,7 +263,10 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
               onChangeAmount={setAmountInput}
               onAddTender={() => handleAddTender()}
               tenders={tenders}
-              onRemoveTender={id => setTenders(prev => prev.filter(t => t.id !== id))}
+              onRemoveTender={id => {
+                setTenders(prev => prev.filter(t => t.id !== id));
+                setChangeOverride(null);
+              }}
             />
           )}
 
@@ -276,8 +282,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
               changeGivenUsdCents={givenUsdCents}
               changeGivenBsCents={givenBsCents}
               onChangeSplit={(usd, bs) => {
-                setGivenUsdCents(usd);
-                setGivenBsCents(bs);
+                setChangeOverride({ usdCents: usd, bsCents: bs });
               }}
               changeBsMethod={changeBsMethod}
               onChangeBsMethod={setChangeBsMethod}

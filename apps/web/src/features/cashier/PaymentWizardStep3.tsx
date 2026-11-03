@@ -4,8 +4,10 @@ import type { CashierTender } from './types.js';
 import {
   splitChangeByUsd,
   splitChangeByBs,
-  validateChangeSplit
+  validateChangeSplit,
+  bsCentsToUsdCents
 } from '@tocineta/shared';
+import { formatCents } from '../../lib/format.js';
 
 interface PaymentWizardStep3Props {
   totalUsdCents: number;
@@ -132,7 +134,11 @@ export const PaymentWizardStep3: React.FC<PaymentWizardStep3Props> = ({
               <span className="font-bold text-ink uppercase">
                 {t.method.replace(/_/g, ' ')} {t.referenceCode ? `(#${t.referenceCode})` : ''}
               </span>
-              <span className="font-mono font-bold text-ink">${(t.amountCents / 100).toFixed(2)}</span>
+              <span className="font-mono font-bold text-ink">
+                {t.currency === 'USD'
+                  ? `$${formatCents(t.amountCents)}`
+                  : `Bs ${formatCents(t.amountCents)} (aprox $${formatCents(bsCentsToUsdCents(t.amountCents, rateMicroBs))})`}
+              </span>
             </div>
           ))}
         </div>
