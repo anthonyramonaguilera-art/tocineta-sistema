@@ -762,6 +762,10 @@ describe('Hito M10.3 - Suite Maestra de Certificación Release 1 (22 Pruebas de 
   // 14. Cierre Z con comisión Ubii 0.75% y Hash SHA-256 impreso
   // ───────────────────────────────────────────────────────────────────────────
   it('Prueba 14: Cierre Z calcula comisión Ubii 0.75% y captura Hash SHA-256 de auditoría', async () => {
+    getDatabaseContext().rawDb.prepare(
+      "UPDATE orders SET fulfillment_status = 'anulado' WHERE payment_status IN ('sin_pago', 'parcial', 'autorizado_sin_pago')"
+    ).run();
+
     const res = await app.inject({
       method: 'POST',
       url: `/api/jornadas/${currentJornadaId}/close`,

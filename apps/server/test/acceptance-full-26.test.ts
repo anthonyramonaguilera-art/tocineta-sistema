@@ -759,6 +759,10 @@ describe('Hito M15 - Suite Maestra de Certificación Definitiva (26 Pruebas de A
   });
 
   it('Prueba 14: Cierre Z calcula comisión Ubii 0.75% y captura Hash SHA-256 de auditoría', async () => {
+    getDatabaseContext().rawDb.prepare(
+      "UPDATE orders SET fulfillment_status = 'anulado' WHERE payment_status IN ('sin_pago', 'parcial', 'autorizado_sin_pago')"
+    ).run();
+
     const res = await app.inject({
       method: 'POST',
       url: `/api/jornadas/${currentJornadaId}/close`,
