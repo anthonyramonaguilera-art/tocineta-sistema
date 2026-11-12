@@ -133,6 +133,9 @@ describe('P2-B — Verdad Única del Dinero y Contratos Compartidos', () => {
     createdOrderId = order.id;
     expect(order.total_to_collect_usd_cents).toBe(1190);
 
+    // Cerrar temporalmente las sesiones abiertas para probar cobro sin sesión activa en la estación
+    rawDb.prepare("UPDATE cash_sessions SET status = 'cerrada' WHERE status = 'abierta'").run();
+
     // Probar validación CASH_SESSION_REQUIRED intentando cobrar con un usuario autorizado pero sin sesión abierta (admin)
     const resPayNoSession = await app.inject({
       method: 'POST',
@@ -146,6 +149,9 @@ describe('P2-B — Verdad Única del Dinero y Contratos Compartidos', () => {
     expect(resPayNoSession.statusCode).toBe(400);
     const bodyNoSession = JSON.parse(resPayNoSession.payload);
     expect(bodyNoSession.code).toBe('CASH_SESSION_REQUIRED');
+
+    // Reabrir la sesión para el test 3
+    rawDb.prepare("UPDATE cash_sessions SET status = 'abierta' WHERE jornada_id = ?").run(createdJornadaId);
   });
 
   it('3. Cajera cobra $11.90 en efectivo USD con su sesión activa; orden queda con jornada_id y cash_session_id', async () => {

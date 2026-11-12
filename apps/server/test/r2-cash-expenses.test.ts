@@ -119,7 +119,20 @@ describe('T-03: Salida de caja chica para cajera (POST/GET /api/cash-expenses)',
     expect(ftAfter.expectedCash.netCashUsdCents).toBe(4500);
     expect(ftAfter.operatingExpensesUsdCents).toBe(500);
 
-    // 4. Verificar que performBlindCount reconozca la salida en el cuadre de caja
+    // 4. Verificar GET /api/cash-expenses
+    const resList = await app.inject({
+      method: 'GET',
+      url: '/api/cash-expenses',
+      headers: { authorization: `Bearer ${cajeraToken}` }
+    });
+    expect(resList.statusCode).toBe(200);
+    const listData = resList.json();
+    expect(listData.success).toBe(true);
+    expect(listData.expenses.length).toBe(1);
+    expect(listData.expenses[0].amountUsdCents).toBe(500);
+    expect(listData.expenses[0].description).toBe('2 bolsas de hielo para refrescos');
+
+    // 5. Verificar que performBlindCount reconozca la salida en el cuadre de caja
     // Si la cajera cuenta 4500 cents físicos ($45.00), el arqueo debe cuadrar a 0 cents de diferencia
     const blindResult = performBlindCount(
       rawDb,
@@ -133,19 +146,6 @@ describe('T-03: Salida de caja chica para cajera (POST/GET /api/cash-expenses)',
     expect(updatedSession.status).toBe('cerrada');
     expect(updatedSession.expected_cash_usd_cents).toBe(4500);
     expect(updatedSession.diff_usd_cents).toBe(0);
-
-    // 5. Verificar GET /api/cash-expenses
-    const resList = await app.inject({
-      method: 'GET',
-      url: '/api/cash-expenses',
-      headers: { authorization: `Bearer ${cajeraToken}` }
-    });
-    expect(resList.statusCode).toBe(200);
-    const listData = resList.json();
-    expect(listData.success).toBe(true);
-    expect(listData.expenses.length).toBe(1);
-    expect(listData.expenses[0].amountUsdCents).toBe(500);
-    expect(listData.expenses[0].description).toBe('2 bolsas de hielo para refrescos');
 
     // 6. Verificar que aparezca en el Cierre Z y su PDF
     const zReportData = getJornadaReportData(rawDb, jornadaId);
@@ -183,9 +183,9 @@ describe('T-03: Salida de caja chica para cajera (POST/GET /api/cash-expenses)',
     });
     expect(resJornada.statusCode).toBe(200);
 
-    // Asegurar que no hay sesión abierta para cajera
-    const cajeraSession = rawDb.prepare("SELECT id FROM cash_sessions WHERE user_id = ? AND status = 'abierta'").get(cajeraUser.id);
-    expect(cajeraSession).toBeUndefined();
+    // Con la regla de sesión por estación, admin/supervisor/cajera comparten la sesión abierta.
+    // Para probar el rechazo CASH_SESSION_REQUIRED, cerramos las sesiones de caja de la estación.
+    rawDb.prepare("UPDATE cash_sessions SET status = 'cerrada' WHERE status = 'abierta'").run();
 
     // Cajera intenta registrar gasto sin tener sesión abierta -> 409 CASH_SESSION_REQUIRED
     const resExpense = await app.inject({
@@ -202,7 +202,7 @@ describe('T-03: Salida de caja chica para cajera (POST/GET /api/cash-expenses)',
     expect(resExpense.statusCode).toBe(409);
     const body = resExpense.json();
     expect(body.code).toBe('CASH_SESSION_REQUIRED');
-    expect(body.error).toContain('Debe abrir su sesión de caja');
+    expect(body.error).toContain('caja abierta');
   });
 
   it('3. Sin jornada abierta -> 409 JORNADA_CLOSED', async () => {
