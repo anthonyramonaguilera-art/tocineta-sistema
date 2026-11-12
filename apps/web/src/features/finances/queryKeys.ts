@@ -17,7 +17,9 @@ export const MONEY_QUERY_KEYS = {
   homeSummary: ['homeSummary'] as const,
   homeOrders: ['homeOrders'] as const,
   ownerDashboard: ['fase4OwnerDashboard'] as const,
-  finances: ['finances'] as const
+  finances: ['finances'] as const,
+  currentCashSession: ['current-cash-session'] as const,
+  currentJornada: ['current-jornada'] as const
 };
 
 /**
@@ -33,6 +35,8 @@ export async function invalidateMoney(queryClient: QueryClient): Promise<void> {
     queryClient.invalidateQueries({ queryKey: MONEY_QUERY_KEYS.homeSummary }),
     queryClient.invalidateQueries({ queryKey: MONEY_QUERY_KEYS.homeOrders }),
     queryClient.invalidateQueries({ queryKey: MONEY_QUERY_KEYS.ownerDashboard }),
-    queryClient.invalidateQueries({ queryKey: MONEY_QUERY_KEYS.finances })
+    queryClient.invalidateQueries({ queryKey: MONEY_QUERY_KEYS.finances }),
+    queryClient.invalidateQueries({ queryKey: MONEY_QUERY_KEYS.currentCashSession }),
+    queryClient.invalidateQueries({ queryKey: MONEY_QUERY_KEYS.currentJornada })
   ]);
 }
