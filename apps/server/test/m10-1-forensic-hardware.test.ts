@@ -13,6 +13,7 @@ import { renderTicketToEscPos, prorateComboLargestRemainder, type TicketIR } fro
 import { createOrder } from '../src/modules/orders/order-service.js';
 import { reportOrderIncident } from '../src/modules/incidents/incidents-service.js';
 import { hashPin } from '../src/modules/auth/pin.js';
+import { activateLegacyFixtureProducts } from './test-helpers.js';
 
 describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocineta/server)', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_m10_1_test_${Date.now()}`);
@@ -122,7 +123,8 @@ describe('Hito M10.1 - Hardware Forensics & Robustness Validation Suite (@tocine
     expect(paraTiPrices).toEqual([615, 615, 160]);
 
     // Verificación adicional: crear una orden real con combo y verificar líneas en la base de datos
-    const burger = rawDb.prepare('SELECT id FROM products WHERE is_combo = 0 LIMIT 1').get() as any;
+    activateLegacyFixtureProducts(rawDb);
+    const burger = rawDb.prepare('SELECT id, price_usd_cents FROM products WHERE is_combo = 0 AND price_usd_cents > 0 LIMIT 1').get() as any;
     const combo = rawDb.prepare('SELECT id, price_usd_cents FROM products WHERE is_combo = 1 LIMIT 1').get() as any;
 
     if (combo && burger) {

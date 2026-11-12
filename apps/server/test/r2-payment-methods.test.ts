@@ -318,7 +318,7 @@ describe('A-1 · Servidor: métodos de pago coherentes + migración 0039 (@tocin
     const resSummary = await app.inject({
       method: 'GET',
       url: '/api/reports/z-report/summary',
-      headers: { authorization: `Bearer ${cajeraToken}` }
+      headers: { authorization: `Bearer ${supervisorToken}` }
     });
     expect(resSummary.statusCode).toBe(200);
     const summary = JSON.parse(resSummary.payload).summary;
