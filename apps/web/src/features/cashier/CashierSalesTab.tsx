@@ -11,7 +11,7 @@ import { formatSaleDateTime } from './sale-format.js';
 import { SaleScopeBar, type SalesScope } from './SaleScopeBar.js';
 import { SaleDetailModal } from './SaleDetailModal.js';
 
-interface PaidSale {
+export interface PaidSale {
   orderId: string;
   orderNumber: number;
   customerName?: string | null;
@@ -47,10 +47,6 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
 
   // Modal de Reimpresión
   const [reprintingSale, setReprintingSale] = useState<PaidSale | null>(null);
-  const [reprintPin, setReprintPin] = useState<string>('');
-  const [reprintReason, setReprintReason] = useState<string>('CLIENTE_SOLICITA_COPIA');
-  const [isReprinting, setIsReprinting] = useState<boolean>(false);
-  const [reprintError, setReprintError] = useState<string | null>(null);
   const [reprintSuccess, setReprintSuccess] = useState<string | null>(null);
 
   // Modal de Anulación / Reembolso
@@ -64,51 +60,6 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
   const [showExpenseModal, setShowExpenseModal] = useState<boolean>(false);
   const [detailSale, setDetailSale] = useState<PaidSale | null>(null);
 
-
-  const handleExecuteReprint = async () => {
-    if (!reprintingSale) return;
-    setIsReprinting(true);
-    setReprintError(null);
-
-    try {
-      const jobsRes = await apiFetch(`/api/print-jobs?orderId=${reprintingSale.orderId}`);
-      const jobsData = await jobsRes.json();
-      if (!jobsRes.ok) {
-        throw new Error(jobsData.message || 'Error al buscar trabajos de impresión');
-      }
-
-      const jobs = jobsData.data || [];
-      const targetJob = jobs.find((j: any) => j.job_type === 'NOTA_ENTREGA' || j.job_type === 'TICKET_CLIENTE') || jobs[0];
-
-      if (!targetJob) {
-        throw new Error('No se encontró ningún trabajo de impresión registrado para esta orden');
-      }
-
-      const res = await apiFetch(`/api/print-jobs/${targetJob.id}/reprint`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          pin: reprintPin.trim(),
-          reason: reprintReason
-        })
-      });
-
-      const resData = await res.json();
-      if (!res.ok) {
-        throw new Error(resData.message || resData.error || 'No autorizado o error al reimprimir');
-      }
-
-      setReprintingSale(null);
-      setReprintPin('');
-      setReprintReason('CLIENTE_SOLICITA_COPIA');
-      setReprintSuccess('Comprobante re-enviado a la impresora exitosamente.');
-      setTimeout(() => setReprintSuccess(null), 4000);
-    } catch (err: any) {
-      setReprintError(err.message || 'Error al procesar la reimpresión');
-    } finally {
-      setIsReprinting(false);
-    }
-  };
 
   const handleExecuteVoid = async () => {
     if (!voidingSale) return;
@@ -308,13 +259,11 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
       <CashierReprintModal
         reprintingSale={reprintingSale}
         onClose={() => setReprintingSale(null)}
-        reprintError={reprintError}
-        reprintReason={reprintReason}
-        setReprintReason={setReprintReason}
-        reprintPin={reprintPin}
-        setReprintPin={setReprintPin}
-        isReprinting={isReprinting}
-        onConfirm={handleExecuteReprint}
+        onDone={(msg) => {
+          setReprintingSale(null);
+          setReprintSuccess(msg);
+          setTimeout(() => setReprintSuccess(null), 4000);
+        }}
       />
 
       {detailSale && (
