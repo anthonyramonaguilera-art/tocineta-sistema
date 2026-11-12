@@ -117,7 +117,6 @@ describe('Hito M19 — Suite de Pruebas Operativas Críticas', () => {
             productId: 'prod_miami',
             quantity: 1,
             unitPriceUsdCents: 690,
-            station: 'hamburguesas',
             modifiers: [
               // Modificador de ingrediente base
               {
@@ -173,12 +172,10 @@ describe('Hito M19 — Suite de Pruebas Operativas Críticas', () => {
             productId: 'prod_combo_clasico',
             quantity: 1,
             unitPriceUsdCents: 790,
-            station: 'hot_dogs',
             comboChildren: [
               {
                 productId: 'prod_street_dog',
                 quantity: 1,
-                station: 'hot_dogs',
                 modifiers: [
                   {
                     ingredient_id: 'ing_base_pan_perro',
@@ -265,7 +262,7 @@ describe('Hito M19 — Suite de Pruebas Operativas Críticas', () => {
         payload: {
           tableNumber: 'Mesa 1',
           fulfillmentType: 'salon',
-          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250, station: 'hot_dogs' }]
+          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250 }]
         }
       });
       expect(orderARes.statusCode).toBe(201);
@@ -293,7 +290,7 @@ describe('Hito M19 — Suite de Pruebas Operativas Críticas', () => {
         payload: {
           tableNumber: 'Mesa 2',
           fulfillmentType: 'salon',
-          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250, station: 'hot_dogs' }]
+          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250 }]
         }
       });
       expect(orderBRes.statusCode).toBe(201);
@@ -325,7 +322,7 @@ describe('Hito M19 — Suite de Pruebas Operativas Críticas', () => {
         payload: {
           tableNumber: 'Mesa 3',
           fulfillmentType: 'salon',
-          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250, station: 'hot_dogs' }]
+          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250 }]
         }
       });
       expect(orderCRes.statusCode).toBe(201);
@@ -353,7 +350,7 @@ describe('Hito M19 — Suite de Pruebas Operativas Críticas', () => {
         payload: {
           tableNumber: 'Mesa 4',
           fulfillmentType: 'salon',
-          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250, station: 'hot_dogs' }]
+          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250 }]
         }
       });
       const orderD = JSON.parse(orderDRes.payload).order;

@@ -101,8 +101,8 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
           tableNumber: 'Mesa 10',
           fulfillmentType: 'salon',
           lines: [
-            { productId: 'prod_miami', quantity: 1, unitPriceUsdCents: 690, station: 'hamburguesas' },
-            { productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250, station: 'hot_dogs' }
+            { productId: 'prod_miami', quantity: 1, unitPriceUsdCents: 690 },
+            { productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250 }
           ]
         }
       });
@@ -258,6 +258,17 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
   // ==========================================================================
   describe('Test 3: Matriz Dinámica de Permisos en Caja (CASHIER_PAY)', () => {
     it('permite a un mesonero cobrar solo cuando tiene el permiso CASHIER_PAY asignado', async () => {
+      // Asegurar sesion de caja abierta en la jornada
+      const openSession = rawDb.prepare("SELECT id FROM cash_sessions WHERE status = 'abierta' LIMIT 1").get();
+      if (!openSession) {
+        const j = rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta' LIMIT 1").get() as any;
+        const jId = j?.id || 'jor_m20_test';
+        rawDb.prepare(`
+          INSERT OR REPLACE INTO cash_sessions (id, jornada_id, user_id, opened_at_ms, status)
+          VALUES ('cs_m20_test_t3', ?, 'usr_cajera', ?, 'abierta')
+        `).run(jId, Date.now());
+      }
+
       // 1. Crear Orden de prueba
       const order1Res = await app.inject({
         method: 'POST',
@@ -269,7 +280,7 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
         payload: {
           tableNumber: 'Mesa 11',
           fulfillmentType: 'salon',
-          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250, station: 'hot_dogs' }]
+          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250 }]
         }
       });
       const order1 = JSON.parse(order1Res.payload).order;
@@ -331,7 +342,7 @@ describe('Hito M20 — God Mode Dueña, Staff y Matriz de Permisos', () => {
         payload: {
           tableNumber: 'Mesa 12',
           fulfillmentType: 'salon',
-          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250, station: 'hot_dogs' }]
+          lines: [{ productId: 'prod_street_dog', quantity: 1, unitPriceUsdCents: 250 }]
         }
       });
       const order2 = JSON.parse(order2Res.payload).order;
