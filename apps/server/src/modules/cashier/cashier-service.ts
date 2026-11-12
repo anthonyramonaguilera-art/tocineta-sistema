@@ -335,8 +335,48 @@ export function getCurrentJornada(rawDb: Database.Database) {
 /**
  * Obtener sesión de caja actual para un usuario
  */
-export function getCurrentCashSession(rawDb: Database.Database, userId: string) {
-  return rawDb.prepare("SELECT * FROM cash_sessions WHERE user_id = ? AND status = 'abierta'").get(userId) as any || null;
+const STATION_ROLES = ['admin', 'supervisor', 'cajera'];
+
+export function getStationCashSession(
+  rawDb: Database.Database,
+  userId: string,
+  locationId?: string | null
+): any | null {
+  const own = rawDb.prepare(
+    "SELECT * FROM cash_sessions WHERE user_id = ? AND status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1"
+  ).get(userId) as any;
+  if (own) return own;
+
+  const userRow = rawDb.prepare('SELECT role FROM users WHERE id = ?').get(userId) as any;
+  if (!userRow || !STATION_ROLES.includes(userRow.role)) return null;
+
+  const jornada = rawDb.prepare(
+    "SELECT id FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1"
+  ).get() as any;
+  if (!jornada) return null;
+
+  let locId = locationId || null;
+  if (!locId) {
+    try {
+      const ul = rawDb.prepare('SELECT location_id FROM user_locations WHERE user_id = ? LIMIT 1').get(userId) as any;
+      if (ul?.location_id) locId = ul.location_id;
+    } catch {}
+  }
+
+  if (locId) {
+    const byLoc = rawDb.prepare(
+      "SELECT * FROM cash_sessions WHERE jornada_id = ? AND location_id = ? AND status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1"
+    ).get(jornada.id, locId) as any;
+    if (byLoc) return byLoc;
+  }
+
+  return (rawDb.prepare(
+    "SELECT * FROM cash_sessions WHERE jornada_id = ? AND status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1"
+  ).get(jornada.id) as any) || null;
+}
+
+export function getCurrentCashSession(rawDb: Database.Database, userId: string, locationId?: string | null) {
+  return getStationCashSession(rawDb, userId, locationId);
 }
 
 /**
@@ -510,6 +550,10 @@ export function processOrderPayment(
 
   // Exigir sesión de caja abierta del usuario que cobra (Regla D1, P2-B Task 5: CASH_SESSION_REQUIRED)
   let session = rawDb.prepare("SELECT id FROM cash_sessions WHERE user_id = ? AND status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get(input.cashierUserId) as any;
+  if (!session) {
+    const stationSession = getStationCashSession(rawDb, input.cashierUserId);
+    if (stationSession) session = { id: stationSession.id };
+  }
   if (!session) {
     // Si un mesonero con permiso temporal CASHIER_PAY cobra, utiliza la sesión de caja activa en la estación
     const userRow = rawDb.prepare('SELECT role, permissions_json FROM users WHERE id = ?').get(input.cashierUserId) as any;

@@ -8,7 +8,7 @@ import {
   openJornada,
   getCurrentJornada,
   openCashSession,
-  getCurrentCashSession,
+  getStationCashSession,
   processOrderPayment,
   annulOrderInCashier,
   canUserProcessPayments,
@@ -129,10 +129,17 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/cash-sessions/current', async (request, reply) => {
     const dbCtx = getDatabaseContext();
     const user = resolveActingUser(request);
-    const current = getCurrentCashSession(dbCtx.rawDb, user.id);
+    const current = getStationCashSession(dbCtx.rawDb, user.id);
+    let openedByName: string | null = null;
+    if (current && current.user_id !== user.id) {
+      const u = dbCtx.rawDb.prepare('SELECT name FROM users WHERE id = ?').get(current.user_id) as any;
+      openedByName = u?.name ?? null;
+    }
     return reply.status(200).send({
       success: true,
-      cashSession: current
+      cashSession: current,
+      ownedByCurrentUser: current ? current.user_id === user.id : null,
+      openedByName
     });
   });
 
@@ -337,12 +344,12 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    const session = dbCtx.rawDb.prepare("SELECT id, location_id, opened_at_ms FROM cash_sessions WHERE user_id = ? AND status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get(user.id) as any;
+    const session = getStationCashSession(dbCtx.rawDb, user.id);
     if (!session) {
       return reply.status(409).send({
         success: false,
         code: 'CASH_SESSION_REQUIRED',
-        error: 'Debe abrir su sesión de caja (arqueo inicial) antes de procesar cobros.'
+        error: 'No hay una caja abierta en la jornada. Un administrador o supervisor debe abrir caja primero.'
       });
     }
 
@@ -391,27 +398,23 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
-    let session = dbCtx.rawDb.prepare("SELECT id, jornada_id, opened_at_ms, closed_at_ms FROM cash_sessions WHERE user_id = ? AND status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get(user.id) as any;
+    const session = getStationCashSession(dbCtx.rawDb, user.id);
     if (!session) {
-      const jornada = dbCtx.rawDb.prepare("SELECT id FROM jornadas WHERE status = 'abierta' ORDER BY opened_at_ms DESC LIMIT 1").get() as any;
-      if (jornada) {
-        session = dbCtx.rawDb.prepare("SELECT id, jornada_id, opened_at_ms, closed_at_ms FROM cash_sessions WHERE user_id = ? AND jornada_id = ? ORDER BY opened_at_ms DESC LIMIT 1").get(user.id, jornada.id) as any;
-      }
+      return reply.status(200).send({ success: true, expenses: [] });
     }
-    if (!session) {
-      return reply.status(200).send({
-        success: true,
-        expenses: []
-      });
-    }
-
     const expenses = dbCtx.rawDb.prepare(
       'SELECT id, location_id, jornada_id, category, amount_usd_cents, amount_bs_cents, ' +
       'payment_method, description, authorized_by_user_id, created_at_ms ' +
       'FROM operating_expenses ' +
-      'WHERE jornada_id = ? AND authorized_by_user_id = ? AND created_at_ms >= ? ' +
-      'ORDER BY created_at_ms DESC'
-    ).all(session.jornada_id, user.id, session.opened_at_ms) as any[];
+      "WHERE jornada_id = ? AND category != 'MERMAS_DESPERDICIOS' " +
+      'AND (authorized_by_user_id = ? OR location_id = ?) ' +
+      'AND created_at_ms >= ? ORDER BY created_at_ms DESC'
+    ).all(
+      session.jornada_id,
+      session.user_id,
+      session.location_id || 'loc_alta_vista',
+      session.opened_at_ms
+    ) as any[];
 
     return reply.status(200).send({
       success: true,
