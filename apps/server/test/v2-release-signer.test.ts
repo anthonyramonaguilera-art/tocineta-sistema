@@ -82,7 +82,7 @@ describe('V-2: Firma digital de release Ed25519 y versión unificada', () => {
   });
 
   describe('Endpoint GET /api/updater/version', () => {
-    it('devuelve "1.0.0" leyendo el package.json raíz con getProjectRoot()', async () => {
+    it('devuelve "1.0.1" leyendo el package.json raíz con getProjectRoot()', async () => {
       const res = await app.inject({
         method: 'GET',
         url: '/api/updater/version'
@@ -91,7 +91,7 @@ describe('V-2: Firma digital de release Ed25519 y versión unificada', () => {
       expect(res.statusCode).toBe(200);
       const data = JSON.parse(res.payload);
       expect(data.success).toBe(true);
-      expect(data.version).toBe('1.0.0');
+      expect(data.version).toBe('1.0.1');
     });
   });
 });

@@ -4,7 +4,7 @@ import * as path from 'node:path';
 import * as os from 'node:os';
 import DatabaseConstructor from 'better-sqlite3';
 import type Database from 'better-sqlite3';
-import { initSqlite } from '../src/db/connection.js';
+import { initSqlite, getDatabaseContext } from '../src/db/connection.js';
 import { runMigrations } from '../src/db/migrate.js';
 import { seedInitialUsers } from '../src/modules/auth/seed-users.js';
 import { seedCatalog } from '../src/db/seed-catalog.js';
@@ -345,7 +345,8 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
       expect(openSess.statusCode).toBe(200);
 
       // Obtener un producto activo del catálogo
-      const prod = rawDb.prepare('SELECT id, price_usd_cents FROM products WHERE is_combo = 0 LIMIT 1').get() as any;
+      activateLegacyFixtureProducts(getDatabaseContext().rawDb);
+      const prod = rawDb.prepare("SELECT id, price_usd_cents FROM products WHERE is_active = 1 AND id != 'prod_libre' AND price_usd_cents > 0 LIMIT 1").get() as any;
 
       const realTimeMs = Date.now() - 3600000; // Ocurrió hace 1 hora durante el apagón
 
@@ -397,7 +398,8 @@ describe('Hito M9 - Blindaje de Datos, Respaldos Cifrados age, Restauración y M
     });
 
     it('Regla Anti-Duplicados: Intentar registrar dos veces el mismo número de comanda física es rechazado (409 Conflict)', async () => {
-      const prod = rawDb.prepare('SELECT id, price_usd_cents FROM products LIMIT 1').get() as any;
+      activateLegacyFixtureProducts(getDatabaseContext().rawDb);
+      const prod = rawDb.prepare("SELECT id, price_usd_cents FROM products WHERE is_active = 1 AND id != 'prod_libre' AND price_usd_cents > 0 LIMIT 1").get() as any;
 
       const resDuplicate = await app.inject({
         method: 'POST',
