@@ -146,56 +146,85 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
   // 4.1 Consultar Ventas de la Sesión Actual (GET /api/cash-sessions/current/sales)
   fastify.get('/api/cash-sessions/current/sales', async (request, reply) => {
     const dbCtx = getDatabaseContext();
+    const user = resolveActingUser(request);
     const currentJornada = getCurrentJornada(dbCtx.rawDb);
-    if (!currentJornada) {
-      return reply.status(200).send({
-        success: true,
-        sales: [],
-        nextCursor: null
-      });
-    }
-
-    const query = (request.query || {}) as { limit?: string; cursor?: string };
+    const query = (request.query || {}) as { limit?: string; cursor?: string; scope?: string; date?: string };
+    const scope: 'jornada' | 'turn' | 'date' =
+      query.scope === 'turn' || query.scope === 'date' ? query.scope : 'jornada';
     const limit = Math.min(100, Math.max(1, parseInt(query.limit || '50', 10) || 50));
     const cursor = query.cursor ? parseInt(query.cursor, 10) : null;
 
-    const conditions = ["payment_status = 'pagado'", "jornada_id = ?"];
-    const params: any[] = [currentJornada.id];
-    if (cursor) {
-      conditions.push('updated_at_ms < ?');
-      params.push(cursor);
+    const innerConds: string[] = ["o.payment_status = 'pagado'"];
+    const innerParams: any[] = [];
+    const outerConds: string[] = ['1=1'];
+    const outerParams: any[] = [];
+
+    if (scope === 'date') {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(query.date || '')) {
+        return reply.status(400).send({ success: false, error: 'Parametro date invalido (YYYY-MM-DD)' });
+      }
+      const startMs = Date.parse(`${query.date}T00:00:00-04:00`);
+      if (Number.isNaN(startMs)) {
+        return reply.status(400).send({ success: false, error: 'Parametro date invalido (YYYY-MM-DD)' });
+      }
+      outerConds.push('paid_ts >= ? AND paid_ts <= ?');
+      outerParams.push(startMs, startMs + 86_400_000 - 1);
+    } else if (scope === 'turn') {
+      const session = getStationCashSession(dbCtx.rawDb, user.id);
+      if (!session) {
+        return reply.status(200).send({ success: true, scope, sales: [], nextCursor: null, jornada: null });
+      }
+      innerConds.push('o.cash_session_id = ?');
+      innerParams.push(session.id);
+    } else {
+      if (!currentJornada) {
+        return reply.status(200).send({ success: true, scope, sales: [], nextCursor: null, jornada: null });
+      }
+      innerConds.push('o.jornada_id = ?');
+      innerParams.push(currentJornada.id);
     }
-    params.push(limit + 1);
+
+    if (cursor) {
+      outerConds.push('paid_ts < ?');
+      outerParams.push(cursor);
+    }
 
     const rows = dbCtx.rawDb.prepare(`
-      SELECT o.*, 
-        (SELECT p.method FROM payments p WHERE p.order_id = o.id ORDER BY p.created_at_ms DESC LIMIT 1) as primary_method
-      FROM orders o
-      WHERE ${conditions.join(' AND ')}
-      ORDER BY o.updated_at_ms DESC
+      SELECT * FROM (
+        SELECT o.*,
+          (SELECT p.method FROM payments p WHERE p.order_id = o.id ORDER BY p.created_at_ms DESC LIMIT 1) AS primary_method,
+          COALESCE((SELECT MAX(p.created_at_ms) FROM payments p WHERE p.order_id = o.id), o.updated_at_ms, o.created_at_ms) AS paid_ts
+        FROM orders o
+        WHERE ${innerConds.join(' AND ')}
+      )
+      WHERE ${outerConds.join(' AND ')}
+      ORDER BY paid_ts DESC
       LIMIT ?
-    `).all(...params) as any[];
+    `).all(...innerParams, ...outerParams, limit + 1) as any[];
 
     const hasMore = rows.length > limit;
     const pagedRows = hasMore ? rows.slice(0, limit) : rows;
-    const nextCursor = hasMore && pagedRows.length > 0 ? String(pagedRows[pagedRows.length - 1].updated_at_ms) : null;
-    const rateMicroBs = currentJornada.rate_micro_bs || 40_000_000;
+    const nextCursor = hasMore && pagedRows.length > 0 ? String(pagedRows[pagedRows.length - 1].paid_ts) : null;
+    const fallbackRate = currentJornada?.rate_micro_bs || 40_000_000;
 
     const sales = pagedRows.map((o) => {
       const totalUsdCents = o.net_food_sales_usd_cents || o.total_to_collect_usd_cents || 0;
-      const rate = (o.rate_micro_bs || rateMicroBs) / 1_000_000;
+      const rate = (o.rate_micro_bs || fallbackRate) / 1_000_000;
       const totalBsCents = Math.round((totalUsdCents / 100) * rate * 100);
       const rawMethod = o.primary_method || 'EFECTIVO_USD';
-
       return {
         orderId: o.id,
         orderNumber: String(o.order_number),
         customerName: o.customer_name || 'Cliente Mostrador',
         tableLabel: o.table_number ? `Mesa ${o.table_number}` : (o.fulfillment_type === 'delivery' ? 'Delivery' : 'Para Llevar'),
+        tableNumber: o.table_number || null,
         totalUsdCents,
         totalBsCents,
         primaryMethod: rawMethod,
-        paidAtMs: o.updated_at_ms || o.created_at_ms,
+        paidAtMs: o.paid_ts,
+        createdAtMs: o.created_at_ms,
+        jornadaId: o.jornada_id,
+        cashSessionId: o.cash_session_id || null,
         locationId: o.location_id || 'loc_alta_vista',
         status: o.fulfillment_status,
         id: o.id,
@@ -206,8 +235,12 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
 
     return reply.status(200).send({
       success: true,
+      scope,
       sales,
-      nextCursor
+      nextCursor,
+      jornada: currentJornada
+        ? { id: currentJornada.id, openedAtMs: currentJornada.opened_at_ms, ageMs: Date.now() - currentJornada.opened_at_ms }
+        : null
     });
   });
 
