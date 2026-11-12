@@ -329,7 +329,7 @@ export const printingRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.post('/api/print-jobs/:id/reprint', async (request, reply) => {
     const { id } = request.params as { id: string };
     const bodySchema = z.object({
-      pin: z.string().min(4).max(6).optional().default('1111'),
+      pin: z.string().min(4).max(6),
       reason: z.string().min(3).max(255).optional().default('Reimpresión rápida')
     });
 
