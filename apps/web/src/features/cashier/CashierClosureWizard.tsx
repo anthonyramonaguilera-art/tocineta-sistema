@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Badge, WizardLayout, Icon } from '../../ui/index.js';
 import { ClosurePaymentMethodsTable } from './ClosurePaymentMethodsTable.js';
 import { ClosureCountStep, CLOSURE_METHODS } from './ClosureCountStep.js';
+import { ClosureDoneStep } from './ClosureDoneStep.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
 import { apiFetch } from '../../api/client.js';
 
@@ -31,6 +32,8 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [recountMessage, setRecountMessage] = useState<string | null>(null);
   const [closureResult, setClosureResult] = useState<any | null>(null);
+  const [zClosed, setZClosed] = useState<boolean>(false);
+  const [closedJornadaId, setClosedJornadaId] = useState<string | null>(null);
 
   const { data: sessionData } = useQuery({
     queryKey: ['current-cash-session'],
@@ -129,7 +132,11 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
 
     const sessionId = currentSession?.id;
     if (!sessionId) {
-      setErrorMessage('No se encontró una sesión de caja activa para registrar el arqueo ciego.');
+      setErrorMessage(
+        jornada
+          ? 'No hay una caja abierta en esta jornada. Un administrador o supervisor debe abrir caja primero.'
+          : 'No hay jornada ni caja abierta.'
+      );
       return;
     }
 
@@ -176,7 +183,11 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
     }
   };
 
-  const handleFinalize = () => {
+  const handleFinalize = async () => {
+    setZClosed(false);
+    setClosedJornadaId(null);
+    await invalidateMoney(queryClient);
+    queryClient.removeQueries({ queryKey: ['z-report-summary'] });
     setStep(1);
     setMethodValues({});
     setConfirmEmpty(false);
@@ -189,7 +200,7 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
   };
 
   const handleExport = async (type: 'pdf' | 'excel') => {
-    const targetJornadaId = jornada?.id;
+    const targetJornadaId = closedJornadaId || jornada?.id;
     if (!targetJornadaId) {
       setErrorMessage('No hay jornada abierta o identificador de jornada');
       return;
@@ -216,6 +227,12 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
     } finally {
       setIsExporting(false);
     }
+  };
+
+  const handleZClosed = async (jId: string) => {
+    setClosedJornadaId(jId);
+    setZClosed(true);
+    await invalidateMoney(queryClient);
   };
 
   return (
@@ -250,6 +267,11 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
         <div className="space-y-4">
           {step === 1 && (
             <div className="space-y-4">
+              {sessionData?.ownedByCurrentUser === false && (
+                <p className="text-xs font-semibold text-warning">
+                  Caja abierta por {sessionData?.openedByName || 'otro usuario'}. Estas cerrando esa misma caja.
+                </p>
+              )}
               {!summary?.byMethod ? (
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
@@ -328,43 +350,15 @@ export const CashierClosureWizard: React.FC<CashierClosureWizardProps> = ({
           )}
 
           {step === 3 && (
-            <div className="space-y-4 text-center">
-              <div className="w-16 h-16 mx-auto rounded-full bg-success/20 flex items-center justify-center text-success">
-                <Icon name="CheckCircle2" className="w-8 h-8 text-success" />
-              </div>
-              <div>
-                <h3 className="text-xl font-black text-ink uppercase">Cierre de Caja Confirmado</h3>
-                <p className="text-xs text-ink-muted">El turno de caja ha sido formalmente cerrado y auditado.</p>
-              </div>
-
-              {closureResult?.methodCounts && (
-                <ClosurePaymentMethodsTable methodCounts={closureResult.methodCounts} />
-              )}
-
-              {currentSession?.id && (
-                <Card variant="alt" className="p-4 text-left space-y-2 font-mono text-xs border-border">
-                  <div className="flex justify-between">
-                    <span className="text-ink-muted">Sesión de Caja:</span>
-                    <span className="font-bold text-ink">{currentSession.id}</span>
-                  </div>
-                  {jornada?.id && (
-                    <div className="flex justify-between">
-                      <span className="text-ink-muted">Jornada:</span>
-                      <span className="font-bold text-ink">{jornada.id}</span>
-                    </div>
-                  )}
-                </Card>
-              )}
-
-              <div className="flex flex-col sm:flex-row gap-2 justify-center pt-2">
-                <Button variant="secondary" size="md" onClick={() => handleExport('pdf')} leftIcon="FileText" disabled={isExporting}>
-                  Descargar Informe PDF
-                </Button>
-                <Button variant="secondary" size="md" onClick={() => handleExport('excel')} leftIcon="FileSpreadsheet" disabled={isExporting}>
-                  Exportar Excel
-                </Button>
-              </div>
-            </div>
+            <ClosureDoneStep
+              closureResult={closureResult}
+              currentSession={currentSession}
+              jornada={jornada}
+              zClosed={zClosed}
+              isExporting={isExporting}
+              onExport={handleExport}
+              onZClosed={handleZClosed}
+            />
           )}
         </div>
       </WizardLayout>
