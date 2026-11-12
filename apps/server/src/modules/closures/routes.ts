@@ -107,7 +107,8 @@ export const closuresRoutes: FastifyPluginAsync = async (fastify) => {
         success: false,
         code: err.code,
         error: err.message,
-        remainingMs: err.remainingMs
+        remainingMs: err.remainingMs,
+        pendingCount: err.pendingCount
       });
     }
   });

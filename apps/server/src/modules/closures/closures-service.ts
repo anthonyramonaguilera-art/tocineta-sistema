@@ -339,6 +339,22 @@ export function closeJornadaZ(
     throw err;
   }
 
+  const pending = rawDb.prepare(`
+    SELECT COUNT(*) AS cnt FROM orders
+    WHERE jornada_id = ?
+      AND payment_status IN ('sin_pago', 'parcial', 'autorizado_sin_pago')
+      AND fulfillment_status NOT IN ('cerrado', 'anulado')
+  `).get(jornadaId) as { cnt: number };
+  if (pending.cnt > 0) {
+    const err: any = new Error(
+      `No se puede cerrar la jornada: hay ${pending.cnt} pedido(s) sin cobrar. Cobralos o anulalos primero.`
+    );
+    err.statusCode = 409;
+    err.code = 'UNPAID_ORDERS_PENDING';
+    err.pendingCount = pending.cnt;
+    throw err;
+  }
+
   const now = Date.now();
 
   // Delegar cálculo de verdad financiera a servicio central
