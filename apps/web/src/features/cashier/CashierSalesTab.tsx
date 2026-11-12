@@ -7,6 +7,9 @@ import { invalidateMoney } from '../finances/queryKeys.js';
 import { CashierReprintModal } from './CashierReprintModal.js';
 import { CashierExpenseModal } from './CashierExpenseModal.js';
 import { apiFetch } from '../../api/client.js';
+import { formatSaleDateTime } from './sale-format.js';
+import { SaleScopeBar, type SalesScope } from './SaleScopeBar.js';
+import { SaleDetailModal } from './SaleDetailModal.js';
 
 interface PaidSale {
   orderId: string;
@@ -23,12 +26,22 @@ interface CashierSalesTabProps {
   sales: PaidSale[];
   onRefresh: () => void;
   userRole?: string;
+  scope?: SalesScope;
+  onScopeChange?: (s: SalesScope) => void;
+  date?: string;
+  onDateChange?: (d: string) => void;
+  jornadaInfo?: { id: string; openedAtMs: number; ageMs: number } | null;
 }
 
 export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
   sales,
   onRefresh,
-  userRole: _userRole = 'cajera'
+  userRole: _userRole = 'cajera',
+  scope,
+  onScopeChange,
+  date,
+  onDateChange,
+  jornadaInfo
 }) => {
   const queryClient = useQueryClient();
 
@@ -49,6 +62,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
 
   // Modal de Salida de Caja Chica
   const [showExpenseModal, setShowExpenseModal] = useState<boolean>(false);
+  const [detailSale, setDetailSale] = useState<PaidSale | null>(null);
 
 
   const handleExecuteReprint = async () => {
@@ -149,6 +163,10 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
         </Button>
       </div>
 
+      {scope && onScopeChange && onDateChange && (
+        <SaleScopeBar scope={scope} onScopeChange={onScopeChange} date={date || ''} onDateChange={onDateChange} jornada={jornadaInfo ?? null} />
+      )}
+
       {reprintSuccess && (
         <div className="p-3 bg-success/10 border border-success/30 rounded-xl text-xs font-bold text-success flex items-center gap-2">
           <Icon name="CheckCircle" className="w-4 h-4 shrink-0 text-success" />
@@ -159,22 +177,20 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
       {/* Listado de Ventas del Día */}
       {sales.length === 0 ? (
         <EmptyState
-          title="Sin cobros registrados hoy"
+          title={scope === 'turn' ? 'Sin cobros en tu turno' : scope === 'date' ? 'Sin cobros en esa fecha' : 'Sin cobros en esta jornada'}
           description="Aún no se han completado transacciones en la jornada activa."
           icon="Receipt"
         />
       ) : (
         <div className="space-y-3">
-          {sales.map(s => {
-            const timeStr = new Date(s.paidAtMs).toLocaleTimeString('es-VE', { hour: '2-digit', minute: '2-digit' });
-            return (
+          {sales.map(s => (
               <Card key={s.orderId} variant="surface" className="p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-border">
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-base font-black text-ink">#{s.orderNumber}</span>
                     <Badge variant="success">Cobrado</Badge>
                     <Badge variant="neutral">{getPaymentMethodHumanLabel(s.primaryMethod)}</Badge>
-                    <span className="text-xs text-ink-muted font-mono">{timeStr}</span>
+                    <span className="text-xs text-ink-muted font-mono">{formatSaleDateTime(s.paidAtMs)}</span>
                   </div>
                   <p className="text-xs font-bold text-ink-muted mt-0.5">
                     Cliente: {s.customerName || 'Mostrador'} {s.tableNumber ? `• ${formatTableLabel(s.tableNumber)}` : ''}
@@ -195,10 +211,10 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
                     <Button
                       variant="ghost"
                       size="sm"
-                      onClick={() => setReprintingSale(s)}
+                      onClick={() => setDetailSale(s)}
                       leftIcon="Receipt"
                     >
-                      Recibo
+                      Ver detalle
                     </Button>
                     <Button
                       variant="ghost"
@@ -219,8 +235,7 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
                   </div>
                 </div>
               </Card>
-            );
-          })}
+          ))}
         </div>
       )}
 
@@ -301,6 +316,10 @@ export const CashierSalesTab: React.FC<CashierSalesTabProps> = ({
         isReprinting={isReprinting}
         onConfirm={handleExecuteReprint}
       />
+
+      {detailSale && (
+        <SaleDetailModal sale={detailSale} onClose={() => setDetailSale(null)} onReprint={() => { setReprintingSale(detailSale); setDetailSale(null); }} />
+      )}
     </div>
   );
 };

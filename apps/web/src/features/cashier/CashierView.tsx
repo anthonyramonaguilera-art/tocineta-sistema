@@ -9,6 +9,8 @@ import { CashierSalesTab } from './CashierSalesTab.js';
 import { CashierClosureWizard } from './CashierClosureWizard.js';
 import { CashierShiftOpeningModal } from './CashierShiftOpeningModal.js';
 import { ClosureHistoryView } from './ClosureHistoryView.js';
+import { todayCaracasISO } from './sale-format.js';
+import type { SalesScope } from './SaleScopeBar.js';
 import { Tabs, Button, Card, Badge, Icon } from '../../ui/index.js';
 import { invalidateMoney } from '../finances/queryKeys.js';
 import { apiFetch } from '../../api/client.js';
@@ -22,6 +24,8 @@ export const CashierView: React.FC = () => {
   const [wizardKey, setWizardKey] = useState<number>(0);
   const [showShiftOpening, setShowShiftOpening] = useState<boolean>(false);
   const [showSedeBreakdown, setShowSedeBreakdown] = useState<boolean>(false);
+  const [salesScope, setSalesScope] = useState<SalesScope>('jornada');
+  const [salesDate, setSalesDate] = useState<string>(todayCaracasISO());
 
   // Consultar órdenes pendientes de cobro
   const {
@@ -44,16 +48,18 @@ export const CashierView: React.FC = () => {
   const {
     data: salesData,
     refetch: refetchSales
-  } = useQuery<CashSalesResponse>({
-    queryKey: ['cashier-sales'],
+  } = useQuery<CashSalesResponse & { jornada?: { id: string; openedAtMs: number; ageMs: number } | null }>({
+    queryKey: ['cashier-sales', salesScope, salesDate],
     queryFn: async () => {
-      const res = await apiFetch('/api/cash-sessions/current/sales');
+      const res = await apiFetch(`/api/cash-sessions/current/sales?scope=${salesScope}${salesScope === 'date' ? `&date=${salesDate}` : ''}`);
       if (!res.ok) return { success: true, sales: [], totalCollectedUsdCents: 0, totalOrders: 0 };
       return res.json();
     },
     refetchInterval: 10000,
     refetchOnWindowFocus: true
   });
+
+  const jornadaInfo = salesData?.jornada ?? null;
 
   // Consultar tasa BCV vigente
   const { data: menuData } = useQuery<{ rateMicroBs: number; formattedRate: string }>({
@@ -253,7 +259,7 @@ export const CashierView: React.FC = () => {
       <Tabs
         tabs={[
           { id: 'cobro', label: `Por cobrar (${orders.length})`, icon: 'CreditCard' },
-          { id: 'ultimas_ventas', label: `Ventas del día (${sales.length})`, icon: 'Receipt' },
+          { id: 'ultimas_ventas', label: salesScope === 'jornada' ? `Ventas del dia (${sales.length})` : `Ventas (${sales.length})`, icon: 'Receipt' },
           { id: 'cierre_dia', label: 'Cierre de caja', icon: 'Lock' },
           { id: 'historial', label: 'Historial', icon: 'History' }
         ]}
@@ -277,6 +283,11 @@ export const CashierView: React.FC = () => {
           sales={sales}
           onRefresh={handleRefreshAll}
           userRole={user?.role}
+          scope={salesScope}
+          onScopeChange={setSalesScope}
+          date={salesDate}
+          onDateChange={setSalesDate}
+          jornadaInfo={jornadaInfo}
         />
       )}
 
