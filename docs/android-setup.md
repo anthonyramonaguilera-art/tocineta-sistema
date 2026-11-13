@@ -6,6 +6,21 @@
 
 ---
 
+## Reservar la IP de la laptop en el router (recomendado)
+
+Para asegurar la máxima estabilidad en la operación del punto de venta y terminales de mesa/cocina, se recomienda configurar una **reserva de dirección IP (DHCP Static Lease / Address Reservation)** para la laptop servidora en el panel del router local.
+
+### ¿Por qué es fundamental fijar la IP de la laptop?
+
+1. **Evita la pérdida o inaccesibilidad de la cola de pedidos offline (Outbox):**
+   Las aplicaciones web y el WebView de Android almacenan transacciones y peticiones pendientes en el almacenamiento local aislado del navegador (`IndexedDB` y `localStorage`). Este almacenamiento está blindado por el protocolo de seguridad del mismo origen (*Same-Origin Policy*), ligado de forma estricta a la URL base (`http://<IP>:<PUERTO>`). Si la laptop reinicia o renueva la concesión DHCP y el router le asigna una IP diferente, el dispositivo Android no podrá acceder a las comandas pendientes guardadas bajo el origen anterior hasta que vuelva a coincidir la dirección IP.
+2. **Evita el cierre de sesión intempestivo (Re-login):**
+   Los tokens de autenticación y sesiones de los operadores se guardan por origen. Un cambio de IP invalida el acceso inmediato del personal en mesa o despacho, obligando a reintroducir credenciales en pleno turno de atención.
+3. **Conexión instantánea en milisegundos:**
+   El terminal Android implementa descubrimiento en tres capas (Capa A: IP guardada en memoria, Capa B: barrido automático `/24` en puerto 3000, Capa C: configuración manual). Si la IP de la laptop se mantiene fija, la Capa A conecta de manera instantánea y transparente al abrir la aplicación sin necesidad de barrido de red.
+
+---
+
 ## 1. EL RETO TÉCNICO EN DISPOSITIVOS ANDROID
 
 Los dispositivos móviles modernos con Android cuentan con sistemas de detección de conectividad a Internet (servicios de sondeo hacia servidores de Google como `clients3.google.com` o `connectivitycheck.gstatic.com`).
