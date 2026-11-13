@@ -38,6 +38,16 @@ object PermissionHelper {
         }
     }
 
+    fun requestBluetoothPermissionIfNeeded(activity: Activity, requestCode: Int = REQUEST_BLUETOOTH_CONNECT): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (!hasBluetoothPermission(activity)) {
+                requestBluetoothPermission(activity, requestCode)
+                return true
+            }
+        }
+        return false
+    }
+
     fun showPermissionDeniedNotice(activity: Activity) {
         AlertDialog.Builder(activity)
             .setMessage(RATIONALE_MESSAGE)

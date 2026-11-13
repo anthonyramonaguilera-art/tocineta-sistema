@@ -35,6 +35,7 @@ export interface PairedPrinterInfo {
 export interface DeviceBluetoothStatus {
   enabled: boolean;
   hasPermission: boolean;
+  permission?: boolean;
   connected?: boolean;
 }
 
@@ -106,15 +107,15 @@ export async function testPrintOnDevice(): Promise<{ ok: boolean; error?: string
 export async function getBluetoothStatusOnDevice(): Promise<DeviceBluetoothStatus> {
   try {
     if (!hasNativePrinting() || !window.TocinetaNative || typeof window.TocinetaNative.getBluetoothStatus !== 'function') {
-      return { enabled: false, hasPermission: false, connected: false };
+      return { enabled: false, hasPermission: false, permission: false, connected: false };
     }
     const status = await window.TocinetaNative.getBluetoothStatus();
     const hasPermission = Boolean(status?.hasPermission ?? (status as any)?.permission ?? false);
     const enabled = Boolean(status?.enabled);
     const connected = Boolean(status?.connected);
-    return { enabled, hasPermission, connected };
+    return { enabled, hasPermission, permission: hasPermission, connected };
   } catch {
-    return { enabled: false, hasPermission: false, connected: false };
+    return { enabled: false, hasPermission: false, permission: false, connected: false };
   }
 }
 
@@ -179,7 +180,7 @@ export async function sendTerminalHeartbeatNow(): Promise<{ ok: boolean }> {
  * Indica si el entorno actual cuenta con la interfaz de puente nativo de impresión.
  */
 export function hasNativePrinting(): boolean {
-  return typeof window !== 'undefined' && Boolean(window.TocinetaNative);
+  return typeof window !== 'undefined' && typeof window.TocinetaNative !== 'undefined';
 }
 
 /**

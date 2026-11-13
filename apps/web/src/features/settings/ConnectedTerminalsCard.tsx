@@ -37,6 +37,7 @@ export const ConnectedTerminalsCard: React.FC<ConnectedTerminalsCardProps> = ({ 
   const isApk = hasNativePrinting();
   const [deviceLabel, setDeviceLabel] = useState<string>(() => getTerminalLabel() || '');
   const [savedSuccess, setSavedSuccess] = useState<boolean>(false);
+  const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
 
   const { data: terminals = [], isLoading, refetch } = useQuery<TerminalItem[]>({
     queryKey: ['terminalsList'],
@@ -49,6 +50,11 @@ export const ConnectedTerminalsCard: React.FC<ConnectedTerminalsCardProps> = ({ 
     },
     refetchInterval: 10000
   });
+
+  const handleRefreshAll = () => {
+    void refetch();
+    setRefreshTrigger((prev) => prev + 1);
+  };
 
   const handleSaveLabel = (e: React.FormEvent) => {
     e.preventDefault();
@@ -70,7 +76,7 @@ export const ConnectedTerminalsCard: React.FC<ConnectedTerminalsCardProps> = ({ 
           type="button"
           variant="ghost"
           size="sm"
-          onClick={() => refetch()}
+          onClick={handleRefreshAll}
           className="min-h-[48px] px-3 text-xs"
           leftIcon="RefreshCw"
         >
@@ -79,7 +85,10 @@ export const ConnectedTerminalsCard: React.FC<ConnectedTerminalsCardProps> = ({ 
       </div>
 
       {/* Impresora exclusiva de este dispositivo */}
-      <DevicePrinterCard />
+      <DevicePrinterCard
+        onPrinterConfigured={() => void refetch()}
+        refreshTrigger={refreshTrigger}
+      />
 
       {/* Campo exclusivo dentro de la APK */}
       {isApk && (

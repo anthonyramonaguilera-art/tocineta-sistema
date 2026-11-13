@@ -155,6 +155,10 @@ class MainActivity : AppCompatActivity() {
         PermissionHelper.handlePermissionResult(this, requestCode, grantResults)
     }
 
+    fun requestBluetoothPermissionIfNeeded() {
+        PermissionHelper.requestBluetoothPermissionIfNeeded(this)
+    }
+
     private fun startDiscoveryFlow() {
         discoveryJob?.cancel()
         discoveryJob = activityScope.launch {
@@ -265,7 +269,7 @@ class MainActivity : AppCompatActivity() {
                 promptBatteryOptimizationIfNeeded()
             }
         }
-        nativeBridge = NativeBridge(webView, printerGateway)
+        nativeBridge = NativeBridge(webView, printerGateway, this)
         webView.addJavascriptInterface(nativeBridge, NativeBridge.JAVASCRIPT_INTERFACE_NAME)
 
         webView.webViewClient = object : WebViewClient() {

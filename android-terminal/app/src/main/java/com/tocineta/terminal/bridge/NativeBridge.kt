@@ -1,9 +1,11 @@
 package com.tocineta.terminal.bridge
 
+import android.app.Activity
 import android.os.Handler
 import android.os.Looper
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import com.tocineta.terminal.bt.PermissionHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -12,7 +14,8 @@ import kotlinx.coroutines.launch
 
 class NativeBridge(
     private val webView: WebView,
-    private val printerGateway: PrinterGateway
+    private val printerGateway: PrinterGateway,
+    private val activity: Activity? = null
 ) {
 
     companion object {
@@ -109,6 +112,7 @@ class NativeBridge(
                         resolve(callId, sb.toString())
                     }
                     "listPairedPrinters" -> {
+                        requestBluetoothPermissionIfNeeded()
                         val list = printerGateway.listPairedPrinters()
                         val json = list.joinToString(prefix = "[", postfix = "]") { p ->
                             """{"name":"${escapeJson(p.name)}","mac":"${escapeJson(p.mac)}"}"""
@@ -135,6 +139,7 @@ class NativeBridge(
                         resolve(callId, json)
                     }
                     "getBluetoothStatus" -> {
+                        requestBluetoothPermissionIfNeeded()
                         val status = printerGateway.getBluetoothStatus()
                         val json = """{"permission":${status.permission},"enabled":${status.enabled},"connected":${status.connected}}"""
                         resolve(callId, json)
@@ -146,6 +151,13 @@ class NativeBridge(
             } catch (t: Throwable) {
                 reject(callId, t.message ?: "Error al ejecutar $method")
             }
+        }
+    }
+
+    private fun requestBluetoothPermissionIfNeeded() {
+        val act = activity ?: (webView.context as? Activity) ?: return
+        mainHandler.post {
+            PermissionHelper.requestBluetoothPermissionIfNeeded(act)
         }
     }
 

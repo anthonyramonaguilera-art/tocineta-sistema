@@ -104,6 +104,7 @@ class AndroidBtTransport(
 }
 
 interface BluetoothChecker {
+    fun hasAdapter(): Boolean = true
     fun hasPermission(): Boolean
     fun isEnabled(): Boolean
     fun isPaired(mac: String): Boolean
@@ -125,6 +126,10 @@ class AndroidBluetoothChecker(
         } catch (_: Throwable) {
             null
         }
+
+    override fun hasAdapter(): Boolean {
+        return adapter != null
+    }
 
     override fun hasPermission(): Boolean {
         return context?.let { PermissionHelper.hasBluetoothPermission(it) } ?: true
@@ -154,12 +159,18 @@ class AndroidBluetoothChecker(
     @SuppressLint("MissingPermission")
     override fun getPairedPrinters(): List<PrinterInfo> {
         return try {
-            adapter?.bondedDevices?.map { device ->
-                PrinterInfo(
-                    name = device.name ?: device.address,
-                    mac = device.address
-                )
-            } ?: emptyList()
+            adapter?.bondedDevices
+                ?.filter { !it.address.isNullOrBlank() }
+                ?.map { device ->
+                    val rawName = try { device.name } catch (_: SecurityException) { null }
+                    val name = if (!rawName.isNullOrBlank()) rawName else "Dispositivo (${device.address})"
+                    PrinterInfo(
+                        name = name,
+                        mac = device.address
+                    )
+                }
+                ?.sortedBy { it.name.lowercase() }
+                ?: emptyList()
         } catch (_: SecurityException) {
             emptyList()
         } catch (_: Throwable) {
@@ -250,7 +261,7 @@ class PrinterSession(
     }
 
     override suspend fun getCapabilities(): CapabilitiesResult {
-        return CapabilitiesResult(bluetoothSpp = true)
+        return CapabilitiesResult(bluetoothSpp = btChecker.hasAdapter())
     }
 
     override suspend fun getSelectedPrinter(): PrinterInfo? {

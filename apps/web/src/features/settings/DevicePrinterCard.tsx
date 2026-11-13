@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Card, Badge, Icon, Button } from '../../ui/index.js';
 import {
   hasNativePrinting,
@@ -6,20 +7,36 @@ import {
   selectPrinterOnDevice,
   testPrintOnDevice,
   getBluetoothStatusOnDevice,
+  sendTerminalHeartbeatNow,
   type PairedPrinterInfo,
   type DeviceBluetoothStatus
 } from '../../lib/mobile-print-bridge.js';
 
-export const DevicePrinterCard: React.FC = () => {
+export interface DevicePrinterCardProps {
+  onPrinterConfigured?: () => void;
+  refreshTrigger?: number;
+}
+
+export const DevicePrinterCard: React.FC<DevicePrinterCardProps> = ({
+  onPrinterConfigured,
+  refreshTrigger
+}) => {
   const isApk = hasNativePrinting();
+  const queryClient = useQueryClient();
   const [printers, setPrinters] = useState<PairedPrinterInfo[]>([]);
   const [selectedPrinter, setSelectedPrinter] = useState<{ name: string; mac: string } | null>(null);
-  const [btStatus, setBtStatus] = useState<DeviceBluetoothStatus>({ enabled: false, hasPermission: false, connected: false });
+  const [btStatus, setBtStatus] = useState<DeviceBluetoothStatus>({
+    enabled: false,
+    hasPermission: false,
+    permission: false,
+    connected: false
+  });
   const [loading, setLoading] = useState<boolean>(true);
   const [actionMessage, setActionMessage] = useState<{ text: string; error?: boolean } | null>(null);
 
   const refreshState = useCallback(async () => {
     if (!hasNativePrinting()) return;
+    setLoading(true);
     try {
       const [list, status, current] = await Promise.all([
         listPairedPrintersOnDevice(),
@@ -31,14 +48,21 @@ export const DevicePrinterCard: React.FC = () => {
       setPrinters(list);
       setBtStatus(status);
       setSelectedPrinter(current);
+      if (current) {
+        await sendTerminalHeartbeatNow();
+        queryClient.invalidateQueries({ queryKey: ['terminalsList'] });
+        onPrinterConfigured?.();
+      }
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [onPrinterConfigured, queryClient]);
 
   useEffect(() => {
-    if (isApk) void refreshState();
-  }, [isApk, refreshState]);
+    if (isApk) {
+      void refreshState();
+    }
+  }, [isApk, refreshTrigger, refreshState]);
 
   if (!isApk) return null;
 
@@ -46,7 +70,10 @@ export const DevicePrinterCard: React.FC = () => {
     const res = await selectPrinterOnDevice(mac);
     if (res.ok) {
       setActionMessage({ text: 'Impresora seleccionada' });
+      await sendTerminalHeartbeatNow();
       await refreshState();
+      queryClient.invalidateQueries({ queryKey: ['terminalsList'] });
+      onPrinterConfigured?.();
     } else {
       setActionMessage({ text: res.error || 'Error al seleccionar', error: true });
     }
@@ -63,8 +90,10 @@ export const DevicePrinterCard: React.FC = () => {
     setTimeout(() => setActionMessage(null), 3000);
   };
 
+  const hasPerm = btStatus.hasPermission && btStatus.permission !== false;
+
   const renderStatus = () => {
-    if (!btStatus.hasPermission) {
+    if (!hasPerm) {
       return <Badge variant="danger">Sin permiso</Badge>;
     }
     if (!btStatus.enabled) {
@@ -87,6 +116,20 @@ export const DevicePrinterCard: React.FC = () => {
         </div>
         {renderStatus()}
       </div>
+
+      {!hasPerm && (
+        <div className="p-3 rounded-xl border border-danger/30 bg-danger/10 text-xs font-bold text-danger flex items-start gap-2">
+          <Icon name="AlertTriangle" size={16} className="shrink-0 mt-0.5" />
+          <span>Falta el permiso de Dispositivos cercanos en Android. Pulsa Actualizar o actívalo en Ajustes de la aplicación.</span>
+        </div>
+      )}
+
+      {hasPerm && !btStatus.enabled && (
+        <div className="p-3 rounded-xl border border-warning/30 bg-warning/10 text-xs font-bold text-warning flex items-start gap-2">
+          <Icon name="AlertTriangle" size={16} className="shrink-0 mt-0.5" />
+          <span>El Bluetooth del teléfono está apagado. Enciéndelo y pulsa Actualizar.</span>
+        </div>
+      )}
 
       <div className="space-y-2">
         <p className="text-[11px] font-bold text-ink-muted">Impresoras vinculadas</p>
@@ -117,15 +160,27 @@ export const DevicePrinterCard: React.FC = () => {
       </div>
 
       <div className="pt-2 flex flex-col sm:flex-row gap-2 items-center justify-between">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={() => void handleTestPrint()}
-          className="w-full sm:w-auto min-h-[48px] px-4 text-xs font-bold"
-          leftIcon="FileText"
-        >
-          Imprimir prueba
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void refreshState()}
+            className="w-full sm:w-auto min-h-[48px] px-4 text-xs font-bold"
+            leftIcon="RefreshCw"
+            disabled={loading}
+          >
+            Actualizar lista Bluetooth
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void handleTestPrint()}
+            className="w-full sm:w-auto min-h-[48px] px-4 text-xs font-bold"
+            leftIcon="FileText"
+          >
+            Imprimir prueba
+          </Button>
+        </div>
         {actionMessage && (
           <p className={`text-xs font-bold ${actionMessage.error ? 'text-danger' : 'text-success'}`}>
             {actionMessage.text}
