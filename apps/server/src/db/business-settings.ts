@@ -38,6 +38,8 @@ export interface BusinessSettingsRecord {
   kitchen_printer_id: string;
   print_delivery_note: number;
   print_flow: string;
+  receipt_destination: string;
+  kitchen_destination: string;
   is_demo_mode?: number;
   updated_at_ms: number;
 }
@@ -80,6 +82,8 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettingsRecord = {
   kitchen_printer_id: 'print_caja_usb',
   print_delivery_note: 1,
   print_flow: 'manual',
+  receipt_destination: 'payer_device',
+  kitchen_destination: 'payer_device',
   is_demo_mode: 0,
   updated_at_ms: Date.now()
 };
@@ -103,7 +107,7 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
           profitability_pro_enabled, fiscal_module_enabled, fiscal_price_mode,
           iva_enabled, iva_rate_bps, igtf_enabled, igtf_rate_bps, igtf_applies_to,
           blind_closure_enabled, partners_module_enabled, events_quote_enabled,
-          onboarding_completed, ask_table_on_order, inventory_operation_mode, inventory_tracking_since_ms, print_mode, receipt_printer_id, kitchen_printer_id, print_delivery_note, print_flow, updated_at_ms
+          onboarding_completed, ask_table_on_order, inventory_operation_mode, inventory_tracking_since_ms, print_mode, receipt_printer_id, kitchen_printer_id, print_delivery_note, print_flow, receipt_destination, kitchen_destination, updated_at_ms
         ) VALUES (
           'default', 'TOCINETA', 'V-17040918-0', '04249728209', 'Detrás de Torre Movistar, Puerto Ordaz',
           'Cocinamos con amor y servimos como mereces', NULL, '#EAB308',
@@ -112,7 +116,7 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
           '04249728209', '17040918', 75,
           0, 0, 'INCLUSIVE',
           0, 1600, 0, 300, 'CASH_USD',
-          0, 0, 1, 1, 0, 'free', NULL, 'one', 'print_caja_usb', 'print_caja_usb', 1, 'manual', ?
+          0, 0, 1, 1, 0, 'free', NULL, 'one', 'print_caja_usb', 'print_caja_usb', 1, 'manual', 'payer_device', 'payer_device', ?
         )
       `).run(now);
 
@@ -157,6 +161,8 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
       kitchen_printer_id: existing.kitchen_printer_id || DEFAULT_BUSINESS_SETTINGS.kitchen_printer_id,
       print_delivery_note: existing.print_delivery_note ?? DEFAULT_BUSINESS_SETTINGS.print_delivery_note,
       print_flow: existing.print_flow || DEFAULT_BUSINESS_SETTINGS.print_flow,
+      receipt_destination: existing.receipt_destination || DEFAULT_BUSINESS_SETTINGS.receipt_destination,
+      kitchen_destination: existing.kitchen_destination || DEFAULT_BUSINESS_SETTINGS.kitchen_destination,
       is_demo_mode: existing.is_demo_mode ?? 0,
       updated_at_ms: existing.updated_at_ms || Date.now()
     };

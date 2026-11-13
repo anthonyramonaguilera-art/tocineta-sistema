@@ -42,6 +42,14 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         printDeliveryNote: settings.print_delivery_note,
         print_flow: settings.print_flow,
         printFlow: settings.print_flow,
+        receipt_printer_id: settings.receipt_printer_id,
+        receiptPrinterId: settings.receipt_printer_id,
+        kitchen_printer_id: settings.kitchen_printer_id,
+        kitchenPrinterId: settings.kitchen_printer_id,
+        receipt_destination: settings.receipt_destination,
+        receiptDestination: settings.receipt_destination,
+        kitchen_destination: settings.kitchen_destination,
+        kitchenDestination: settings.kitchen_destination,
         ask_table_on_order: settings.ask_table_on_order ?? 0
       };
 
@@ -149,6 +157,60 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         newPrintFlow = rawPrintFlow;
       }
 
+      const rawReceiptPrinterId = b.receipt_printer_id ?? b.receiptPrinterId;
+      let newReceiptPrinterId = current.receipt_printer_id;
+      if (rawReceiptPrinterId !== undefined) {
+        const printer = rawDb.prepare('SELECT id, is_active FROM printers WHERE id = ?').get(rawReceiptPrinterId);
+        if (!printer || !printer.is_active) {
+          return reply.status(400).send({
+            success: false,
+            message: "receipt_printer_id debe existir en printers y estar activa",
+            field: 'receipt_printer_id'
+          });
+        }
+        newReceiptPrinterId = rawReceiptPrinterId;
+      }
+
+      const rawKitchenPrinterId = b.kitchen_printer_id ?? b.kitchenPrinterId;
+      let newKitchenPrinterId = current.kitchen_printer_id;
+      if (rawKitchenPrinterId !== undefined) {
+        const printer = rawDb.prepare('SELECT id, is_active FROM printers WHERE id = ?').get(rawKitchenPrinterId);
+        if (!printer || !printer.is_active) {
+          return reply.status(400).send({
+            success: false,
+            message: "kitchen_printer_id debe existir en printers y estar activa",
+            field: 'kitchen_printer_id'
+          });
+        }
+        newKitchenPrinterId = rawKitchenPrinterId;
+      }
+
+      const rawReceiptDestination = b.receipt_destination ?? b.receiptDestination;
+      let newReceiptDestination = current.receipt_destination;
+      if (rawReceiptDestination !== undefined) {
+        if (rawReceiptDestination !== 'payer_device' && rawReceiptDestination !== 'fixed_printer') {
+          return reply.status(400).send({
+            success: false,
+            message: "receipt_destination debe ser 'payer_device' o 'fixed_printer'",
+            field: 'receipt_destination'
+          });
+        }
+        newReceiptDestination = rawReceiptDestination;
+      }
+
+      const rawKitchenDestination = b.kitchen_destination ?? b.kitchenDestination;
+      let newKitchenDestination = current.kitchen_destination;
+      if (rawKitchenDestination !== undefined) {
+        if (rawKitchenDestination !== 'payer_device' && rawKitchenDestination !== 'fixed_printer') {
+          return reply.status(400).send({
+            success: false,
+            message: "kitchen_destination debe ser 'payer_device' o 'fixed_printer'",
+            field: 'kitchen_destination'
+          });
+        }
+        newKitchenDestination = rawKitchenDestination;
+      }
+
       rawDb.prepare(`
         UPDATE business_settings
         SET business_name = ?,
@@ -176,6 +238,10 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
             print_mode = ?,
             print_delivery_note = ?,
             print_flow = ?,
+            receipt_printer_id = ?,
+            kitchen_printer_id = ?,
+            receipt_destination = ?,
+            kitchen_destination = ?,
             updated_at_ms = ?
         WHERE id = 'default'
       `).run(
@@ -204,6 +270,10 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
         newPrintMode,
         newPrintDeliveryNote,
         newPrintFlow,
+        newReceiptPrinterId,
+        newKitchenPrinterId,
+        newReceiptDestination,
+        newKitchenDestination,
         now
       );
 
@@ -242,6 +312,14 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
           printDeliveryNote: updated.print_delivery_note,
           print_flow: updated.print_flow,
           printFlow: updated.print_flow,
+          receipt_printer_id: updated.receipt_printer_id,
+          receiptPrinterId: updated.receipt_printer_id,
+          kitchen_printer_id: updated.kitchen_printer_id,
+          kitchenPrinterId: updated.kitchen_printer_id,
+          receipt_destination: updated.receipt_destination,
+          receiptDestination: updated.receipt_destination,
+          kitchen_destination: updated.kitchen_destination,
+          kitchenDestination: updated.kitchen_destination,
           ask_table_on_order: updated.ask_table_on_order ?? 0
         }
       });
