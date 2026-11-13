@@ -31,8 +31,9 @@ import androidx.webkit.WebViewCompat
 import androidx.webkit.WebViewFeature
 import com.tocineta.terminal.bridge.BridgeScript
 import com.tocineta.terminal.bridge.NativeBridge
-import com.tocineta.terminal.bridge.NoopPrinterGateway
 import com.tocineta.terminal.bridge.PrinterGateway
+import com.tocineta.terminal.bt.PermissionHelper
+import com.tocineta.terminal.bt.PrinterSession
 import com.tocineta.terminal.net.ServerDiscovery
 import com.tocineta.terminal.net.WifiBinder
 import kotlinx.coroutines.CoroutineScope
@@ -50,7 +51,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var wifiBinder: WifiBinder
 
     private lateinit var nativeBridge: NativeBridge
-    private val printerGateway: PrinterGateway = NoopPrinterGateway()
+    private lateinit var printerGateway: PrinterGateway
     private var bridgeScript: String = ""
     private var documentStartScriptHandler: ScriptHandler? = null
     private var isDocumentStartScriptActive = false
@@ -117,10 +118,22 @@ class MainActivity : AppCompatActivity() {
         if (::nativeBridge.isInitialized) {
             nativeBridge.destroy()
         }
+        if (::printerGateway.isInitialized && printerGateway is PrinterSession) {
+            (printerGateway as PrinterSession).destroy()
+        }
         discoveryJob?.cancel()
         activityScope.cancel()
         wifiBinder.release()
         super.onDestroy()
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+        PermissionHelper.handlePermissionResult(this, requestCode, grantResults)
     }
 
     private fun startDiscoveryFlow() {
@@ -226,6 +239,7 @@ class MainActivity : AppCompatActivity() {
             cacheMode = WebSettings.LOAD_DEFAULT
         }
 
+        printerGateway = PrinterSession(this)
         nativeBridge = NativeBridge(webView, printerGateway)
         webView.addJavascriptInterface(nativeBridge, NativeBridge.JAVASCRIPT_INTERFACE_NAME)
 
