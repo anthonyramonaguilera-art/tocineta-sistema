@@ -37,6 +37,14 @@ export const incidentsRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
 
+    const rawTerminalId = request.headers['x-terminal-id'];
+    const requesterTerminalId =
+      typeof rawTerminalId === 'string' &&
+      rawTerminalId.trim().length >= 8 &&
+      rawTerminalId.trim().length <= 64
+        ? rawTerminalId.trim()
+        : null;
+
     const input: ReportIncidentInput = {
       reasonCode: body.reason_code || body.reasonCode,
       responsibleArea: body.responsible_area || body.responsibleArea,
@@ -45,7 +53,8 @@ export const incidentsRoutes: FastifyPluginAsync = async (fastify) => {
       workerId: body.worker_id || body.workerId,
       description: body.description,
       estimatedLossUsdCents: body.estimated_loss_usd_cents ?? body.estimatedLossUsdCents,
-      refundMethod: body.refund_method || body.refundMethod
+      refundMethod: body.refund_method || body.refundMethod,
+      requesterTerminalId
     };
 
     const key = (request as any).user?.id ?? request.ip;

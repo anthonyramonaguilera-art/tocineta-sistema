@@ -444,11 +444,20 @@ export const printingRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
+      const rawTerminalId = request.headers['x-terminal-id'];
+      const requesterTerminalId =
+        typeof rawTerminalId === 'string' &&
+        rawTerminalId.trim().length >= 8 &&
+        rawTerminalId.trim().length <= 64
+          ? rawTerminalId.trim()
+          : null;
+
       const result = createRefirePrintJob(
         rawDb,
         parsed.data.orderId,
         parsed.data.reason,
-        parsed.data.pin
+        parsed.data.pin,
+        requesterTerminalId
       );
 
       if (fastify.printingWorker) {

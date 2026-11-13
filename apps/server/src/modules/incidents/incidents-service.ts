@@ -18,7 +18,7 @@ import {
   loadOrderReceiptDataFromDb,
   buildRefireTicketIR
 } from '../printing/templates.js';
-import { getPrinterConfig, resolveKitchenPrinterId } from '../printing/worker.js';
+import { getPrinterConfig, resolveTicketTarget } from '../printing/worker.js';
 import { reverseCouponRedemptionForOrder } from '../coupons/coupon-service.js';
 import { revertInventoryForOrder } from '../profitability/recipes-service.js';
 import { resolveLocationId } from '../profitability/locations-service.js';
@@ -34,6 +34,7 @@ export interface ReportIncidentInput {
   description?: string;
   estimatedLossUsdCents?: number;
   refundMethod?: 'CASH_USD' | 'CASH_BS' | 'PAGO_MOVIL';
+  requesterTerminalId?: string | null;
 }
 
 export interface IncidentResult {
@@ -109,17 +110,27 @@ export function reportOrderIncident(
     // Cargar datos de la orden y líneas de cocina para ticket de reposición
     const { order: receiptOrder, kitchenLines } = loadOrderReceiptDataFromDb(rawDb, orderId);
     const refireIR = buildRefireTicketIR(receiptOrder, kitchenLines, input.reasonCode);
-    const kitchenPrinterId = resolveKitchenPrinterId(rawDb);
-    const cocinaConfig = getPrinterConfig(rawDb, kitchenPrinterId);
+    const targetResult = resolveTicketTarget(rawDb, 'comanda', input.requesterTerminalId ?? null);
+    const cocinaConfig = getPrinterConfig(rawDb, targetResult.printerId);
     const refireBytes = Buffer.from(renderTicketToEscPos(refireIR, cocinaConfig));
 
     const printJobId = `pjob_${generateUuidV7()}`;
     rawDb.prepare(`
       INSERT INTO print_jobs (
         id, printer_id, order_id, job_type, payload_bytes,
-        ticket_ir_json, station, status, attempts, created_at_ms
-      ) VALUES (?, ?, ?, 'REPOSICION_COCINA', ?, ?, 'cocina', 'en_cola', 0, ?)
-    `).run(printJobId, kitchenPrinterId, orderId, refireBytes, JSON.stringify(refireIR), now);
+        ticket_ir_json, station, status, attempts, created_at_ms,
+        target, target_terminal_id
+      ) VALUES (?, ?, ?, 'REPOSICION_COCINA', ?, ?, 'cocina', 'en_cola', 0, ?, ?, ?)
+    `).run(
+      printJobId,
+      targetResult.printerId,
+      orderId,
+      refireBytes,
+      JSON.stringify(refireIR),
+      now,
+      targetResult.target,
+      targetResult.terminalId
+    );
 
     // Reactivar orden y líneas en cocina/KDS sin alterar pagos ni caja
     rawDb.prepare(`

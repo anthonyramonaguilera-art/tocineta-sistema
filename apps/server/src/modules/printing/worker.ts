@@ -32,7 +32,8 @@ import {
   buildReceiptTicketIR,
   buildKitchenTicketIRs,
   buildReprintTicketIR,
-  buildRefireTicketIR
+  buildRefireTicketIR,
+  buildOrderModificationTicketIR
 } from './templates.js';
 import { verifyPin } from '../auth/pin.js';
 import { isTerminalAlive, getTerminalPrinterId } from './terminal-registry.js';
@@ -182,6 +183,9 @@ export interface PrintJobRow {
   reprinted_by_user_id: string | null;
   created_at_ms: number;
   completed_at_ms: number | null;
+  target?: 'server' | 'client';
+  target_terminal_id?: string | null;
+  claimed_at_ms?: number | null;
 }
 
 // Ruta al script de PowerShell de WinSpool RAW
@@ -764,12 +768,16 @@ export function reprintPrintJob(
   const now = Date.now();
   const newJobId = `pjob_${generateUuidV7()}`;
 
+  const target = job.target || 'server';
+  const targetTerminalId = job.target_terminal_id ?? null;
+
   rawDb.prepare(`
     INSERT INTO print_jobs (
       id, printer_id, order_id, job_type, payload_bytes,
       ticket_ir_json, station, status, attempts, reprint_count,
-      reprint_reason, reprinted_by_user_id, created_at_ms
-    ) VALUES (?, ?, ?, 'REIMPRESION', ?, ?, ?, 'en_cola', 0, ?, ?, ?, ?)
+      reprint_reason, reprinted_by_user_id, created_at_ms,
+      target, target_terminal_id
+    ) VALUES (?, ?, ?, 'REIMPRESION', ?, ?, ?, 'en_cola', 0, ?, ?, ?, ?, ?, ?)
   `).run(
     newJobId,
     job.printer_id,
@@ -780,7 +788,9 @@ export function reprintPrintJob(
     newReprintCount,
     input.reason,
     auth.user.id,
-    now
+    now,
+    target,
+    targetTerminalId
   );
 
   appendAuditEvent(rawDb, {
@@ -822,7 +832,7 @@ export function resolveAttentionJob(
   } else {
     rawDb.prepare(`
       UPDATE print_jobs
-      SET status = 'en_cola', attempts = 0, error_message = NULL
+      SET status = 'en_cola', attempts = 0, error_message = NULL, claimed_at_ms = NULL
       WHERE id = ?
     `).run(jobId);
     return { success: true, status: 'en_cola' };
@@ -836,7 +846,8 @@ export function createRefirePrintJob(
   rawDb: Database.Database,
   orderId: string,
   reason: string,
-  pin: string
+  pin: string,
+  requesterTerminalId?: string | null
 ): { success: boolean; newJobId: string } {
   const auth = authenticateByPin(rawDb, pin);
   if (!auth.authenticated || !auth.user) {
@@ -845,8 +856,8 @@ export function createRefirePrintJob(
 
   const { order, kitchenLines } = loadOrderReceiptDataFromDb(rawDb, orderId);
   const refireIR = buildRefireTicketIR(order, kitchenLines, reason);
-  const kitchenPrinterId = resolveKitchenPrinterId(rawDb);
-  const cocinaConfig = getPrinterConfig(rawDb, kitchenPrinterId);
+  const targetResult = resolveTicketTarget(rawDb, 'comanda', requesterTerminalId);
+  const cocinaConfig = getPrinterConfig(rawDb, targetResult.printerId);
   const refireBytes = Buffer.from(renderTicketToEscPos(refireIR, cocinaConfig));
 
   const now = Date.now();
@@ -855,9 +866,19 @@ export function createRefirePrintJob(
   rawDb.prepare(`
     INSERT INTO print_jobs (
       id, printer_id, order_id, job_type, payload_bytes,
-      ticket_ir_json, station, status, attempts, created_at_ms
-    ) VALUES (?, ?, ?, 'REPOSICION_COCINA', ?, ?, 'cocina', 'en_cola', 0, ?)
-  `).run(newJobId, kitchenPrinterId, orderId, refireBytes, JSON.stringify(refireIR), now);
+      ticket_ir_json, station, status, attempts, created_at_ms,
+      target, target_terminal_id
+    ) VALUES (?, ?, ?, 'REPOSICION_COCINA', ?, ?, 'cocina', 'en_cola', 0, ?, ?, ?)
+  `).run(
+    newJobId,
+    targetResult.printerId,
+    orderId,
+    refireBytes,
+    JSON.stringify(refireIR),
+    now,
+    targetResult.target,
+    targetResult.terminalId
+  );
 
   // Reactivar orden y líneas en KDS
   rawDb.prepare(`
@@ -896,6 +917,64 @@ export function createRefirePrintJob(
       orderNumber: order.orderNumber,
       reason,
       isRefire: true
+    }
+  });
+
+  return { success: true, newJobId };
+}
+
+
+/**
+ * Cambio o anulación de comanda de cocina
+ */
+export function createOrderChangePrintJob(
+  rawDb: Database.Database,
+  orderId: string,
+  action: 'MODIFICACION' | 'ANULACION',
+  reason: string,
+  pin: string,
+  requesterTerminalId?: string | null
+): { success: boolean; newJobId: string } {
+  const auth = authenticateByPin(rawDb, pin);
+  if (!auth.authenticated || !auth.user) {
+    throw new Error('PIN inválido para autorizar cambio de comanda');
+  }
+
+  const { order } = loadOrderReceiptDataFromDb(rawDb, orderId);
+  const changeIR = buildOrderModificationTicketIR(order, action, reason, auth.user.name);
+  const targetResult = resolveTicketTarget(rawDb, 'comanda', requesterTerminalId);
+  const cocinaConfig = getPrinterConfig(rawDb, targetResult.printerId);
+  const changeBytes = Buffer.from(renderTicketToEscPos(changeIR, cocinaConfig));
+
+  const now = Date.now();
+  const newJobId = `pjob_${generateUuidV7()}`;
+
+  rawDb.prepare(`
+    INSERT INTO print_jobs (
+      id, printer_id, order_id, job_type, payload_bytes,
+      ticket_ir_json, station, status, attempts, created_at_ms,
+      target, target_terminal_id
+    ) VALUES (?, ?, ?, 'CAMBIO_ORDEN', ?, ?, 'cocina', 'en_cola', 0, ?, ?, ?)
+  `).run(
+    newJobId,
+    targetResult.printerId,
+    orderId,
+    changeBytes,
+    JSON.stringify(changeIR),
+    now,
+    targetResult.target,
+    targetResult.terminalId
+  );
+
+  appendAuditEvent(rawDb, {
+    actorUserId: auth.user.id,
+    action: 'KITCHEN_ORDER_CHANGE_PRINTED',
+    entityType: 'order',
+    entityId: orderId,
+    payload: {
+      newJobId,
+      action,
+      reason
     }
   });
 
