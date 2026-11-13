@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { formatCaracasDateTime, type HealthResponse } from '@tocineta/shared';
 import { getDatabaseContext } from '../db/connection.js';
+import { getServerId } from '../lib/server-id.js';
 
 export const healthRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.get('/api/health', async (_req, reply) => {
@@ -15,7 +16,8 @@ export const healthRoutes: FastifyPluginAsync = async (fastify) => {
       synchronous: pragmas.synchronous,
       foreignKeys: pragmas.foreignKeys,
       timestampUtcMs: Date.now(),
-      localTimeCaracas: formatCaracasDateTime()
+      localTimeCaracas: formatCaracasDateTime(),
+      serverId: getServerId()
     };
 
     return reply.status(200).send(response);

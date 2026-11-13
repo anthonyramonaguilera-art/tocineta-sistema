@@ -67,3 +67,16 @@ export function getUploadsDir(): string {
   }
   return uploadsDir;
 }
+
+export function getDataDir(): string {
+  const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
+  const isProd = process.env.NODE_ENV === 'production' && !isTest;
+  const rawDbPath = process.env.DB_PATH || './data/tocineta.db';
+  const baseDir = (isProd && !path.isAbsolute(rawDbPath)) ? getProjectRoot() : process.cwd();
+  const dbPath = path.resolve(baseDir, rawDbPath);
+  return path.dirname(dbPath);
+}
+
+export function getServerIdPath(): string {
+  return path.join(getDataDir(), 'server-id.txt');
+}

@@ -8,7 +8,8 @@ export const HealthResponseSchema = z.object({
   synchronous: z.number(),
   foreignKeys: z.number(),
   timestampUtcMs: z.number(),
-  localTimeCaracas: z.string()
+  localTimeCaracas: z.string(),
+  serverId: z.string()
 });
 
 export type HealthResponse = z.infer<typeof HealthResponseSchema>;
