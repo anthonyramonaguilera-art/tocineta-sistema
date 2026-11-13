@@ -21,6 +21,8 @@ export interface BusinessSettings {
   print_flow?: string;
   kitchen_printer_id?: string;
   receipt_printer_id?: string;
+  receipt_destination?: 'payer_device' | 'fixed_printer';
+  kitchen_destination?: 'payer_device' | 'fixed_printer';
   banesco_pago_movil_phone: string;
   banesco_pago_movil_id: string;
   pos_fee_bps: number;
@@ -46,4 +48,17 @@ export interface BusinessLocation {
   address?: string | null;
   phone?: string | null;
   is_active: number;
+}
+
+export interface PrinterItem {
+  id: string;
+  name: string;
+  connection_type: string;
+  address: string;
+  columns?: number;
+  codepage?: number;
+  has_cutter?: number;
+  has_buzzer?: number;
+  is_active: number;
+  owner_terminal_id?: string | null;
 }

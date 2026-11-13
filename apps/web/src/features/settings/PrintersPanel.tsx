@@ -1,21 +1,10 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Badge, Icon } from '../../ui/index.js';
-import type { BusinessSettings } from './types.js';
+import type { BusinessSettings, PrinterItem } from './types.js';
 import { PrintFlowSettings } from './PrintFlowSettings.js';
 import { apiFetch } from '../../api/client';
 
-interface PrinterItem {
-  id: string;
-  name: string;
-  connection_type: string;
-  address: string;
-  columns: number;
-  codepage: number;
-  has_cutter: number;
-  has_buzzer: number;
-  is_active: number;
-}
 
 interface PrintersPanelProps {
   token?: string | null;
@@ -158,7 +147,7 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
         <div className="flex items-center gap-2">
           <Icon name="Printer" size={18} className="text-primary" />
           <h3 className="font-extrabold text-sm text-ink uppercase tracking-wide">
-            Impresoras de Windows y Hardware Térmico
+            Impresoras del Sistema y Hardware Térmico
           </h3>
         </div>
         <Badge variant={hasWindowsPrinters ? 'success' : 'warning'}>
@@ -174,6 +163,7 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
 
       <PrintFlowSettings
         settings={settings}
+        printers={printers}
         isUniquePrinting={isUniquePrinting}
         onUpdatePrintMode={(mode) => updateSettingsMutation.mutate({ print_mode: mode })}
         onUpdateSettings={(payload) => updateSettingsMutation.mutate(payload)}
@@ -212,14 +202,14 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-2">
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-ink-muted mb-1">
-                Seleccionar Impresora del Spooler de Windows
+                Seleccionar Impresora del Sistema
               </label>
               <select
                 value={cajaPrinter.address}
                 onChange={(e) => updatePrinterMutation.mutate({ id: cajaPrinter.id, payload: { address: e.target.value, name: e.target.value, connection_type: 'SPOOLER_RAW_USB' } })}
                 className="w-full min-h-[48px] rounded-xl border border-border bg-surface px-3 text-xs font-bold text-ink outline-none focus:border-primary"
               >
-                <option value="">-- Seleccionar Impresora Windows --</option>
+                <option value="">-- Seleccionar Impresora del Sistema --</option>
                 {windowsPrinters.map((wp) => (
                   <option key={wp.Name} value={wp.Name}>
                     {wp.Name} {wp.PrinterStatus ? `(${wp.PrinterStatus})` : ''}
@@ -278,14 +268,14 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs pt-2">
             <div className="sm:col-span-2">
               <label className="block text-[11px] font-bold text-ink-muted mb-1">
-                Seleccionar Impresora del Spooler de Windows
+                Seleccionar Impresora del Sistema
               </label>
               <select
                 value={cocinaPrinter.address}
                 onChange={(e) => updatePrinterMutation.mutate({ id: cocinaPrinter.id, payload: { address: e.target.value, name: e.target.value, connection_type: 'SPOOLER_RAW_USB' } })}
                 className="w-full min-h-[48px] rounded-xl border border-border bg-surface px-3 text-xs font-bold text-ink outline-none focus:border-primary"
               >
-                <option value="">-- Seleccionar Impresora Windows --</option>
+                <option value="">-- Seleccionar Impresora del Sistema --</option>
                 {windowsPrinters.map((wp) => (
                   <option key={wp.Name} value={wp.Name}>
                     {wp.Name} {wp.PrinterStatus ? `(${wp.PrinterStatus})` : ''}
