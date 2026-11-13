@@ -184,6 +184,9 @@ class PrinterSession(
     private val btChecker: BluetoothChecker = context?.let { AndroidBluetoothChecker(it) } ?: DefaultTestBluetoothChecker()
 ) : PrinterGateway {
 
+    @Volatile
+    var onPrinterSelectedListener: ((PrinterInfo) -> Unit)? = null
+
     private val printMutex = Mutex()
     private var inMemoryPrinter: PrinterInfo? = null
 
@@ -264,6 +267,7 @@ class PrinterSession(
         val info = PrinterInfo(name = name, mac = mac)
         inMemoryPrinter = info
         store?.saveSelectedPrinter(name, mac)
+        onPrinterSelectedListener?.invoke(info)
         return SelectPrinterResult(ok = true)
     }
 

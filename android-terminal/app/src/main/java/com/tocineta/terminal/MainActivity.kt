@@ -2,11 +2,14 @@ package com.tocineta.terminal
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.content.Intent
 import android.content.SharedPreferences
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
+import android.os.PowerManager
+import android.provider.Settings
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.View
@@ -25,6 +28,7 @@ import android.widget.ProgressBar
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
+import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.webkit.ScriptHandler
 import androidx.webkit.WebViewCompat
@@ -34,8 +38,10 @@ import com.tocineta.terminal.bridge.NativeBridge
 import com.tocineta.terminal.bridge.PrinterGateway
 import com.tocineta.terminal.bt.PermissionHelper
 import com.tocineta.terminal.bt.PrinterSession
+import com.tocineta.terminal.bt.PrinterStore
 import com.tocineta.terminal.net.ServerDiscovery
 import com.tocineta.terminal.net.WifiBinder
+import com.tocineta.terminal.service.PrintKeepAliveController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -52,6 +58,7 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var nativeBridge: NativeBridge
     private lateinit var printerGateway: PrinterGateway
+    private lateinit var keepAliveController: PrintKeepAliveController
     private var bridgeScript: String = ""
     private var documentStartScriptHandler: ScriptHandler? = null
     private var isDocumentStartScriptActive = false
@@ -72,6 +79,7 @@ class MainActivity : AppCompatActivity() {
         private const val PREFS_NAME = "tocineta_terminal_prefs"
         private const val KEY_SERVER_URL = "server_url"
         private const val KEY_SERVER_ID = "server_id"
+        private const val KEY_BATTERY_PROMPT_SHOWN = "battery_prompt_shown"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -88,6 +96,8 @@ class MainActivity : AppCompatActivity() {
         wifiBinder = WifiBinder(this)
         wifiBinder.start()
 
+        keepAliveController = PrintKeepAliveController.getInstance(this)
+
         rootContainer = FrameLayout(this).apply {
             layoutParams = ViewGroup.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -100,6 +110,12 @@ class MainActivity : AppCompatActivity() {
         setupSearchingView()
         setupErrorView()
         setupNativeConfigView()
+
+        val printerStore = PrinterStore(this)
+        if (printerStore.getSelectedPrinter() != null) {
+            keepAliveController.start()
+            promptBatteryOptimizationIfNeeded()
+        }
 
         // Iniciar flujo de descubrimiento
         startDiscoveryFlow()
@@ -118,8 +134,11 @@ class MainActivity : AppCompatActivity() {
         if (::nativeBridge.isInitialized) {
             nativeBridge.destroy()
         }
-        if (::printerGateway.isInitialized && printerGateway is PrinterSession) {
-            (printerGateway as PrinterSession).destroy()
+        if (isFinishing) {
+            if (::keepAliveController.isInitialized) {
+                keepAliveController.stop()
+                keepAliveController.destroySession()
+            }
         }
         discoveryJob?.cancel()
         activityScope.cancel()
@@ -239,7 +258,13 @@ class MainActivity : AppCompatActivity() {
             cacheMode = WebSettings.LOAD_DEFAULT
         }
 
-        printerGateway = PrinterSession(this)
+        printerGateway = keepAliveController.printerSession
+        (printerGateway as? PrinterSession)?.onPrinterSelectedListener = {
+            keepAliveController.start()
+            runOnUiThread {
+                promptBatteryOptimizationIfNeeded()
+            }
+        }
         nativeBridge = NativeBridge(webView, printerGateway)
         webView.addJavascriptInterface(nativeBridge, NativeBridge.JAVASCRIPT_INTERFACE_NAME)
 
@@ -437,9 +462,26 @@ class MainActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                bottomMargin = dpToPx(12)
+            }
             setOnClickListener {
                 showConfigView()
+            }
+        }
+
+        val exitButton = Button(this).apply {
+            text = "Salir de la aplicación"
+            minHeight = dpToPx(48)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            setOnClickListener {
+                if (::keepAliveController.isInitialized) {
+                    keepAliveController.stop()
+                }
+                finishAndRemoveTask()
             }
         }
 
@@ -448,6 +490,7 @@ class MainActivity : AppCompatActivity() {
         errorView.addView(retryButton)
         errorView.addView(searchAgainButton)
         errorView.addView(changeServerButton)
+        errorView.addView(exitButton)
 
         rootContainer.addView(errorView)
     }
@@ -511,7 +554,9 @@ class MainActivity : AppCompatActivity() {
             layoutParams = LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT
-            )
+            ).apply {
+                bottomMargin = dpToPx(12)
+            }
             setOnClickListener {
                 val inputUrl = urlInput.text.toString().trim()
                 if (isValidHttpUrl(inputUrl)) {
@@ -540,10 +585,26 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        val exitButton = Button(this).apply {
+            text = "Salir de la aplicación"
+            minHeight = dpToPx(48)
+            layoutParams = LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT
+            )
+            setOnClickListener {
+                if (::keepAliveController.isInitialized) {
+                    keepAliveController.stop()
+                }
+                finishAndRemoveTask()
+            }
+        }
+
         setupView.addView(titleView)
         setupView.addView(labelView)
         setupView.addView(urlInput)
         setupView.addView(connectButton)
+        setupView.addView(exitButton)
 
         rootContainer.addView(setupView)
     }
@@ -643,5 +704,37 @@ class MainActivity : AppCompatActivity() {
             dp.toFloat(),
             resources.displayMetrics
         ).toInt()
+    }
+
+    private fun promptBatteryOptimizationIfNeeded() {
+        if (isFinishing || isDestroyed) return
+        val promptShown = prefs.getBoolean(KEY_BATTERY_PROMPT_SHOWN, false)
+        if (promptShown) return
+
+        val powerManager = getSystemService(Context.POWER_SERVICE) as? PowerManager ?: return
+        if (!powerManager.isIgnoringBatteryOptimizations(packageName)) {
+            prefs.edit().putBoolean(KEY_BATTERY_PROMPT_SHOWN, true).apply()
+            AlertDialog.Builder(this)
+                .setTitle("TOCINETA")
+                .setMessage("Para que las impresiones no se interrumpan, permite que TOCINETA funcione sin restricciones de batería")
+                .setPositiveButton("Permitir") { _, _ ->
+                    try {
+                        @SuppressLint("BatteryLife")
+                        val intent = Intent(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
+                            data = Uri.parse("package:$packageName")
+                        }
+                        startActivity(intent)
+                    } catch (_: Exception) {
+                        try {
+                            startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+                .setNegativeButton("Cancelar", null)
+                .show()
+        } else {
+            prefs.edit().putBoolean(KEY_BATTERY_PROMPT_SHOWN, true).apply()
+        }
     }
 }
