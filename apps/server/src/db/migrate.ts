@@ -172,15 +172,42 @@ export async function runMigrations(
       }
     }
 
-    const executeMigration = rawDb.transaction(() => {
-      executeSqlIdempotently(rawDb, sqlContent);
-      rawDb.prepare('INSERT INTO _migrations (name, applied_at_ms) VALUES (?, ?)').run(
-        migrationFile,
-        Date.now()
-      );
-    });
+    const firstLine = (sqlContent.replace(/^\uFEFF/, '').split(/\r?\n/)[0] ?? '').trim();
+    const hasFkOffDirective = firstLine === '-- tocineta:fk-off';
 
-    executeMigration();
+    if (hasFkOffDirective) {
+      rawDb.pragma('foreign_keys = OFF');
+      try {
+        const executeMigration = rawDb.transaction(() => {
+          executeSqlIdempotently(rawDb, sqlContent);
+          const fkViolations = rawDb.prepare('PRAGMA foreign_key_check').all() as any[];
+          if (fkViolations.length > 0) {
+            throw new Error(
+              `MIGRACION_FK_ERROR: foreign_key_check falló con ${fkViolations.length} violación(es) en ${migrationFile}: ${JSON.stringify(fkViolations)}`
+            );
+          }
+          rawDb.prepare('INSERT INTO _migrations (name, applied_at_ms) VALUES (?, ?)').run(
+            migrationFile,
+            Date.now()
+          );
+        });
+
+        executeMigration();
+      } finally {
+        rawDb.pragma('foreign_keys = ON');
+      }
+    } else {
+      const executeMigration = rawDb.transaction(() => {
+        executeSqlIdempotently(rawDb, sqlContent);
+        rawDb.prepare('INSERT INTO _migrations (name, applied_at_ms) VALUES (?, ?)').run(
+          migrationFile,
+          Date.now()
+        );
+      });
+
+      executeMigration();
+    }
+
     appliedNow.push(migrationFile);
   }
 

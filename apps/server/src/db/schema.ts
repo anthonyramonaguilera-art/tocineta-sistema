@@ -317,7 +317,8 @@ export const ingredients = sqliteTable('ingredients', {
   isBarraLibre: integer('is_barra_libre').notNull().default(0),
   extraPriceUsdCents: integer('extra_price_usd_cents').notNull().default(0),
   internalCostUsdCents: integer('internal_cost_usd_cents').notNull().default(0),
-  isActive: integer('is_active').notNull().default(1)
+  isActive: integer('is_active').notNull().default(1),
+  ownerTerminalId: text('owner_terminal_id')
 });
 
 export const productIngredients = sqliteTable('product_ingredients', {
