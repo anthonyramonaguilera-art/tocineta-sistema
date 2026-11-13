@@ -4,6 +4,7 @@ import { canUserProcessPayments } from '@tocineta/shared';
 import { useAuth } from '../context/AuthContext.js';
 import { queryClient, ALLOWED_TABS_BY_ROLE, type TabType } from '../App.js';
 import { apiFetch } from '../api/client.js';
+import { startTerminalHeartbeat } from '../lib/mobile-print-bridge.js';
 import { AppHeader } from './AppHeader.js';
 import { AppSidebar } from './AppSidebar.js';
 import { PrintAttentionModal } from '../features/cashier/PrintAttentionModal.js';
@@ -54,6 +55,15 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [previewJobId, setPreviewJobId] = useState<string | null>(null);
 
   const mustChangePin = Boolean(user?.mustChangePin);
+
+  // Latido del terminal para puente nativo de impresión tras iniciar sesión
+  useEffect(() => {
+    if (!token) return;
+    const cancelHeartbeat = startTerminalHeartbeat();
+    return () => {
+      cancelHeartbeat();
+    };
+  }, [token]);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);

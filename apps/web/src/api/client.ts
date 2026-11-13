@@ -1,4 +1,5 @@
 import { SystemHealthResponseSchema, type SystemHealthResponse } from '@tocineta/shared';
+import { getTerminalId } from '../lib/terminal-identity.js';
 
 export const TOKEN_KEY = 'tocineta_token';
 
@@ -25,6 +26,17 @@ export async function apiFetch(input: string, init?: RequestInit): Promise<Respo
 
   if (token && !headers.has('Authorization')) {
     headers.set('Authorization', `Bearer ${token}`);
+  }
+
+  if (!headers.has('X-Terminal-Id')) {
+    try {
+      const terminalId = getTerminalId();
+      if (terminalId) {
+        headers.set('X-Terminal-Id', terminalId);
+      }
+    } catch {
+      // Ignorar si no está disponible
+    }
   }
 
   if (
