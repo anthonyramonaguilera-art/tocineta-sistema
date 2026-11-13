@@ -1,17 +1,26 @@
 # BITÁCORA TÉCNICA Y DE CONTEXTO — TOCINETA
-Última actualización: 2026-11-12 · Rama: r2/go-live · Última migración: 0041_free_item.sql · Tests: 587/587 verdes (100%)
+Última actualización: 2026-11-13 · Rama: feat/impresion-movil · Última migración: 0043_printers_client_bt.sql · Tests: 642+ aprobados en suites de servidor
 
 ---
 
 ## 1. RESUMEN EJECUTIVO Y ESTADO ACTUAL
 
 - **Oleada / Fase actual:**
-  - **Fase de Blindaje Backend y Frontend (Oleadas 1, 2 y 3) 100% COMPLETADA y sellada en git** [VERIFICADO: git log `da8c0e6`].
-  - **Parche de Consolidación QA / Go-Live (Olas A, B y C) en preparación:** Planificación y especificación técnica exhaustiva para subsanar los hallazgos de campo de dinero, cierre Z, catálogo y UX móvil.
-  - La suite de pruebas de servidor cuenta con **587 pruebas unitarias aprobadas de 587 (83 suites, 100% VERDE)** [VERIFICADO: ejecución Vitest 2026-11-12].
-  - Gobernanza de diseño UI (`pnpm run guard`) y compilación TypeScript (`tsc --noEmit` en web, shared y server) se encuentran en **0 errores** [VERIFICADO: ejecución en consola 2026-11-12].
-  - Base de datos consolidada hasta la migración `0041_free_item.sql`. Próxima migración asignada: `0042_client_print_routing.sql`.
-  - **Arquitectura de Impresión Móvil Bluetooth MP583 (58mm) y Terminal Android:** Operatividad definida por el dueño: Laptop fija USB en cocina como comandera (`print_caja_usb`), y teléfonos móviles (2 concurrentes) cobrando con su propia impresora Bluetooth MP583 de 58mm para notas de entrega. Plan en 3 etapas: Etapa 1 (backend de ruteo y endpoints de payload ESC/POS en Fastify + conector web), Etapa 2 (APK terminal Capacitor con plugin Kotlin SPP + bindProcessToNetwork + auto-descubrimiento por mDNS/barrido), Etapa 3 (Ajustes de terminal y homologación en campo).
+  - **Fase de Impresión Móvil Bluetooth (MP583 58mm) y Ruteo Dinámico de Comandas 100% COMPLETADA y verificada** [VERIFICADO: commits `de355d1` a `63456cc`].
+  - **Arquitectura de Impresión Híbrida Operativa:**
+    - Laptop fija USB en cocina como comandera fija (`print_caja_usb` para tickets de hot dogs y hamburguesas).
+    - Terminales móviles Android concurrentes cobrando con su propia impresora Bluetooth portátil MP583 de 58mm para notas de entrega inmediatas.
+    - Selectores configurables en Ajustes del Sistema para dirigir nota de entrega y comandas a dispositivo cobrador (`payer_device`) o impresora fija (`fixed_printer`).
+  - **Migraciones de Base de Datos aplicadas y blindadas:**
+    - `0042_client_print_routing.sql`: añade `target` ('server' | 'client') y `target_terminal_id` a `print_jobs`, más configuraciones de ruteo en `business_settings`.
+    - `0043_printers_client_bt.sql`: soporte para conexión `CLIENT_BT` en impresoras térmicas manteniendo integridad referencial.
+  - **Auditoría Forense de Caja, Ventas y Cierres:**
+    - Documento maestro de remediación estructurado en `docs/AUDITORIA_Y_SOLUCIONES_CAJA_Y_CIERRES.md` cubriendo las soluciones de arquitectura para los 5 hallazgos de campo (BUG-01 Sesión de caja Admin vs Cajera, BUG-02 Acumulación de ventas y Cierre Z de Jornada, BUG-03 Detalle digital de comanda, BUG-04 Reimpresión selectiva comandas/nota, BUG-05 Descuento de gastos en caja chica).
+  - **Calidad y Validación Técnica:**
+    - Suite de servidor con **642+ pruebas unitarias y E2E aprobadas** (incluyendo suite E2E `r2-print-e2e-routing.test.ts` con 7 escenarios de concurrencia y aislamiento 403).
+    - Gobernanza UI (`pnpm run guard`) en **0 infracciones**.
+    - Sistema de tipos TypeScript (`pnpm -r run lint`) en **0 errores**.
+    - Compilación de producción (`pnpm -r run build`) **100% exitosa** en todos los paquetes.
 
 - **Completado (con evidencia en repo):**
   - **Oleada 1 — Seguridad Backend (Tag oficial `r2-ola-1` en commit `b3eab54`):**
@@ -85,7 +94,10 @@
 | **D12** | **Blindaje de Red Wi-Fi sin Internet (`bindProcessToNetwork`)** | En routers locales de food truck/restaurante sin salida a internet (WAN), Android salta automáticamente a datos móviles (4G), perdiendo la conexión local con la laptop (`192.168.x.x`). La APK terminal fija el proceso al Wi-Fi. | Permitir que el sistema operativo gestione la red automáticamente o depender de que los meseros apaguen datos móviles manualmente. | Desconexión inmediata de los comanderos y terminales de cobro con error "No se puede acceder a este sitio". | [DECLARADO; docs/android-setup.md; Auditoría 2026-11-12] |
 | **D13** | **Auto-descubrimiento en Capas del Servidor (mDNS + Barrido /24)** | Si el router reinicia y cambia la IP de la laptop por DHCP, la APK busca mDNS (`_tocineta._tcp`) o barre la subred `/24` contra `/api/health` validando el `serverId`. | Fijar una IP manual en duro en los teléfonos. | Caída del sistema si cambia la IP de la laptop hasta que un técnico reconfigure los teléfonos. | [DECLARADO; Auditoría 2026-11-12] |
 | **D14** | **Identificación de Terminal en Cobro (`target_terminal_id`) sin Tabla `devices` Paralela** | Cada terminal móvil se identifica con un `terminal_id` enviado en el cobro y aprovecha las sesiones existentes (`auth-guard`, `session.ts`, `localStorage`). | Crear una tabla `devices` redundante con hashes y tokens paralelos a la seguridad de la Oleada 1. | Sobre-ingeniería innecesaria, complejidad en auditoría y duplicación de autenticación. | [DECLARADO; Auditoría 2026-11-12] |
-| **D15** | **Migración 0042 como Siguiente Migración Forward-Only** | La migración 0041 (`0041_free_item.sql`) es la última en el repositorio. La próxima migración debe ser `0042_client_print_routing.sql` agregando `target` y `target_terminal_id` a `print_jobs`. | Crear migraciones con numeración duplicada o alterar tablas previas destructivamente. | Violación de D5 y fallos en migrador. | [DECLARADO; Auditoría 2026-11-12] |
+| **D15** | **Migraciones 0042 y 0043 como Migraciones Forward-Only** | Las migraciones `0042_client_print_routing.sql` (agrega `target` y `target_terminal_id` a `print_jobs` y llaves de ruteo) y `0043_printers_client_bt.sql` (`CLIENT_BT` en printers) fueron aplicadas sin alterar esquemas previos ni perder datos existentes. | Crear migraciones con numeración duplicada o alterar tablas previas destructivamente. | Violación de D5 y fallos en migrador. | [VERIFICADO: commits `de355d1` y `6ec9fcc`] |
+| **D16** | **Registro de Terminales en Memoria con Latido (`/api/printing/terminals/heartbeat`)** | Las terminales móviles registran su presencia y estado mediante latidos periódicos en memoria con expiración automática (60s). Evita sobrecargar SQLite con escrituras continuas de terminales efímeras o de prueba. | Persistir cada latido o ping en disco mediante transacciones SQLite. | Degradación del rendimiento de base de datos por contención de I/O en la laptop de caja. | [VERIFICADO: commits `ce38f52` y `b42f65e`] |
+| **D17** | **Reclamo Atómico de Trabajos de Impresión (`claim`) con Expiración (30s)** | Cuando una terminal móvil consulta sus trabajos (`/api/printing/devices/:terminalId/jobs`), reclama de forma atómica cada trabajo. Si la terminal se desconecta durante la impresión, el reclamo expira a los 30 segundos y queda disponible para reintento. | Entregar el trabajo sin reclamo o mantenerlo bloqueado indefinidamente. | Duplicación de impresión de notas de entrega o bloqueo permanente de la cola ante caída de red. | [VERIFICADO: commits `61fc8aa` y `63456cc`] |
+| **D18** | **Preservación de Metadatos de Impresión en Reimpresiones y Reposiciones** | Al reimprimir una nota de entrega o reponer una comanda desde caja o cocina, el trabajo nuevo preserva el `target` ('client' o 'server') y el `target_terminal_id` original o los asigna según la terminal que ejecuta la reimpresión. | Descartar el destino original y enviar todas las reimpresiones a la impresora fija del servidor. | Pérdida de la capacidad de reimprimir desde el móvil o envío indeseado de notas de entrega a la cocina. | [VERIFICADO: commit `ff04d83`] |
 
 ---
 
@@ -156,7 +168,17 @@
 | **P3-A** | Arquitecto (Flash 3.8) | Blindaje de Outbox offline (retención en IndexedDB ante 4xx/5xx) | `apps/web/src/features/pos/outbox.ts`, `types.ts`, `usePosCart.ts` | `0b11687` | Commiteado | [VERIFICADO: commit `0b11687`] |
 | **P3-B** | Arquitecto (Flash 3.8) | Inmutabilidad de órdenes en cocina y guardia 409 Conflict | `apps/server/src/modules/kds/kds-service.ts`, `routes.ts`, `r2-kds-immutability.test.ts` | `b302c1c` | Commiteado | [VERIFICADO: commit `b302c1c`] |
 | **P3-C** | Arquitecto (Flash 3.8) | Lockout de autorizadores por PIN ante ataques de fuerza bruta | `apps/server/src/modules/auth/authorizer-guard.ts`, `cashier-service.ts`, `routes.ts`, `r2-authorizer-lockout.test.ts` | `8d290c4` | Commiteado | [VERIFICADO: commit `8d290c4`] |
-| **P5-A** | Arquitecto (Flash 3.8) | Paridad Z vs verdad financiera (0 centavos de diferencia) | `apps/server/test/r2-z-vs-truth-parity.test.ts` | `da8c0e6` | Commiteado | [VERIFICADO: commit `da8c0e6` (HEAD)] |
+| **P5-A** | Arquitecto (Flash 3.8) | Paridad Z vs verdad financiera (0 centavos de diferencia) | `apps/server/test/r2-z-vs-truth-parity.test.ts` | `da8c0e6` | Commiteado | [VERIFICADO: commit `da8c0e6`] |
+| **M-01** | Arquitecto (Flash 3.8) | Migración 0042: enrutamiento de impresión cliente y configuración de destinos | `0042_client_print_routing.sql`, `business-settings.ts`, `settings-routes.ts`, tests | `de355d1` | Commiteado | [VERIFICADO: commit `de355d1`] |
+| **M-02** | Arquitecto (Flash 3.8) | Migración 0043: permitir connection_type CLIENT_BT en printers sin pérdida de datos | `0043_printers_client_bt.sql`, `migrate.ts`, `schema.ts`, tests | `6ec9fcc` | Commiteado | [VERIFICADO: commit `6ec9fcc`] |
+| **M-03** | Arquitecto (Flash 3.8) | Registro en memoria de terminales móviles y rutas de heartbeat y listado | `modules/printing/routes.ts`, `modules/printing/terminals.ts`, tests | `ce38f52` | Commiteado | [VERIFICADO: commit `ce38f52`] |
+| **M-04** | Arquitecto (Flash 3.8) | Enrutar nota y comandas según selectores de ajustes y terminales móviles | `modules/cashier/cashier-service.ts`, `modules/printing/worker.ts`, tests | `f8ff2fa` | Commiteado | [VERIFICADO: commit `f8ff2fa`] |
+| **M-05** | Arquitecto (Flash 3.8) | Preservar destino y terminal en reimpresiones, reposiciones y resolución de atención | `modules/cashier/routes.ts`, `modules/kds/routes.ts`, `modules/printing/worker.ts` | `ff04d83` | Commiteado | [VERIFICADO: commit `ff04d83`] |
+| **M-06** | Arquitecto (Flash 3.8) | Rutas de dispositivo para impresión móvil y vencimiento de reclamos | `modules/printing/routes.ts`, `apps/server/test/r2-print-device-routes.test.ts` | `61fc8aa` | Commiteado | [VERIFICADO: commit `61fc8aa`] |
+| **M-07** | Arquitecto / UI (Flash 3.8) | Interfaz de ajustes de impresión con destinos y sincronización de modo | `PrintFlowSettings.tsx`, `ConnectedTerminalsCard.tsx`, `PrintersPanel.tsx` | `9e03461` | Commiteado | [VERIFICADO: commit `9e03461`] |
+| **M-08** | Arquitecto (Flash 3.8) | Identidad de terminal, puente de impresión nativa y latido en layout | `terminal-identity.ts`, `mobile-print-bridge.ts`, `AppLayout.tsx` | `b42f65e` | Commiteado | [VERIFICADO: commit `b42f65e`] |
+| **M-09** | Arquitecto (Flash 3.8) | Impresión en dispositivo, panel post-pago, auto-impresión y terminales | `PostPaymentPrintPanel.tsx`, `usePayerDevicePrint.ts`, `AutoPrintErrorBanner.tsx` | `1a23fe8` | Commiteado | [VERIFICADO: commit `1a23fe8`] |
+| **M-10** | Arquitecto (Flash 3.8) | Escenarios E2E de enrutamiento de impresión móvil y fija (7 pruebas) | `apps/server/test/r2-print-e2e-routing.test.ts` | `63456cc` | Commiteado | [VERIFICADO: commit `63456cc`] |
 
 ---
 
@@ -237,3 +259,4 @@
 - **2026-11-01 (4ta edición):** Consolidación total de Oleada 2 (`da48375`), Oleada 3 (`0b11687`, `b302c1c`, `8d290c4`) y Paridad Z (`da8c0e6`). Verificación contra código fuente de los hallazgos críticos de campo (BUG-01 a BUG-05, N-01 a N-05). Confirmación de presencia de `ENFORCE_AUTH=true` en `.env`. Formulación del plan de parche por Olas A y B.
 
 - **2026-11-12 (5ta edición):** Auditoría exhaustiva en vivo y definición técnica de la Arquitectura de Impresión Móvil Bluetooth (MP583 58mm) y APK Terminal Android. Verificación de 587/587 tests unitarios en verde (83 suites) en `@tocineta/server` y 0 errores en TypeScript y UI-Guard. Incorporación de Decisiones D10 a D15: impresión híbrida (laptop USB comandera + teléfonos Bluetooth MP583), transporte nativo RFCOMM/SPP con chunking de 256 bytes, blindaje `bindProcessToNetwork` para Wi-Fi sin internet, auto-descubrimiento por mDNS/barrido /24 y migración 0042 forward-only.
+- **2026-11-13 (6ta edición):** Consolidación de la fase de Impresión Móvil Bluetooth (MP583 58mm) y Ruteo Dinámico de Comandas (`feat/impresion-movil`). Registro de 10 commits clave (`de355d1` a `63456cc`) cubriendo migraciones 0042 y 0043, soporte `CLIENT_BT`, registro de terminales en memoria (`/api/printing/terminals/heartbeat`), reclamo atómico y endpoints de dispositivo, interfaz de ajustes de ruteo, puente de impresión móvil nativo, panel táctil post-pago y suite E2E de concurrencia y aislamiento (`r2-print-e2e-routing.test.ts`). Incorporación de Decisiones D16 a D18. Documentación forense de la auditoría de Caja, Ventas y Cierres (`docs/AUDITORIA_Y_SOLUCIONES_CAJA_Y_CIERRES.md`). Verificación completa de UI-Guard, `tsc` en monorepo y `pnpm -r run build` en verde.
