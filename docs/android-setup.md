@@ -1,6 +1,6 @@
 # GUÍA DE CONFIGURACIÓN DE CELULARES ANDROID (RED WI-FI SIN INTERNET)
-**Proyecto:** Sistema Operativo Local Tocineta Sonríe  
-**Cliente:** Tocineta Sonríe  
+**Proyecto:** Sistema Operativo Local TOCINETA  
+**Cliente:** TOCINETA  
 **Destinatarios:** Mesoneros, Cajeros y Personal de Cocina  
 **Entorno de Red:** Router LAN Local en Food Truck (100% Offline / Sin Conexión WAN)  
 
@@ -74,21 +74,31 @@ Para el personal de servicio durante el turno de atención:
 
 ---
 
-## 5. PASO 4: CREAR ACCESO DIRECTO EN PANTALLA DE INICIO (MODO KIOSCO ANDROID)
+## 5. PASO 4: INSTALACIÓN DEL APK OFICIAL TOCINETA O ACCESO WEB
 
-Para que los mesoneros y cocineros accedan a la interfaz de comanda como si fuera una aplicación nativa instalada (sin barra de direcciones de navegación que distraiga):
+Para que el personal de servicio cuente con la aplicación optimizada para terminales Android:
 
-1. Abrir **Google Chrome** en el celular.
-2. En la barra de direcciones, escribir la IP local del servidor y puerto:
+### Opción A (Recomendada): Instalar la aplicación nativa TOCINETA desde la laptop
+
+1. Abrir el navegador en el dispositivo Android conectado a la red local.
+2. Ingresar a la página de instalación del servidor:
    ```text
-   http://192.168.31.50:3000
+   http://192.168.31.50:3000/apk-instalar.html
    ```
-   *(Sustituir `192.168.31.50` por la IP asignada a la laptop según el dashboard).*
-3. Comprobar que cargue la interfaz oscura con la marca **TOCINETA SONRÍE**.
-4. Tocar el menú de tres puntos de Chrome (`⋮`) en la esquina superior derecha.
-5. Seleccionar la opción **"Agregar a la pantalla principal"** (o **"Instalar aplicación"**).
-6. Asignar el nombre: `Tocineta POS` y pulsar **Agregar**.
-7. En la pantalla principal del celular aparecerá el icono con el logo de la tocineta. Al tocarlo, se abrirá a pantalla completa sin elementos distractores.
+   *(Sustituir `192.168.31.50` por la IP asignada a la laptop según el panel de control).*
+3. Pulsar el botón **"Descargar TOCINETA para Android"** (descarga `/apk/tocineta-terminal.apk`).
+4. Abrir la notificación de descarga e instalar el APK. Si Android solicita autorización para instalar aplicaciones desconocidas desde el navegador, permitirla.
+5. Iniciar la aplicación TOCINETA e introducir el PIN de usuario asignado.
+
+### Opción B: Acceso directo web en pantalla de inicio
+
+Si el dispositivo no admite instalación de APK o se requiere acceso de contingencia:
+1. Abrir el navegador en el celular e ingresar a `http://192.168.31.50:3000`.
+2. Comprobar que cargue la interfaz oficial con la marca **TOCINETA**.
+3. Tocar el menú del navegador (`⋮`) en la esquina superior derecha.
+4. Seleccionar la opción **"Agregar a la pantalla principal"** (o **"Instalar aplicación"**).
+5. Asignar el nombre: `TOCINETA POS` y pulsar **Agregar**.
+6. En la pantalla principal del celular aparecerá el icono oficial. Al tocarlo, se abrirá a pantalla completa sin elementos distractores.
 
 ---
 

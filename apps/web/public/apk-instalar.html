@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#FFE600" />
+  <title>Instalacion Terminal Android | TOCINETA</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: #F8F9FA;
+      color: #111111;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem 1rem;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .container {
+      width: 100%;
+      max-width: 520px;
+      background-color: #FFFFFF;
+      border: 1px solid #E2E8F0;
+      border-radius: 16px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+      padding: 2rem 1.5rem;
+    }
+    .header {
+      text-align: center;
+      margin-bottom: 1.75rem;
+    }
+    .badge {
+      display: inline-block;
+      background-color: #FFFBE6;
+      color: #111111;
+      border: 1px solid #FFE600;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      padding: 0.25rem 0.75rem;
+      border-radius: 9999px;
+      margin-bottom: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 800;
+      color: #111111;
+      line-height: 1.25;
+      margin-bottom: 0.5rem;
+    }
+    .subtitle {
+      font-size: 0.9375rem;
+      color: #555555;
+    }
+    .version-tag {
+      margin-top: 0.5rem;
+      font-size: 0.875rem;
+      color: #555555;
+      font-weight: 600;
+    }
+    .btn-download {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 52px;
+      background-color: #FFE600;
+      color: #111111;
+      text-decoration: none;
+      font-size: 1.0625rem;
+      font-weight: 700;
+      border-radius: 12px;
+      border: 1px solid #E5CE00;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      margin: 1.5rem 0;
+      transition: background-color 0.15s ease, transform 0.05s ease;
+      text-align: center;
+    }
+    .btn-download:hover {
+      background-color: #F0D800;
+    }
+    .btn-download:active {
+      transform: scale(0.99);
+    }
+    .steps-card {
+      background-color: #F8F9FA;
+      border: 1px solid #E2E8F0;
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+    .steps-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #111111;
+      margin-bottom: 1rem;
+    }
+    .steps-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    .step-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.875rem;
+    }
+    .step-number {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background-color: #FFE600;
+      color: #111111;
+      font-size: 0.875rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-content {
+      flex: 1;
+    }
+    .step-heading {
+      font-size: 0.9375rem;
+      font-weight: 700;
+      color: #111111;
+      margin-bottom: 0.125rem;
+    }
+    .step-text {
+      font-size: 0.875rem;
+      color: #555555;
+      line-height: 1.4;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 0.8125rem;
+      color: #555555;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <span class="badge">Terminal Local</span>
+      <h1>TOCINETA</h1>
+      <p class="subtitle">Instalador oficial para dispositivos Android de servicio</p>
+      <div id="version-display" class="version-tag">Cargando version...</div>
+    </div>
+
+    <a href="/apk/tocineta-terminal.apk" class="btn-download" download>
+      Descargar TOCINETA para Android
+    </a>
+
+    <div class="steps-card">
+      <h2 class="steps-title">Pasos de Instalacion</h2>
+      <ol class="steps-list">
+        <li class="step-item">
+          <div class="step-number">1</div>
+          <div class="step-content">
+            <div class="step-heading">Conectar a la red Wi-Fi</div>
+            <div class="step-text">Conectate a la red local del restaurante y confirma la opcion de mantener la conexion activa.</div>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-number">2</div>
+          <div class="step-content">
+            <div class="step-heading">Descargar el archivo</div>
+            <div class="step-text">Pulsa el boton de descarga superior para guardar el archivo en tu dispositivo.</div>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-number">3</div>
+          <div class="step-content">
+            <div class="step-heading">Permitir la instalacion</div>
+            <div class="step-text">Abre la descarga y, si el sistema lo solicita, autoriza la instalacion desde el navegador.</div>
+          </div>
+        </li>
+        <li class="step-item">
+          <div class="step-number">4</div>
+          <div class="step-content">
+            <div class="step-heading">Abrir e iniciar sesion</div>
+            <div class="step-text">Inicia la aplicacion TOCINETA e ingresa tu PIN de usuario asignado.</div>
+          </div>
+        </li>
+      </ol>
+    </div>
+
+    <div class="footer">
+      Sistema Operativo Gastronomico TOCINETA
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      fetch('/apk/version.txt')
+        .then(function(res) {
+          if (res.ok) {
+            return res.text();
+          }
+          throw new Error('Version file not found');
+        })
+        .then(function(ver) {
+          var trimmed = ver.trim();
+          if (trimmed) {
+            document.getElementById('version-display').textContent = 'Version disponible: ' + trimmed;
+          } else {
+            document.getElementById('version-display').textContent = 'Version disponible: 1.0.0 (1)';
+          }
+        })
+        .catch(function() {
+          document.getElementById('version-display').textContent = 'Version disponible: 1.0.0 (1)';
+        });
+    })();
+  </script>
+</body>
+</html>

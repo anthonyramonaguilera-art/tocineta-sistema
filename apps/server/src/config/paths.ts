@@ -77,6 +77,14 @@ export function getDataDir(): string {
   return path.dirname(dbPath);
 }
 
+export function getApkDir(): string {
+  const apkDir = path.join(getDataDir(), 'apk');
+  if (!fs.existsSync(apkDir)) {
+    fs.mkdirSync(apkDir, { recursive: true });
+  }
+  return apkDir;
+}
+
 export function getServerIdPath(): string {
   return path.join(getDataDir(), 'server-id.txt');
 }

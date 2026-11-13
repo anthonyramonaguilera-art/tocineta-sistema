@@ -1,4 +1,4 @@
-import { getUploadsDir } from '../config/paths.js';
+import { getUploadsDir, getApkDir } from '../config/paths.js';
 import type { FastifyPluginAsync } from 'fastify';
 import fastifyStatic from '@fastify/static';
 import * as path from 'node:path';
@@ -23,6 +23,15 @@ export const staticPlugin: FastifyPluginAsync = async (fastify) => {
     decorateReply: false
   });
 
+  // Carpeta de distribución local de APKs
+  const apkDir = getApkDir();
+
+  await fastify.register(fastifyStatic, {
+    root: apkDir,
+    prefix: '/apk/',
+    decorateReply: false
+  });
+
   if (!webDistDir) {
     fastify.log.warn('⚠️ No se encontró la carpeta compilada de la UI (apps/web/dist). La API responderá normalmente.');
     return;
@@ -36,12 +45,21 @@ export const staticPlugin: FastifyPluginAsync = async (fastify) => {
     wildcard: false
   });
 
-  // Fallback SPA para rutas que no sean /api ni /ws ni /uploads
+  // Fallback SPA para rutas que no sean /api ni /ws ni /uploads ni /apk/
   fastify.setNotFoundHandler(async (request, reply) => {
-    if (request.raw.url && (request.raw.url.startsWith('/api') || request.raw.url.startsWith('/ws') || request.raw.url.startsWith('/uploads'))) {
+    const rawUrl = request.raw.url || '';
+    const cleanUrl = rawUrl.split('?')[0];
+
+    if (
+      cleanUrl.startsWith('/api') ||
+      cleanUrl.startsWith('/ws') ||
+      cleanUrl.startsWith('/uploads') ||
+      cleanUrl.startsWith('/apk') ||
+      path.extname(cleanUrl) !== ''
+    ) {
       return reply.status(404).send({
         success: false,
-        error: `Ruta no encontrada: ${request.raw.url}`
+        error: `Ruta no encontrada: ${rawUrl}`
       });
     }
 
