@@ -4,6 +4,7 @@ import { Card, Badge, Icon, Button } from '../../ui/index.js';
 import { apiFetch } from '../../api/client.js';
 import { getTerminalLabel, setTerminalLabel } from '../../lib/terminal-identity.js';
 import { hasNativePrinting } from '../../lib/mobile-print-bridge.js';
+import { DevicePrinterCard } from './DevicePrinterCard.js';
 
 interface TerminalItem {
   terminalId: string;
@@ -76,6 +77,9 @@ export const ConnectedTerminalsCard: React.FC<ConnectedTerminalsCardProps> = ({ 
           Actualizar
         </Button>
       </div>
+
+      {/* Impresora exclusiva de este dispositivo */}
+      <DevicePrinterCard />
 
       {/* Campo exclusivo dentro de la APK */}
       {isApk && (

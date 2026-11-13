@@ -7,8 +7,14 @@ import {
   printJobsOnDevice,
   startTerminalHeartbeat,
   printPendingTerminalJobs,
-  appendLineFeedsToBase64
+  appendLineFeedsToBase64,
+  listPairedPrintersOnDevice,
+  selectPrinterOnDevice,
+  testPrintOnDevice,
+  getBluetoothStatusOnDevice,
+  sendTerminalHeartbeatNow
 } from '../../web/src/lib/mobile-print-bridge.js';
+import { installMockNativeBridge } from '../../web/src/lib/mobile-print-bridge.mock.js';
 import {
   getTerminalId,
   getTerminalLabel,
@@ -54,6 +60,35 @@ describe('R2 — Mobile Print Bridge & Terminal Identity (@tocineta/web)', () =>
   });
 
   describe('1. Identidad de Terminal (terminal-identity.ts)', () => {
+    it('prioriza window.__TOCINETA_TERMINAL_ID__ valido y lo sincroniza en localStorage', () => {
+      mockStorage['tocineta_terminal_id'] = 'old-local-storage-id';
+      (globalThis.window as any).__TOCINETA_TERMINAL_ID__ = 'apk-device-term-001';
+
+      const id = getTerminalId();
+      expect(id).toBe('apk-device-term-001');
+      expect(mockStorage['tocineta_terminal_id']).toBe('apk-device-term-001');
+    });
+
+    it('rechaza window.__TOCINETA_TERMINAL_ID__ invalido y conserva comportamiento actual', () => {
+      mockStorage['tocineta_terminal_id'] = 'valid-storage-id-123';
+
+      // Demasiado corto (< 8)
+      (globalThis.window as any).__TOCINETA_TERMINAL_ID__ = 'short';
+      expect(getTerminalId()).toBe('valid-storage-id-123');
+
+      // Caracteres invalidos (espacios, signos)
+      (globalThis.window as any).__TOCINETA_TERMINAL_ID__ = 'invalid id with spaces!';
+      expect(getTerminalId()).toBe('valid-storage-id-123');
+
+      // Demasiado largo (> 64)
+      (globalThis.window as any).__TOCINETA_TERMINAL_ID__ = 'a'.repeat(65);
+      expect(getTerminalId()).toBe('valid-storage-id-123');
+
+      // No string
+      (globalThis.window as any).__TOCINETA_TERMINAL_ID__ = 12345678 as any;
+      expect(getTerminalId()).toBe('valid-storage-id-123');
+    });
+
     it('genera un UUID sin guiones si no existe en localStorage y lo persiste', () => {
       const id1 = getTerminalId();
       expect(typeof id1).toBe('string');
@@ -112,6 +147,25 @@ describe('R2 — Mobile Print Bridge & Terminal Identity (@tocineta/web)', () =>
       expect(typeof cancel).toBe('function');
       cancel();
       expect(apiFetchSpy).not.toHaveBeenCalled();
+    });
+
+    it('helpers opcionales seguros devuelven valores controlados sin lanzar cuando window.TocinetaNative es undefined', async () => {
+      const paired = await listPairedPrintersOnDevice();
+      expect(paired).toEqual([]);
+
+      const selectRes = await selectPrinterOnDevice('11:22:33:44:55:66');
+      expect(selectRes.ok).toBe(false);
+      expect(selectRes.error).toBeDefined();
+
+      const testRes = await testPrintOnDevice();
+      expect(testRes.ok).toBe(false);
+      expect(testRes.error).toBeDefined();
+
+      const btStatus = await getBluetoothStatusOnDevice();
+      expect(btStatus).toEqual({ enabled: false, hasPermission: false, connected: false });
+
+      const heartbeatRes = await sendTerminalHeartbeatNow();
+      expect(heartbeatRes.ok).toBe(false);
     });
   });
 
@@ -394,6 +448,91 @@ describe('R2 — Mobile Print Bridge & Terminal Identity (@tocineta/web)', () =>
       expect(count).toBe(2);
       // Comanda primero, nota al final
       expect(printedOrder).toEqual(['job_cocina_1', 'job_nota_1']);
+    });
+
+    it('3.11 helpers opcionales seguros cuando window.TocinetaNative existe pero no implementa los métodos', async () => {
+      globalThis.window.TocinetaNative = {
+        getCapabilities: vi.fn(async () => ({ bluetoothSpp: true })),
+        getSelectedPrinter: vi.fn(async () => null),
+        printEscPos: vi.fn()
+      };
+
+      const paired = await listPairedPrintersOnDevice();
+      expect(paired).toEqual([]);
+
+      const selectRes = await selectPrinterOnDevice('11:22:33:44:55:66');
+      expect(selectRes.ok).toBe(false);
+      expect(selectRes.error).toBe('Método no disponible en este dispositivo');
+
+      const testRes = await testPrintOnDevice();
+      expect(testRes.ok).toBe(false);
+      expect(testRes.error).toBe('Método no disponible en este dispositivo');
+
+      const btStatus = await getBluetoothStatusOnDevice();
+      expect(btStatus).toEqual({ enabled: false, hasPermission: false, connected: false });
+    });
+
+    it('3.12 disparo de sendTerminalHeartbeatNow al seleccionar impresora exitosamente', async () => {
+      let heartbeatSent = false;
+      let heartbeatBody: any = null;
+
+      vi.spyOn(clientModule, 'apiFetch').mockImplementation(async (url: string, init?: RequestInit) => {
+        if (url === '/api/terminals/heartbeat') {
+          heartbeatSent = true;
+          heartbeatBody = init?.body ? JSON.parse(init.body as string) : null;
+          return { status: 200, ok: true, json: async () => ({ ok: true }) } as unknown as Response;
+        }
+        return { status: 200, ok: true, json: async () => ({}) } as unknown as Response;
+      });
+
+      const selectPrinterMock = vi.fn(async (_args: { mac: string } | string) => ({ ok: true }));
+
+      globalThis.window.TocinetaNative = {
+        getCapabilities: vi.fn(async () => ({ bluetoothSpp: true })),
+        getSelectedPrinter: vi.fn(async () => ({ name: 'POS-80-BT', mac: '88:77:66:55:44:33' })),
+        printEscPos: vi.fn(),
+        selectPrinter: selectPrinterMock
+      };
+
+      const res = await selectPrinterOnDevice('88:77:66:55:44:33');
+      expect(res.ok).toBe(true);
+      expect(selectPrinterMock).toHaveBeenCalledWith('88:77:66:55:44:33');
+
+      // Esperar brevemente a la microtarea del void sendTerminalHeartbeatNow()
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(heartbeatSent).toBe(true);
+      expect(heartbeatBody.btPrinter).toEqual({ name: 'POS-80-BT', mac: '88:77:66:55:44:33' });
+    });
+
+    it('3.13 helpers opcionales funcionan correctamente con installMockNativeBridge', async () => {
+      const uninstall = installMockNativeBridge({
+        printer: { name: 'POS-58-BT', mac: 'AA:BB:CC:DD:EE:FF' },
+        pairedPrinters: [
+          { name: 'POS-58-BT', mac: 'AA:BB:CC:DD:EE:FF' },
+          { name: 'POS-80-BT', mac: '11:22:33:44:55:66' }
+        ],
+        bluetoothStatus: { enabled: true, hasPermission: true, connected: true }
+      });
+
+      try {
+        const paired = await listPairedPrintersOnDevice();
+        expect(paired).toHaveLength(2);
+        expect(paired[0].name).toBe('POS-58-BT');
+
+        const btStatus = await getBluetoothStatusOnDevice();
+        expect(btStatus).toEqual({ enabled: true, hasPermission: true, connected: true });
+
+        const testRes = await testPrintOnDevice();
+        expect(testRes.ok).toBe(true);
+
+        const selectRes = await selectPrinterOnDevice('11:22:33:44:55:66');
+        expect(selectRes.ok).toBe(true);
+
+        const currentPrinter = await globalThis.window.TocinetaNative!.getSelectedPrinter();
+        expect(currentPrinter?.mac).toBe('11:22:33:44:55:66');
+      } finally {
+        uninstall();
+      }
     });
   });
 });

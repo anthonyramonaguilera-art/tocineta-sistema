@@ -79,4 +79,39 @@ describe('R2 — UI Print Wiring & Source Contracts Test', () => {
     // Cero nombres de software externo
     expect(content).not.toMatch(/\b(Windows|Spooler|Excel|Word)\b/i);
   });
+
+  it('6) ConnectedTerminalsCard mounts DevicePrinterCard and DevicePrinterCard satisfies UI requirements', () => {
+    const terminalsCardPath = path.join(webSrcDir, 'features/settings/ConnectedTerminalsCard.tsx');
+    const devicePrinterCardPath = path.join(webSrcDir, 'features/settings/DevicePrinterCard.tsx');
+
+    expect(fs.existsSync(devicePrinterCardPath)).toBe(true);
+
+    const terminalsContent = fs.readFileSync(terminalsCardPath, 'utf8');
+    const devicePrinterContent = fs.readFileSync(devicePrinterCardPath, 'utf8');
+
+    // ConnectedTerminalsCard imports and renders DevicePrinterCard
+    expect(terminalsContent).toContain('DevicePrinterCard');
+    expect(terminalsContent).toContain('<DevicePrinterCard />');
+
+    // DevicePrinterCard checks hasNativePrinting
+    expect(devicePrinterContent).toContain('hasNativePrinting()');
+
+    // Required block and status texts
+    expect(devicePrinterContent).toContain('Impresora de este dispositivo');
+    expect(devicePrinterContent).toContain('Conectada');
+    expect(devicePrinterContent).toContain('Desconectada');
+    expect(devicePrinterContent).toContain('Sin permiso');
+    expect(devicePrinterContent).toContain('Bluetooth apagado');
+
+    // Button and helper note
+    expect(devicePrinterContent).toContain('Imprimir prueba');
+    expect(devicePrinterContent).toContain('Si no aparece tu impresora, empárejala primero en los ajustes de Bluetooth del teléfono.');
+
+    // Min height 48px for tactile controls
+    expect(devicePrinterContent).toContain('min-h-[48px]');
+
+    // Line count < 150 lines
+    const lineCount = devicePrinterContent.split('\n').length;
+    expect(lineCount).toBeLessThan(150);
+  });
 });

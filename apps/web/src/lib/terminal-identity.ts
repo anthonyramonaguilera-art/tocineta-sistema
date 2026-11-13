@@ -2,14 +2,42 @@
  * TOCINETA — Identidad del Terminal de Punto de Venta / Dispositivo Móvil
  */
 
+declare global {
+  interface Window {
+    __TOCINETA_TERMINAL_ID__?: string;
+  }
+}
+
 const TERMINAL_ID_KEY = 'tocineta_terminal_id';
 const TERMINAL_LABEL_KEY = 'tocineta_terminal_label';
+const VALID_TERMINAL_ID_REGEX = /^[A-Za-z0-9_-]{8,64}$/;
 
 /**
  * Obtiene el identificador único persistente de este terminal.
- * Si no existe en localStorage, genera un UUID v4 sin guiones y lo almacena.
+ * Prioriza window.__TOCINETA_TERMINAL_ID__ si es válido, sincronizándolo en localStorage.
+ * Si no existe o no es válido, lee de localStorage o genera un UUID v4 sin guiones.
  */
 export function getTerminalId(): string {
+  try {
+    if (
+      typeof window !== 'undefined' &&
+      typeof window.__TOCINETA_TERMINAL_ID__ === 'string' &&
+      VALID_TERMINAL_ID_REGEX.test(window.__TOCINETA_TERMINAL_ID__)
+    ) {
+      const nativeId = window.__TOCINETA_TERMINAL_ID__;
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.setItem(TERMINAL_ID_KEY, nativeId);
+        }
+      } catch {
+        // Ignorar fallo al persistir
+      }
+      return nativeId;
+    }
+  } catch {
+    // Si el acceso a window falla, continuar con fallback
+  }
+
   try {
     if (typeof localStorage !== 'undefined') {
       const stored = localStorage.getItem(TERMINAL_ID_KEY);

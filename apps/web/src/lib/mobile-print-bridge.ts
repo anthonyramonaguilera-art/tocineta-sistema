@@ -14,7 +14,164 @@ declare global {
         mac: string;
         base64: string;
       }): Promise<{ success: boolean; bytesSent?: number; error?: string }>;
+      listPairedPrinters?(): Promise<Array<{ name: string; mac: string }>>;
+      selectPrinter?(args: { mac: string } | string): Promise<{ ok?: boolean; success?: boolean; error?: string }>;
+      testPrint?(): Promise<{ success: boolean; error?: string }>;
+      getBluetoothStatus?(): Promise<{
+        enabled: boolean;
+        permission?: boolean;
+        hasPermission?: boolean;
+        connected?: boolean;
+      }>;
     };
+  }
+}
+
+export interface PairedPrinterInfo {
+  name: string;
+  mac: string;
+}
+
+export interface DeviceBluetoothStatus {
+  enabled: boolean;
+  hasPermission: boolean;
+  connected?: boolean;
+}
+
+/**
+ * Lista las impresoras Bluetooth vinculadas en el dispositivo si existe el puente nativo.
+ * Nunca lanza excepciones. Devuelve un array vacío si no está soportado o falla.
+ */
+export async function listPairedPrintersOnDevice(): Promise<PairedPrinterInfo[]> {
+  try {
+    if (!hasNativePrinting() || !window.TocinetaNative || typeof window.TocinetaNative.listPairedPrinters !== 'function') {
+      return [];
+    }
+    const list = await window.TocinetaNative.listPairedPrinters();
+    if (!Array.isArray(list)) return [];
+    return list.filter((p) => p && typeof p.mac === 'string' && typeof p.name === 'string');
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Selecciona la impresora Bluetooth indicada por MAC en el dispositivo nativo.
+ * Al tener éxito, dispara un latido inmediato del terminal hacia el servidor.
+ * Nunca lanza excepciones.
+ */
+export async function selectPrinterOnDevice(
+  mac: string
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    if (!hasNativePrinting() || !window.TocinetaNative || typeof window.TocinetaNative.selectPrinter !== 'function') {
+      return { ok: false, error: 'Método no disponible en este dispositivo' };
+    }
+    const res = await window.TocinetaNative.selectPrinter(mac);
+    const ok = Boolean(res && (res.ok !== undefined ? res.ok : res.success));
+    if (ok) {
+      void sendTerminalHeartbeatNow();
+      return { ok: true };
+    }
+    return { ok: false, error: res?.error || 'No se pudo seleccionar la impresora' };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || 'Error al seleccionar la impresora' };
+  }
+}
+
+/**
+ * Solicita una impresión de prueba de ticket al dispositivo nativo.
+ * Nunca lanza excepciones.
+ */
+export async function testPrintOnDevice(): Promise<{ ok: boolean; error?: string }> {
+  try {
+    if (!hasNativePrinting() || !window.TocinetaNative || typeof window.TocinetaNative.testPrint !== 'function') {
+      return { ok: false, error: 'Método no disponible en este dispositivo' };
+    }
+    const res = await window.TocinetaNative.testPrint();
+    const ok = Boolean(res && (res.success !== undefined ? res.success : (res as any).ok));
+    if (ok) {
+      return { ok: true };
+    }
+    return { ok: false, error: res?.error || 'Fallo al imprimir página de prueba' };
+  } catch (err: any) {
+    return { ok: false, error: err?.message || 'Error al imprimir página de prueba' };
+  }
+}
+
+/**
+ * Consulta el estado actual de Bluetooth en el dispositivo nativo.
+ * Nunca lanza excepciones.
+ */
+export async function getBluetoothStatusOnDevice(): Promise<DeviceBluetoothStatus> {
+  try {
+    if (!hasNativePrinting() || !window.TocinetaNative || typeof window.TocinetaNative.getBluetoothStatus !== 'function') {
+      return { enabled: false, hasPermission: false, connected: false };
+    }
+    const status = await window.TocinetaNative.getBluetoothStatus();
+    const hasPermission = Boolean(status?.hasPermission ?? (status as any)?.permission ?? false);
+    const enabled = Boolean(status?.enabled);
+    const connected = Boolean(status?.connected);
+    return { enabled, hasPermission, connected };
+  } catch {
+    return { enabled: false, hasPermission: false, connected: false };
+  }
+}
+
+/**
+ * Envía inmediatamente un latido (heartbeat) del terminal al servidor con su configuración actual.
+ * Devuelve { ok: boolean }. Nunca lanza excepciones.
+ */
+export async function sendTerminalHeartbeatNow(): Promise<{ ok: boolean }> {
+  try {
+    if (!hasNativePrinting() || !window.TocinetaNative) {
+      return { ok: false };
+    }
+
+    const terminalId = getTerminalId();
+    const rawLabel = getTerminalLabel();
+    const label = rawLabel && rawLabel.trim().length > 0 ? rawLabel.trim().slice(0, 40) : undefined;
+
+    let btPrinter: { name: string; mac: string } | undefined;
+    try {
+      const selected = await window.TocinetaNative.getSelectedPrinter();
+      if (selected && selected.name && selected.mac) {
+        btPrinter = { name: selected.name, mac: selected.mac };
+      }
+    } catch {
+      btPrinter = undefined;
+    }
+
+    let capabilities: { bluetoothSpp?: boolean } | undefined;
+    try {
+      const caps = await window.TocinetaNative.getCapabilities();
+      if (caps) {
+        capabilities = { bluetoothSpp: Boolean(caps.bluetoothSpp) };
+      }
+    } catch {
+      capabilities = undefined;
+    }
+
+    const body: {
+      terminalId: string;
+      label?: string;
+      btPrinter?: { name: string; mac: string };
+      capabilities?: { bluetoothSpp?: boolean };
+    } = {
+      terminalId
+    };
+    if (label) body.label = label;
+    if (btPrinter) body.btPrinter = btPrinter;
+    if (capabilities) body.capabilities = capabilities;
+
+    const res = await apiFetch('/api/terminals/heartbeat', {
+      method: 'POST',
+      body: JSON.stringify(body)
+    });
+
+    return { ok: Boolean(res && res.ok) };
+  } catch {
+    return { ok: false };
   }
 }
 
@@ -190,47 +347,7 @@ export function startTerminalHeartbeat(onFirstHeartbeat?: () => void): () => voi
     if (cancelled || !hasNativePrinting() || !window.TocinetaNative) return;
 
     try {
-      const terminalId = getTerminalId();
-      const rawLabel = getTerminalLabel();
-      const label = rawLabel && rawLabel.trim().length > 0 ? rawLabel.trim().slice(0, 40) : undefined;
-
-      let btPrinter: { name: string; mac: string } | undefined;
-      try {
-        const selected = await window.TocinetaNative.getSelectedPrinter();
-        if (selected && selected.name && selected.mac) {
-          btPrinter = { name: selected.name, mac: selected.mac };
-        }
-      } catch {
-        btPrinter = undefined;
-      }
-
-      let capabilities: { bluetoothSpp?: boolean } | undefined;
-      try {
-        const caps = await window.TocinetaNative.getCapabilities();
-        if (caps) {
-          capabilities = { bluetoothSpp: Boolean(caps.bluetoothSpp) };
-        }
-      } catch {
-        capabilities = undefined;
-      }
-
-      const body: {
-        terminalId: string;
-        label?: string;
-        btPrinter?: { name: string; mac: string };
-        capabilities?: { bluetoothSpp?: boolean };
-      } = {
-        terminalId
-      };
-      if (label) body.label = label;
-      if (btPrinter) body.btPrinter = btPrinter;
-      if (capabilities) body.capabilities = capabilities;
-
-      const res = await apiFetch('/api/terminals/heartbeat', {
-        method: 'POST',
-        body: JSON.stringify(body)
-      });
-
+      const res = await sendTerminalHeartbeatNow();
       if (res && res.ok && !hasFiredFirst) {
         hasFiredFirst = true;
         if (onFirstHeartbeat) {

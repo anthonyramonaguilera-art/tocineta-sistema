@@ -12,9 +12,20 @@
 export interface MockNativeBridgeOptions {
   capabilities?: { bluetoothSpp: boolean };
   printer?: { name: string; mac: string } | null;
+  pairedPrinters?: Array<{ name: string; mac: string }>;
+  bluetoothStatus?: {
+    enabled: boolean;
+    hasPermission?: boolean;
+    permission?: boolean;
+    connected?: boolean;
+  };
   shouldFailPrint?: boolean;
   printErrorMessage?: string;
   bytesSent?: number;
+  shouldFailSelectPrinter?: boolean;
+  selectPrinterErrorMessage?: string;
+  shouldFailTestPrint?: boolean;
+  testPrintErrorMessage?: string;
 }
 
 /**
@@ -29,7 +40,17 @@ export function installMockNativeBridge(options: MockNativeBridgeOptions = {}): 
   const originalBridge = window.TocinetaNative;
 
   const capabilities = options.capabilities ?? { bluetoothSpp: true };
-  const printer = options.printer !== undefined ? options.printer : { name: 'POS-58-BT', mac: 'AA:BB:CC:DD:EE:FF' };
+  let selectedPrinter = options.printer !== undefined ? options.printer : { name: 'POS-58-BT', mac: 'AA:BB:CC:DD:EE:FF' };
+  const pairedPrinters = options.pairedPrinters ?? [
+    { name: 'POS-58-BT', mac: 'AA:BB:CC:DD:EE:FF' },
+    { name: 'POS-80-BT', mac: '11:22:33:44:55:66' }
+  ];
+  const bluetoothStatus = options.bluetoothStatus ?? {
+    enabled: true,
+    hasPermission: true,
+    permission: true,
+    connected: true
+  };
   const shouldFailPrint = Boolean(options.shouldFailPrint);
   const printErrorMessage = options.printErrorMessage || 'Error de conexión Bluetooth SPP';
   const bytesSent = options.bytesSent ?? 256;
@@ -39,7 +60,7 @@ export function installMockNativeBridge(options: MockNativeBridgeOptions = {}): 
       return { ...capabilities };
     },
     async getSelectedPrinter() {
-      return printer ? { ...printer } : null;
+      return selectedPrinter ? { ...selectedPrinter } : null;
     },
     async printEscPos(args: { mac: string; base64: string }) {
       if (shouldFailPrint) {
@@ -52,6 +73,34 @@ export function installMockNativeBridge(options: MockNativeBridgeOptions = {}): 
         success: true,
         bytesSent: args.base64 ? Math.max(bytesSent, args.base64.length) : bytesSent
       };
+    },
+    async listPairedPrinters() {
+      return [...pairedPrinters];
+    },
+    async selectPrinter(args: { mac: string } | string) {
+      if (options.shouldFailSelectPrinter) {
+        return {
+          ok: false,
+          success: false,
+          error: options.selectPrinterErrorMessage || 'Error al seleccionar impresora'
+        };
+      }
+      const mac = typeof args === 'string' ? args : args?.mac;
+      const found = pairedPrinters.find((p) => p.mac === mac);
+      selectedPrinter = found ? { ...found } : { name: `Impresora (${mac})`, mac };
+      return { ok: true, success: true };
+    },
+    async testPrint() {
+      if (options.shouldFailTestPrint) {
+        return {
+          success: false,
+          error: options.testPrintErrorMessage || 'Fallo de impresión de prueba'
+        };
+      }
+      return { success: true };
+    },
+    async getBluetoothStatus() {
+      return { ...bluetoothStatus };
     }
   };
 
