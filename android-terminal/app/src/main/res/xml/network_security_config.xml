@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Permite tráfico HTTP en claro hacia el servidor de la laptop en LAN (Decisión D3).
+     MainActivity restringe la navegación exclusivamente al host y puerto de la URL configurada. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+</network-security-config>
