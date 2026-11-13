@@ -6,6 +6,7 @@ import {
   printJobOnDevice,
   printJobsOnDevice,
   startTerminalHeartbeat,
+  printPendingTerminalJobs,
   appendLineFeedsToBase64
 } from '../../web/src/lib/mobile-print-bridge.js';
 import {
@@ -320,6 +321,79 @@ describe('R2 — Mobile Print Bridge & Terminal Identity (@tocineta/web)', () =>
       expect(decodedBuf[4]).toBe(10);
       expect(decodedBuf[5]).toBe(10);
       expect(decodedBuf[6]).toBe(10);
+    });
+
+    it('3.9 startTerminalHeartbeat ejecuta callback onFirstHeartbeat una sola vez tras primer latido', async () => {
+      vi.useFakeTimers();
+      try {
+        globalThis.window.TocinetaNative = {
+          getCapabilities: vi.fn(async () => ({ bluetoothSpp: true })),
+          getSelectedPrinter: vi.fn(async () => ({ name: 'POS-58-BT', mac: 'AA:BB:CC:DD:EE:FF' })),
+          printEscPos: vi.fn()
+        };
+
+        vi.spyOn(clientModule, 'apiFetch').mockImplementation(async () => {
+          return { status: 200, ok: true, json: async () => ({ ok: true }) } as unknown as Response;
+        });
+
+        const firstCallback = vi.fn();
+        const cancel = startTerminalHeartbeat(firstCallback);
+
+        await vi.advanceTimersByTimeAsync(100);
+        expect(firstCallback).toHaveBeenCalledTimes(1);
+
+        // Segundo latido no vuelve a invocar callback
+        await vi.advanceTimersByTimeAsync(30000);
+        expect(firstCallback).toHaveBeenCalledTimes(1);
+
+        cancel();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it('3.10 printPendingTerminalJobs consulta GET /api/terminals/me/print-jobs e imprime comandas primero y nota al final', async () => {
+      globalThis.window.TocinetaNative = {
+        getCapabilities: vi.fn(async () => ({ bluetoothSpp: true })),
+        getSelectedPrinter: vi.fn(async () => ({ name: 'POS-58-BT', mac: 'AA:BB:CC:DD:EE:FF' })),
+        printEscPos: vi.fn(async () => ({ success: true }))
+      };
+
+      const printedOrder: string[] = [];
+
+      vi.spyOn(clientModule, 'apiFetch').mockImplementation(async (url: string) => {
+        if (url === '/api/terminals/me/print-jobs') {
+          return {
+            status: 200,
+            ok: true,
+            json: async () => ({
+              data: [
+                { id: 'job_nota_1', job_type: 'NOTA_ENTREGA', created_at_ms: 1000 },
+                { id: 'job_cocina_1', job_type: 'TICKET_COCINA', created_at_ms: 1005 }
+              ]
+            })
+          } as unknown as Response;
+        }
+        if (url.includes('/claim')) {
+          const match = url.match(/\/api\/print-jobs\/(.*?)\/claim/);
+          if (match) printedOrder.push(match[1]);
+          return {
+            status: 200,
+            ok: true,
+            json: async () => ({ payloadBase64: Buffer.from('TICKET').toString('base64') })
+          } as unknown as Response;
+        }
+        return {
+          status: 200,
+          ok: true,
+          json: async () => ({ ok: true })
+        } as unknown as Response;
+      });
+
+      const count = await printPendingTerminalJobs();
+      expect(count).toBe(2);
+      // Comanda primero, nota al final
+      expect(printedOrder).toEqual(['job_cocina_1', 'job_nota_1']);
     });
   });
 });

@@ -434,4 +434,28 @@ describe('R2 — Rutas del Dispositivo (Impresión Móvil) (@tocineta/server)', 
     // Restaurar business_settings
     rawDb.prepare("UPDATE business_settings SET receipt_printer_id = 'print_caja_usb' WHERE id = 'default'").run();
   });
+
+  it('8. GET /api/print-jobs incluye target, target_terminal_id y printer_name en su SELECT', async () => {
+    rawDb.prepare(`
+      INSERT INTO print_jobs (id, printer_id, job_type, station, status, target, target_terminal_id, payload_bytes, created_at_ms)
+      VALUES ('job_select_test', 'print_bt_1', 'NOTA_ENTREGA', 'caja', 'en_cola', 'client', ?, ?, ?)
+    `).run(terminal1, Buffer.from('test'), Date.now());
+
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/print-jobs?limit=10',
+      headers: {
+        authorization: `Bearer ${cajeraToken}`
+      }
+    });
+
+    expect(res.statusCode).toBe(200);
+    const body = res.json();
+    expect(Array.isArray(body.data)).toBe(true);
+    expect(body.data.length).toBeGreaterThan(0);
+    const firstJob = body.data[0];
+    expect(firstJob.target).toBe('client');
+    expect(firstJob.target_terminal_id).toBe(terminal1);
+    expect(firstJob.printer_name).toBe('BT 1');
+  });
 });

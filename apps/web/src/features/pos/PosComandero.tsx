@@ -10,6 +10,8 @@ import { CustomizationModal } from './CustomizationModal.js';
 import { ComboWizardModal } from './ComboWizardModal.js';
 import { MultiMethodCalculator } from '../cashier/MultiMethodCalculator.js';
 import { PostPaymentPrintModal } from '../cashier/PostPaymentPrintModal.js';
+import { usePayerDevicePrint } from '../cashier/usePayerDevicePrint.js';
+import { AutoPrintErrorBanner } from '../cashier/AutoPrintErrorBanner.js';
 import { hasPendingPrintJobs } from '../cashier/fetchPendingPrintJobs.js';
 import { WizardLayout, Toast, ToastContainer, Modal } from '../../ui/index.js';
 import { canUserProcessPayments, usdToBsCents } from '@tocineta/shared';
@@ -22,6 +24,8 @@ export const PosComandero: React.FC = () => {
   const { token, user } = useAuth();
   const queryClient = useQueryClient();
   const canPay = canUserProcessPayments(user);
+  const [autoPrintOrderId, setAutoPrintOrderId] = useState<string | null>(null);
+  const autoPrint = usePayerDevicePrint(autoPrintOrderId, token);
 
   React.useEffect(() => {
     if (typeof window !== 'undefined' && window.innerWidth <= 768) {
@@ -81,6 +85,16 @@ export const PosComandero: React.FC = () => {
       // Pedido creado/actualizado
     }
   });
+
+  React.useEffect(() => {
+    if (autoPrint.isPrinted) {
+      posCart.setStatusNotification({
+        type: 'success',
+        message: 'Impreso'
+      });
+      setAutoPrintOrderId(null);
+    }
+  }, [autoPrint.isPrinted, posCart]);
 
   // Modales de personalización
   const [customizingProduct, setCustomizingProduct] = useState<PosProduct | null>(null);
@@ -351,6 +365,7 @@ export const PosComandero: React.FC = () => {
                   if (hasPending) {
                     setPaidOrderForPrint({ id: paid.id, orderNumber: paid.order_number });
                   } else {
+                    setAutoPrintOrderId(paid.id);
                     posCart.setStatusNotification({
                       type: 'success',
                       message: `✓ Orden #${paid.order_number} cobrada con éxito`
@@ -362,6 +377,13 @@ export const PosComandero: React.FC = () => {
           </div>
         </Modal>
       )}
+
+      <AutoPrintErrorBanner
+        errorMessage={autoPrint.errorMessage}
+        onRetry={autoPrint.retry}
+        onReroute={autoPrint.rerouteToServer}
+        onClose={autoPrint.clearError}
+      />
 
       <PostPaymentPrintModal
         order={paidOrderForPrint}

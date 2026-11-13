@@ -3,6 +3,8 @@ import type { CashierOrder, CashierOrderLine } from './types.js';
 import { Card, Button, Badge, EmptyState, Modal, Input, Field } from '../../ui/index.js';
 import { PaymentWizard } from './PaymentWizard.js';
 import { PostPaymentPrintModal } from './PostPaymentPrintModal.js';
+import { usePayerDevicePrint } from './usePayerDevicePrint.js';
+import { AutoPrintErrorBanner } from './AutoPrintErrorBanner.js';
 import { hasPendingPrintJobs } from './fetchPendingPrintJobs.js';
 import { formatTableLabel } from '../../lib/format.js';
 import { apiFetch } from '../../api/client.js';
@@ -25,6 +27,14 @@ export const CashierOrdersTab: React.FC<CashierOrdersTabProps> = ({
   const [selectedOrder, setSelectedOrder] = useState<CashierOrder | null>(null);
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
   const [paidOrderForPrint, setPaidOrderForPrint] = useState<{ id: string; orderNumber: number } | null>(null);
+  const [autoPrintOrderId, setAutoPrintOrderId] = useState<string | null>(null);
+  const autoPrint = usePayerDevicePrint(autoPrintOrderId, token);
+
+  React.useEffect(() => {
+    if (autoPrint.isPrinted) {
+      setAutoPrintOrderId(null);
+    }
+  }, [autoPrint.isPrinted]);
 
   // Estados para cancelar comanda
   const [cancelingOrder, setCancelingOrder] = useState<CashierOrder | null>(null);
@@ -197,6 +207,8 @@ export const CashierOrdersTab: React.FC<CashierOrdersTabProps> = ({
                 const hasPending = await hasPendingPrintJobs(paid.id, token);
                 if (hasPending) {
                   setPaidOrderForPrint({ id: paid.id, orderNumber: paid.order_number });
+                } else {
+                  setAutoPrintOrderId(paid.id);
                 }
               }
               onRefresh();
@@ -211,6 +223,13 @@ export const CashierOrdersTab: React.FC<CashierOrdersTabProps> = ({
         order={paidOrderForPrint}
         token={token}
         onClose={() => setPaidOrderForPrint(null)}
+      />
+
+      <AutoPrintErrorBanner
+        errorMessage={autoPrint.errorMessage}
+        onRetry={autoPrint.retry}
+        onReroute={autoPrint.rerouteToServer}
+        onClose={autoPrint.clearError}
       />
 
       {/* Modal de Cancelación de Comanda */}

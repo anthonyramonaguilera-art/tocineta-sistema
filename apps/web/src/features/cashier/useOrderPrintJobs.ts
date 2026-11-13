@@ -6,6 +6,10 @@ export interface OrderPrintJob {
   station: string | null;
   status: string;
   created_at_ms: number;
+  target?: 'server' | 'client';
+  target_terminal_id?: string | null;
+  printer_name?: string | null;
+  connection_type?: string | null;
 }
 
 export function pickOriginalJobs(jobs: OrderPrintJob[]) {
@@ -31,3 +35,5 @@ export async function fetchOrderPrintJobs(orderId: string): Promise<OrderPrintJo
   if (!res.ok) throw new Error(data.message || 'Error al consultar los comprobantes de la orden');
   return data.data || [];
 }
+
+export { usePayerDevicePrint, type UsePayerDevicePrintState } from './usePayerDevicePrint.js';

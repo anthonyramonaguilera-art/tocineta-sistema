@@ -175,14 +175,16 @@ export async function printJobsOnDevice(
 
 /**
  * Inicia el envío periódico de latidos (heartbeat) del terminal cada 30 segundos si hay puente nativo.
+ * Opcionalmente ejecuta un callback tras confirmar el primer latido exitoso.
  * Devuelve la función para cancelar el latido. Sin puente no realiza ninguna acción.
  */
-export function startTerminalHeartbeat(): () => void {
+export function startTerminalHeartbeat(onFirstHeartbeat?: () => void): () => void {
   if (!hasNativePrinting()) {
     return () => {};
   }
 
   let cancelled = false;
+  let hasFiredFirst = false;
 
   const sendHeartbeat = async () => {
     if (cancelled || !hasNativePrinting() || !window.TocinetaNative) return;
@@ -224,10 +226,21 @@ export function startTerminalHeartbeat(): () => void {
       if (btPrinter) body.btPrinter = btPrinter;
       if (capabilities) body.capabilities = capabilities;
 
-      await apiFetch('/api/terminals/heartbeat', {
+      const res = await apiFetch('/api/terminals/heartbeat', {
         method: 'POST',
         body: JSON.stringify(body)
       });
+
+      if (res && res.ok && !hasFiredFirst) {
+        hasFiredFirst = true;
+        if (onFirstHeartbeat) {
+          try {
+            onFirstHeartbeat();
+          } catch {
+            // Ignorar errores en callback
+          }
+        }
+      }
     } catch {
       // Ignorar errores transitorios de red en el heartbeat
     }
@@ -243,4 +256,32 @@ export function startTerminalHeartbeat(): () => void {
     cancelled = true;
     clearInterval(intervalId);
   };
+}
+
+/**
+ * Consulta los trabajos pendientes de este terminal de los últimos 15 min e imprime con printJobsOnDevice.
+ * Devuelve el número de tickets impresos exitosamente.
+ */
+export async function printPendingTerminalJobs(): Promise<number> {
+  try {
+    const res = await apiFetch('/api/terminals/me/print-jobs');
+    if (!res.ok) return 0;
+    const body = (await res.json()) as { data?: Array<{ id: string; job_type: string; created_at_ms: number }> };
+    const jobs = body?.data || [];
+    if (!Array.isArray(jobs) || jobs.length === 0) return 0;
+
+    // Orden: comandas primero y nota al final
+    const sorted = [...jobs].sort((a, b) => {
+      const aIsKitchen = a.job_type === 'TICKET_COCINA';
+      const bIsKitchen = b.job_type === 'TICKET_COCINA';
+      if (aIsKitchen && !bIsKitchen) return -1;
+      if (!aIsKitchen && bIsKitchen) return 1;
+      return a.created_at_ms - b.created_at_ms;
+    });
+
+    const results = await printJobsOnDevice(sorted.map((j) => j.id));
+    return results.filter((r) => r.ok).length;
+  } catch {
+    return 0;
+  }
 }

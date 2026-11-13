@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, Button, Badge, Icon } from '../../ui/index.js';
 import type { BusinessSettings, PrinterItem } from './types.js';
 import { PrintFlowSettings } from './PrintFlowSettings.js';
+import { ConnectedTerminalsCard } from './ConnectedTerminalsCard.js';
 import { apiFetch } from '../../api/client';
 
 
@@ -142,7 +143,8 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
   const hasWindowsPrinters = windowsPrinters.length > 0;
 
   return (
-    <Card variant="surface" className="p-5 border border-border space-y-6">
+    <div className="space-y-6">
+      <Card variant="surface" className="p-5 border border-border space-y-6">
       <div className="flex items-center justify-between border-b border-border pb-3">
         <div className="flex items-center gap-2">
           <Icon name="Printer" size={18} className="text-primary" />
@@ -301,6 +303,8 @@ export const PrintersPanel: React.FC<PrintersPanelProps> = ({ token }) => {
         </div>
       )}
     </Card>
+      <ConnectedTerminalsCard token={token} />
+    </div>
   );
 };
 

@@ -277,6 +277,7 @@ export const printingRoutes: FastifyPluginAsync = async (fastify) => {
     const jobs = rawDb.prepare(`
       SELECT 
         pj.id, pj.printer_id, pj.order_id, pj.job_type,
+        pj.target, pj.target_terminal_id,
         pj.ticket_ir_json, pj.station, pj.status, pj.error_message,
         pj.attempts, pj.max_attempts, pj.reprint_count,
         pj.reprint_reason, pj.reprinted_by_user_id,
@@ -284,7 +285,7 @@ export const printingRoutes: FastifyPluginAsync = async (fastify) => {
         p.name as printer_name, p.connection_type,
         o.order_number
       FROM print_jobs pj
-      JOIN printers p ON pj.printer_id = p.id
+      LEFT JOIN printers p ON pj.printer_id = p.id
       LEFT JOIN orders o ON pj.order_id = o.id
       ${whereClause}
       ORDER BY pj.created_at_ms DESC

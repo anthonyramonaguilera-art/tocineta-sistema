@@ -4,7 +4,8 @@ import { canUserProcessPayments } from '@tocineta/shared';
 import { useAuth } from '../context/AuthContext.js';
 import { queryClient, ALLOWED_TABS_BY_ROLE, type TabType } from '../App.js';
 import { apiFetch } from '../api/client.js';
-import { startTerminalHeartbeat } from '../lib/mobile-print-bridge.js';
+import { startTerminalHeartbeat, printPendingTerminalJobs } from '../lib/mobile-print-bridge.js';
+import { Toast, ToastContainer } from '../ui/index.js';
 import { AppHeader } from './AppHeader.js';
 import { AppSidebar } from './AppSidebar.js';
 import { PrintAttentionModal } from '../features/cashier/PrintAttentionModal.js';
@@ -53,13 +54,22 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isOnline, setIsOnline] = useState<boolean>(() => typeof navigator !== 'undefined' ? navigator.onLine : true);
   const [previewJobId, setPreviewJobId] = useState<string | null>(null);
+  const [startupNotice, setStartupNotice] = useState<string | null>(null);
 
   const mustChangePin = Boolean(user?.mustChangePin);
 
   // Latido del terminal para puente nativo de impresión tras iniciar sesión
   useEffect(() => {
     if (!token) return;
-    const cancelHeartbeat = startTerminalHeartbeat();
+    let checkedStartup = false;
+    const cancelHeartbeat = startTerminalHeartbeat(async () => {
+      if (checkedStartup) return;
+      checkedStartup = true;
+      const count = await printPendingTerminalJobs();
+      if (count > 0) {
+        setStartupNotice(`Se imprimieron ${count} tickets pendientes`);
+      }
+    });
     return () => {
       cancelHeartbeat();
     };
@@ -221,6 +231,16 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
       <PrintAttentionModal onOpenTicketPreview={setPreviewJobId} />
       {previewJobId && <TicketPreviewModal jobId={previewJobId} onClose={() => setPreviewJobId(null)} />}
+
+      {startupNotice && (
+        <ToastContainer>
+          <Toast
+            type="info"
+            message={startupNotice}
+            onClose={() => setStartupNotice(null)}
+          />
+        </ToastContainer>
+      )}
     </div>
   );
 };
