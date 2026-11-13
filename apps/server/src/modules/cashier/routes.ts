@@ -278,6 +278,14 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
+      const rawTerminalId = request.headers['x-terminal-id'];
+      const payerTerminalId =
+        typeof rawTerminalId === 'string' &&
+        rawTerminalId.trim().length >= 8 &&
+        rawTerminalId.trim().length <= 64
+          ? rawTerminalId.trim()
+          : null;
+
       const result = processOrderPayment(dbCtx.rawDb, id, {
         orderId: id,
         cashierUserId: user.id,
@@ -287,7 +295,8 @@ export const cashierRoutes: FastifyPluginAsync = async (fastify) => {
         overpaymentReason: body.overpaymentReason,
         supervisorPin: body.supervisorPin,
         confirmWarning: body.confirmWarning,
-        actingKey: (request as any).user?.id ?? request.ip
+        actingKey: (request as any).user?.id ?? request.ip,
+        payerTerminalId
       });
 
       return reply.status(200).send({

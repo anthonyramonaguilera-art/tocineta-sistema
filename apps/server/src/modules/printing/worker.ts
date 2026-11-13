@@ -35,6 +35,7 @@ import {
   buildRefireTicketIR
 } from './templates.js';
 import { verifyPin } from '../auth/pin.js';
+import { isTerminalAlive, getTerminalPrinterId } from './terminal-registry.js';
 
 export function authenticateByPin(
   rawDb: Database.Database,
@@ -91,17 +92,77 @@ export function resolveKitchenPrinterId(rawDb: Database.Database): string {
       if (s.print_mode === 'one') {
         return s.receipt_printer_id || 'print_caja_usb';
       }
-      if (s.kitchen_printer_id && s.kitchen_printer_id !== 'print_caja_usb') {
-        return s.kitchen_printer_id;
-      }
       if (s.print_mode === 'two') {
-        return 'print_cocina';
+        const kId = s.kitchen_printer_id?.trim();
+        return kId ? kId : 'print_cocina';
+      }
+      const kId = s.kitchen_printer_id?.trim();
+      if (kId) {
+        return kId;
       }
     }
     return 'print_caja_usb';
   } catch {
     return 'print_caja_usb';
   }
+}
+
+export interface TicketTargetResult {
+  printerId: string;
+  target: 'server' | 'client';
+  terminalId: string | null;
+}
+
+export function resolveTicketTarget(
+  rawDb: Database.Database,
+  kind: 'nota' | 'comanda',
+  payerTerminalId?: string | null
+): TicketTargetResult {
+  let s: any = null;
+  try {
+    s = rawDb.prepare(
+      'SELECT receipt_destination, kitchen_destination, receipt_printer_id, kitchen_printer_id, print_mode FROM business_settings WHERE id = ?'
+    ).get('default') as any;
+  } catch {
+    s = null;
+  }
+
+  const dest: string = kind === 'nota'
+    ? (s?.receipt_destination || 'payer_device')
+    : (s?.kitchen_destination || 'payer_device');
+
+  if (dest === 'payer_device' && payerTerminalId && isTerminalAlive(payerTerminalId)) {
+    const printerId = getTerminalPrinterId(rawDb, payerTerminalId) || `print_bt_${payerTerminalId}`;
+    return {
+      printerId,
+      target: 'client',
+      terminalId: payerTerminalId
+    };
+  }
+
+  const fixedPrinterId = kind === 'nota'
+    ? (s?.receipt_printer_id || 'print_caja_usb')
+    : resolveKitchenPrinterId(rawDb);
+
+  try {
+    const row = rawDb.prepare(
+      'SELECT connection_type, owner_terminal_id FROM printers WHERE id = ?'
+    ).get(fixedPrinterId) as { connection_type?: string; owner_terminal_id?: string | null } | undefined;
+
+    if (row && row.connection_type === 'CLIENT_BT') {
+      return {
+        printerId: fixedPrinterId,
+        target: 'client',
+        terminalId: row.owner_terminal_id ?? null
+      };
+    }
+  } catch {}
+
+  return {
+    printerId: fixedPrinterId,
+    target: 'server',
+    terminalId: null
+  };
 }
 
 export interface PrintJobRow {
@@ -372,7 +433,7 @@ export class PrintingWorker {
       for (const p of printers) {
         if (this.activeLocks.get(p.id)) continue;
         const pendingCount = this.rawDb.prepare(`
-          SELECT COUNT(*) as c FROM print_jobs WHERE printer_id = ? AND status IN ('en_cola', 'imprimiendo')
+          SELECT COUNT(*) as c FROM print_jobs WHERE printer_id = ? AND status IN ('en_cola', 'imprimiendo') AND target = 'server'
         `).get(p.id) as { c: number };
 
         if (pendingCount && pendingCount.c > 0) continue;
@@ -410,7 +471,7 @@ export class PrintingWorker {
         SELECT pj.*, p.connection_type, p.address, p.name as printer_name
         FROM print_jobs pj
         JOIN printers p ON pj.printer_id = p.id
-        WHERE pj.status = 'en_cola'
+        WHERE pj.status = 'en_cola' AND pj.target = 'server'
         ORDER BY pj.created_at_ms ASC
         LIMIT 10
       `).all() as Array<PrintJobRow & { connection_type: string; address: string; printer_name: string }>;
@@ -452,7 +513,7 @@ export class PrintingWorker {
     this.rawDb.prepare(`
       UPDATE print_jobs 
       SET status = 'imprimiendo', attempts = attempts + 1
-      WHERE id = ? AND status = 'en_cola'
+      WHERE id = ? AND status = 'en_cola' AND target = 'server'
     `).run(job.id);
 
     try {
@@ -570,41 +631,53 @@ export interface EnqueueOrderPrintJobsResult {
  */
 export function enqueueOrderPrintJobs(
   rawDb: Database.Database,
-  orderId: string
+  orderId: string,
+  opts?: { payerTerminalId?: string | null }
 ): EnqueueOrderPrintJobsResult {
   const now = Date.now();
+  const payerTerminalId = opts?.payerTerminalId ?? null;
   const { order, lines, kitchenLines } = loadOrderReceiptDataFromDb(rawDb, orderId);
 
-  const settings = rawDb.prepare('SELECT print_mode, receipt_printer_id, kitchen_printer_id, print_delivery_note, print_flow FROM business_settings WHERE id = ?').get('default') as any;
+  const settings = rawDb.prepare('SELECT print_delivery_note, print_flow FROM business_settings WHERE id = ?').get('default') as any;
   const printDeliveryNote = settings?.print_delivery_note ?? 1;
   const printFlow = settings?.print_flow || 'manual';
-  const printMode = settings?.print_mode || 'one';
 
-  const receiptPrinterId = (settings?.receipt_printer_id && settings.receipt_printer_id !== 'print_caja_usb') ? settings.receipt_printer_id : 'print_caja_usb';
-  const kitchenPrinterId = resolveKitchenPrinterId(rawDb);
+  const initialStatus = printFlow === 'manual' ? 'pending' : 'en_cola';
 
-  const isUnique = printMode === 'one' || kitchenPrinterId === receiptPrinterId;
-  const initialStatus = (isUnique && printFlow === 'manual') ? 'pending' : 'en_cola';
+  // 1. Resolver target para NOTA DE ENTREGA
+  const notaTarget = resolveTicketTarget(rawDb, 'nota', payerTerminalId);
 
   let cajaJobId: string | null = null;
   if (printDeliveryNote === 1) {
     const receiptIR = buildReceiptTicketIR(order, lines);
-    const cajaConfig = getPrinterConfig(rawDb, receiptPrinterId);
+    const cajaConfig = getPrinterConfig(rawDb, notaTarget.printerId);
     const receiptBytes = Buffer.from(renderTicketToEscPos(receiptIR, cajaConfig));
 
     cajaJobId = `pjob_${generateUuidV7()}`;
     rawDb.prepare(`
       INSERT INTO print_jobs (
         id, printer_id, order_id, job_type, payload_bytes,
-        ticket_ir_json, station, status, attempts, created_at_ms
-      ) VALUES (?, ?, ?, 'NOTA_ENTREGA', ?, ?, 'caja', ?, 0, ?)
-    `).run(cajaJobId, receiptPrinterId, orderId, receiptBytes, JSON.stringify(receiptIR), initialStatus, now);
+        ticket_ir_json, station, status, attempts, created_at_ms,
+        target, target_terminal_id
+      ) VALUES (?, ?, ?, 'NOTA_ENTREGA', ?, ?, 'caja', ?, 0, ?, ?, ?)
+    `).run(
+      cajaJobId,
+      notaTarget.printerId,
+      orderId,
+      receiptBytes,
+      JSON.stringify(receiptIR),
+      initialStatus,
+      now,
+      notaTarget.target,
+      notaTarget.terminalId
+    );
   }
 
-  // 2. Generar Comandas de Cocina por Estación
+  // 2. Resolver target UNA VEZ para COMANDAS DE COCINA
+  const comandaTarget = resolveTicketTarget(rawDb, 'comanda', payerTerminalId);
   const kitchenIRs = buildKitchenTicketIRs({ order, kitchenLines });
   const kitchenJobIds: string[] = [];
-  const cocinaConfig = getPrinterConfig(rawDb, kitchenPrinterId);
+  const cocinaConfig = getPrinterConfig(rawDb, comandaTarget.printerId);
 
   for (const kIR of kitchenIRs) {
     const kJobId = `pjob_${generateUuidV7()}`;
@@ -624,9 +697,21 @@ export function enqueueOrderPrintJobs(
     rawDb.prepare(`
       INSERT INTO print_jobs (
         id, printer_id, order_id, job_type, payload_bytes,
-        ticket_ir_json, station, status, attempts, created_at_ms
-      ) VALUES (?, ?, ?, 'TICKET_COCINA', ?, ?, ?, ?, 0, ?)
-    `).run(kJobId, kitchenPrinterId, orderId, kBytes, JSON.stringify(kIR), station, initialStatus, now);
+        ticket_ir_json, station, status, attempts, created_at_ms,
+        target, target_terminal_id
+      ) VALUES (?, ?, ?, 'TICKET_COCINA', ?, ?, ?, ?, 0, ?, ?, ?)
+    `).run(
+      kJobId,
+      comandaTarget.printerId,
+      orderId,
+      kBytes,
+      JSON.stringify(kIR),
+      station,
+      initialStatus,
+      now,
+      comandaTarget.target,
+      comandaTarget.terminalId
+    );
 
     kitchenJobIds.push(kJobId);
   }

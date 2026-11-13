@@ -93,6 +93,7 @@ export interface ProcessOrderPaymentInput {
   supervisorPin?: string;
   confirmWarning?: boolean;
   actingKey?: string;
+  payerTerminalId?: string | null;
 }
 
 /**
@@ -829,7 +830,9 @@ export function processOrderPayment(
     deductInventoryForOrder(rawDb, orderId, orderLocationId, now, input.cashierUserId);
 
     // 6. Encolar Trabajos de Impresión Asíncrona (Caja USB y Cocina TCP con Ticket IR)
-    enqueueOrderPrintJobs(rawDb, orderId);
+    enqueueOrderPrintJobs(rawDb, orderId, {
+      payerTerminalId: input.payerTerminalId ?? null
+    });
 
     // 6. Auditoría y Bus de Eventos
     appendAuditEvent(rawDb, {

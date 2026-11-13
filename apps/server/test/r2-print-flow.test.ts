@@ -79,7 +79,7 @@ describe('R2 — Print Flow (manual, auto, delivery note, release)', () => {
     } catch {}
   });
 
-  it('1) Modo two genera jobs en_cola', async () => {
+  it('1) Modo two con print_flow=manual genera jobs pending (isUnique eliminado)', async () => {
     await app.inject({
       method: 'PATCH',
       url: '/api/business-settings',
@@ -111,7 +111,7 @@ describe('R2 — Print Flow (manual, auto, delivery note, release)', () => {
     const jobs = rawDb.prepare('SELECT status FROM print_jobs WHERE order_id = ?').all(order.id) as any[];
     expect(jobs.length).toBeGreaterThan(0);
     for (const j of jobs) {
-      expect(j.status).toBe('en_cola');
+      expect(j.status).toBe('pending');
     }
   });
 
