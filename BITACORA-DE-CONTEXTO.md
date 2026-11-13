@@ -1,5 +1,5 @@
 # BITÁCORA TÉCNICA Y DE CONTEXTO — TOCINETA
-Última actualización: 2026-11-01 · Rama: r2/go-live · Último commit: da8c0e6 test(P5-A): paridad Z vs financial truth (0 centavos diferencia)
+Última actualización: 2026-11-12 · Rama: r2/go-live · Última migración: 0041_free_item.sql · Tests: 587/587 verdes (100%)
 
 ---
 
@@ -8,8 +8,10 @@
 - **Oleada / Fase actual:**
   - **Fase de Blindaje Backend y Frontend (Oleadas 1, 2 y 3) 100% COMPLETADA y sellada en git** [VERIFICADO: git log `da8c0e6`].
   - **Parche de Consolidación QA / Go-Live (Olas A, B y C) en preparación:** Planificación y especificación técnica exhaustiva para subsanar los hallazgos de campo de dinero, cierre Z, catálogo y UX móvil.
-  - La suite de pruebas de servidor cuenta con **410 pruebas unitarias aprobadas de 414** (52 archivos verdes, 4 fallos documentados por desalineación de tests antiguos con blindajes nuevos) [VERIFICADO: ejecución Vitest 2026-11-01].
-  - Gobernanza de diseño UI (`pnpm run guard`) y compilación TypeScript (`tsc --noEmit` en web y server) se encuentran en **0 errores** [VERIFICADO: ejecución en consola].
+  - La suite de pruebas de servidor cuenta con **587 pruebas unitarias aprobadas de 587 (83 suites, 100% VERDE)** [VERIFICADO: ejecución Vitest 2026-11-12].
+  - Gobernanza de diseño UI (`pnpm run guard`) y compilación TypeScript (`tsc --noEmit` en web, shared y server) se encuentran en **0 errores** [VERIFICADO: ejecución en consola 2026-11-12].
+  - Base de datos consolidada hasta la migración `0041_free_item.sql`. Próxima migración asignada: `0042_client_print_routing.sql`.
+  - **Arquitectura de Impresión Móvil Bluetooth MP583 (58mm) y Terminal Android:** Operatividad definida por el dueño: Laptop fija USB en cocina como comandera (`print_caja_usb`), y teléfonos móviles (2 concurrentes) cobrando con su propia impresora Bluetooth MP583 de 58mm para notas de entrega. Plan en 3 etapas: Etapa 1 (backend de ruteo y endpoints de payload ESC/POS en Fastify + conector web), Etapa 2 (APK terminal Capacitor con plugin Kotlin SPP + bindProcessToNetwork + auto-descubrimiento por mDNS/barrido), Etapa 3 (Ajustes de terminal y homologación en campo).
 
 - **Completado (con evidencia en repo):**
   - **Oleada 1 — Seguridad Backend (Tag oficial `r2-ola-1` en commit `b3eab54`):**
@@ -78,6 +80,12 @@
 | **D7** | **Lockout de PINs (M12 / SEV-203) desbloqueable por `admin` y `supervisor`** | Protección contra ataques de fuerza bruta en terminales físicas, manteniendo el control de desbloqueo en los rangos de supervisión. | Desbloqueo exclusivo por `admin` o desactivación total del lockout. | Bloqueo permanente de cajeras/mesoneros en caso de fallos de PIN sin presencia del dueño/admin. | [DECLARADO; VERIFICADO en `authorizer-guard.ts`] |
 | **D8** | **Estrategia de Rama Única (`r2/go-live`) por Máxima Eficiencia** | Evitar sobrecarga y fricción de cambio de ramas o sincronización de múltiples worktrees en el monorepo local. Commits atómicos directos sobre `r2/go-live`. | Múltiples worktrees (`r2/ola-1`, `r2/ola-2`, `r2/lite-*`). | Conflictos de fusión complejos y pérdida de visibilidad del estado global del sistema. | [DECLARADO; VERIFICADO en git branch actual `r2/go-live`] |
 | **D9** | **Propuesta: Descargas de Reporte de Jornada para Cajera (`CASHIER_PLUS`)** | Permitir que la cajera descargue su propio comprobante PDF/Excel al cerrar turno sin recibir error 403 por el comodín `/api/reports/*`. | Mantener `/api/reports/*` exclusivo para administradores y supervisores. | Error 403 cuando la cajera intente descargar el soporte físico de su arqueo de turno con `ENFORCE_AUTH=true`. | [PROPUESTA TÉCNICA; VERIFICADO en `route-policy.ts:115`] |
+| **D10** | **Arquitectura Híbrida de Impresión (Laptop USB + Teléfonos Bluetooth MP583)** | Laptop cerca de cocina opera con impresora fija USB (`print_caja_usb`) como comandera para hot dogs y hamburguesas. Teléfonos móviles (2 cajeras concurrentes) operan con su propia impresora Bluetooth MP583 de 58mm para notas de entrega. | Intentar que la laptop controle todas las impresoras Bluetooth chinas sin puertos COM configurados, o forzar a la cocina a usar Bluetooth. | Fallos de driver en Windows con impresoras chinas, monopolio de conexión Bluetooth de un solo dispositivo. | [RESUELTO POR EL DUEÑO 2026-11-12; Auditoría en vivo] |
+| **D11** | **Transporte Bluetooth Clásico (RFCOMM/SPP) con Chunking para 58mm** | Las impresoras térmicas chinas genéricas (MP583) usan SPP clásico (no BLE) y tienen búferes RAM pequeños (2–4 KB). Se requiere APK nativa (Capacitor) con chunking (256–512 bytes, pausa 15–20 ms). | Web Bluetooth (exige HTTPS y es BLE-only, incompatible con D3 y MP583). Envío masivo de bytes de golpe. | Bloqueo o descarte por parte de Chrome, caracteres basura y corte prematuro del papel. | [DECLARADO; Auditoría 2026-11-12] |
+| **D12** | **Blindaje de Red Wi-Fi sin Internet (`bindProcessToNetwork`)** | En routers locales de food truck/restaurante sin salida a internet (WAN), Android salta automáticamente a datos móviles (4G), perdiendo la conexión local con la laptop (`192.168.x.x`). La APK terminal fija el proceso al Wi-Fi. | Permitir que el sistema operativo gestione la red automáticamente o depender de que los meseros apaguen datos móviles manualmente. | Desconexión inmediata de los comanderos y terminales de cobro con error "No se puede acceder a este sitio". | [DECLARADO; docs/android-setup.md; Auditoría 2026-11-12] |
+| **D13** | **Auto-descubrimiento en Capas del Servidor (mDNS + Barrido /24)** | Si el router reinicia y cambia la IP de la laptop por DHCP, la APK busca mDNS (`_tocineta._tcp`) o barre la subred `/24` contra `/api/health` validando el `serverId`. | Fijar una IP manual en duro en los teléfonos. | Caída del sistema si cambia la IP de la laptop hasta que un técnico reconfigure los teléfonos. | [DECLARADO; Auditoría 2026-11-12] |
+| **D14** | **Identificación de Terminal en Cobro (`target_terminal_id`) sin Tabla `devices` Paralela** | Cada terminal móvil se identifica con un `terminal_id` enviado en el cobro y aprovecha las sesiones existentes (`auth-guard`, `session.ts`, `localStorage`). | Crear una tabla `devices` redundante con hashes y tokens paralelos a la seguridad de la Oleada 1. | Sobre-ingeniería innecesaria, complejidad en auditoría y duplicación de autenticación. | [DECLARADO; Auditoría 2026-11-12] |
+| **D15** | **Migración 0042 como Siguiente Migración Forward-Only** | La migración 0041 (`0041_free_item.sql`) es la última en el repositorio. La próxima migración debe ser `0042_client_print_routing.sql` agregando `target` y `target_terminal_id` a `print_jobs`. | Crear migraciones con numeración duplicada o alterar tablas previas destructivamente. | Violación de D5 y fallos en migrador. | [DECLARADO; Auditoría 2026-11-12] |
 
 ---
 
@@ -195,6 +203,8 @@
 
 ## 8. PREGUNTAS ABIERTAS PARA EL DUEÑO
 
+0. **[RESUELTO POR EL DUEÑO 2026-11-12] Operativa de Impresoras en Sala y Cocina:**
+   En la laptop fija queda conectada una impresora térmica USB (cerca de cocina, comandera para hot dogs y hamburguesas). Los teléfonos móviles que cobran tienen su propia impresora portátil Bluetooth MP583 de 58mm (2 terminales concurrentes previstas). Todo el flujo y asignación de roles será configurable desde los Ajustes del sistema.
 1. **[RESUELTO POR INSPECCIÓN] ¿Está `ENFORCE_AUTH=true` en el entorno real?**  
    Verificado: Sí, está presente en `apps/server/.env`. Los 403 observados en pruebas son bloqueos reales de autorización.
 2. **[RESUELTO POR INSPECCIÓN] ¿Por qué falló el Cierre de Jornada con 403?**  
@@ -225,3 +235,5 @@
 - **2026-11-01 (2da edición):** Incorporación de resoluciones del dueño para las 5 preguntas abiertas: verificación de rutas en `guias/`, aprobación de cierre de turno por cajera (D6), confirmación de desbloqueo de PIN por admin y supervisor (D7), adopción de rama única `r2/go-live` (D8), y consolidación del estado de L-1 como Hecho sin commit.
 - **2026-11-01 (3ra edición):** Cierre y consolidación de la Oleada 1 verificado con tag `r2-ola-1` en commit `b3eab54`. Verificación en historial git de commits L-2 a L-9 (`aecab15`). Registro de culminación técnica de L-10 (Mecánico), P2-B y P2-D.
 - **2026-11-01 (4ta edición):** Consolidación total de Oleada 2 (`da48375`), Oleada 3 (`0b11687`, `b302c1c`, `8d290c4`) y Paridad Z (`da8c0e6`). Verificación contra código fuente de los hallazgos críticos de campo (BUG-01 a BUG-05, N-01 a N-05). Confirmación de presencia de `ENFORCE_AUTH=true` en `.env`. Formulación del plan de parche por Olas A y B.
+
+- **2026-11-12 (5ta edición):** Auditoría exhaustiva en vivo y definición técnica de la Arquitectura de Impresión Móvil Bluetooth (MP583 58mm) y APK Terminal Android. Verificación de 587/587 tests unitarios en verde (83 suites) en `@tocineta/server` y 0 errores en TypeScript y UI-Guard. Incorporación de Decisiones D10 a D15: impresión híbrida (laptop USB comandera + teléfonos Bluetooth MP583), transporte nativo RFCOMM/SPP con chunking de 256 bytes, blindaje `bindProcessToNetwork` para Wi-Fi sin internet, auto-descubrimiento por mDNS/barrido /24 y migración 0042 forward-only.

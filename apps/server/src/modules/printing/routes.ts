@@ -8,6 +8,7 @@ import { z } from 'zod';
 import { execFile } from 'node:child_process';
 import { renderTicketToHtml, renderTicketToEscPos, type TicketIR, type EscPosConfig } from '@tocineta/shared';
 import { getSessionUser } from '../auth/session.js';
+import { recordHeartbeat, listTerminals } from './terminal-registry.js';
 import {
   reprintPrintJob,
   resolveAttentionJob,
@@ -461,5 +462,45 @@ export const printingRoutes: FastifyPluginAsync = async (fastify) => {
         message: err.message
       });
     }
+  });
+
+  // 7. Registro de latido de terminal móvil / POS
+  fastify.post('/api/terminals/heartbeat', async (request, reply) => {
+    const heartbeatSchema = z.object({
+      terminalId: z
+        .string()
+        .min(8)
+        .max(64)
+        .regex(/^[A-Za-z0-9_-]+$/, 'terminalId solo permite caracteres alfanuméricos, guiones y guiones bajos'),
+      label: z.string().max(40).optional(),
+      btPrinter: z
+        .object({
+          name: z.string().min(1),
+          mac: z.string().regex(/^([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}$/, 'Formato MAC inválido (XX:XX:XX:XX:XX:XX)')
+        })
+        .optional(),
+      capabilities: z
+        .object({
+          bluetoothSpp: z.boolean().optional()
+        })
+        .optional()
+    });
+
+    const parsed = heartbeatSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        error: 'BAD_REQUEST',
+        message: 'Datos de heartbeat inválidos',
+        issues: parsed.error.issues
+      });
+    }
+
+    recordHeartbeat(rawDb, parsed.data.terminalId, parsed.data);
+    return reply.send({ ok: true, serverTimeMs: Date.now() });
+  });
+
+  // 8. Listar terminales registrados y estado de conexión
+  fastify.get('/api/terminals', async (_request, reply) => {
+    return reply.send(listTerminals());
   });
 };

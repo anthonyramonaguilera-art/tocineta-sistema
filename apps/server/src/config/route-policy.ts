@@ -100,6 +100,7 @@ export const ROUTE_POLICY: readonly RouteRule[] = [
   ['POST', '/api/print-jobs/:id/refire', 'CASHIER_PLUS'],
   ['POST', '/api/print-jobs/refire', 'CASHIER_PLUS'],
   ['POST', '/api/printers/:id/test', 'CASHIER_PLUS'],
+  ['POST', '/api/terminals/heartbeat', 'CASHIER_PLUS'],
   ['GET', '/api/reports/z-report/*', 'CASHIER_PLUS'],
   ['GET', '/api/reports/jornada/*', 'CASHIER_PLUS'],
   ['POST', '/api/menu/exchange-rate', 'CASHIER_PLUS'],
@@ -110,6 +111,7 @@ export const ROUTE_POLICY: readonly RouteRule[] = [
 
   // ───────────── ADMIN_SUPERVISOR ─────────────
   ['GET', '/api/printers/windows', 'ADMIN_SUPERVISOR'],
+  ['GET', '/api/terminals', 'ADMIN_SUPERVISOR'],
   ['POST', '/api/delivery/drivers', 'ADMIN_SUPERVISOR'],
   ['PATCH', '/api/delivery/drivers/:id', 'ADMIN_SUPERVISOR'],
   ['GET', '/api/qr-menu/cloud-summary', 'ADMIN_SUPERVISOR'],
