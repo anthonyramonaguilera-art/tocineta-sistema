@@ -190,11 +190,59 @@ describe('R2 — Reimpresiones y trabajos derivados respetan destino (r2-print-r
       expect(response.statusCode).toBe(201);
       const json = response.json();
       expect(json.success).toBe(true);
+      expect(json.id).toBe(json.newJobId);
+      expect(json.target).toBe('client');
+      expect(json.target_terminal_id).toBe(termId);
 
       const jobInDb = rawDb.prepare('SELECT * FROM print_jobs WHERE id = ?').get(json.newJobId) as any;
       expect(jobInDb.target).toBe('client');
       expect(jobInDb.target_terminal_id).toBe(termId);
       expect(jobInDb.printer_id).toBe(printerId);
+    });
+
+    it('POST /api/print-jobs/:id/reprint con header x-terminal-id vivo enruta trabajo server a client y devuelve datos del nuevo job', async () => {
+      const mobileTermId = 'term_pos_charlie';
+      const mobilePrinterId = registerTestTerminal(mobileTermId);
+
+      const serverJobId = `pjob_${generateUuidV7()}`;
+      const dummyIR = {
+        title: 'Nota Servidor Original',
+        widthColumns: 32,
+        blocks: [{ type: 'text', text: 'Nota Original', align: 'center' }]
+      };
+
+      rawDb.prepare(`
+        INSERT INTO print_jobs (
+          id, printer_id, order_id, job_type, payload_bytes,
+          ticket_ir_json, station, status, attempts, created_at_ms,
+          target, target_terminal_id
+        ) VALUES (?, 'print_caja_usb', ?, 'NOTA_ENTREGA', ?, ?, 'caja', 'impreso', 1, ?, 'server', NULL)
+      `).run(serverJobId, testOrderId, Buffer.from('dummy'), JSON.stringify(dummyIR), Date.now());
+
+      const response = await app.inject({
+        method: 'POST',
+        url: `/api/print-jobs/${serverJobId}/reprint`,
+        headers: {
+          authorization: `Bearer ${supervisorToken}`,
+          'x-terminal-id': mobileTermId
+        },
+        payload: {
+          pin: '654321',
+          reason: 'Reimpresión solicitada desde terminal móvil'
+        }
+      });
+
+      expect(response.statusCode).toBe(201);
+      const json = response.json();
+      expect(json.success).toBe(true);
+      expect(json.id).toBe(json.newJobId);
+      expect(json.target).toBe('client');
+      expect(json.target_terminal_id).toBe(mobileTermId);
+
+      const jobInDb = rawDb.prepare('SELECT * FROM print_jobs WHERE id = ?').get(json.newJobId) as any;
+      expect(jobInDb.target).toBe('client');
+      expect(jobInDb.target_terminal_id).toBe(mobileTermId);
+      expect(jobInDb.printer_id).toBe(mobilePrinterId);
     });
 
     it('la reimpresión de un trabajo server conserva target = server y target_terminal_id = null', () => {

@@ -350,10 +350,19 @@ export const printingRoutes: FastifyPluginAsync = async (fastify) => {
     }
 
     try {
+      const rawTerminalId = request.headers['x-terminal-id'];
+      const requesterTerminalId =
+        typeof rawTerminalId === 'string' &&
+        rawTerminalId.trim().length >= 8 &&
+        rawTerminalId.trim().length <= 64
+          ? rawTerminalId.trim()
+          : null;
+
       const result = reprintPrintJob(rawDb, {
         jobId: id,
         pin: parsed.data.pin,
-        reason: parsed.data.reason
+        reason: parsed.data.reason,
+        requesterTerminalId
       });
 
       // Disparar procesamiento del worker

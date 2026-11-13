@@ -753,12 +753,26 @@ export interface ReprintJobInput {
   jobId: string;
   pin: string;
   reason: string;
+  requesterTerminalId?: string | null;
+}
+
+export interface ReprintJobResult {
+  success: boolean;
+  newJobId: string;
+  id: string;
+  target: 'server' | 'client';
+  target_terminal_id: string | null;
+  job?: {
+    id: string;
+    target: 'server' | 'client';
+    target_terminal_id: string | null;
+  };
 }
 
 export function reprintPrintJob(
   rawDb: Database.Database,
   input: ReprintJobInput
-): { success: boolean; newJobId: string } {
+): ReprintJobResult {
   // 1. Validar PIN
   const auth = authenticateByPin(rawDb, input.pin);
   if (!auth.authenticated || !auth.user) {
@@ -779,17 +793,24 @@ export function reprintPrintJob(
     throw new Error('El trabajo original no posee especificación Ticket IR para reimpresión');
   }
 
+  let target: 'server' | 'client' = (job.target as 'server' | 'client') || 'server';
+  let targetTerminalId: string | null = job.target_terminal_id ?? null;
+  let printerId = job.printer_id;
+
+  if (input.requesterTerminalId && isTerminalAlive(input.requesterTerminalId)) {
+    target = 'client';
+    targetTerminalId = input.requesterTerminalId;
+    printerId = getTerminalPrinterId(rawDb, input.requesterTerminalId) || `print_bt_${input.requesterTerminalId}`;
+  }
+
   const originalIR = JSON.parse(job.ticket_ir_json) as TicketIR;
   const newReprintCount = (job.reprint_count || 0) + 1;
   const reprintedIR = buildReprintTicketIR(originalIR, newReprintCount, input.reason, auth.user.name);
-  const pConfig = getPrinterConfig(rawDb, job.printer_id);
+  const pConfig = getPrinterConfig(rawDb, printerId);
   const newBytes = Buffer.from(renderTicketToEscPos(reprintedIR, pConfig));
 
   const now = Date.now();
   const newJobId = `pjob_${generateUuidV7()}`;
-
-  const target = job.target || 'server';
-  const targetTerminalId = job.target_terminal_id ?? null;
 
   rawDb.prepare(`
     INSERT INTO print_jobs (
@@ -800,7 +821,7 @@ export function reprintPrintJob(
     ) VALUES (?, ?, ?, 'REIMPRESION', ?, ?, ?, 'en_cola', 0, ?, ?, ?, ?, ?, ?)
   `).run(
     newJobId,
-    job.printer_id,
+    printerId,
     job.order_id,
     newBytes,
     JSON.stringify(reprintedIR),
@@ -825,7 +846,18 @@ export function reprintPrintJob(
     }
   });
 
-  return { success: true, newJobId };
+  return {
+    success: true,
+    newJobId,
+    id: newJobId,
+    target,
+    target_terminal_id: targetTerminalId,
+    job: {
+      id: newJobId,
+      target,
+      target_terminal_id: targetTerminalId
+    }
+  };
 }
 
 /**

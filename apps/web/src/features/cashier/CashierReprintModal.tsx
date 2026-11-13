@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Modal, Button, Input, Select, Field } from '../../ui/index.js';
 import { apiFetch } from '../../api/client.js';
+import { getTerminalId } from '../../lib/terminal-identity.js';
+import { printJobsOnDevice } from '../../lib/mobile-print-bridge.js';
 import { fetchOrderPrintJobs, pickOriginalJobs } from './useOrderPrintJobs.js';
 import type { PaidSale } from './CashierSalesTab.js';
 
@@ -80,6 +82,9 @@ export const CashierReprintModal: React.FC<CashierReprintModalProps> = ({ reprin
     setError(null);
     const ids = Array.from(selected);
     let sent = 0;
+    const clientJobIds: string[] = [];
+    const myTerminalId = getTerminalId();
+
     for (const jobId of ids) {
       try {
         const res = await apiFetch(`/api/print-jobs/${jobId}/reprint`, {
@@ -94,12 +99,26 @@ export const CashierReprintModal: React.FC<CashierReprintModalProps> = ({ reprin
           return;
         }
         sent += 1;
+        const returnedJob = data.job || data;
+        const newId = returnedJob.id || returnedJob.newJobId;
+        if (returnedJob.target === 'client' && returnedJob.target_terminal_id === myTerminalId && newId) {
+          clientJobIds.push(newId);
+        }
       } catch (err: any) {
         setError(`${err?.message || 'Error de red'} (${sent} de ${ids.length} reenviados)`);
         setIsSubmitting(false);
         return;
       }
     }
+
+    if (clientJobIds.length > 0) {
+      try {
+        await printJobsOnDevice(clientJobIds);
+      } catch {
+        // Ignorar fallos de impresión en dispositivo para no bloquear UI
+      }
+    }
+
     setIsSubmitting(false);
     onDone(`${sent} comprobante(s) reenviado(s) a la impresora.`);
   };
