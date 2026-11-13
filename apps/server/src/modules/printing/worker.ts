@@ -383,6 +383,7 @@ export class PrintingWorker {
   private rawDb: Database.Database;
   private intervalTimer: NodeJS.Timeout | null = null;
   private keepAliveTimer: NodeJS.Timeout | null = null;
+  private clientReclaimTimer: NodeJS.Timeout | null = null;
   private isRunning = false;
   private activeLocks = new Map<string, boolean>();
   private lastSentAt = new Map<string, number>();
@@ -401,6 +402,17 @@ export class PrintingWorker {
         console.error('[PrintingWorker] Error procesando cola:', err);
       });
     }, pollIntervalMs);
+
+    if (!this.clientReclaimTimer) {
+      this.clientReclaimTimer = setInterval(() => {
+        try {
+          this.reclaimStaleClientJobs();
+        } catch (err) {
+          console.error('[PrintingWorker] Error vencimiento clientes:', err);
+        }
+      }, 15000);
+      this.clientReclaimTimer.unref();
+    }
 
     if (!this.keepAliveTimer && process.platform === 'win32' && process.env.PRINTER_DEV_SIMULATION !== 'true' && !this.mockTransports) {
       const keepAliveMs = process.env.PRINTER_KEEPALIVE_MS ? parseInt(process.env.PRINTER_KEEPALIVE_MS, 10) : 240000;
@@ -423,6 +435,14 @@ export class PrintingWorker {
       clearInterval(this.keepAliveTimer);
       this.keepAliveTimer = null;
     }
+    if (this.clientReclaimTimer) {
+      clearInterval(this.clientReclaimTimer);
+      this.clientReclaimTimer = null;
+    }
+  }
+
+  public reclaimStaleClientJobs(now = Date.now()): { reclaimedToQueue: number; escalatedToAttention: number } {
+    return reclaimStaleClientJobs(this.rawDb, now);
   }
 
   private async sendKeepAlives(): Promise<void> {
@@ -979,4 +999,62 @@ export function createOrderChangePrintJob(
   });
 
   return { success: true, newJobId };
+}
+
+
+export function reclaimStaleClientJobs(
+  rawDb: Database.Database,
+  now = Date.now()
+): { reclaimedToQueue: number; escalatedToAttention: number } {
+  if (!rawDb.open) return { reclaimedToQueue: 0, escalatedToAttention: 0 };
+  const threshold = now - 60000;
+  const staleJobs = rawDb.prepare(`
+    SELECT id, attempts, max_attempts, order_id, printer_id, job_type
+    FROM print_jobs
+    WHERE target = 'client' AND status = 'imprimiendo' AND claimed_at_ms < ?
+  `).all(threshold) as Array<{
+    id: string;
+    attempts: number;
+    max_attempts: number;
+    order_id: string | null;
+    printer_id: string;
+    job_type: string;
+  }>;
+
+  let reclaimedToQueue = 0;
+  let escalatedToAttention = 0;
+
+  for (const job of staleJobs) {
+    if (job.attempts < job.max_attempts) {
+      rawDb.prepare(`
+        UPDATE print_jobs
+        SET status = 'en_cola', claimed_at_ms = NULL, error_message = 'Tiempo de impresión en dispositivo cliente expirado'
+        WHERE id = ? AND status = 'imprimiendo'
+      `).run(job.id);
+      reclaimedToQueue++;
+    } else {
+      rawDb.prepare(`
+        UPDATE print_jobs
+        SET status = 'requiere_atencion', claimed_at_ms = NULL, error_message = 'Superó intentos máximos de impresión en cliente'
+        WHERE id = ? AND status = 'imprimiendo'
+      `).run(job.id);
+      escalatedToAttention++;
+
+      publishDomainEvent(rawDb, {
+        eventType: 'PRINT_JOB_ATTENTION_REQUIRED',
+        entityId: job.id,
+        payload: {
+          jobId: job.id,
+          orderId: job.order_id,
+          printerId: job.printer_id,
+          jobType: job.job_type,
+          errorMessage: 'Superó intentos máximos de impresión en cliente',
+          attempts: job.attempts,
+          status: 'requiere_atencion'
+        }
+      });
+    }
+  }
+
+  return { reclaimedToQueue, escalatedToAttention };
 }

@@ -15,8 +15,13 @@ import {
   createRefirePrintJob,
   sendWindowsRawEscPos,
   sendTcpEscPos,
-  type PrinterRow
+  getPrinterConfig,
+  resolveKitchenPrinterId,
+  type PrinterRow,
+  type PrintJobRow
 } from './worker.js';
+import { appendAuditEvent } from '../audit/audit-service.js';
+import { publishDomainEvent } from '../events/event-bus.js';
 
 import { getDatabaseContext } from '../../db/connection.js';
 
@@ -511,5 +516,332 @@ export const printingRoutes: FastifyPluginAsync = async (fastify) => {
   // 8. Listar terminales registrados y estado de conexión
   fastify.get('/api/terminals', async (_request, reply) => {
     return reply.send(listTerminals());
+  });
+
+  function getRequesterTerminalId(request: any): string | null {
+    const raw = request.headers['x-terminal-id'];
+    if (typeof raw === 'string') {
+      const trimmed = raw.trim();
+      if (trimmed.length > 0) {
+        return trimmed;
+      }
+    }
+    return null;
+  }
+
+  // 9. Listar trabajos client en cola para el terminal actual (GET /api/terminals/me/print-jobs)
+  fastify.get('/api/terminals/me/print-jobs', async (request, reply) => {
+    const terminalId = getRequesterTerminalId(request);
+    if (!terminalId) {
+      return reply.status(403).send({
+        code: 'FORBIDDEN_TERMINAL',
+        error: 'FORBIDDEN_TERMINAL',
+        message: 'Terminal no autorizado o header x-terminal-id ausente'
+      });
+    }
+
+    const fifteenMinAgo = Date.now() - 15 * 60 * 1000;
+    const jobs = rawDb.prepare(`
+      SELECT id, order_id, job_type, station, created_at_ms
+      FROM print_jobs
+      WHERE target = 'client'
+        AND target_terminal_id = ?
+        AND status = 'en_cola'
+        AND created_at_ms >= ?
+      ORDER BY created_at_ms ASC
+    `).all(terminalId, fifteenMinAgo) as Array<{
+      id: string;
+      order_id: string | null;
+      job_type: string;
+      station: string | null;
+      created_at_ms: number;
+    }>;
+
+    return reply.send(jobs);
+  });
+
+  // 10. Reclamar trabajo de impresión para terminal móvil (POST /api/print-jobs/:id/claim)
+  fastify.post('/api/print-jobs/:id/claim', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const terminalId = getRequesterTerminalId(request);
+
+    const job = rawDb.prepare('SELECT * FROM print_jobs WHERE id = ?').get(id) as PrintJobRow | undefined;
+    if (!job) {
+      return reply.status(404).send({
+        code: 'NOT_FOUND',
+        error: 'NOT_FOUND',
+        message: `Trabajo de impresión ${id} no encontrado`
+      });
+    }
+
+    if (!terminalId || job.target_terminal_id !== terminalId) {
+      return reply.status(403).send({
+        code: 'FORBIDDEN_TERMINAL',
+        error: 'FORBIDDEN_TERMINAL',
+        message: 'Terminal no coincide con el destinatario del trabajo'
+      });
+    }
+
+    const now = Date.now();
+    const result = rawDb.prepare(`
+      UPDATE print_jobs
+      SET status = 'imprimiendo', claimed_at_ms = ?, attempts = attempts + 1
+      WHERE id = ? AND target = 'client' AND status = 'en_cola'
+    `).run(now, id);
+
+    if (result.changes === 0) {
+      return reply.status(409).send({
+        code: 'CONFLICT',
+        error: 'CONFLICT',
+        message: 'El trabajo no se encuentra en estado en_cola para ser reclamado'
+      });
+    }
+
+    const payloadBase64 = Buffer.isBuffer(job.payload_bytes)
+      ? job.payload_bytes.toString('base64')
+      : Buffer.from(job.payload_bytes).toString('base64');
+
+    return reply.send({
+      id: job.id,
+      jobType: job.job_type,
+      payloadBase64
+    });
+  });
+
+  // 11. Completar trabajo reclamado por terminal móvil (POST /api/print-jobs/:id/complete)
+  fastify.post('/api/print-jobs/:id/complete', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const terminalId = getRequesterTerminalId(request);
+
+    const job = rawDb.prepare('SELECT * FROM print_jobs WHERE id = ?').get(id) as PrintJobRow | undefined;
+    if (!job) {
+      return reply.status(404).send({
+        code: 'NOT_FOUND',
+        error: 'NOT_FOUND',
+        message: `Trabajo de impresión ${id} no encontrado`
+      });
+    }
+
+    if (!terminalId || job.target_terminal_id !== terminalId) {
+      return reply.status(403).send({
+        code: 'FORBIDDEN_TERMINAL',
+        error: 'FORBIDDEN_TERMINAL',
+        message: 'Terminal no coincide con el destinatario del trabajo'
+      });
+    }
+
+    const completeSchema = z.object({
+      ok: z.boolean(),
+      error: z.string().optional()
+    });
+
+    const parsed = completeSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        code: 'BAD_REQUEST',
+        error: 'BAD_REQUEST',
+        message: 'Cuerpo inválido. Se requiere { ok: boolean, error?: string }',
+        issues: parsed.error.issues
+      });
+    }
+
+    if (job.status !== 'imprimiendo') {
+      return reply.status(409).send({
+        code: 'CONFLICT',
+        error: 'CONFLICT',
+        status: job.status,
+        message: `El trabajo no se encuentra en estado imprimiendo (estado actual: ${job.status})`
+      });
+    }
+
+    const now = Date.now();
+    if (parsed.data.ok) {
+      rawDb.prepare(`
+        UPDATE print_jobs
+        SET status = 'impreso', completed_at_ms = ?, error_message = NULL
+        WHERE id = ?
+      `).run(now, id);
+
+      publishDomainEvent(rawDb, {
+        eventType: 'PRINT_JOB_PRINTED',
+        entityId: job.id,
+        payload: {
+          jobId: job.id,
+          orderId: job.order_id,
+          printerId: job.printer_id,
+          jobType: job.job_type,
+          status: 'impreso',
+          completedAtMs: now
+        }
+      });
+
+      return reply.send({ success: true, id, status: 'impreso', completedAtMs: now });
+    } else {
+      const errorMsg = parsed.data.error || 'Fallo de impresión en terminal móvil';
+      if (job.attempts < job.max_attempts) {
+        rawDb.prepare(`
+          UPDATE print_jobs
+          SET status = 'en_cola', error_message = ?
+          WHERE id = ?
+        `).run(errorMsg, id);
+
+        return reply.send({
+          success: false,
+          id,
+          status: 'en_cola',
+          attempts: job.attempts,
+          maxAttempts: job.max_attempts,
+          error: errorMsg
+        });
+      } else {
+        rawDb.prepare(`
+          UPDATE print_jobs
+          SET status = 'requiere_atencion', error_message = ?
+          WHERE id = ?
+        `).run(errorMsg, id);
+
+        publishDomainEvent(rawDb, {
+          eventType: 'PRINT_JOB_ATTENTION_REQUIRED',
+          entityId: job.id,
+          payload: {
+            jobId: job.id,
+            orderId: job.order_id,
+            printerId: job.printer_id,
+            jobType: job.job_type,
+            errorMessage: errorMsg,
+            attempts: job.attempts,
+            status: 'requiere_atencion'
+          }
+        });
+
+        return reply.send({
+          success: false,
+          id,
+          status: 'requiere_atencion',
+          attempts: job.attempts,
+          maxAttempts: job.max_attempts,
+          error: errorMsg
+        });
+      }
+    }
+  });
+
+  // 12. Re-enrutar trabajo móvil hacia impresora del servidor (POST /api/print-jobs/:id/reroute)
+  fastify.post('/api/print-jobs/:id/reroute', async (request, reply) => {
+    const { id } = request.params as { id: string };
+    const terminalId = getRequesterTerminalId(request);
+
+    const job = rawDb.prepare('SELECT * FROM print_jobs WHERE id = ?').get(id) as PrintJobRow | undefined;
+    if (!job) {
+      return reply.status(404).send({
+        code: 'NOT_FOUND',
+        error: 'NOT_FOUND',
+        message: `Trabajo de impresión ${id} no encontrado`
+      });
+    }
+
+    if (!terminalId || job.target_terminal_id !== terminalId) {
+      return reply.status(403).send({
+        code: 'FORBIDDEN_TERMINAL',
+        error: 'FORBIDDEN_TERMINAL',
+        message: 'Terminal no coincide con el destinatario del trabajo'
+      });
+    }
+
+    const rerouteSchema = z.object({
+      to: z.literal('server')
+    });
+
+    const parsed = rerouteSchema.safeParse(request.body);
+    if (!parsed.success) {
+      return reply.status(400).send({
+        code: 'BAD_REQUEST',
+        error: 'BAD_REQUEST',
+        message: "Cuerpo inválido. Se requiere { to: 'server' }",
+        issues: parsed.error.issues
+      });
+    }
+
+    const settings = rawDb.prepare(
+      'SELECT receipt_printer_id, kitchen_printer_id, print_mode FROM business_settings WHERE id = ?'
+    ).get('default') as any;
+
+    const receiptPrinterId = settings?.receipt_printer_id || 'print_caja_usb';
+
+    let chosenPrinterId: string;
+    const isCocinaJob =
+      job.job_type === 'TICKET_COCINA' ||
+      job.job_type === 'REPOSICION_COCINA' ||
+      job.job_type === 'CAMBIO_ORDEN';
+
+    if (isCocinaJob) {
+      const kPrinterId = resolveKitchenPrinterId(rawDb);
+      const kPrinterRow = rawDb.prepare('SELECT connection_type FROM printers WHERE id = ?').get(kPrinterId) as { connection_type?: string } | undefined;
+      if (kPrinterRow && kPrinterRow.connection_type === 'CLIENT_BT') {
+        chosenPrinterId = receiptPrinterId;
+      } else {
+        chosenPrinterId = kPrinterId;
+      }
+    } else {
+      chosenPrinterId = receiptPrinterId;
+    }
+
+    const chosenPrinter = rawDb.prepare('SELECT connection_type FROM printers WHERE id = ?').get(chosenPrinterId) as { connection_type?: string } | undefined;
+    if (!chosenPrinter || chosenPrinter.connection_type === 'CLIENT_BT') {
+      return reply.status(409).send({
+        code: 'NO_SERVER_PRINTER',
+        error: 'NO_SERVER_PRINTER',
+        message: 'No hay impresora de servidor disponible para re-enrutar el trabajo'
+      });
+    }
+
+    if (!job.ticket_ir_json) {
+      return reply.status(400).send({
+        code: 'NO_IR_DATA',
+        error: 'NO_IR_DATA',
+        message: 'El trabajo no cuenta con ticket_ir_json para re-renderizado'
+      });
+    }
+
+    const ir = JSON.parse(job.ticket_ir_json) as TicketIR;
+    const pConfig = getPrinterConfig(rawDb, chosenPrinterId);
+    const newPayloadBytes = Buffer.from(renderTicketToEscPos(ir, pConfig));
+
+    rawDb.prepare(`
+      UPDATE print_jobs
+      SET target = 'server',
+          target_terminal_id = NULL,
+          printer_id = ?,
+          payload_bytes = ?,
+          status = 'en_cola',
+          error_message = NULL,
+          claimed_at_ms = NULL
+      WHERE id = ?
+    `).run(chosenPrinterId, newPayloadBytes, id);
+
+    const user = getSessionUser(rawDb, request.headers.authorization);
+    appendAuditEvent(rawDb, {
+      actorUserId: user?.id || null,
+      action: 'PRINT_JOB_REROUTED',
+      entityType: 'print_job',
+      entityId: id,
+      payload: {
+        previousTerminalId: job.target_terminal_id,
+        newPrinterId: chosenPrinterId,
+        jobType: job.job_type
+      }
+    });
+
+    if (fastify.printingWorker) {
+      fastify.printingWorker.trigger();
+    }
+
+    return reply.send({
+      success: true,
+      id,
+      target: 'server',
+      printerId: chosenPrinterId,
+      status: 'en_cola'
+    });
   });
 };
