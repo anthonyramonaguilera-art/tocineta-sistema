@@ -3,6 +3,7 @@ package com.tocineta.terminal
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.SharedPreferences
+import android.graphics.Bitmap
 import android.graphics.Color
 import android.net.Uri
 import android.os.Bundle
@@ -25,6 +26,13 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
+import androidx.webkit.ScriptHandler
+import androidx.webkit.WebViewCompat
+import androidx.webkit.WebViewFeature
+import com.tocineta.terminal.bridge.BridgeScript
+import com.tocineta.terminal.bridge.NativeBridge
+import com.tocineta.terminal.bridge.NoopPrinterGateway
+import com.tocineta.terminal.bridge.PrinterGateway
 import com.tocineta.terminal.net.ServerDiscovery
 import com.tocineta.terminal.net.WifiBinder
 import kotlinx.coroutines.CoroutineScope
@@ -40,6 +48,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var prefs: SharedPreferences
     private lateinit var wifiBinder: WifiBinder
+
+    private lateinit var nativeBridge: NativeBridge
+    private val printerGateway: PrinterGateway = NoopPrinterGateway()
+    private var bridgeScript: String = ""
+    private var documentStartScriptHandler: ScriptHandler? = null
+    private var isDocumentStartScriptActive = false
 
     private val activityScope = CoroutineScope(Dispatchers.Main + SupervisorJob())
     private var discoveryJob: Job? = null
@@ -66,6 +80,9 @@ class MainActivity : AppCompatActivity() {
         window.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
 
         prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+
+        val terminalId = BridgeScript.getOrCreateTerminalId(prefs)
+        bridgeScript = BridgeScript.buildScript(terminalId)
 
         wifiBinder = WifiBinder(this)
         wifiBinder.start()
@@ -97,6 +114,9 @@ class MainActivity : AppCompatActivity() {
     }
 
     override fun onDestroy() {
+        if (::nativeBridge.isInitialized) {
+            nativeBridge.destroy()
+        }
         discoveryJob?.cancel()
         activityScope.cancel()
         wifiBinder.release()
@@ -206,7 +226,17 @@ class MainActivity : AppCompatActivity() {
             cacheMode = WebSettings.LOAD_DEFAULT
         }
 
+        nativeBridge = NativeBridge(webView, printerGateway)
+        webView.addJavascriptInterface(nativeBridge, NativeBridge.JAVASCRIPT_INTERFACE_NAME)
+
         webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                if (!isDocumentStartScriptActive) {
+                    view?.evaluateJavascript(bridgeScript, null)
+                }
+            }
+
             override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                 val targetUri = request?.url ?: return true
                 val allowed = currentAllowedUri
@@ -531,11 +561,48 @@ class MainActivity : AppCompatActivity() {
     private fun connectToServer(url: String) {
         val parsed = Uri.parse(url)
         currentAllowedUri = parsed
+        injectBridgeScript(url)
         searchingView.visibility = View.GONE
         errorView.visibility = View.GONE
         setupView.visibility = View.GONE
         webView.visibility = View.VISIBLE
         webView.loadUrl(url)
+    }
+
+    private fun injectBridgeScript(url: String) {
+        isDocumentStartScriptActive = false
+        if (WebViewFeature.isFeatureSupported(WebViewFeature.DOCUMENT_START_SCRIPT)) {
+            val origin = extractOrigin(url)
+            if (origin != null) {
+                try {
+                    documentStartScriptHandler?.remove()
+                    documentStartScriptHandler = WebViewCompat.addDocumentStartJavaScript(
+                        webView,
+                        bridgeScript,
+                        setOf(origin)
+                    )
+                    isDocumentStartScriptActive = true
+                } catch (_: Exception) {
+                    isDocumentStartScriptActive = false
+                }
+            }
+        }
+    }
+
+    private fun extractOrigin(url: String): String? {
+        return try {
+            val uri = Uri.parse(url)
+            val scheme = uri.scheme?.lowercase() ?: return null
+            val host = uri.host ?: return null
+            val port = uri.port
+            if (port != -1) {
+                "$scheme://$host:$port"
+            } else {
+                "$scheme://$host"
+            }
+        } catch (_: Exception) {
+            null
+        }
     }
 
     private fun saveServerInfo(url: String, serverId: String) {
