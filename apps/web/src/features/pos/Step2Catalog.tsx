@@ -185,11 +185,12 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
                   onClick={(e) => handleOpenCustomizeModal(e, product)}
                   disabled={soldOut}
                   title={soldOut ? 'Producto agotado' : 'Personalizar ingredientes'}
-                  className={`absolute bottom-2 right-2 p-1.5 rounded-xl bg-surface/90 text-ink border border-border shadow-xs backdrop-blur-xs transition-transform ${
-                    soldOut ? 'opacity-40 cursor-not-allowed' : 'hover:bg-surface active:scale-90'
+                  className={`absolute bottom-2 right-2 min-h-[48px] px-3 rounded-xl bg-primary text-primary-ink font-bold text-xs flex items-center gap-1.5 shadow-xs transition-transform ${
+                    soldOut ? 'opacity-40 cursor-not-allowed' : 'hover:opacity-90 active:scale-95'
                   }`}
                 >
-                  <Icon name="Sliders" size={14} />
+                  <Icon name="Sliders" size={16} />
+                  <span>Personalizar</span>
                 </button>
               </div>
 
