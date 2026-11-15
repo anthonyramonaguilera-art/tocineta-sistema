@@ -400,12 +400,18 @@ export function buildReceiptTicketIR(
 export interface KitchenTicketParams {
   order: OrderReceiptData;
   kitchenLines: KitchenBuildableLine[];
+  drinkLines?: KitchenBuildableLine[];
 }
 
-export function buildKitchenTicketIRs(
+export interface KitchenTicketJob {
+  station: string;
+  ir: TicketIR;
+}
+
+export function buildKitchenTicketJobs(
   params: KitchenTicketParams
-): TicketIR[] {
-  const { order, kitchenLines } = params;
+): KitchenTicketJob[] {
+  const { order, kitchenLines, drinkLines = [] } = params;
 
   const burgerLines = kitchenLines.filter(l => l.station === 'hamburguesas');
   const hotDogLines = kitchenLines.filter(l => l.station === 'hot_dogs');
@@ -413,8 +419,9 @@ export function buildKitchenTicketIRs(
   const hasBurgers = burgerLines.length > 0;
   const hasHotDogs = hotDogLines.length > 0;
   const isComposite = hasBurgers && hasHotDogs;
+  const hasDrinks = drinkLines.length > 0;
 
-  const results: TicketIR[] = [];
+  const results: KitchenTicketJob[] = [];
   const cmdStr = formatOrderCmd(order.orderNumber);
   const turnStr = formatTurnNumber(order.orderNumber);
   const canalStr = formatFulfillmentChannel(order.fulfillmentType, order.tableNumber);
@@ -428,7 +435,8 @@ export function buildKitchenTicketIRs(
   const buildStationTicket = (
     stationName: 'HAMBURGUESAS' | 'HOT DOGS',
     lines: KitchenBuildableLine[],
-    indicatorText: string
+    indicatorText: string,
+    drinksToInclude?: KitchenBuildableLine[]
   ): TicketIR => {
     const blocks: TicketBlock[] = [];
 
@@ -458,15 +466,19 @@ export function buildKitchenTicketIRs(
     blocks.push({ type: 'key_value', key: 'HORA:', value: timeStr });
     blocks.push({ type: 'separator', style: 'double' });
 
+    // PASO 2: Total de platos de ESA estación (antes de las líneas)
+    const total = lines.reduce((s, l) => s + (l.quantity ?? (l as any).qty ?? 1), 0);
+    blocks.push({ type: 'title_double', text: `TOTAL ${stationName}: ${total}`, align: 'center' });
+
     // Líneas con modificadores resaltados
     for (const line of lines) {
       blocks.push({
         type: 'line_item',
-        qty: line.quantity,
-        name: line.productName
+        qty: line.quantity ?? (line as any).qty ?? 1,
+        name: line.productName ?? (line as any).name ?? ''
       });
 
-      for (const mod of line.modifiers) {
+      for (const mod of line.modifiers || []) {
         // Resaltar exclusiones e instrucciones
         const isHighlight =
           mod.startsWith('SIN ') ||
@@ -492,6 +504,42 @@ export function buildKitchenTicketIRs(
       });
     }
 
+    // PASO 3: Bebidas del pedido al pie si corresponde (antes del corte)
+    if (drinksToInclude && drinksToInclude.length > 0) {
+      blocks.push({ type: 'separator', style: 'single' });
+      blocks.push({
+        type: 'banner_inverted',
+        text: '=== BEBIDAS DEL PEDIDO ==='
+      });
+      for (const drink of drinksToInclude) {
+        blocks.push({
+          type: 'line_item',
+          qty: drink.quantity ?? (drink as any).qty ?? 1,
+          name: drink.productName ?? (drink as any).name ?? ''
+        });
+        if (drink.flavorChoice) {
+          blocks.push({
+            type: 'modifier_item',
+            text: `Sabor: ${drink.flavorChoice}`
+          });
+        }
+        if (drink.modifiers && drink.modifiers.length > 0) {
+          for (const mod of drink.modifiers) {
+            blocks.push({
+              type: 'modifier_item',
+              text: mod
+            });
+          }
+        }
+      }
+      const totalDrinks = drinksToInclude.reduce((s, d) => s + (d.quantity ?? (d as any).qty ?? 1), 0);
+      blocks.push({
+        type: 'title_double',
+        text: `TOTAL BEBIDAS: ${totalDrinks}`,
+        align: 'center'
+      });
+    }
+
     blocks.push({ type: 'separator', style: 'single' });
     blocks.push({ type: 'cut', feedLines: 4 });
 
@@ -502,32 +550,127 @@ export function buildKitchenTicketIRs(
     };
   };
 
+  // Helper para armar ticket exclusivo de despacho de bebidas
+  const buildDrinksOnlyTicket = (
+    drinks: KitchenBuildableLine[]
+  ): TicketIR => {
+    const blocks: TicketBlock[] = [];
+
+    blocks.push({
+      type: 'banner_inverted',
+      text: '=== DESPACHO BEBIDAS ==='
+    });
+
+    blocks.push({
+      type: 'title_double',
+      text: `${cmdStr} · TURNO ${turnStr}`,
+      align: 'center'
+    });
+
+    blocks.push({
+      type: 'banner_inverted',
+      text: '[ORDEN SOLO BEBIDAS: DESPACHAR DIRECTO]'
+    });
+
+    blocks.push({ type: 'key_value', key: 'CANAL:', value: canalStr, bold: true });
+    if (order.customerName) {
+      blocks.push({ type: 'key_value', key: 'CLIENTE:', value: order.customerName });
+    }
+    blocks.push({ type: 'key_value', key: 'HORA:', value: timeStr });
+    blocks.push({ type: 'separator', style: 'double' });
+
+    for (const drink of drinks) {
+      blocks.push({
+        type: 'line_item',
+        qty: drink.quantity ?? (drink as any).qty ?? 1,
+        name: drink.productName ?? (drink as any).name ?? ''
+      });
+      if (drink.flavorChoice) {
+        blocks.push({
+          type: 'modifier_item',
+          text: `Sabor: ${drink.flavorChoice}`
+        });
+      }
+      if (drink.modifiers && drink.modifiers.length > 0) {
+        for (const mod of drink.modifiers) {
+          blocks.push({
+            type: 'modifier_item',
+            text: mod
+          });
+        }
+      }
+    }
+
+    const totalDrinks = drinks.reduce((s, d) => s + (d.quantity ?? (d as any).qty ?? 1), 0);
+    blocks.push({
+      type: 'title_double',
+      text: `TOTAL BEBIDAS: ${totalDrinks}`,
+      align: 'center'
+    });
+
+    if (order.notes) {
+      blocks.push({ type: 'separator', style: 'dashed' });
+      blocks.push({
+        type: 'modifier_item',
+        text: `↳ NOTA GENERAL: ${order.notes}`,
+        highlighted: true
+      });
+    }
+
+    blocks.push({ type: 'separator', style: 'single' });
+    blocks.push({ type: 'cut', feedLines: 4 });
+
+    return {
+      title: `Despacho Bebidas ${cmdStr}`,
+      widthColumns: 32,
+      blocks
+    };
+  };
+
   if (isComposite) {
     // Caso 1: Orden Compuesta -> 2 trabajos de impresión separados
-    results.push(
-      buildStationTicket('HAMBURGUESAS', burgerLines, '[ORDEN COMPUESTA: ESPERAR HOT DOGS]')
-    );
-    results.push(
-      buildStationTicket('HOT DOGS', hotDogLines, '[ORDEN COMPUESTA: ESPERAR HAMBURGUESAS]')
-    );
+    // Las bebidas van solo en el ticket de despacho/último para no duplicarlas
+    results.push({
+      station: 'hamburguesas',
+      ir: buildStationTicket('HAMBURGUESAS', burgerLines, '[ORDEN COMPUESTA: ESPERAR HOT DOGS]')
+    });
+    results.push({
+      station: 'hot_dogs',
+      ir: buildStationTicket('HOT DOGS', hotDogLines, '[ORDEN COMPUESTA: ESPERAR HAMBURGUESAS]', drinkLines)
+    });
   } else if (hasBurgers) {
     // Caso 2: Solo Hamburguesas
-    results.push(
-      buildStationTicket('HAMBURGUESAS', burgerLines, '[ORDEN ÚNICA: DESPACHAR DIRECTO]')
-    );
+    results.push({
+      station: 'hamburguesas',
+      ir: buildStationTicket('HAMBURGUESAS', burgerLines, '[ORDEN ÚNICA: DESPACHAR DIRECTO]', drinkLines)
+    });
   } else if (hasHotDogs) {
     // Caso 3: Solo Hot Dogs
-    results.push(
-      buildStationTicket('HOT DOGS', hotDogLines, '[ORDEN ÚNICA: DESPACHAR DIRECTO]')
-    );
+    results.push({
+      station: 'hot_dogs',
+      ir: buildStationTicket('HOT DOGS', hotDogLines, '[ORDEN ÚNICA: DESPACHAR DIRECTO]', drinkLines)
+    });
   } else if (kitchenLines.length > 0) {
     // Caso de respaldo (otros platos de cocina)
-    results.push(
-      buildStationTicket('HAMBURGUESAS', kitchenLines, '[ORDEN ÚNICA: DESPACHAR DIRECTO]')
-    );
+    results.push({
+      station: kitchenLines[0].station || 'hamburguesas',
+      ir: buildStationTicket('HAMBURGUESAS', kitchenLines, '[ORDEN ÚNICA: DESPACHAR DIRECTO]', drinkLines)
+    });
+  } else if (hasDrinks) {
+    // Caso 4: Pedido solo con bebidas (sin hamburguesas ni hot dogs)
+    results.push({
+      station: 'caja_bebidas',
+      ir: buildDrinksOnlyTicket(drinkLines)
+    });
   }
 
   return results;
+}
+
+export function buildKitchenTicketIRs(
+  params: KitchenTicketParams
+): TicketIR[] {
+  return buildKitchenTicketJobs(params).map(j => j.ir);
 }
 
 // ============================================================================
@@ -701,7 +844,7 @@ export function buildReprintTicketIR(
 export function loadOrderReceiptDataFromDb(
   rawDb: Database.Database,
   orderId: string
-): { order: OrderReceiptData; lines: ReceiptLineItem[]; kitchenLines: KitchenBuildableLine[] } {
+): { order: OrderReceiptData; lines: ReceiptLineItem[]; kitchenLines: KitchenBuildableLine[]; drinkLines: KitchenBuildableLine[] } {
   const orderRow = rawDb.prepare(`
     SELECT 
       id,
@@ -783,11 +926,13 @@ export function loadOrderReceiptDataFromDb(
   }));
 
   const kitchenLines = getKitchenBuildableLines(rawDb, orderId);
+  const drinkLines = getKitchenBuildableLines(rawDb, orderId, { station: 'caja_bebidas' });
 
   return {
     order: orderRow,
     lines,
-    kitchenLines
+    kitchenLines,
+    drinkLines
   };
 }
 

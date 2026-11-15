@@ -30,11 +30,12 @@ import { publishDomainEvent } from '../events/event-bus.js';
 import {
   loadOrderReceiptDataFromDb,
   buildReceiptTicketIR,
-  buildKitchenTicketIRs,
+  buildKitchenTicketJobs,
   buildReprintTicketIR,
   buildRefireTicketIR,
   buildOrderModificationTicketIR
 } from './templates.js';
+import { getKitchenBuildableLines } from '../orders/kitchen-queries.js';
 import { verifyPin } from '../auth/pin.js';
 import { isTerminalAlive, getTerminalPrinterId } from './terminal-registry.js';
 import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
@@ -701,25 +702,14 @@ export function enqueueOrderPrintJobs(
 
   // 2. Resolver target UNA VEZ para COMANDAS DE COCINA
   const comandaTarget = resolveTicketTarget(rawDb, 'comanda', payerTerminalId);
-  const kitchenIRs = buildKitchenTicketIRs({ order, kitchenLines });
+  const drinkLines = getKitchenBuildableLines(rawDb, orderId, { station: 'caja_bebidas' });
+  const kitchenJobs = buildKitchenTicketJobs({ order, kitchenLines, drinkLines });
   const kitchenJobIds: string[] = [];
   const cocinaConfig = getPrinterConfig(rawDb, comandaTarget.printerId);
 
-  for (const kIR of kitchenIRs) {
+  for (const { station, ir: kIR } of kitchenJobs) {
     const kJobId = `pjob_${generateUuidV7()}`;
     const kBytes = Buffer.from(renderTicketToEscPos(kIR, cocinaConfig));
-    
-    // Determinar la estación usando la estación de las líneas del ticket en lugar de title.includes('hot dog')
-    let station = 'hamburguesas';
-    const lineItemBlocks = kIR.blocks.filter(b => b.type === 'line_item');
-    for (const block of lineItemBlocks) {
-      const matchingLine = kitchenLines.find(l => l.productName === block.name);
-      if (matchingLine && matchingLine.station) {
-        station = matchingLine.station;
-        break;
-      }
-    }
-
     rawDb.prepare(`
       INSERT INTO print_jobs (
         id, printer_id, order_id, job_type, payload_bytes,
