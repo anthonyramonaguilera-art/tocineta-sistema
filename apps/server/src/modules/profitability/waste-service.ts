@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
+import { appendAuditEvent } from '../audit/audit-service.js';
 
 export interface RegisterWasteInput {
   locationId: string;
@@ -50,6 +51,53 @@ export interface PhysicalCountResult {
     status: 'OPTIMO' | 'FALTANTE' | 'SOBRANTE';
   }>;
   totalDifferenceCostUsdCents: number;
+}
+
+export function resolveProductRecipeDeductions(
+  rawDb: Database.Database,
+  productId: string,
+  quantity: number,
+  recipeMode?: string
+): Map<string, number> {
+  const deductions = new Map<string, number>();
+
+  const addDeduction = (supplyId: string, qty: number) => {
+    if (!supplyId || qty <= 0) return;
+    const current = deductions.get(supplyId) || 0;
+    deductions.set(supplyId, current + qty);
+  };
+
+  const recipe = rawDb.prepare('SELECT id FROM recipes WHERE product_id = ?').get(productId) as any;
+  if (!recipe) return deductions;
+
+  const recipeItems = rawDb.prepare('SELECT * FROM recipe_items WHERE recipe_id = ?').all(recipe.id) as any[];
+  const mode = recipeMode || 'UNITS';
+
+  for (const ri of recipeItems) {
+    if (ri.sub_recipe_id) {
+      // Sub-receta: desglosar en sus insumos componentes
+      const subItems = rawDb.prepare('SELECT * FROM sub_recipe_items WHERE sub_recipe_id = ?').all(ri.sub_recipe_id) as any[];
+      const subRecipe = rawDb.prepare('SELECT yield_quantity FROM sub_recipes WHERE id = ?').get(ri.sub_recipe_id) as any;
+      const yieldQty = subRecipe?.yield_quantity > 0 ? subRecipe.yield_quantity : 1;
+      for (const si of subItems) {
+        const portionPerUnit = (si.quantity_required / yieldQty) * ri.quantity_required;
+        const portionNeeded = portionPerUnit * quantity;
+        addDeduction(si.supply_id, portionNeeded);
+      }
+    } else if (ri.supply_item_id) {
+      let portionPerUnit = 0;
+      if (mode === 'GRAMMAGE' && ri.gross_weight_grams) {
+        const shrinkageFactor = 1 + ((ri.shrinkage_percentage || 0) / 100);
+        portionPerUnit = (ri.gross_weight_grams * shrinkageFactor) / 1000;
+      } else {
+        portionPerUnit = ri.quantity_required;
+      }
+      const portionNeeded = portionPerUnit * quantity;
+      addDeduction(ri.supply_item_id, portionNeeded);
+    }
+  }
+
+  return deductions;
 }
 
 export function registerWasteLog(rawDb: Database.Database, input: RegisterWasteInput): WasteRecord {
@@ -121,24 +169,148 @@ export function registerWasteLog(rawDb: Database.Database, input: RegisterWasteI
       );
     } else {
       // Merma de plato/producto terminado
-      const prod = rawDb.prepare('SELECT id, name, estimated_cost_usd_cents FROM products WHERE id = ?').get(input.productId) as any;
+      const prod = rawDb.prepare('SELECT id, name, estimated_cost_usd_cents, recipe_mode FROM products WHERE id = ?').get(input.productId) as any;
       if (!prod) throw new Error(`Producto '${input.productId}' no encontrado`);
       itemName = prod.name;
       finalUnit = input.unit || 'porcion';
-      const autoUnitCost = prod.estimated_cost_usd_cents || 0;
-      finalCostCents = input.costUsdCents !== undefined && input.costUsdCents !== null
-        ? input.costUsdCents
-        : Math.round(input.quantity * autoUnitCost);
 
-      // Si tiene insumo directo espejo, descontar
-      const mirrorSupply = rawDb.prepare('SELECT id FROM supply_items WHERE id = ? OR id = ?').get(`sup_${prod.id.replace('prod_', '')}`, prod.id) as any;
-      if (mirrorSupply) {
-        rawDb.prepare('UPDATE location_inventory SET current_stock_qty = current_stock_qty - ?, updated_at_ms = ? WHERE location_id = ? AND supply_id = ?').run(
-          input.quantity,
-          now,
-          input.locationId,
-          mirrorSupply.id
-        );
+      const deductions = resolveProductRecipeDeductions(rawDb, prod.id, input.quantity, prod.recipe_mode);
+
+      if (deductions.size > 0) {
+        let totalCalculatedCostCents = 0;
+
+        for (const [supplyId, qtyToDeduct] of deductions.entries()) {
+          if (qtyToDeduct <= 0) continue;
+          const supply = rawDb.prepare('SELECT id, name, unit, cost_per_unit_usd_cents, weighted_avg_cost_usd_cents FROM supply_items WHERE id = ?').get(supplyId) as any;
+          if (!supply) continue;
+
+          const autoUnitCost = supply.weighted_avg_cost_usd_cents || supply.cost_per_unit_usd_cents || 0;
+          const lineCostCents = Math.round(qtyToDeduct * autoUnitCost);
+          totalCalculatedCostCents += lineCostCents;
+
+          // Descontar del inventario de la sede
+          const locInv = rawDb.prepare('SELECT current_stock_qty FROM location_inventory WHERE location_id = ? AND supply_id = ?').get(input.locationId, supply.id) as any;
+          if (locInv) {
+            rawDb.prepare('UPDATE location_inventory SET current_stock_qty = current_stock_qty - ?, updated_at_ms = ? WHERE location_id = ? AND supply_id = ?').run(
+              qtyToDeduct,
+              now,
+              input.locationId,
+              supply.id
+            );
+          } else {
+            rawDb.prepare('INSERT INTO location_inventory (id, location_id, supply_id, current_stock_qty, minimum_stock_qty, updated_at_ms) VALUES (?, ?, ?, ?, 0, ?)').run(
+              `${input.locationId}_${supply.id}`,
+              input.locationId,
+              supply.id,
+              -qtyToDeduct,
+              now
+            );
+          }
+
+          // Actualizar global supply_items
+          rawDb.prepare('UPDATE supply_items SET current_stock_qty = current_stock_qty - ?, updated_at_ms = ? WHERE id = ?').run(
+            qtyToDeduct,
+            now,
+            supply.id
+          );
+
+          // Registrar movimiento inmutable
+          rawDb.prepare(`
+            INSERT INTO inventory_movements (
+              id, location_id, supply_id, movement_type, quantity_delta,
+              unit_cost_usd_cents, total_cost_usd_cents, reference_doc, notes, created_by, created_at_ms
+            ) VALUES (?, ?, ?, 'MERMA', ?, ?, ?, 'MERMA', ?, ?, ?)
+          `).run(
+            `mov_${generateUuidV7()}`,
+            input.locationId,
+            supply.id,
+            -qtyToDeduct,
+            autoUnitCost,
+            lineCostCents,
+            input.reason,
+            input.reportedByUserId,
+            now
+          );
+        }
+
+        finalCostCents = input.costUsdCents !== undefined && input.costUsdCents !== null
+          ? input.costUsdCents
+          : totalCalculatedCostCents;
+      } else {
+        // Si no tiene receta con insumos, verificar si tiene insumo directo espejo
+        const mirrorSupply = rawDb.prepare('SELECT id, name, unit, cost_per_unit_usd_cents, weighted_avg_cost_usd_cents FROM supply_items WHERE id = ? OR id = ?').get(`sup_${prod.id.replace('prod_', '')}`, prod.id) as any;
+        if (mirrorSupply) {
+          const autoUnitCost = mirrorSupply.weighted_avg_cost_usd_cents || mirrorSupply.cost_per_unit_usd_cents || 0;
+          const lineCostCents = Math.round(input.quantity * autoUnitCost);
+          finalCostCents = input.costUsdCents !== undefined && input.costUsdCents !== null
+            ? input.costUsdCents
+            : lineCostCents;
+
+          // Descontar del inventario de la sede
+          const locInv = rawDb.prepare('SELECT current_stock_qty FROM location_inventory WHERE location_id = ? AND supply_id = ?').get(input.locationId, mirrorSupply.id) as any;
+          if (locInv) {
+            rawDb.prepare('UPDATE location_inventory SET current_stock_qty = current_stock_qty - ?, updated_at_ms = ? WHERE location_id = ? AND supply_id = ?').run(
+              input.quantity,
+              now,
+              input.locationId,
+              mirrorSupply.id
+            );
+          } else {
+            rawDb.prepare('INSERT INTO location_inventory (id, location_id, supply_id, current_stock_qty, minimum_stock_qty, updated_at_ms) VALUES (?, ?, ?, ?, 0, ?)').run(
+              `${input.locationId}_${mirrorSupply.id}`,
+              input.locationId,
+              mirrorSupply.id,
+              -input.quantity,
+              now
+            );
+          }
+
+          // Actualizar global supply_items
+          rawDb.prepare('UPDATE supply_items SET current_stock_qty = current_stock_qty - ?, updated_at_ms = ? WHERE id = ?').run(
+            input.quantity,
+            now,
+            mirrorSupply.id
+          );
+
+          // Registrar movimiento inmutable
+          rawDb.prepare(`
+            INSERT INTO inventory_movements (
+              id, location_id, supply_id, movement_type, quantity_delta,
+              unit_cost_usd_cents, total_cost_usd_cents, reference_doc, notes, created_by, created_at_ms
+            ) VALUES (?, ?, ?, 'MERMA', ?, ?, ?, 'MERMA', ?, ?, ?)
+          `).run(
+            `mov_${generateUuidV7()}`,
+            input.locationId,
+            mirrorSupply.id,
+            -input.quantity,
+            autoUnitCost,
+            lineCostCents,
+            input.reason,
+            input.reportedByUserId,
+            now
+          );
+        } else {
+          // Si no tiene ni receta ni espejo: valorada con estimated_cost y emite appendAuditEvent 'WASTE_WITHOUT_RECIPE'
+          const autoUnitCost = prod.estimated_cost_usd_cents || 0;
+          finalCostCents = input.costUsdCents !== undefined && input.costUsdCents !== null
+            ? input.costUsdCents
+            : Math.round(input.quantity * autoUnitCost);
+
+          appendAuditEvent(rawDb, {
+            action: 'WASTE_WITHOUT_RECIPE',
+            actorUserId: input.reportedByUserId,
+            entityType: 'product',
+            entityId: prod.id,
+            payload: {
+              productId: prod.id,
+              productName: prod.name,
+              quantity: input.quantity,
+              locationId: input.locationId,
+              reason: input.reason,
+              costUsdCents: finalCostCents
+            }
+          });
+        }
       }
     }
 
