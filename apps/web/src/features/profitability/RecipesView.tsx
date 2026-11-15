@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Button, Input, Icon, Badge } from '../../ui/index.js';
 import { RecipeEditorModal } from './components/RecipeEditorModal.js';
 import { SubRecipeEditorModal } from './components/SubRecipeEditorModal.js';
+import { QuickProductModal } from './components/QuickProductModal.js';
 import { apiFetch } from '../../api/client';
 
 interface RecipeSummary {
@@ -30,6 +31,7 @@ export const RecipesView: React.FC = () => {
   const [activeRecipe, setActiveRecipe] = useState<RecipeSummary | null>(null);
   const [isSubRecipeModalOpen, setIsSubRecipeModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isQuickProductModalOpen, setIsQuickProductModalOpen] = useState(false);
 
   const { data: recipesData, isLoading } = useQuery<{ success: boolean; recipes: RecipeSummary[] }>({
     queryKey: ['fase3Recipes'],
@@ -83,19 +85,27 @@ export const RecipesView: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Button
             variant="primary"
-            onClick={() => setIsCreateModalOpen(true)}
-            className="flex-1 sm:flex-none"
+            onClick={() => setIsQuickProductModalOpen(true)}
+            className="flex-1 sm:flex-none min-h-[48px]"
             leftIcon={<Icon name="Plus" size={16} />}
+          >
+            Crear plato en carta
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => setIsCreateModalOpen(true)}
+            className="flex-1 sm:flex-none min-h-[48px]"
+            leftIcon={<Icon name="BookOpen" size={16} />}
           >
             Nueva receta
           </Button>
           <Button
             variant="ghost"
             onClick={() => setIsSubRecipeModalOpen(true)}
-            className="flex-1 sm:flex-none"
+            className="flex-1 sm:flex-none min-h-[48px]"
             leftIcon={<Icon name="Layers" size={16} />}
           >
             Sub-Recetas ({subRecipes.length})
@@ -244,6 +254,12 @@ export const RecipesView: React.FC = () => {
         isOpen={isSubRecipeModalOpen}
         onClose={() => setIsSubRecipeModalOpen(false)}
         supplies={supplies}
+      />
+
+      {/* Modal de Creación Rápida de Producto con Receta (E4) */}
+      <QuickProductModal
+        isOpen={isQuickProductModalOpen}
+        onClose={() => setIsQuickProductModalOpen(false)}
       />
     </div>
   );

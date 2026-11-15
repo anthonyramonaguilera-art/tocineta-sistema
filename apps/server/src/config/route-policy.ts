@@ -123,6 +123,7 @@ export const ROUTE_POLICY: readonly RouteRule[] = [
   ['*', '/api/menu/*', 'ADMIN_SUPERVISOR'],
   ['*', '/api/reports/*', 'ADMIN_SUPERVISOR'],
   ['*', '/api/finances/*', 'ADMIN_SUPERVISOR'],
+  ['POST', '/api/profitability/products/quick-create', 'ADMIN'],
   ['*', '/api/profitability/*', 'ADMIN_SUPERVISOR'],
   ['*', '/api/quotes/*', 'ADMIN_SUPERVISOR'],
   ['*', '/api/backups/*', 'ADMIN_SUPERVISOR'],

@@ -4,6 +4,7 @@ import { resolveLocationId } from './locations-service.js';
 import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
 import { AppError } from '../../lib/app-error.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
+import { createProduct } from '../menu/menu-service.js';
 
 export interface SubRecipeRecord {
   id: string;
@@ -832,4 +833,215 @@ export function revertInventoryForOrder(
     console.warn(`[InventoryReversal] Reversión de inventario para orden ${orderId} manejada limpiamente:`, err?.message);
   }
 }
+
+// ----------------------------------------------------------------------------
+// 6. CREACIÓN RÁPIDA DE PRODUCTO EN CARTA CON RECETA EN UNA ACCIÓN (E4)
+// ----------------------------------------------------------------------------
+
+export interface CreateSellableProductItemInput {
+  supplyId?: string | null;
+  supplyItemId?: string | null;
+  subRecipeId?: string | null;
+  quantity?: number;
+  quantityRequired?: number;
+  grossWeightGrams?: number | null;
+  shrinkagePercentage?: number | null;
+}
+
+export interface CreateSellableProductInput {
+  id?: string;
+  name: string;
+  categoryId: string;
+  station: 'hot_dogs' | 'hamburguesas' | 'caja_bebidas';
+  description?: string;
+  recipeMode?: 'UNITS' | 'GRAMMAGE' | 'FINISHED_PRODUCT';
+  targetMarginBps?: number;
+  priceUsdCents?: number;
+  items: CreateSellableProductItemInput[];
+  notes?: string;
+  allowsFlavors?: boolean;
+  isCombo?: boolean;
+}
+
+export interface CreateSellableProductResult {
+  productId: string;
+  productName: string;
+  station: string;
+  recipeMode: string;
+  targetMarginBps: number;
+  calculatedCostUsdCents: number;
+  priceUsdCents: number;
+  marginBps: number;
+  currentMarginBps: number;
+  suggestedPriceUsdCents: number;
+  recipe: ProductRecipeDetail;
+}
+
+export function createSellableProductWithRecipe(
+  rawDb: Database.Database,
+  input: CreateSellableProductInput,
+  actorUserId: string
+): CreateSellableProductResult {
+  // 1. Validaciones previas
+  if (!input.name || !input.name.trim()) {
+    throw new AppError('NAME_REQUIRED', 400, 'El nombre del producto es requerido');
+  }
+
+  if (!['hot_dogs', 'hamburguesas', 'caja_bebidas'].includes(input.station)) {
+    throw new AppError('INVALID_STATION', 400, 'Estación inválida. Debe ser hot_dogs, hamburguesas o caja_bebidas');
+  }
+
+  const cat = rawDb.prepare('SELECT id, is_active, is_internal FROM categories WHERE id = ?').get(input.categoryId) as any;
+  if (!cat) {
+    throw new AppError('CATEGORY_NOT_FOUND', 400, 'La categoría no existe');
+  }
+  if (cat.is_internal === 1) {
+    throw new AppError('CATEGORY_INTERNAL', 400, 'No se pueden crear productos en una categoría interna');
+  }
+  if (cat.is_active === 0) {
+    throw new AppError('CATEGORY_INACTIVE', 400, 'La categoría está inactiva: actívala antes de agregar productos');
+  }
+
+  if (!input.items || !Array.isArray(input.items) || input.items.length === 0) {
+    throw new AppError('ITEMS_REQUIRED', 400, 'Debe especificar al menos un insumo para la receta');
+  }
+
+  for (const it of input.items) {
+    const supplyId = it.supplyId || it.supplyItemId;
+    const subRecipeId = it.subRecipeId;
+    if (!supplyId && !subRecipeId) {
+      throw new AppError('SUPPLY_REQUIRED', 400, 'Cada ítem debe tener un insumo o sub-receta');
+    }
+    if (supplyId) {
+      const sup = rawDb.prepare('SELECT id FROM supply_items WHERE id = ?').get(supplyId);
+      if (!sup) {
+        throw new AppError('SUPPLY_NOT_FOUND', 400, `El insumo "${supplyId}" no existe`);
+      }
+    }
+    if (subRecipeId) {
+      const sr = rawDb.prepare('SELECT id FROM sub_recipes WHERE id = ?').get(subRecipeId);
+      if (!sr) {
+        throw new AppError('SUB_RECIPE_NOT_FOUND', 400, `La sub-receta "${subRecipeId}" no existe`);
+      }
+    }
+    const qty = it.quantity ?? it.quantityRequired;
+    if (typeof qty !== 'number' || isNaN(qty) || qty <= 0) {
+      throw new AppError('INVALID_QUANTITY', 400, 'La cantidad de cada insumo debe ser un número mayor a 0');
+    }
+  }
+
+  // 2. Cálculo previo de costo estimado y sugerencia de precio
+  let calculatedCostCents = 0;
+  const recipeMode = input.recipeMode || 'UNITS';
+
+  for (const it of input.items) {
+    const supplyId = it.supplyId || it.supplyItemId;
+    const qty = it.quantity ?? it.quantityRequired ?? 1;
+    if (supplyId) {
+      const s = rawDb.prepare('SELECT cost_per_unit_usd_cents, weighted_avg_cost_usd_cents FROM supply_items WHERE id = ?').get(supplyId) as any;
+      const unitCost = s?.weighted_avg_cost_usd_cents || s?.cost_per_unit_usd_cents || 0;
+      if (recipeMode === 'GRAMMAGE' && it.grossWeightGrams) {
+        const shrinkageFactor = 1 + ((it.shrinkagePercentage || 0) / 100);
+        const actualGross = it.grossWeightGrams * shrinkageFactor;
+        calculatedCostCents += Math.round((actualGross / 1000) * unitCost);
+      } else {
+        calculatedCostCents += Math.round(qty * unitCost);
+      }
+    } else if (it.subRecipeId) {
+      const subRecipes = getSubRecipes(rawDb);
+      const sr = subRecipes.find(r => r.id === it.subRecipeId);
+      const unitCost = sr?.costPerUnitUsdCents || 0;
+      calculatedCostCents += Math.round(qty * unitCost);
+    }
+  }
+
+  const targetMarginBps = input.targetMarginBps ?? 6500;
+  const marginRatio = (10000 - targetMarginBps) / 10000;
+  const suggestedPriceUsdCents = marginRatio > 0 && calculatedCostCents > 0
+    ? Math.ceil(calculatedCostCents / marginRatio)
+    : calculatedCostCents;
+
+  const finalPriceUsdCents = (input.priceUsdCents !== undefined && input.priceUsdCents !== null && input.priceUsdCents > 0)
+    ? input.priceUsdCents
+    : suggestedPriceUsdCents;
+
+  // 3. Ejecución atómica en UNA transacción
+  const tx = rawDb.transaction(() => {
+    // (a) createProduct
+    const prodPayload: any = {
+      categoryId: input.categoryId,
+      name: input.name.trim(),
+      priceUsdCents: finalPriceUsdCents,
+      estimatedCostUsdCents: calculatedCostCents,
+      station: input.station,
+      description: input.description,
+      allowsFlavors: input.allowsFlavors,
+      isCombo: input.isCombo
+    };
+    if (input.id) {
+      prodPayload.id = input.id;
+    }
+
+    const prod = createProduct(rawDb, prodPayload, actorUserId);
+    const productId = prod.id || prodPayload.id;
+
+    const now = Date.now();
+    rawDb.prepare(`
+      UPDATE products
+      SET recipe_mode = ?, target_margin_bps = ?, updated_at_ms = ?
+      WHERE id = ?
+    `).run(recipeMode, targetMarginBps, now, productId);
+
+    // (b) crear recipe + recipe_items
+    const recipeId = `rec_${generateUuidV7()}`;
+    rawDb.prepare(`
+      INSERT INTO recipes (id, product_id, name, notes)
+      VALUES (?, ?, ?, ?)
+    `).run(recipeId, productId, productId, input.notes || null);
+
+    const insertItem = rawDb.prepare(`
+      INSERT INTO recipe_items (
+        id, recipe_id, supply_item_id, sub_recipe_id, quantity_required, gross_weight_grams, shrinkage_percentage
+      ) VALUES (?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const it of input.items) {
+      insertItem.run(
+        `ritem_${generateUuidV7()}`,
+        recipeId,
+        it.supplyItemId || it.supplyId || null,
+        it.subRecipeId || null,
+        it.quantity ?? it.quantityRequired ?? 1,
+        it.grossWeightGrams || null,
+        it.shrinkagePercentage || 0
+      );
+    }
+
+    // (c) syncProductEstimatedCost (de E3)
+    syncProductEstimatedCost(rawDb, productId);
+
+    const detail = getProductRecipe(rawDb, productId);
+    const costCents = detail ? detail.calculatedCostUsdCents : calculatedCostCents;
+    const currentMarginBps = finalPriceUsdCents > 0
+      ? Math.round(((finalPriceUsdCents - costCents) / finalPriceUsdCents) * 10000)
+      : 0;
+
+    return {
+      productId,
+      productName: prod.name,
+      station: input.station,
+      recipeMode,
+      targetMarginBps,
+      calculatedCostUsdCents: costCents,
+      priceUsdCents: finalPriceUsdCents,
+      marginBps: currentMarginBps,
+      currentMarginBps,
+      suggestedPriceUsdCents,
+      recipe: detail!
+    };
+  });
+
+  return tx();
+}
+
 

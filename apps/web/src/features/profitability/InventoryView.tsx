@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Card, Button, Input, Icon, Badge } from '../../ui/index.js';
 import { TransferModal } from './components/TransferModal.js';
 import { NewSupplyModal } from './components/NewSupplyModal.js';
+import { QuickProductModal } from './components/QuickProductModal.js';
 import { ProductionModal } from './components/ProductionModal.js';
 import { apiFetch } from '../../api/client.js';
 
@@ -39,6 +40,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   const [isTransferModalOpen, setIsTransferModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isProductionModalOpen, setIsProductionModalOpen] = useState(false);
+  const [quickSellSupply, setQuickSellSupply] = useState<SupplyItemData | null>(null);
 
   const { data: suppliesData, isLoading } = useQuery<{ success: boolean; supplies: SupplyItemData[] }>({
     queryKey: ['fase3Supplies', activeLocationId],
@@ -238,6 +240,16 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                   <span>Último: <strong className="text-ink">${lastUsd}</strong></span>
                   <span>1 {supply.purchaseUnit} = {supply.conversionFactor} {supply.usageUnit}</span>
                 </div>
+
+                {/* Acción de Reventa Rápida (E4) */}
+                <Button
+                  variant="ghost"
+                  onClick={() => setQuickSellSupply(supply)}
+                  className="w-full min-h-[48px] text-xs font-bold"
+                  leftIcon={<Icon name="Tag" size={14} />}
+                >
+                  Vender este insumo
+                </Button>
               </Card>
             );
           })}
@@ -259,6 +271,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
       <ProductionModal
         isOpen={isProductionModalOpen}
         onClose={() => setIsProductionModalOpen(false)}
+      />
+
+      {/* Modal de Reventa Rápida de Insumo (E4) */}
+      <QuickProductModal
+        isOpen={!!quickSellSupply}
+        onClose={() => setQuickSellSupply(null)}
+        initialSupply={quickSellSupply}
       />
     </div>
   );

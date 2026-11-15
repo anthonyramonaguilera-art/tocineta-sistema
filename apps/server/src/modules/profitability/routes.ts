@@ -23,6 +23,7 @@ import { generateMenuEngineeringReport } from './menu-engineering.js';
 import { generateUuidV7, usdToBsCents, formatMicroBsToRate } from '@tocineta/shared';
 import { getCurrentExchangeRate } from '../menu/menu-service.js';
 import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
+import { createSellableProductWithRecipe } from './recipes-service.js';
 
 export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
   const getUserFromRequest = (req: any) => {
@@ -769,6 +770,32 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
         totalUsdCents: totalPayableUsdCents
       }
     });
+  });
+
+  // 17. Crear producto de venta en una sola acción con receta (E4)
+  fastify.post('/api/profitability/products/quick-create', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const user = (request as any).user || getSessionUser(dbCtx.rawDb, request.headers.authorization);
+    const actorUserId = user?.userId || user?.id || 'usr_admin';
+
+    const body = request.body as any;
+    if (!body) {
+      return reply.status(400).send({ success: false, error: 'Cuerpo de solicitud requerido' });
+    }
+
+    try {
+      const result = createSellableProductWithRecipe(dbCtx.rawDb, body, actorUserId);
+      return reply.status(201).send({
+        success: true,
+        ...result
+      });
+    } catch (err: any) {
+      const statusCode = err.httpStatus || err.statusCode || 400;
+      return reply.status(statusCode).send({
+        success: false,
+        error: err.message || 'Error al crear producto con receta'
+      });
+    }
   });
 };
 
