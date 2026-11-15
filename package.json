@@ -24,6 +24,7 @@
     "probe:tcp": "tsx tools/g0-probe/probe.ts --tcp",
     "probe:server": "tsx tools/g0-probe/probe.ts --port 3000",
     "guard:visual": "node scripts/guard-visual.mjs",
+    "brand:thermal": "node scripts/generate-thermal-logo.mjs",
     "r2:e2e": "playwright test -c playwright.r2.config.ts",
     "r2:status": "node scripts/r2-status.mjs",
     "export:virgenes": "node scripts/generar-exportes-virgenes.mjs"

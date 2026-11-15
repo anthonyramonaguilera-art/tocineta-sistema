@@ -1,4 +1,4 @@
-// Logo TOCINETA para impresora térmica de 58 mm (384 puntos). Generado desde el logo oficial.
+// Generado por scripts/generate-thermal-logo.mjs. Logo TOCINETA para impresora térmica de 58 mm (384 puntos).
 // Comando ESC/POS raster completo (GS v 0), listo para enviar tal cual.
 export const THERMAL_LOGO_WIDTH = 384;
 export const THERMAL_LOGO_HEIGHT = 274;
