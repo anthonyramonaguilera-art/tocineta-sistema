@@ -1,6 +1,6 @@
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
-import { getProductRecipe, type ProductRecipeDetail } from './recipes-service.js';
+import { getProductRecipe, syncProductEstimatedCost, type ProductRecipeDetail } from './recipes-service.js';
 import { normalizePaymentMethod } from '../finances/financial-truth-helpers.js';
 
 export interface PurchaseItemInput {
@@ -81,6 +81,15 @@ export function registerPurchase(rawDb: Database.Database, input: RegisterPurcha
       WHERE sri.supply_id = ?
     `).all(it.supplyId) as Array<{ product_id: string }>;
     for (const r of subRecRows) affectedProductIds.add(r.product_id);
+
+    // Insumos espejo para FINISHED_PRODUCT
+    const mirrorProdId = it.supplyId.startsWith('sup_')
+      ? `prod_${it.supplyId.replace('sup_', '')}`
+      : it.supplyId;
+    const directProd = rawDb.prepare('SELECT id FROM products WHERE id = ? OR id = ?').get(mirrorProdId, it.supplyId) as { id: string } | undefined;
+    if (directProd) {
+      affectedProductIds.add(directProd.id);
+    }
   }
 
   const initialRecipesMap = new Map<string, ProductRecipeDetail>();
@@ -266,6 +275,15 @@ export function registerPurchase(rawDb: Database.Database, input: RegisterPurcha
   });
 
   tx();
+
+  // Sincronizar costo estimado en productos afectados tras la compra
+  for (const pid of affectedProductIds) {
+    try {
+      syncProductEstimatedCost(rawDb, pid);
+    } catch (err) {
+      console.warn(`[registerPurchase] Error al sincronizar costo estimado del producto ${pid}:`, err);
+    }
+  }
 
   // 3. Evaluar impacto en las recetas afectadas
   const affectedRecipes: RecipeCostImpact[] = [];

@@ -73,7 +73,7 @@ export function getSubRecipes(rawDb: Database.Database): SubRecipeRecord[] {
     const itemsRows = rawDb.prepare(`
       SELECT sri.id, sri.supply_id, sri.quantity_required,
              s.name as supply_name, s.unit as supply_unit,
-             COALESCE(s.weighted_avg_cost_usd_cents, s.cost_per_unit_usd_cents, 0) as unit_cost
+             COALESCE(NULLIF(s.weighted_avg_cost_usd_cents, 0), s.cost_per_unit_usd_cents, 0) as unit_cost
       FROM sub_recipe_items sri
       JOIN supply_items s ON sri.supply_id = s.id
       WHERE sri.sub_recipe_id = ?
@@ -172,12 +172,37 @@ export function saveSubRecipe(
       VALUES (?, ?, ?, ?)
     `);
 
+    let totalSubRecipeCostCents = 0;
     for (const it of input.items) {
-      insertItemStmt.run(`sri_${generateUuidV7()}`, subRecipeId, it.supplyId, it.quantityRequired);
+      const sId = it.supplyId || (it as any).supplyItemId;
+      insertItemStmt.run(`sri_${generateUuidV7()}`, subRecipeId, sId, it.quantityRequired);
+      const supply = rawDb.prepare('SELECT COALESCE(NULLIF(weighted_avg_cost_usd_cents, 0), cost_per_unit_usd_cents, 0) as unit_cost FROM supply_items WHERE id = ?').get(sId) as any;
+      const unitCost = supply?.unit_cost || 0;
+      totalSubRecipeCostCents += Math.round(it.quantityRequired * unitCost);
     }
+
+    const yieldQty = input.yieldQuantity > 0 ? input.yieldQuantity : 1;
+    const subRecipeUnitCost = Math.round(totalSubRecipeCostCents / yieldQty);
+    rawDb.prepare('UPDATE sub_recipes SET cost_per_unit_usd_cents = ? WHERE id = ?').run(subRecipeUnitCost, subRecipeId);
   });
 
   tx();
+
+  // Sincronizar costo estimado de productos que usan esta sub-receta
+  try {
+    const affected = rawDb.prepare(`
+      SELECT DISTINCT r.product_id
+      FROM recipe_items ri
+      JOIN recipes r ON ri.recipe_id = r.id
+      WHERE ri.sub_recipe_id = ?
+    `).all(subRecipeId) as Array<{ product_id: string }>;
+    for (const row of affected) {
+      syncProductEstimatedCost(rawDb, row.product_id);
+    }
+  } catch (err) {
+    console.warn(`[saveSubRecipe] Error al sincronizar recetas afectadas por sub-receta ${subRecipeId}:`, err);
+  }
+
   const list = getSubRecipes(rawDb);
   return list.find(s => s.id === subRecipeId)!;
 }
@@ -203,7 +228,7 @@ export function getProductRecipe(rawDb: Database.Database, productId: string): P
     ? (rawDb.prepare(`
         SELECT ri.*,
                s.name as supply_name, s.unit as supply_unit,
-               COALESCE(s.weighted_avg_cost_usd_cents, s.cost_per_unit_usd_cents, 0) as supply_unit_cost,
+               COALESCE(NULLIF(s.weighted_avg_cost_usd_cents, 0), s.cost_per_unit_usd_cents, 0) as supply_unit_cost,
                sr.name as sub_recipe_name, sr.cost_per_unit_usd_cents as sub_recipe_unit_cost
         FROM recipe_items ri
         LEFT JOIN supply_items s ON ri.supply_item_id = s.id
@@ -297,6 +322,81 @@ export function getAllProductRecipes(rawDb: Database.Database): ProductRecipeDet
   return list;
 }
 
+/**
+ * Sincroniza products.estimated_cost_usd_cents con el costo calculado de su receta.
+ * Solo actualiza si el costo calculado difiere del costo estimado actual.
+ * No modifica en ningún caso el precio de venta (price_usd_cents).
+ * Nunca lanza excepciones (defensivo con console.warn).
+ */
+export function syncProductEstimatedCost(
+  rawDb: Database.Database,
+  productId: string
+): { updated: boolean; costUsdCents: number } | null {
+  try {
+    const detail = getProductRecipe(rawDb, productId);
+    if (!detail) return null;
+
+    const current = rawDb
+      .prepare('SELECT estimated_cost_usd_cents FROM products WHERE id = ?')
+      .get(productId) as { estimated_cost_usd_cents: number } | undefined;
+
+    if (!current) return null;
+
+    const newCost = detail.calculatedCostUsdCents;
+    if (current.estimated_cost_usd_cents !== newCost) {
+      const now = Date.now();
+      rawDb
+        .prepare('UPDATE products SET estimated_cost_usd_cents = ?, updated_at_ms = ? WHERE id = ?')
+        .run(newCost, now, productId);
+      return { updated: true, costUsdCents: newCost };
+    }
+
+    return { updated: false, costUsdCents: newCost };
+  } catch (err) {
+    console.warn(`[syncProductEstimatedCost] Error al sincronizar costo estimado del producto ${productId}:`, err);
+    return null;
+  }
+}
+
+/**
+ * Sincroniza todos los productos cuyas recetas usan un insumo específico (directamente,
+ * vía sub-receta o por insumo espejo en FINISHED_PRODUCT).
+ */
+export function syncProductsAffectedBySupply(rawDb: Database.Database, supplyId: string): void {
+  try {
+    const recRows = rawDb.prepare(`
+      SELECT r.product_id
+      FROM recipe_items ri
+      JOIN recipes r ON ri.recipe_id = r.id
+      WHERE ri.supply_item_id = ?
+    `).all(supplyId) as Array<{ product_id: string }>;
+
+    const subRecRows = rawDb.prepare(`
+      SELECT r.product_id
+      FROM sub_recipe_items sri
+      JOIN recipe_items ri ON ri.sub_recipe_id = sri.sub_recipe_id
+      JOIN recipes r ON ri.recipe_id = r.id
+      WHERE sri.supply_id = ?
+    `).all(supplyId) as Array<{ product_id: string }>;
+
+    const productIds = new Set<string>();
+    for (const r of recRows) productIds.add(r.product_id);
+    for (const r of subRecRows) productIds.add(r.product_id);
+
+    const mirrorProdId = supplyId.startsWith('sup_')
+      ? `prod_${supplyId.replace('sup_', '')}`
+      : supplyId;
+    const directProd = rawDb.prepare('SELECT id FROM products WHERE id = ? OR id = ?').get(mirrorProdId, supplyId) as { id: string } | undefined;
+    if (directProd) productIds.add(directProd.id);
+
+    for (const pid of productIds) {
+      syncProductEstimatedCost(rawDb, pid);
+    }
+  } catch (err) {
+    console.warn(`[syncProductsAffectedBySupply] Error al sincronizar productos del insumo ${supplyId}:`, err);
+  }
+}
+
 export function saveProductRecipe(
   rawDb: Database.Database,
   productId: string,
@@ -355,13 +455,7 @@ export function saveProductRecipe(
     }
 
     // Actualizar el estimated_cost_usd_cents en products
-    const detail = getProductRecipe(rawDb, productId);
-    if (detail) {
-      rawDb.prepare('UPDATE products SET estimated_cost_usd_cents = ? WHERE id = ?').run(
-        detail.calculatedCostUsdCents,
-        productId
-      );
-    }
+    syncProductEstimatedCost(rawDb, productId);
   });
 
   tx();
