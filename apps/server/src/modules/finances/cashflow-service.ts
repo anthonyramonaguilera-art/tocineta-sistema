@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import { normalizeLocationFilter } from './financial-truth-helpers.js';
 import { getFinancialTruth } from './financial-truth-service.js';
 
 export interface CashFlowMethodItem {
@@ -61,7 +62,7 @@ export function calculateCashFlow(
   const now = Date.now();
   const startDateMs = params.startDateMs ?? (now - 30 * 24 * 60 * 60 * 1000);
   const endDateMs = params.endDateMs ?? now;
-  const locationId = params.locationId || null;
+  const locationId = normalizeLocationFilter(params.locationId);
 
   const methodMap: Record<string, CashFlowMethodItem> = {};
   const ensureMethod = (m: string) => {

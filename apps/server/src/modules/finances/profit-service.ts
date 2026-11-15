@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import { calculateOrderLineRealCost } from '../profitability/costing.js';
 import { generateMenuEngineeringReport, type MenuEngineeringReport } from '../profitability/menu-engineering.js';
+import { normalizeLocationFilter } from './financial-truth-helpers.js';
 import { getFinancialTruth } from './financial-truth-service.js';
 
 export interface ProfitAndLossParams {
@@ -88,7 +89,7 @@ export function calculateProfitAndLoss(
   const now = Date.now();
   const startDateMs = params.startDateMs ?? (now - 30 * 24 * 60 * 60 * 1000);
   const endDateMs = params.endDateMs ?? now;
-  const locationId = params.locationId || null;
+  const locationId = normalizeLocationFilter(params.locationId);
 
   let locationName: string | null = null;
   if (locationId) {
@@ -206,7 +207,7 @@ export function calculateProfitAndLoss(
     SELECT c.id as category_id, c.name as category_name, COALESCE(SUM(ol.quantity), 0) as units_sold, COALESCE(SUM(ol.subtotal_usd_cents), 0) as total_usd
     FROM order_lines ol JOIN orders o ON ol.order_id = o.id
     JOIN products pr ON ol.product_id = pr.id JOIN categories c ON pr.category_id = c.id
-    WHERE ${orderWhere.join(' AND ')}
+    WHERE ${orderWhere.join(' AND ')} AND ol.line_role IN ('STANDARD', 'COMBO_PARENT', 'COURTESY_ITEM')
     GROUP BY c.id ORDER BY total_usd DESC
   `).all(...orderParams) as any[];
   const byCategory: SalesByCategoryItem[] = catRows.map(r => ({

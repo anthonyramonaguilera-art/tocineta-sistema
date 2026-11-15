@@ -92,3 +92,8 @@ export function calculateDeduplicatedWaste(
     workerIncidentsUsd
   };
 }
+
+export function normalizeLocationFilter(value?: string | null): string | null {
+  const v = (value ?? '').trim();
+  return v === '' || v.toUpperCase() === 'ALL' ? null : v;
+}

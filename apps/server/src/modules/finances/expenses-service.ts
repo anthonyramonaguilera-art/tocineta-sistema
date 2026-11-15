@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
+import { normalizeLocationFilter } from './financial-truth-helpers.js';
 
 export interface ExpenseCategoryItem {
   id: string;
@@ -210,9 +211,10 @@ export function listExpenses(rawDb: Database.Database, filters: ExpenseFilters =
   const conditions: string[] = ['1=1'];
   const params: any[] = [];
 
-  if (filters.locationId) {
+  const locId = normalizeLocationFilter(filters.locationId);
+  if (locId) {
     conditions.push('oe.location_id = ?');
-    params.push(filters.locationId);
+    params.push(locId);
   }
   if (filters.startDateMs) {
     conditions.push('oe.created_at_ms >= ?');

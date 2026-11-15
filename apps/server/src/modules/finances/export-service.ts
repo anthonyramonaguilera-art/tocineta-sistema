@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3';
 import PDFDocument from 'pdfkit';
+import { normalizeLocationFilter } from './financial-truth-helpers.js';
 import { calculateProfitAndLoss } from './profit-service.js';
 import { calculateCashFlow } from './cashflow-service.js';
 
@@ -150,7 +151,7 @@ export function createMonthlyClosure(
   const pnl = calculateProfitAndLoss(rawDb, {
     startDateMs: startDate.getTime(),
     endDateMs: endDate.getTime(),
-    locationId: locationId === 'all' ? undefined : locationId
+    locationId: normalizeLocationFilter(locationId) ?? undefined
   });
 
   const id = `close_${year}_${month}_${locationId}`;
