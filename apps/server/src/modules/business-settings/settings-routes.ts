@@ -1,6 +1,9 @@
+import * as fs from 'node:fs';
+import * as path from 'node:path';
 import type { FastifyPluginAsync } from 'fastify';
 import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
 import { getSessionUser } from '../auth/session.js';
+import { getUploadsDir } from '../../config/paths.js';
 
 
 export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
@@ -330,6 +333,78 @@ export const businessSettingsRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.put('/api/business-settings', updateSettingsHandler);
   fastify.patch('/api/business-settings', updateSettingsHandler);
+
+  // 3. Subir logo para web / QR
+  fastify.post('/api/business-settings/logo', { bodyLimit: 5 * 1024 * 1024 }, async (request, reply) => {
+    try {
+      const user = request.user || getSessionUser(rawDb, request.headers.authorization);
+      if (user && user.role !== 'admin') {
+        return reply.status(403).send({ success: false, message: 'Solo el rol admin puede modificar la configuración del negocio' });
+      }
+
+      ensureBusinessSettingsDefensive(rawDb);
+
+      const body = request.body as { base64?: string; photoBase64?: string } | undefined;
+      const base64Payload = body?.base64 || body?.photoBase64;
+
+      if (!base64Payload || typeof base64Payload !== 'string') {
+        return reply.status(400).send({ success: false, error: 'Debe enviar la imagen en formato base64' });
+      }
+
+      let mimeType = 'image/jpeg';
+      let cleanBase64 = base64Payload;
+
+      const dataUrlMatch = base64Payload.match(/^data:(image\/[a-zA-Z+]+);base64,(.+)$/);
+      if (dataUrlMatch) {
+        mimeType = dataUrlMatch[1].toLowerCase();
+        cleanBase64 = dataUrlMatch[2];
+      }
+
+      let ext = 'jpg';
+      if (mimeType.includes('png')) ext = 'png';
+      else if (mimeType.includes('webp')) ext = 'webp';
+      else if (mimeType.includes('jpeg') || mimeType.includes('jpg')) ext = 'jpg';
+      else {
+        return reply.status(400).send({ success: false, error: 'Formato de imagen no soportado. Debe ser JPG, PNG o WEBP.' });
+      }
+
+      const buffer = Buffer.from(cleanBase64, 'base64');
+      if (buffer.length === 0) {
+        return reply.status(400).send({ success: false, error: 'El contenido de la imagen está vacío o es inválido.' });
+      }
+
+      if (buffer.length > 2 * 1024 * 1024) {
+        return reply.status(400).send({ success: false, error: 'El archivo excede el tamaño máximo permitido de 2 MB.' });
+      }
+
+      const targetDir = getUploadsDir();
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+
+      const filename = `business-logo-${Date.now()}.${ext}`;
+      const filePath = path.join(targetDir, filename);
+      fs.writeFileSync(filePath, buffer);
+
+      const imageUrl = `/uploads/${filename}?t=${Date.now()}`;
+      const now = Date.now();
+
+      rawDb.prepare(`
+        UPDATE business_settings
+        SET logo_url = ?, updated_at_ms = ?
+        WHERE id = 'default'
+      `).run(imageUrl, now);
+
+      return reply.status(200).send({
+        success: true,
+        logo_url: imageUrl,
+        logoUrl: imageUrl,
+        imageUrl
+      });
+    } catch (err: any) {
+      return reply.status(400).send({ success: false, error: err.message });
+    }
+  });
 
   // 3. Asistente de Primera Instalación (Onboarding Wizard)
   fastify.post('/api/business-settings/onboarding', async (req, reply) => {

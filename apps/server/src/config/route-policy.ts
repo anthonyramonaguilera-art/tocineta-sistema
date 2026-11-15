@@ -135,6 +135,7 @@ export const ROUTE_POLICY: readonly RouteRule[] = [
   ['PUT', '/api/business-settings', 'ADMIN'],
   ['PATCH', '/api/business-settings', 'ADMIN'],
   ['POST', '/api/business-settings/onboarding', 'ADMIN'],
+  ['POST', '/api/business-settings/logo', 'ADMIN'],
   ['PATCH', '/api/printers/:id', 'ADMIN'],
   ['POST', '/api/locations', 'ADMIN'],
   ['PATCH', '/api/locations/:id', 'ADMIN'],

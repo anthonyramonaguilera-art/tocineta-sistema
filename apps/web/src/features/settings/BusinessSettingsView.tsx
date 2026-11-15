@@ -4,6 +4,7 @@ import { Card, Button, Badge, Icon } from '../../ui/index.js';
 import { OnboardingWizardModal } from './OnboardingWizardModal.js';
 import { OperationalManualsModal } from './OperationalManualsModal.js';
 import { InventoryModeCard } from './InventoryModeCard.js';
+import { BrandIdentityCard } from './BrandIdentityCard.js';
 import { PrintersPanel } from './PrintersPanel.js';
 import { AboutSystemCard } from './AboutSystemCard.js';
 import { useAuth } from '../../context/AuthContext.js';
@@ -34,6 +35,7 @@ export const BusinessSettingsView: React.FC = () => {
 
   const [businessName, setBusinessName] = useState(settings?.business_name || '');
   const [slogan, setSlogan] = useState(settings?.slogan || '');
+  const [logoUrl, setLogoUrl] = useState(settings?.logo_url || '');
   const [rif, setRif] = useState(settings?.rif || '');
   const [phone, setPhone] = useState(settings?.phone || '');
   const [address, setAddress] = useState(settings?.address || '');
@@ -56,6 +58,7 @@ export const BusinessSettingsView: React.FC = () => {
     if (!settings) return;
     setBusinessName(settings.business_name || '');
     setSlogan(settings.slogan || '');
+    setLogoUrl(settings.logo_url || '');
     setRif(settings.rif || '');
     setPhone(settings.phone || '');
     setAddress(settings.address || '');
@@ -92,6 +95,7 @@ export const BusinessSettingsView: React.FC = () => {
     e.preventDefault();
     await saveMutation.mutateAsync({
       business_name: businessName.trim(), slogan: slogan.trim(), rif: rif.trim(),
+      logo_url: logoUrl,
       phone: phone.trim(), address: address.trim(), primary_color: primaryColor,
       rate_change_hour: rateChangeHour, ticket_header_message: ticketHeader.trim(),
       ticket_footer_message: ticketFooter.trim(), iva_enabled: ivaEnabled,
@@ -167,40 +171,20 @@ export const BusinessSettingsView: React.FC = () => {
         {/* Printers & Hardware Panel */}
         <PrintersPanel token={token} />
 
-        {/* 1. Identidad Corporativa */}
-        <Card variant="surface" className="p-5 border border-border space-y-4">
-          <div className="flex items-center gap-2 border-b border-border pb-3">
-            <Icon name="Building2" size={18} className="text-primary" />
-            <h3 className="font-extrabold text-sm text-ink uppercase tracking-wide">
-              1. Identidad de Marca y Logo
-            </h3>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
-            <div>
-              <label className="block text-[11px] font-bold text-ink-muted mb-1">Nombre Comercial de la Marca *</label>
-              <input type="text" required value={businessName} onChange={(e) => setBusinessName(e.target.value)} placeholder="TOCINETA" className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-black uppercase" />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-ink-muted mb-1">Registro de Información Fiscal (RIF)</label>
-              <input type="text" value={rif} onChange={(e) => setRif(e.target.value)} placeholder="V-17040918-0" className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-mono font-bold" />
-            </div>
-
-            <div className="sm:col-span-2">
-              <label className="block text-[11px] font-bold text-ink-muted mb-1">Eslogan Oficial</label>
-              <input type="text" value={slogan} onChange={(e) => setSlogan(e.target.value)} placeholder="Cocinamos con amor y servimos como mereces" className="w-full min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs text-ink outline-none focus:border-primary font-medium" />
-            </div>
-
-            <div>
-              <label className="block text-[11px] font-bold text-ink-muted mb-1">Color Corporativo</label>
-              <div className="flex items-center gap-3">
-                <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-11 h-11 rounded-xl border border-border cursor-pointer bg-surface p-1" />
-                <input type="text" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)} className="w-28 min-h-[44px] rounded-xl border border-border bg-surface px-3 text-xs font-mono font-bold text-ink" />
-              </div>
-            </div>
-          </div>
-        </Card>
+        {/* 1. Identidad de Marca y Eslogan */}
+        <BrandIdentityCard
+          businessName={businessName}
+          onChangeBusinessName={setBusinessName}
+          rif={rif}
+          onChangeRif={setRif}
+          slogan={slogan}
+          onChangeSlogan={setSlogan}
+          primaryColor={primaryColor}
+          onChangePrimaryColor={setPrimaryColor}
+          logoUrl={logoUrl}
+          onChangeLogoUrl={setLogoUrl}
+          disabled={saveMutation.isPending}
+        />
 
         {/* 2. Contacto y Sedes */}
         <Card variant="surface" className="p-5 border border-border space-y-4">
