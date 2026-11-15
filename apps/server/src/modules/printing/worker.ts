@@ -37,6 +37,7 @@ import {
 } from './templates.js';
 import { verifyPin } from '../auth/pin.js';
 import { isTerminalAlive, getTerminalPrinterId } from './terminal-registry.js';
+import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
 
 export function authenticateByPin(
   rawDb: Database.Database,
@@ -673,7 +674,8 @@ export function enqueueOrderPrintJobs(
 
   let cajaJobId: string | null = null;
   if (printDeliveryNote === 1) {
-    const receiptIR = buildReceiptTicketIR(order, lines);
+    const brand = ensureBusinessSettingsDefensive(rawDb);
+    const receiptIR = buildReceiptTicketIR(order, lines, brand);
     const cajaConfig = getPrinterConfig(rawDb, notaTarget.printerId);
     const receiptBytes = Buffer.from(renderTicketToEscPos(receiptIR, cajaConfig));
 

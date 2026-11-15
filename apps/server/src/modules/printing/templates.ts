@@ -48,6 +48,7 @@ export interface FiscalSettings {
   ticket_header_message?: string;
   ticket_footer_message?: string;
   business_name?: string;
+  rif?: string;
 }
 
 export interface FiscalBreakdown {
@@ -227,9 +228,10 @@ export function buildReceiptTicketIR(
   blocks.push({ type: 'header_logo' });
 
   // 2. Eslogan oficial dinámico
-  const receiptSlogan = (settings?.slogan && settings?.slogan.includes('damos gloria a Dios'))
-    ? settings.slogan
-    : 'Cocinamos con amor, te servimos como mereces y damos gloria a Dios';
+  const configuredSlogan = settings?.slogan?.trim();
+  const receiptSlogan = (configuredSlogan && configuredSlogan !== 'Cocinamos con amor y servimos como mereces')
+    ? configuredSlogan
+    : 'Cocinamos con amor, te servimos como mereces y damos gloria a DIOS';
   blocks.push({
     type: 'text',
     text: `"${receiptSlogan}"`,
@@ -369,7 +371,10 @@ export function buildReceiptTicketIR(
 
   // 7. Footer de Agradecimiento y Corte
   blocks.push({ type: 'separator', style: 'dashed' });
-  const footerMessage = settings?.ticket_footer_message || '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga';
+  const rawFooter = settings?.ticket_footer_message?.trim();
+  const footerMessage = (!rawFooter || rawFooter === '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga')
+    ? '¡GRACIAS POR SU PREFERENCIA! DIOS le bendiga'
+    : rawFooter;
   blocks.push({
     type: 'footer',
     lines: [
