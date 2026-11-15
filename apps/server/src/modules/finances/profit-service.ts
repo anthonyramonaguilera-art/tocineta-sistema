@@ -68,6 +68,7 @@ export interface ProfitAndLossStatement {
     netProfitMarginPercentage: number;
     totalOrders: number;
     averageTicketUsdCents: number;
+    purchasesUsdCents: number;
   };
   breakdown: {
     byMethod: SalesByMethodItem[];
@@ -137,6 +138,20 @@ export function calculateProfitAndLoss(
   const netProfitMarginPercentage = netFoodSalesUsdCents > 0
     ? Number(((netProfitUsdCents / netFoodSalesUsdCents) * 100).toFixed(2))
     : 0;
+
+  // Compras de inventario del período (suma de purchases.total_usd_cents por rango y sede)
+  const purchWhere = ['p.created_at_ms >= ?', 'p.created_at_ms <= ?'];
+  const purchParams: any[] = [startDateMs, endDateMs];
+  if (locationId) {
+    purchWhere.push('(p.location_id = ? OR (p.location_id IS NULL AND ? = ?))');
+    purchParams.push(locationId, locationId, 'loc_alta_vista');
+  }
+  const purchRow = rawDb.prepare(`
+    SELECT COALESCE(SUM(p.total_usd_cents), 0) as total_usd
+    FROM purchases p
+    WHERE ${purchWhere.join(' AND ')}
+  `).get(...purchParams) as any;
+  const purchasesUsdCents = purchRow?.total_usd ?? 0;
 
   // 2. Estadísticas de productos para Kasavana & Smith y ranking
   const orderIds = orders.map(o => o.id);
@@ -295,7 +310,8 @@ export function calculateProfitAndLoss(
       netProfitUsdCents,
       netProfitMarginPercentage,
       totalOrders,
-      averageTicketUsdCents
+      averageTicketUsdCents,
+      purchasesUsdCents
     },
     breakdown: { byMethod, byCategory, byHour, byLocation, topProducts, kasavanaMatrix }
   };

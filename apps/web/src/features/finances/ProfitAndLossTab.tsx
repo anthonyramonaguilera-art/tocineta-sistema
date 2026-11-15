@@ -1,3 +1,4 @@
+import React from 'react';
 import { Card, Badge, Icon } from '../../ui/index.js';
 
 interface ProfitAndLossTabProps {
@@ -18,22 +19,19 @@ export const ProfitAndLossTab: React.FC<ProfitAndLossTabProps> = ({ pnlData, isL
 
   return (
     <div className="space-y-6">
-      {/* 1. Tarjeta Principal de Utilidad Real */}
-      <div className="p-6 bg-surface rounded-3xl border border-border shadow-xs space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+      {/* 1. Tarjeta Principal de Estado de Resultados (P&L) en Orden Estándar */}
+      <div className="p-6 bg-surface rounded-3xl border border-border shadow-xs space-y-5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <span className="text-xs font-black text-ink-muted uppercase tracking-wider block">
               Estado de Resultados (P&L)
             </span>
-            <div className={`text-4xl font-black tracking-tight ${summary.netProfitUsdCents < 0 ? 'text-danger' : 'text-ink'}`}>
-              ${(summary.netProfitUsdCents / 100).toFixed(2)}
-            </div>
-            <span className={`text-xs font-bold ${summary.netProfitMarginPercentage < 0 || summary.netProfitUsdCents < 0 ? 'text-danger' : 'text-ink-muted'}`}>
-              Margen Neto: {summary.netProfitMarginPercentage}%
-            </span>
+            <h3 className="text-lg font-black text-ink tracking-tight">
+              Rentabilidad Operativa del Período
+            </h3>
           </div>
 
-          <div className="p-3 bg-surface-alt rounded-2xl border border-border flex items-center gap-4 text-xs font-semibold">
+          <div className="p-3 bg-surface-alt rounded-2xl border border-border flex items-center gap-4 text-xs font-semibold self-start sm:self-auto">
             <div>
               <span className="text-ink-muted block text-[10px] uppercase">Pedidos</span>
               <span className="font-black text-ink">{summary.totalOrders}</span>
@@ -48,58 +46,126 @@ export const ProfitAndLossTab: React.FC<ProfitAndLossTabProps> = ({ pnlData, isL
           </div>
         </div>
 
-        {/* Cascada de Resultados: Ventas - Costo - Mermas - Gastos */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-3 border-t border-border">
-          <div className="p-3 bg-surface-alt rounded-xl">
-            <span className="text-[10px] font-bold text-ink-muted uppercase block">
-              1. Ventas Netas
-            </span>
-            <span className="text-lg font-black text-ink">
-              ${(summary.netFoodSalesUsdCents / 100).toFixed(2)}
-            </span>
-            <span className="text-[10px] text-ink-muted block">Comida facturada</span>
-          </div>
-
-          <div className="p-3 bg-surface-alt rounded-xl">
-            <span className="text-[10px] font-bold text-ink-muted uppercase block">
-              2. Costo de Ventas
-            </span>
-            {summary.cogsConfigured === false ? (
-              <span className="text-xs font-black text-ink-muted block mt-1">
-                Sin recetas configuradas
-              </span>
-            ) : (
-              <span className="text-lg font-black text-danger">
-                -${(summary.costOfGoodsSoldUsdCents / 100).toFixed(2)}
-              </span>
-            )}
-            <span className="text-[10px] text-ink-muted block">
-              {summary.cogsConfigured === false ? 'Modo sin recetas' : `Food Cost (${summary.foodCostPercentage}%)`}
+        {/* Cascada en orden: 1) Ventas netas, 2) Costo de ventas, 3) Mermas, 4) Gastos operativos, 5) Utilidad neta real */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3 pt-2">
+          {/* 1. Ventas netas */}
+          <div className="p-4 bg-surface-alt rounded-2xl border border-border flex flex-col justify-between space-y-2">
+            <div>
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <span className="text-[10px] font-black text-ink-muted uppercase tracking-wider">
+                  1. Ventas Netas
+                </span>
+                <Icon name="TrendingUp" size={14} className="text-success" />
+              </div>
+              <div className="text-2xl font-black text-ink">
+                ${(summary.netFoodSalesUsdCents / 100).toFixed(2)}
+              </div>
+            </div>
+            <span className="text-[11px] text-ink-muted block">
+              Comida facturada
             </span>
           </div>
 
-          <div className="p-3 bg-surface-alt rounded-xl">
-            <span className="text-[10px] font-bold text-ink-muted uppercase block">
-              3. Mermas Registradas
+          {/* 2. Costo de ventas */}
+          <div className="p-4 bg-surface-alt rounded-2xl border border-border flex flex-col justify-between space-y-2">
+            <div>
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <span className="text-[10px] font-black text-ink-muted uppercase tracking-wider">
+                  2. Costo de Ventas
+                </span>
+                <Icon name="ChefHat" size={14} className="text-ink-muted" />
+              </div>
+              {summary.cogsConfigured === false ? (
+                <div className="p-2 bg-warning/10 border border-warning/30 rounded-xl my-1">
+                  <div className="flex items-start gap-1.5 text-warning text-xs font-bold leading-snug">
+                    <Icon name="AlertTriangle" size={14} className="shrink-0 mt-0.5" />
+                    <span>Faltan recetas: el costo de ventas no es confiable</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-2xl font-black text-danger">
+                  -${(summary.costOfGoodsSoldUsdCents / 100).toFixed(2)}
+                </div>
+              )}
+            </div>
+            <span className="text-[11px] text-ink-muted block">
+              {summary.cogsConfigured === false
+                ? 'Insumos por recetas vendidas'
+                : `Insumos consumidos (${summary.foodCostPercentage}% food cost)`}
             </span>
-            <span className="text-lg font-black text-danger">
-              -${(summary.wasteLossUsdCents / 100).toFixed(2)}
-            </span>
-            <span className="text-[10px] text-ink-muted block">Desperdicios y pérdidas</span>
           </div>
 
-          <div className="p-3 bg-surface-alt rounded-xl">
-            <span className="text-[10px] font-bold text-ink-muted uppercase block">
-              4. Gastos de Caja
+          {/* 3. Mermas de inventario */}
+          <div className="p-4 bg-surface-alt rounded-2xl border border-border flex flex-col justify-between space-y-2">
+            <div>
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <span className="text-[10px] font-black text-ink-muted uppercase tracking-wider">
+                  3. Mermas de Inventario
+                </span>
+                <Icon name="Trash2" size={14} className="text-danger" />
+              </div>
+              <div className="text-2xl font-black text-danger">
+                -${(summary.wasteLossUsdCents / 100).toFixed(2)}
+              </div>
+            </div>
+            <span className="text-[11px] text-ink-muted block">
+              Desperdicios y pérdidas
             </span>
-            <span className="text-lg font-black text-danger">
-              -${(summary.operatingExpensesUsdCents / 100).toFixed(2)}
+          </div>
+
+          {/* 4. Gastos operativos */}
+          <div className="p-4 bg-surface-alt rounded-2xl border border-border flex flex-col justify-between space-y-2">
+            <div>
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <span className="text-[10px] font-black text-ink-muted uppercase tracking-wider">
+                  4. Gastos Operativos
+                </span>
+                <Icon name="Receipt" size={14} className="text-danger" />
+              </div>
+              <div className="text-2xl font-black text-danger">
+                -${(summary.operatingExpensesUsdCents / 100).toFixed(2)}
+              </div>
+            </div>
+            <span className="text-[11px] text-ink-muted block">
+              Gastos de operación de caja
             </span>
-            <span className="text-[10px] text-ink-muted block">Gastos operativos</span>
+          </div>
+
+          {/* 5. Utilidad neta real */}
+          <div className="p-4 bg-surface-alt rounded-2xl border border-border flex flex-col justify-between space-y-2">
+            <div>
+              <div className="flex items-center justify-between gap-1 mb-1">
+                <span className="text-[10px] font-black text-ink-muted uppercase tracking-wider">
+                  5. Utilidad Neta Real
+                </span>
+                <Icon
+                  name={summary.netProfitUsdCents < 0 ? 'TrendingDown' : 'CircleDollarSign'}
+                  size={14}
+                  className={summary.netProfitUsdCents < 0 ? 'text-danger' : 'text-success'}
+                />
+              </div>
+              <div
+                className={`text-2xl font-black tracking-tight ${
+                  summary.netProfitUsdCents < 0 ? 'text-danger' : 'text-ink'
+                }`}
+              >
+                {summary.netProfitUsdCents < 0 ? '-' : ''}$
+                {(Math.abs(summary.netProfitUsdCents) / 100).toFixed(2)}
+              </div>
+            </div>
+            <span
+              className={`text-[11px] font-bold block ${
+                summary.netProfitMarginPercentage < 0 || summary.netProfitUsdCents < 0
+                  ? 'text-danger'
+                  : 'text-success'
+              }`}
+            >
+              Margen Neto: {summary.netProfitMarginPercentage}%
+            </span>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 text-[11px] text-ink-muted italic">
+        <div className="flex items-center gap-2 pt-2 border-t border-border text-[11px] text-ink-muted italic">
           <Icon name="ShieldCheck" size={14} className="text-success shrink-0" />
           <span>
             Cada venta conserva la tasa inmutable de su día. Sin doble conteo: las compras a proveedores
@@ -108,7 +174,52 @@ export const ProfitAndLossTab: React.FC<ProfitAndLossTabProps> = ({ pnlData, isL
         </div>
       </div>
 
-      {/* 2. Desgloses en Cuadrícula */}
+      {/* 2. Bloque Aparte: Compras de Inventario del Período (No se resta de la utilidad) */}
+      <div className="p-6 bg-surface rounded-3xl border border-border shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="p-3 bg-surface-alt rounded-2xl border border-border text-ink">
+              <Icon name="ShoppingCart" size={22} />
+            </div>
+            <div>
+              <span className="text-[10px] font-black text-ink-muted uppercase tracking-wider block">
+                Movimientos de Abastecimiento
+              </span>
+              <h4 className="text-base font-black text-ink">
+                Compras de inventario del período
+              </h4>
+              <p className="text-xs text-ink-muted">
+                Total de compras registradas a proveedores en el rango seleccionado
+              </p>
+            </div>
+          </div>
+
+          <div className="text-left sm:text-right">
+            <span className="text-3xl font-black text-ink block">
+              ${((summary.purchasesUsdCents || 0) / 100).toFixed(2)}
+            </span>
+            <span className="text-[10px] font-bold text-ink-muted uppercase">
+              Total facturado en compras
+            </span>
+          </div>
+        </div>
+
+        <div className="p-3.5 bg-surface-alt rounded-2xl border border-border flex items-start gap-3 text-xs">
+          <Icon name="Info" size={16} className="text-primary shrink-0 mt-0.5" />
+          <div className="space-y-1">
+            <span className="font-black text-ink block">
+              Nota: no se resta de la utilidad
+            </span>
+            <p className="text-[11px] text-ink-muted leading-relaxed">
+              Las compras de inventario capitalizan el almacén y no son un gasto directo del período.
+              La utilidad operativa real únicamente descuenta el consumo real de insumos por las recetas
+              efectivamente vendidas (Costo de Ventas / COGS).
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. Desgloses en Cuadrícula */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Ventas por Método de Pago */}
         <Card className="p-4 space-y-3">
@@ -155,7 +266,7 @@ export const ProfitAndLossTab: React.FC<ProfitAndLossTabProps> = ({ pnlData, isL
           </div>
         </Card>
 
-        {/* Ranking de Productos Top */}
+        {/* Ranking de Productos Top (con contenedor de scroll propio para no desbordar en móvil) */}
         <Card className="p-4 space-y-3 md:col-span-2">
           <div className="flex items-center justify-between">
             <h4 className="text-xs font-black text-ink uppercase tracking-wider">
@@ -163,8 +274,8 @@ export const ProfitAndLossTab: React.FC<ProfitAndLossTabProps> = ({ pnlData, isL
             </h4>
             <Icon name="Trophy" size={16} className="text-warning" />
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-xs text-left">
+          <div className="w-full overflow-x-auto">
+            <table className="w-full min-w-[540px] text-xs text-left">
               <thead>
                 <tr className="border-b border-border text-[10px] font-black uppercase text-ink-muted">
                   <th className="py-2">#</th>
