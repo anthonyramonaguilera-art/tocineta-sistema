@@ -20,6 +20,15 @@ import { MonthlyClosureTab } from './MonthlyClosureTab.js';
 
 export type FinanceSubTab = 'expenses' | 'receivables' | 'payables' | 'pnl' | 'cashflow' | 'closures';
 
+const FINANCE_SUBTABS = [
+  { key: 'pnl' as const, label: 'Utilidad (P&L)', icon: 'TrendingUp' as const },
+  { key: 'cashflow' as const, label: 'Flujo de Caja', icon: 'Layers' as const },
+  { key: 'expenses' as const, label: 'Gastos', icon: 'Receipt' as const },
+  { key: 'receivables' as const, label: 'Por Cobrar', icon: 'UserCheck' as const },
+  { key: 'payables' as const, label: 'Por Pagar', icon: 'Truck' as const },
+  { key: 'closures' as const, label: 'Cierre Mensual', icon: 'Lock' as const }
+];
+
 export const FinancesDashboardView: React.FC = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -41,37 +50,18 @@ export const FinancesDashboardView: React.FC = () => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     const startOfTodayMs = d.getTime();
-    if (selectedPeriod === 'today') {
-      return startOfTodayMs;
-    }
-    if (selectedPeriod === '7d') {
-      return startOfTodayMs - 7 * 24 * 3600_000;
-    }
+    if (selectedPeriod === 'today') return startOfTodayMs;
+    if (selectedPeriod === '7d') return startOfTodayMs - 7 * 24 * 3600_000;
     return startOfTodayMs - 30 * 24 * 3600_000;
   }, [selectedPeriod]);
 
   const {
-    numbersData,
-    categoriesData,
-    expensesData,
-    loadingExpenses,
-    customersData,
-    receivablesData,
-    loadingReceivables,
-    payablesData,
-    loadingPayables,
-    pnlData,
-    loadingPnl,
-    cashFlowData,
-    loadingCashFlow,
-    closuresData,
-    loadingClosures,
-    statementData,
-    saveExpenseMutation,
-    saveReceivableMutation,
-    saveReceivablePaymentMutation,
-    savePayablePaymentMutation,
-    createClosureMutation
+    numbersData, categoriesData, expensesData, loadingExpenses,
+    customersData, receivablesData, loadingReceivables,
+    payablesData, loadingPayables, pnlData, loadingPnl,
+    cashFlowData, loadingCashFlow, closuresData, loadingClosures,
+    statementData, saveExpenseMutation, saveReceivableMutation,
+    saveReceivablePaymentMutation, savePayablePaymentMutation, createClosureMutation
   } = useFinancesQueries(selectedLocation, startDateMs, selectedCustomerForStatement, user?.id || 'usr_admin');
 
   const handleSendWhatsApp = async (receivableId: string) => {
@@ -222,22 +212,34 @@ export const FinancesDashboardView: React.FC = () => {
         </Button>
       </div>
 
-      {/* 4. Sub-Pestañas de Navegación */}
-      <div className="border-b border-border flex items-center gap-1 overflow-x-auto pb-1">
-        {([
-          { key: 'pnl', label: 'Utilidad (P&L)', icon: 'TrendingUp' },
-          { key: 'cashflow', label: 'Flujo de Caja', icon: 'Layers' },
-          { key: 'expenses', label: 'Gastos', icon: 'Receipt' },
-          { key: 'receivables', label: 'Por Cobrar', icon: 'UserCheck' },
-          { key: 'payables', label: 'Por Pagar', icon: 'Truck' },
-          { key: 'closures', label: 'Cierre Mensual', icon: 'Lock' }
-        ] as const).map((tab) => (
+      {/* 4. Sub-Pestañas de Navegación (Segmentado 2 Filas en Móvil / Tabs en Desktop) */}
+      <div className="md:hidden grid grid-cols-3 gap-1.5 pb-1">
+        {FINANCE_SUBTABS.map((tab) => (
           <button
             key={tab.key}
             type="button"
             data-subtab={tab.key}
-            onClick={() => setActiveTab(tab.key as FinanceSubTab)}
-            className={`px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-tight flex items-center gap-2 transition-all whitespace-nowrap min-h-[44px] ${
+            onClick={() => setActiveTab(tab.key)}
+            className={`min-h-[48px] px-2 py-1.5 rounded-xl font-bold text-[11px] tracking-tight flex flex-col items-center justify-center gap-1 transition-all text-center border ${
+              activeTab === tab.key
+                ? 'bg-ink text-surface border-ink shadow-xs'
+                : 'bg-surface text-ink-muted border-border hover:text-ink hover:bg-surface-alt'
+            }`}
+          >
+            <Icon name={tab.icon} size={16} />
+            <span className="line-clamp-1">{tab.label}</span>
+          </button>
+        ))}
+      </div>
+
+      <div className="hidden md:flex border-b border-border items-center gap-1 overflow-x-auto pb-1">
+        {FINANCE_SUBTABS.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            data-subtab={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`px-4 py-2.5 rounded-xl font-bold text-xs uppercase tracking-tight flex items-center gap-2 transition-all whitespace-nowrap min-h-[48px] ${
               activeTab === tab.key
                 ? 'bg-ink text-surface shadow-xs'
                 : 'text-ink-muted hover:text-ink hover:bg-surface'

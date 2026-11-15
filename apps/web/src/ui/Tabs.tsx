@@ -15,6 +15,7 @@ export interface TabsProps {
   activeTab?: string;
   onChange: (id: string) => void;
   className?: string;
+  variant?: 'scroll' | 'wrap' | 'responsive';
 }
 
 export const Tabs: React.FC<TabsProps> = ({
@@ -23,7 +24,8 @@ export const Tabs: React.FC<TabsProps> = ({
   activeId,
   activeTab,
   onChange,
-  className = ''
+  className = '',
+  variant = 'scroll'
 }) => {
   const tabList = items || tabs || [];
   const currentActiveId = activeId || activeTab || '';
@@ -36,9 +38,23 @@ export const Tabs: React.FC<TabsProps> = ({
     return iconProp;
   };
 
+  const containerClass =
+    variant === 'wrap'
+      ? `border-b border-border ${className}`
+      : variant === 'responsive'
+      ? `md:overflow-x-auto md:scrollbar-none border-b border-border ${className}`
+      : `overflow-x-auto scrollbar-none border-b border-border ${className}`;
+
+  const innerClass =
+    variant === 'wrap'
+      ? 'flex flex-wrap gap-2 px-1'
+      : variant === 'responsive'
+      ? 'flex flex-wrap md:flex-nowrap gap-2 md:min-w-max px-1'
+      : 'flex gap-2 min-w-max px-1';
+
   return (
-    <div className={`overflow-x-auto scrollbar-none border-b border-border ${className}`.trim()}>
-      <div className="flex gap-2 min-w-max px-1">
+    <div className={containerClass.trim()}>
+      <div className={innerClass}>
         {tabList.map(item => {
           const isActive = item.id === currentActiveId;
           return (
@@ -46,7 +62,7 @@ export const Tabs: React.FC<TabsProps> = ({
               key={item.id}
               type="button"
               onClick={() => onChange(item.id)}
-              className={`flex items-center gap-2 py-3 px-3.5 border-b-2 font-bold text-sm transition-all select-none cursor-pointer whitespace-nowrap ${
+              className={`min-h-[48px] flex items-center gap-2 py-3 px-3.5 border-b-2 font-bold text-sm transition-all select-none cursor-pointer whitespace-nowrap ${
                 isActive
                   ? 'border-primary text-ink'
                   : 'border-transparent text-ink-muted hover:text-ink hover:border-border'

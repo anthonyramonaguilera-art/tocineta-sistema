@@ -1,10 +1,24 @@
 import React, { useState, useMemo } from 'react';
 import type { PosProduct, PosCategory } from '../../types/menu.js';
 import type { CartItem } from './types.js';
-import { Card, Input, Money, Icon, Chips, Button } from '../../ui/index.js';
+import { Card, Input, Money, Icon, Chips, Button, Select, type IconName } from '../../ui/index.js';
 import { ProductImagePlaceholder } from '../../components/ProductImagePlaceholder.js';
 import { useAuth } from '../../context/AuthContext.js';
 import { FreeItemModal } from './FreeItemModal.js';
+
+interface KeyCategoryConfig {
+  key: string;
+  match: (c: PosCategory) => boolean;
+  defaultIcon: IconName;
+  fallbackLabel: string;
+}
+
+const KEY_CATEGORY_CONFIGS: KeyCategoryConfig[] = [
+  { key: 'hamburguesas', match: (c) => /hamburguesa/i.test(c.name) || /hamburguesa/i.test(c.id) || c.station === 'hamburguesas', defaultIcon: 'Beef', fallbackLabel: 'Burgers' },
+  { key: 'hot_dogs', match: (c) => /hot[\s_-]?dog/i.test(c.name) || /perro/i.test(c.name) || /hot_dog/i.test(c.id), defaultIcon: 'Flame', fallbackLabel: 'Hot Dogs' },
+  { key: 'bebidas', match: (c) => /bebida/i.test(c.name) || /bebida/i.test(c.id) || c.station === 'caja_bebidas', defaultIcon: 'CupSoda', fallbackLabel: 'Bebidas' },
+  { key: 'combos', match: (c) => /combo/i.test(c.name) || /combo/i.test(c.id), defaultIcon: 'Package', fallbackLabel: 'Combos' }
+];
 
 interface Step2CatalogProps {
   categories: PosCategory[];
@@ -19,15 +33,8 @@ interface Step2CatalogProps {
 }
 
 export const Step2Catalog: React.FC<Step2CatalogProps> = ({
-  categories,
-  products,
-  cart,
-  onAddProduct,
-  onDecrementProduct,
-  onOpenCustomize,
-  onOpenCombo,
-  formattedRate,
-  onAddFreeItem
+  categories, products, cart, onAddProduct, onDecrementProduct,
+  onOpenCustomize, onOpenCombo, formattedRate, onAddFreeItem
 }) => {
   const { user } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
@@ -35,10 +42,9 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
   const [isFreeItemModalOpen, setIsFreeItemModalOpen] = useState(false);
 
   const canAddFree = Boolean(
-    user?.role === 'admin' ||
-    (Array.isArray(user?.permissions) && user.permissions.includes('canAddFreeItem')) ||
-    ((user as any)?.permissions_json?.canAddFreeItem === true) ||
-    (user?.role && ['cajera', 'supervisor'].includes(user.role) && !user?.permissions?.includes('canAddFreeItem') && (user as any)?.permissions_json?.canAddFreeItem !== false)
+    user?.role === 'admin' || user?.permissions?.includes('canAddFreeItem') ||
+    (user as any)?.permissions_json?.canAddFreeItem === true ||
+    (user?.role && ['cajera', 'supervisor'].includes(user.role) && (user as any)?.permissions_json?.canAddFreeItem !== false)
   );
 
   // Filtrado de productos por categoría y búsqueda
@@ -49,9 +55,7 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
       }
       if (searchTerm.trim()) {
         const query = searchTerm.toLowerCase();
-        const matchesName = p.name.toLowerCase().includes(query);
-        const matchesDesc = (p.description || '').toLowerCase().includes(query);
-        return matchesName || matchesDesc;
+        return p.name.toLowerCase().includes(query) || (p.description || '').toLowerCase().includes(query);
       }
       return true;
     });
@@ -66,12 +70,44 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
     return map;
   }, [cart]);
 
-  const categoryChips = useMemo(() => {
-    return [
-      { id: 'all', label: 'Todos' },
-      ...categories.map((c) => ({ id: c.id, label: c.name }))
-    ];
-  }, [categories]);
+  const categoryChips = useMemo(() => [
+    { id: 'all', label: 'Todos' },
+    ...categories.map((c) => ({ id: c.id, label: c.name }))
+  ], [categories]);
+
+  const { mobileKeyItems, otherCategories } = useMemo(() => {
+    const matchedCategoryIds = new Set<string>();
+    const mappedKeys: Array<{
+      id: string; label: string; shortLabel: string; icon: IconName; isActive: boolean; onClick: () => void;
+    }> = [];
+
+    for (const cfg of KEY_CATEGORY_CONFIGS) {
+      const found = categories.find((c) => !matchedCategoryIds.has(c.id) && cfg.match(c));
+      if (found) {
+        matchedCategoryIds.add(found.id);
+        const short = found.name.length > 9 ? cfg.fallbackLabel : found.name;
+        mappedKeys.push({
+          id: found.id, label: found.name, shortLabel: short, icon: cfg.defaultIcon,
+          isActive: selectedCategory === found.id,
+          onClick: () => setSelectedCategory((prev) => (prev === found.id ? 'all' : found.id))
+        });
+      }
+    }
+
+    if (canAddFree) {
+      mappedKeys.push({
+        id: 'free_item_action', label: 'Ítem libre', shortLabel: 'Ítem libre', icon: 'Plus',
+        isActive: isFreeItemModalOpen, onClick: () => setIsFreeItemModalOpen(true)
+      });
+    } else {
+      mappedKeys.push({
+        id: 'all_action', label: 'Todos', shortLabel: 'Todos', icon: 'Grid',
+        isActive: selectedCategory === 'all', onClick: () => setSelectedCategory('all')
+      });
+    }
+
+    return { mobileKeyItems: mappedKeys, otherCategories: categories.filter((c) => !matchedCategoryIds.has(c.id)) };
+  }, [categories, selectedCategory, canAddFree, isFreeItemModalOpen]);
 
   const handleProductClick = (product: PosProduct) => {
     if (product.isAvailable === false) return;
@@ -122,15 +158,65 @@ export const Step2Catalog: React.FC<Step2CatalogProps> = ({
               variant="secondary"
               onClick={() => setIsFreeItemModalOpen(true)}
               leftIcon={<Icon name="Plus" size={16} />}
-              className="min-h-[48px] shrink-0 font-bold whitespace-nowrap"
+              className="min-h-[48px] shrink-0 font-bold whitespace-nowrap hidden md:inline-flex"
             >
               Ítem libre
             </Button>
           )}
         </div>
 
-        {/* Chips Desplazables de Categoría */}
-        <div className="pt-1">
+        {/* Vista Móvil (< md): 5 botones circulares fijos 48x48 px + Selector "Más" */}
+        <div className="md:hidden space-y-2 pt-1">
+          <div className="grid grid-cols-5 gap-1 items-start text-center">
+            {mobileKeyItems.map((btn) => (
+              <div key={btn.id} className="flex flex-col items-center">
+                <button
+                  type="button"
+                  onClick={btn.onClick}
+                  className={`w-12 h-12 rounded-full flex items-center justify-center transition-all min-h-[48px] min-w-[48px] ${
+                    btn.isActive
+                      ? 'bg-primary text-primary-ink shadow-sm ring-2 ring-primary ring-offset-2 ring-offset-surface font-bold'
+                      : 'bg-surface text-ink border border-border hover:bg-surface-alt active:bg-surface-alt'
+                  }`}
+                  aria-label={btn.label}
+                  title={btn.label}
+                >
+                  <Icon name={btn.icon} size={22} />
+                </button>
+                <span
+                  className={`text-[10px] mt-1 line-clamp-1 font-semibold leading-tight text-center ${
+                    btn.isActive ? 'text-primary font-bold' : 'text-ink-muted'
+                  }`}
+                >
+                  {btn.shortLabel}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          <div className="pt-1">
+            <Select
+              value={
+                otherCategories.some((c) => c.id === selectedCategory)
+                  ? selectedCategory
+                  : selectedCategory === 'all'
+                  ? 'all'
+                  : ''
+              }
+              onChange={(e) => {
+                const val = e.target.value;
+                setSelectedCategory(!val || val === 'all' ? 'all' : val);
+              }}
+              options={[
+                { value: 'all', label: 'Todos los productos' },
+                ...otherCategories.map((c) => ({ value: c.id, label: c.name }))
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* Vista Desktop (md+): Chips habituales */}
+        <div className="hidden md:block pt-1">
           <Chips
             items={categoryChips}
             selectedId={selectedCategory}

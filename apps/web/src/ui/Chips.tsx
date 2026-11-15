@@ -18,6 +18,8 @@ export interface ChipsProps {
   onSelect?: (id: string) => void;
   onToggle?: (id: string) => void;
   className?: string;
+  variant?: 'scroll' | 'wrap' | 'responsive';
+  wrap?: boolean;
 }
 
 export const Chips: React.FC<ChipsProps> = ({
@@ -29,10 +31,15 @@ export const Chips: React.FC<ChipsProps> = ({
   onChange,
   onSelect,
   onToggle,
-  className = ''
+  className = '',
+  variant,
+  wrap
 }) => {
   const chipList = items || options || [];
   const currentSelectedId = selectedId || value;
+
+  const resolvedVariant =
+    wrap === true ? 'wrap' : wrap === false ? 'scroll' : variant || 'responsive';
 
   const renderIcon = (iconProp?: IconName | React.ReactElement) => {
     if (!iconProp) return null;
@@ -42,9 +49,23 @@ export const Chips: React.FC<ChipsProps> = ({
     return iconProp;
   };
 
+  const containerClass =
+    resolvedVariant === 'wrap'
+      ? `py-1.5 ${className}`
+      : resolvedVariant === 'scroll'
+      ? `overflow-x-auto scrollbar-none py-1.5 ${className}`
+      : `md:overflow-x-auto md:scrollbar-none py-1.5 ${className}`;
+
+  const innerClass =
+    resolvedVariant === 'wrap'
+      ? 'flex flex-wrap items-center gap-2 px-0.5'
+      : resolvedVariant === 'scroll'
+      ? 'flex items-center gap-2 min-w-max px-0.5'
+      : 'flex flex-wrap md:flex-nowrap items-center gap-2 md:min-w-max px-0.5';
+
   return (
-    <div className={`overflow-x-auto scrollbar-none py-1.5 ${className}`.trim()}>
-      <div className="flex items-center gap-2 min-w-max px-0.5">
+    <div className={containerClass.trim()}>
+      <div className={innerClass}>
         {chipList.map((item) => {
           const isSelected = selectedIds
             ? selectedIds.includes(item.id)
@@ -61,7 +82,7 @@ export const Chips: React.FC<ChipsProps> = ({
               key={item.id}
               type="button"
               onClick={handleClick}
-              className={`flex items-center gap-1.5 min-h-[40px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all select-none cursor-pointer border ${
+              className={`flex items-center gap-1.5 min-h-[48px] px-3.5 py-1.5 rounded-xl text-xs sm:text-sm font-semibold transition-all select-none cursor-pointer border ${
                 isSelected
                   ? 'bg-primary text-primary-ink border-primary font-bold shadow-sm'
                   : 'bg-surface text-ink border-border hover:bg-surface-alt active:bg-surface-alt'
