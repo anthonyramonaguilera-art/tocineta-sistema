@@ -50,6 +50,7 @@ export function listStaffUsers(rawDb: Database.Database): StaffUserItem[] {
            p.notes as payroll_notes
     FROM users u
     LEFT JOIN staff_payroll_profiles p ON u.id = p.user_id
+    WHERE u.approval_status != 'REJECTED'
     ORDER BY 
       CASE u.role
         WHEN 'admin' THEN 1
@@ -313,9 +314,9 @@ export function deleteOrDeactivateStaffUser(
     // Si tiene constraints de FKs en órdenes o auditoría, desactivar de forma limpia
     rawDb.prepare(`
       UPDATE users 
-      SET is_active = 0, approval_status = 'REJECTED', updated_at_ms = ? 
+      SET is_active = 0, approval_status = 'REJECTED', username = username || '__baja_' || ?, updated_at_ms = ? 
       WHERE id = ?
-    `).run(now, userId);
+    `).run(now, now, userId);
   }
 
   appendAuditEvent(rawDb, {
