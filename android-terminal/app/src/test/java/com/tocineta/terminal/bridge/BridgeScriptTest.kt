@@ -107,4 +107,34 @@ class BridgeScriptTest {
         assertFalse("enabled debe ser false", btStatus.enabled)
         assertFalse("connected debe ser false", btStatus.connected)
     }
+
+    @Test
+    fun testBuildScriptContainsSaveAndOpenFile() {
+        val terminalId = "0123456789abcdef0123456789abcdef"
+        val script = BridgeScript.buildScript(terminalId)
+
+        assertTrue(
+            "El script generado debe incluir saveAndOpenFile",
+            script.contains("saveAndOpenFile")
+        )
+        assertTrue(
+            "El script generado debe configurar timeout extendido de 60000 ms para saveAndOpenFile",
+            script.contains("60000")
+        )
+    }
+
+    @Test
+    fun testSanitizeFileName() {
+        assertEquals("cierre.pdf", NativeBridge.sanitizeFileName("cierre.pdf"))
+        assertEquals("cierre.pdf", NativeBridge.sanitizeFileName("reportes/cierre.pdf"))
+        assertEquals("cierre.pdf", NativeBridge.sanitizeFileName("C:\\reportes\\cierre.pdf"))
+        assertEquals("cierre.pdf", NativeBridge.sanitizeFileName("../cierre.pdf"))
+        assertEquals("cierre.pdf", NativeBridge.sanitizeFileName("..\\..\\cierre.pdf"))
+        assertEquals("cierrepdf", NativeBridge.sanitizeFileName("cierre..pdf"))
+        assertEquals("archivo_descargado", NativeBridge.sanitizeFileName(""))
+        assertEquals("archivo_descargado", NativeBridge.sanitizeFileName("   "))
+        assertEquals("archivo_descargado", NativeBridge.sanitizeFileName(".."))
+        assertEquals("archivo_descargado", NativeBridge.sanitizeFileName("../"))
+        assertEquals("archivo_descargado", NativeBridge.sanitizeFileName("\\"))
+    }
 }

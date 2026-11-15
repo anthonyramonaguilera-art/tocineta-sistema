@@ -60,15 +60,17 @@ object BridgeScript {
     }
   };
 
-  function invoke(method, args) {
+  function invoke(method, args, timeoutMs) {
+    var timeout = typeof timeoutMs === 'number' && timeoutMs > 0 ? timeoutMs : 15000;
     return new Promise(function(resolve, reject) {
       var callId = 'call_' + (++callSeq) + '_' + Date.now();
       var timer = setTimeout(function() {
         if (pendingCalls[callId]) {
           delete pendingCalls[callId];
-          reject(new Error('Timeout de 15 s esperando respuesta nativa para ' + method));
+          var timeoutSec = Math.round(timeout / 1000);
+          reject(new Error('Timeout de ' + timeoutSec + ' s esperando respuesta nativa para ' + method));
         }
-      }, 15000);
+      }, timeout);
 
       pendingCalls[callId] = {
         resolve: resolve,
@@ -117,6 +119,9 @@ object BridgeScript {
     },
     getBluetoothStatus: function() {
       return invoke('getBluetoothStatus', {});
+    },
+    saveAndOpenFile: function(args) {
+      return invoke('saveAndOpenFile', args || {}, 60000);
     }
   };
 })();

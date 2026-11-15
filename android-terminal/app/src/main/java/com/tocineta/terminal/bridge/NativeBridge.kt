@@ -1,16 +1,27 @@
 package com.tocineta.terminal.bridge
 
 import android.app.Activity
+import android.content.ActivityNotFoundException
+import android.content.ContentValues
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import android.os.Build
+import android.os.Environment
 import android.os.Handler
 import android.os.Looper
+import android.provider.MediaStore
 import android.webkit.JavascriptInterface
 import android.webkit.WebView
+import androidx.core.content.FileProvider
 import com.tocineta.terminal.bt.PermissionHelper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
+import java.io.File
+import java.io.IOException
 
 class NativeBridge(
     private val webView: WebView,
@@ -20,6 +31,16 @@ class NativeBridge(
 
     companion object {
         const val JAVASCRIPT_INTERFACE_NAME = "__TocinetaNativeBridge"
+        const val MAX_BASE64_LENGTH = 35 * 1024 * 1024 // ~25 MB binario en Base64
+
+        fun sanitizeFileName(rawName: String): String {
+            var name = rawName.replace('\\', '/').substringAfterLast('/')
+            while (name.contains("..")) {
+                name = name.replace("..", "")
+            }
+            name = name.replace("/", "").replace("\\", "").trim()
+            return if (name.isEmpty() || name == ".") "archivo_descargado" else name
+        }
     }
 
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
@@ -65,6 +86,11 @@ class NativeBridge(
     @JavascriptInterface
     fun getBluetoothStatus(callId: String, argsJson: String) {
         dispatch("getBluetoothStatus", callId, argsJson)
+    }
+
+    @JavascriptInterface
+    fun saveAndOpenFile(callId: String, argsJson: String) {
+        dispatch("saveAndOpenFile", callId, argsJson)
     }
 
     @JavascriptInterface
@@ -144,6 +170,9 @@ class NativeBridge(
                         val json = """{"permission":${status.permission},"enabled":${status.enabled},"connected":${status.connected}}"""
                         resolve(callId, json)
                     }
+                    "saveAndOpenFile" -> {
+                        handleSaveAndOpenFile(callId, argsJson)
+                    }
                     else -> {
                         reject(callId, "Método desconocido: $method")
                     }
@@ -158,6 +187,112 @@ class NativeBridge(
         val act = activity ?: (webView.context as? Activity) ?: return
         mainHandler.post {
             PermissionHelper.requestBluetoothPermissionIfNeeded(act)
+        }
+    }
+
+    private fun handleSaveAndOpenFile(callId: String, argsJson: String) {
+        val rawFileName = extractString(argsJson, "fileName").ifEmpty { extractString(argsJson, "filename") }
+        val mimeType = extractString(argsJson, "mimeType").trim()
+        val base64Data = extractString(argsJson, "base64Data").trim()
+
+        if (mimeType.isEmpty()) {
+            reject(callId, "Tipo MIME vacío o no especificado")
+            return
+        }
+
+        if (base64Data.isEmpty()) {
+            reject(callId, "Datos del archivo vacíos")
+            return
+        }
+
+        if (base64Data.length > MAX_BASE64_LENGTH) {
+            reject(callId, "El archivo excede el tamaño máximo permitido de 25 MB")
+            return
+        }
+
+        val bytes = try {
+            android.util.Base64.decode(base64Data, android.util.Base64.DEFAULT)
+        } catch (t: Throwable) {
+            reject(callId, "Error al decodificar base64: ${t.message ?: "formato inválido"}")
+            return
+        }
+
+        if (bytes.isEmpty()) {
+            reject(callId, "El archivo está vacío")
+            return
+        }
+
+        if (bytes.size > 25 * 1024 * 1024) {
+            reject(callId, "El archivo excede el tamaño máximo permitido de 25 MB")
+            return
+        }
+
+        val sanitizedFileName = sanitizeFileName(rawFileName)
+        val context = activity ?: webView.context
+
+        val opened = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+            val resolver = context.contentResolver
+            val contentValues = ContentValues().apply {
+                put(MediaStore.Downloads.DISPLAY_NAME, sanitizedFileName)
+                put(MediaStore.Downloads.MIME_TYPE, mimeType)
+                put(MediaStore.Downloads.RELATIVE_PATH, Environment.DIRECTORY_DOWNLOADS)
+                put(MediaStore.Downloads.IS_PENDING, 1)
+            }
+            val uri = resolver.insert(MediaStore.Downloads.EXTERNAL_CONTENT_URI, contentValues)
+                ?: throw IOException("No se pudo crear el archivo en Descargas")
+
+            try {
+                resolver.openOutputStream(uri)?.use { stream ->
+                    stream.write(bytes)
+                    stream.flush()
+                } ?: throw IOException("No se pudo abrir el flujo para escribir en Descargas")
+
+                contentValues.clear()
+                contentValues.put(MediaStore.Downloads.IS_PENDING, 0)
+                resolver.update(uri, contentValues, null, null)
+            } catch (e: Throwable) {
+                try {
+                    resolver.delete(uri, null, null)
+                } catch (_: Throwable) {
+                }
+                throw e
+            }
+
+            openFileUri(context, uri, mimeType)
+        } else {
+            val downloadDir = context.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)
+                ?: throw IOException("No se pudo acceder al directorio de Descargas")
+            if (!downloadDir.exists()) {
+                downloadDir.mkdirs()
+            }
+            val targetFile = File(downloadDir, sanitizedFileName)
+            targetFile.writeBytes(bytes)
+
+            val uri = FileProvider.getUriForFile(
+                context,
+                "${context.packageName}.fileprovider",
+                targetFile
+            )
+            openFileUri(context, uri, mimeType)
+        }
+
+        val resultJson = """{"ok":true,"fileName":"${escapeJson(sanitizedFileName)}","opened":$opened}"""
+        resolve(callId, resultJson)
+    }
+
+    private fun openFileUri(context: Context, uri: Uri, mimeType: String): Boolean {
+        return try {
+            val intent = Intent(Intent.ACTION_VIEW).apply {
+                setDataAndType(uri, mimeType)
+                addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            context.startActivity(intent)
+            true
+        } catch (_: ActivityNotFoundException) {
+            false
+        } catch (_: Throwable) {
+            false
         }
     }
 
