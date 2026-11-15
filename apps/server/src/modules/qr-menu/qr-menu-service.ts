@@ -128,7 +128,7 @@ export interface WhatsAppOrderInput {
 export const OFFICIAL_WHATSAPP_NUMBER = '584121928527';
 export const OFFICIAL_WHATSAPP_DISPLAY = '0412-1928527';
 export const OFFICIAL_STORE_NAME = 'TOCINETA';
-export const OFFICIAL_SLOGAN = 'Cocinamos con amor, te servimos como mereces y damos gloria a Dios';
+export const OFFICIAL_SLOGAN = 'Cocinamos con amor, te servimos como mereces y damos gloria a DIOS';
 export const OFFICIAL_SCHEDULE = 'Martes a Domingo de 6:00 p. m. a 12:00 a. m.';
 export const OFFICIAL_LOCATION = 'Alta Vista detrás de Torre Movistar, Puerto Ordaz';
 export const MAX_WHATSAPP_MSG_LENGTH = 3500;
@@ -417,7 +417,7 @@ export function getPublicQrMenuData(rawDb: Database.Database): PublicQrMenuPaylo
   return {
     storeName: settings.business_name || OFFICIAL_STORE_NAME,
     businessName: settings.business_name || OFFICIAL_STORE_NAME,
-    slogan: (settings.slogan && settings.slogan.includes('damos gloria a Dios')) ? settings.slogan : OFFICIAL_SLOGAN,
+    slogan: (settings.slogan && (settings.slogan.includes('damos gloria a DIOS') || settings.slogan.includes('damos gloria a Dios'))) ? settings.slogan.replace(/\bDios\b/g, 'DIOS') : OFFICIAL_SLOGAN,
     schedule: OFFICIAL_SCHEDULE,
     location: settings.address && settings.address.includes('Alta Vista') ? settings.address : OFFICIAL_LOCATION,
     whatsappNumber: OFFICIAL_WHATSAPP_NUMBER,

@@ -148,7 +148,7 @@ describe('Hito M13 - Menú Digital QR Estático, WhatsApp y Cloud Privacy Guard 
       expect(res.statusCode).toBe(200);
       expect(res.headers['content-type']).toContain('text/html');
       expect(res.payload).toContain('<!DOCTYPE html>');
-      expect(res.payload).toContain('Cocinamos con amor, te servimos como mereces y damos gloria a Dios');
+      expect(res.payload).toContain('Cocinamos con amor, te servimos como mereces y damos gloria a DIOS');
       expect(res.payload).toContain('0412-1928527');
       expect(res.payload).toContain('Alta Vista detrás de Torre Movistar');
       expect(res.payload).toContain('Tasa BCV');

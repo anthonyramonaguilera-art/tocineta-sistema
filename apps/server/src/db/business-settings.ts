@@ -55,7 +55,7 @@ export const DEFAULT_BUSINESS_SETTINGS: BusinessSettingsRecord = {
   primary_color: '#EAB308',
   rate_change_hour: '13:00',
   ticket_header_message: '¡BIENVENIDOS!',
-  ticket_footer_message: '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga',
+  ticket_footer_message: '¡GRACIAS POR SU PREFERENCIA! DIOS le bendiga',
   delivery_accounting_mode: 'THIRD_PARTY_PASS_THROUGH',
   delivery_quick_tiers_json: '[200, 300, 400, 500]',
   table_service_mode: 'ticket_independiente',
@@ -111,7 +111,7 @@ export function ensureBusinessSettingsDefensive(rawDb: Database.Database): Busin
         ) VALUES (
           'default', 'TOCINETA', 'V-17040918-0', '04249728209', 'Detrás de Torre Movistar, Puerto Ordaz',
           'Cocinamos con amor y servimos como mereces', NULL, '#EAB308',
-          '13:00', '¡BIENVENIDOS!', '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga',
+          '13:00', '¡BIENVENIDOS!', '¡GRACIAS POR SU PREFERENCIA! DIOS le bendiga',
           'THIRD_PARTY_PASS_THROUGH', '[200, 300, 400, 500]', 'ticket_independiente',
           '04249728209', '17040918', 75,
           0, 0, 'INCLUSIVE',

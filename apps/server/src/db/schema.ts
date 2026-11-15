@@ -194,7 +194,7 @@ export const businessSettings = sqliteTable('business_settings', {
   primaryColor: text('primary_color').notNull().default('#EAB308'),
   rateChangeHour: text('rate_change_hour').notNull().default('13:00'),
   ticketHeaderMessage: text('ticket_header_message').notNull().default('¡BIENVENIDOS!'),
-  ticketFooterMessage: text('ticket_footer_message').notNull().default('¡GRACIAS POR SU PREFERENCIA! Dios le bendiga'),
+  ticketFooterMessage: text('ticket_footer_message').notNull().default('¡GRACIAS POR SU PREFERENCIA! DIOS le bendiga'),
   deliveryAccountingMode: text('delivery_accounting_mode').notNull().default('THIRD_PARTY_PASS_THROUGH'),
   deliveryQuickTiersJson: text('delivery_quick_tiers_json').notNull().default('[200, 300, 400, 500]'),
   tableServiceMode: text('table_service_mode').notNull().default('ticket_independiente'),

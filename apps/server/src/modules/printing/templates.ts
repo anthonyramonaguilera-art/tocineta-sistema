@@ -229,9 +229,10 @@ export function buildReceiptTicketIR(
 
   // 2. Eslogan oficial dinámico
   const configuredSlogan = settings?.slogan?.trim();
-  const receiptSlogan = (configuredSlogan && configuredSlogan !== 'Cocinamos con amor y servimos como mereces')
+  const rawSlogan = (configuredSlogan && configuredSlogan !== 'Cocinamos con amor y servimos como mereces')
     ? configuredSlogan
     : 'Cocinamos con amor, te servimos como mereces y damos gloria a DIOS';
+  const receiptSlogan = rawSlogan.replace(/\bDios\b/g, 'DIOS');
   blocks.push({
     type: 'text',
     text: `"${receiptSlogan}"`,
@@ -372,9 +373,9 @@ export function buildReceiptTicketIR(
   // 7. Footer de Agradecimiento y Corte
   blocks.push({ type: 'separator', style: 'dashed' });
   const rawFooter = settings?.ticket_footer_message?.trim();
-  const footerMessage = (!rawFooter || rawFooter === '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga')
+  const footerMessage = (!rawFooter || rawFooter === '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga' || rawFooter === '¡GRACIAS POR SU PREFERENCIA! DIOS le bendiga')
     ? '¡GRACIAS POR SU PREFERENCIA! DIOS le bendiga'
-    : rawFooter;
+    : rawFooter.replace(/\bDios\b/g, 'DIOS');
   blocks.push({
     type: 'footer',
     lines: [

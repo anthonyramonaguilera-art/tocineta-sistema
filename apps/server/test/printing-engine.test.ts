@@ -277,7 +277,7 @@ describe('Hito M6 - Motor de Impresión, Ticket IR y Estaciones (@tocineta/serve
     expect(ir.blocks.some(b => b.type === 'header_logo')).toBe(true);
 
     const eslogan = ir.blocks.find(
-      b => b.type === 'text' && b.text.includes('Cocinamos con amor, te servimos como mereces y damos gloria a Dios')
+      b => b.type === 'text' && b.text.includes('Cocinamos con amor, te servimos como mereces y damos gloria a DIOS')
     );
     expect(eslogan).toBeDefined();
 

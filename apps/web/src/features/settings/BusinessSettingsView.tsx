@@ -42,7 +42,7 @@ export const BusinessSettingsView: React.FC = () => {
   const [primaryColor, setPrimaryColor] = useState(settings?.primary_color || '#EAB308');
   const [rateChangeHour, setRateChangeHour] = useState(settings?.rate_change_hour || '13:00');
   const [ticketHeader, setTicketHeader] = useState(settings?.ticket_header_message || '¡BIENVENIDOS!');
-  const [ticketFooter, setTicketFooter] = useState(settings?.ticket_footer_message || '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga');
+  const [ticketFooter, setTicketFooter] = useState(settings?.ticket_footer_message || '¡GRACIAS POR SU PREFERENCIA! DIOS le bendiga');
   const [ivaEnabled, setIvaEnabled] = useState(Boolean(settings?.iva_enabled));
   const [igtfEnabled, setIgtfEnabled] = useState(Boolean(settings?.igtf_enabled));
   const [partnersEnabled, setPartnersEnabled] = useState(Boolean(settings?.partners_module_enabled));
@@ -65,7 +65,7 @@ export const BusinessSettingsView: React.FC = () => {
     setPrimaryColor(settings.primary_color || '#EAB308');
     setRateChangeHour(settings.rate_change_hour || '13:00');
     setTicketHeader(settings.ticket_header_message || '¡BIENVENIDOS!');
-    setTicketFooter(settings.ticket_footer_message || '¡GRACIAS POR SU PREFERENCIA! Dios le bendiga');
+    setTicketFooter(settings.ticket_footer_message || '¡GRACIAS POR SU PREFERENCIA! DIOS le bendiga');
     setIvaEnabled(Boolean(settings.iva_enabled));
     setIgtfEnabled(Boolean(settings.igtf_enabled));
     setPartnersEnabled(Boolean(settings.partners_module_enabled));

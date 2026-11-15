@@ -12,7 +12,7 @@ describe('Ticket IR - Representación Intermedia, HTML y ESC/POS (@tocineta/shar
     widthColumns: 32,
     blocks: [
       { type: 'header_logo' },
-      { type: 'text', text: 'Cocinamos con amor, te servimos como mereces y damos gloria a Dios', align: 'center' },
+      { type: 'text', text: 'Cocinamos con amor, te servimos como mereces y damos gloria a DIOS', align: 'center' },
       { type: 'separator', style: 'single' },
       { type: 'title_double', text: 'TURNO T-023', align: 'center' },
       { type: 'key_value', key: 'ORDEN:', value: '#CMD-0145', bold: true },
@@ -31,7 +31,7 @@ describe('Ticket IR - Representación Intermedia, HTML y ESC/POS (@tocineta/shar
         totalBs: 'Bs 508,74',
         bcvRate: 'Tasa BCV: 36.60 Bs/$'
       },
-      { type: 'footer', lines: ['¡GRACIAS POR SU COMPRA!', 'Dios le bendiga'], align: 'center' },
+      { type: 'footer', lines: ['¡GRACIAS POR SU COMPRA!', 'DIOS le bendiga'], align: 'center' },
       { type: 'cut', feedLines: 4 }
     ]
   };
