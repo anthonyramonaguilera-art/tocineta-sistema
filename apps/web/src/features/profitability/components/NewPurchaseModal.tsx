@@ -1,6 +1,16 @@
 import React, { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Modal, Button, Input, Field, Icon } from '../../../ui/index.js';
+import { Modal, Button, Input, Select, Field, Icon } from '../../../ui/index.js';
+
+const PAYMENT_METHODS = [
+  { value: 'EFECTIVO_USD', label: 'Efectivo USD ($)' },
+  { value: 'PAGO_MOVIL', label: 'Pago Móvil (Bs)' },
+  { value: 'TRANSFERENCIA', label: 'Transferencia Bancaria (Bs)' },
+  { value: 'ZELLE', label: 'Zelle (USD)' },
+  { value: 'PUNTO_DE_VENTA', label: 'Punto de Venta (Bs)' },
+  { value: 'EFECTIVO_BS', label: 'Efectivo Bolívares (Bs)' },
+  { value: 'BINANCE', label: 'Binance Pay / USDT' }
+];
 import type { RecipeImpact } from './CostVariationModal.js';
 import { NewSupplyModal } from './NewSupplyModal.js';
 import { apiFetch } from '../../../api/client';
@@ -23,7 +33,11 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
   const [supplierName, setSupplierName] = useState('');
   const [invoiceNumber, setInvoiceNumber] = useState('');
   const [paymentCondition, setPaymentCondition] = useState<'CONTADO' | 'CREDITO'>('CONTADO');
-  const [dueDateDays, setDueDateDays] = useState('15');
+  const [paymentMethod, setPaymentMethod] = useState('EFECTIVO_USD');
+  const [dueDate, setDueDate] = useState(() => {
+    const d = new Date(Date.now() + 15 * 86400000);
+    return d.toISOString().split('T')[0];
+  });
   const [notes, setNotes] = useState('');
   const [purchaseItems, setPurchaseItems] = useState<
     Array<{ supplyId: string; purchaseQuantity: number; unitCostUsdCents: number }>
@@ -56,8 +70,8 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
   const purchaseMutation = useMutation({
     mutationFn: async () => {
       const dueDateMs =
-        paymentCondition === 'CREDITO'
-          ? Date.now() + parseInt(dueDateDays, 10) * 86400000
+        paymentCondition === 'CREDITO' && dueDate
+          ? new Date(`${dueDate}T23:59:59`).getTime()
           : null;
 
       const res = await apiFetch('/api/fase3/purchases', {
@@ -68,6 +82,7 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
           supplierName,
           invoiceNumber,
           paymentCondition,
+          paymentMethod: paymentCondition === 'CONTADO' ? paymentMethod : undefined,
           dueDateMs,
           notes,
           items: purchaseItems
@@ -115,6 +130,14 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
     setErrorMsg(null);
     if (!supplierName.trim()) {
       setErrorMsg('Ingresa el nombre del proveedor');
+      return;
+    }
+    if (paymentCondition === 'CONTADO' && !paymentMethod) {
+      setErrorMsg('Selecciona el método de pago');
+      return;
+    }
+    if (paymentCondition === 'CREDITO' && !dueDate) {
+      setErrorMsg('Indica la fecha de vencimiento de la compra a crédito');
       return;
     }
     if (purchaseItems.length === 0) {
@@ -170,23 +193,30 @@ export const NewPurchaseModal: React.FC<NewPurchaseModalProps> = ({
 
         <div className="grid grid-cols-2 gap-3">
           <Field label="Condición de Pago" required>
-            <select
+            <Select
               value={paymentCondition}
               onChange={(e) => setPaymentCondition(e.target.value as any)}
-              className="w-full h-11 px-3 rounded-xl bg-surface border border-border text-ink text-xs font-bold focus:border-primary"
-            >
-              <option value="CONTADO">Contado (Pagado)</option>
-              <option value="CREDITO">Crédito por Pagar</option>
-            </select>
+              options={[
+                { value: 'CONTADO', label: 'Contado (Pagado)' },
+                { value: 'CREDITO', label: 'Crédito por Pagar' }
+              ]}
+            />
           </Field>
 
-          {paymentCondition === 'CREDITO' && (
-            <Field label="Días de Crédito (Vencimiento)" required>
+          {paymentCondition === 'CONTADO' ? (
+            <Field label="Método de Pago" required>
+              <Select
+                value={paymentMethod}
+                onChange={(e) => setPaymentMethod(e.target.value)}
+                options={PAYMENT_METHODS}
+              />
+            </Field>
+          ) : (
+            <Field label="Fecha de Vencimiento" required>
               <Input
-                type="number"
-                value={dueDateDays}
-                onChange={(e) => setDueDateDays(e.target.value)}
-                placeholder="15"
+                type="date"
+                value={dueDate}
+                onChange={(e) => setDueDate(e.target.value)}
                 required
               />
             </Field>

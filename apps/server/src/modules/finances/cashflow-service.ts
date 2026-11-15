@@ -33,6 +33,7 @@ export interface CashFlowStatement {
     receivableInflowsUsdCents: number;
     expensesOutflowsUsdCents: number;
     payableOutflowsUsdCents: number;
+    purchasesOutflowsUsdCents?: number;
   };
   byMethod: CashFlowMethodItem[];
   byLocation: CashFlowLocationItem[];
@@ -205,6 +206,41 @@ export function calculateCashFlow(
     locMap[row.loc_id].outflows += row.total_usd;
   }
 
+  // 5. SALIDAS: Compras de Contado a Proveedores
+  const purchWhere = [
+    'p.created_at_ms >= ?',
+    'p.created_at_ms <= ?',
+    "p.payment_condition = 'CONTADO'"
+  ];
+  const purchParams: any[] = [startDateMs, endDateMs];
+  if (locationId) {
+    purchWhere.push('(p.location_id = ? OR (p.location_id IS NULL AND ? = ?))');
+    purchParams.push(locationId, locationId, 'loc_alta_vista');
+  }
+
+  const purchRows = rawDb.prepare(`
+    SELECT 
+      COALESCE(p.payment_method, 'OTROS') as payment_method,
+      COALESCE(SUM(p.total_usd_cents), 0) as total_usd,
+      COUNT(p.id) as count,
+      COALESCE(p.location_id, 'loc_alta_vista') as loc_id
+    FROM purchases p
+    WHERE ${purchWhere.join(' AND ')}
+    GROUP BY p.payment_method, p.location_id
+  `).all(...purchParams) as any[];
+
+  let purchasesOutflowsUsdCents = 0;
+  for (const row of purchRows) {
+    const m = normalizePaymentMethod(row.payment_method);
+    ensureMethod(m);
+    methodMap[m].outflowsUsdCents += row.total_usd;
+    methodMap[m].outflowTransactionsCount += row.count;
+    purchasesOutflowsUsdCents += row.total_usd;
+
+    ensureLoc(row.loc_id);
+    locMap[row.loc_id].outflows += row.total_usd;
+  }
+
   // Calcular balances netos por método
   const byMethod: CashFlowMethodItem[] = Object.values(methodMap).map(item => ({
     ...item,
@@ -221,7 +257,7 @@ export function calculateCashFlow(
   }));
 
   const totalInflowsUsdCents = salesInflowsUsdCents + receivableInflowsUsdCents;
-  const totalOutflowsUsdCents = expensesOutflowsUsdCents + payableOutflowsUsdCents;
+  const totalOutflowsUsdCents = expensesOutflowsUsdCents + payableOutflowsUsdCents + purchasesOutflowsUsdCents;
   const netCashFlowUsdCents = totalInflowsUsdCents - totalOutflowsUsdCents;
 
   return {
@@ -237,7 +273,8 @@ export function calculateCashFlow(
       salesInflowsUsdCents,
       receivableInflowsUsdCents,
       expensesOutflowsUsdCents,
-      payableOutflowsUsdCents
+      payableOutflowsUsdCents,
+      purchasesOutflowsUsdCents
     },
     byMethod,
     byLocation

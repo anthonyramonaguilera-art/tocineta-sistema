@@ -399,8 +399,18 @@ export const fase3Routes: FastifyPluginAsync = async (fastify) => {
       return reply.status(400).send({ success: false, error: 'Sede destino e ítems de compra obligatorios' });
     }
 
+    if (body.paymentCondition === 'CONTADO' && !body.paymentMethod?.trim()) {
+      return reply.status(400).send({ success: false, error: 'Las compras de contado requieren método de pago' });
+    }
+
+    if (body.paymentCondition === 'CREDITO' && !body.dueDateMs) {
+      return reply.status(400).send({ success: false, error: 'Las compras a crédito requieren fecha de vencimiento' });
+    }
+
     const result = registerPurchase(dbCtx.rawDb, {
       ...body,
+      paymentMethod: body.paymentMethod,
+      dueDateMs: body.dueDateMs,
       createdBy: user?.user_id || 'usr_admin'
     });
 

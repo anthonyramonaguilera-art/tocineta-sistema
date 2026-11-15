@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
 import { getProductRecipe, type ProductRecipeDetail } from './recipes-service.js';
+import { normalizePaymentMethod } from '../finances/financial-truth-helpers.js';
 
 export interface PurchaseItemInput {
   supplyId: string;
@@ -14,6 +15,7 @@ export interface RegisterPurchaseInput {
   supplierName?: string | null;
   invoiceNumber?: string | null;
   paymentCondition: 'CONTADO' | 'CREDITO';
+  paymentMethod?: string | null;
   dueDateMs?: number | null;
   notes?: string | null;
   createdBy: string;
@@ -44,6 +46,12 @@ export interface PurchaseResult {
 export function registerPurchase(rawDb: Database.Database, input: RegisterPurchaseInput): PurchaseResult {
   if (!input.items || input.items.length === 0) {
     const err: any = new Error('La compra debe contener al menos un insumo');
+    err.statusCode = 400;
+    throw err;
+  }
+
+  if (input.paymentCondition === 'CREDITO' && !input.dueDateMs) {
+    const err: any = new Error('Las compras a crédito requieren fecha de vencimiento');
     err.statusCode = 400;
     throw err;
   }
@@ -209,18 +217,29 @@ export function registerPurchase(rawDb: Database.Database, input: RegisterPurcha
     }
 
     // Insertar cabecera de compra
+    const isCredito = input.paymentCondition === 'CREDITO';
+    const purchaseStatus = isCredito ? 'PENDIENTE' : 'PAGADA';
+    const balanceOwedUsdCents = isCredito ? totalUsdCents : 0;
+    const finalPaymentMethod = isCredito
+      ? null
+      : (input.paymentMethod ? normalizePaymentMethod(input.paymentMethod) : null);
+
     rawDb.prepare(`
       INSERT INTO purchases (
         id, location_id, supplier_id, invoice_number, payment_condition,
-        status, total_usd_cents, total_bs_cents, due_date_ms, notes, created_by, created_at_ms
-      ) VALUES (?, ?, ?, ?, ?, 'PAGADA', ?, 0, ?, ?, ?, ?)
+        status, total_usd_cents, total_bs_cents, balance_owed_usd_cents,
+        payment_method, due_date_ms, notes, created_by, created_at_ms
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, 0, ?, ?, ?, ?, ?, ?)
     `).run(
       purchaseId,
       input.locationId,
       finalSupplierId,
       input.invoiceNumber || null,
       input.paymentCondition,
+      purchaseStatus,
       totalUsdCents,
+      balanceOwedUsdCents,
+      finalPaymentMethod,
       input.dueDateMs || null,
       input.notes || null,
       input.createdBy,
