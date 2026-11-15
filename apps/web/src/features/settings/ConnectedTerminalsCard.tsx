@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Card, Badge, Icon, Button } from '../../ui/index.js';
 import { apiFetch } from '../../api/client.js';
@@ -56,6 +56,10 @@ export const ConnectedTerminalsCard: React.FC<ConnectedTerminalsCardProps> = ({ 
     setRefreshTrigger((prev) => prev + 1);
   };
 
+  const handlePrinterConfigured = useCallback(() => {
+    void refetch();
+  }, [refetch]);
+
   const handleSaveLabel = (e: React.FormEvent) => {
     e.preventDefault();
     setTerminalLabel(deviceLabel.trim());
@@ -86,7 +90,7 @@ export const ConnectedTerminalsCard: React.FC<ConnectedTerminalsCardProps> = ({ 
 
       {/* Impresora exclusiva de este dispositivo */}
       <DevicePrinterCard
-        onPrinterConfigured={() => void refetch()}
+        onPrinterConfigured={handlePrinterConfigured}
         refreshTrigger={refreshTrigger}
       />
 

@@ -51,12 +51,11 @@ export const DevicePrinterCard: React.FC<DevicePrinterCardProps> = ({
       if (current) {
         await sendTerminalHeartbeatNow();
         queryClient.invalidateQueries({ queryKey: ['terminalsList'] });
-        onPrinterConfigured?.();
       }
     } finally {
       setLoading(false);
     }
-  }, [onPrinterConfigured, queryClient]);
+  }, [queryClient]);
 
   useEffect(() => {
     if (isApk) {
