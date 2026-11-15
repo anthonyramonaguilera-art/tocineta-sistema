@@ -31,9 +31,7 @@ export const Modal: React.FC<ModalProps> = ({
 
     // Bloqueo de scroll del fondo (evita que el fondo se mueva al hacer scroll en móvil)
     const originalOverflow = document.body.style.overflow;
-    const originalTouchAction = document.body.style.touchAction;
     document.body.style.overflow = 'hidden';
-    document.body.style.touchAction = 'none';
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && closeOnEscape) onClose();
@@ -42,7 +40,6 @@ export const Modal: React.FC<ModalProps> = ({
 
     return () => {
       document.body.style.overflow = originalOverflow;
-      document.body.style.touchAction = originalTouchAction;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose, closeOnEscape]);

@@ -27,15 +27,6 @@ export const PosComandero: React.FC = () => {
   const [autoPrintOrderId, setAutoPrintOrderId] = useState<string | null>(null);
   const autoPrint = usePayerDevicePrint(autoPrintOrderId, token);
 
-  React.useEffect(() => {
-    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
-      document.body.style.overflow = 'hidden';
-      return () => {
-        document.body.style.overflow = '';
-      };
-    }
-  }, []);
-
   // Consulta de Menú Operativo
   const { data: menuData, isLoading: loadingMenu } = useQuery<PosMenuResponse>({
     queryKey: ['posMenu'],

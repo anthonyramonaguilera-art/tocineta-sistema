@@ -49,9 +49,9 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
   const progressPercent = Math.min(100, Math.round((currentStep / totalSteps) * 100));
 
   return (
-    <div className={`flex flex-col min-h-screen bg-surface text-ink ${className}`.trim()}>
+    <div className={`flex flex-col h-[100dvh] overflow-hidden bg-surface text-ink ${className}`.trim()}>
       {/* Wizard Header */}
-      <header className="sticky top-0 z-20 bg-surface/95 backdrop-blur-md border-b border-border px-4 py-3">
+      <header className="sticky top-0 z-20 shrink-0 bg-surface border-b border-border px-4 py-3">
         <div className="max-w-2xl mx-auto flex flex-col gap-2">
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold uppercase tracking-wider text-ink-muted">
@@ -79,13 +79,13 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
         </div>
       </header>
 
-      {/* Main Content Area con padding inferior calculado para pie + safe-area */}
-      <main className="flex-1 max-w-2xl w-full mx-auto p-4 pb-[calc(5.5rem+env(safe-area-inset-bottom,0px))]">
+      {/* Main Content Area con scroll interno independiente */}
+      <main className="flex-1 overflow-y-auto overscroll-contain min-h-0 max-w-2xl w-full mx-auto p-4 pb-6">
         {children}
       </main>
 
-      {/* Footer Sticky (no fixed para evitar solapar contenido sin espacio) */}
-      <footer className="sticky bottom-0 left-0 right-0 z-20 bg-surface/95 backdrop-blur-md border-t border-border p-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] shadow-lg">
+      {/* Footer Fijo en base flex (sin superposición ni blur costoso) */}
+      <footer className="shrink-0 bg-surface border-t border-border p-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           {footerExtra && (
             <div className="flex-1 min-w-0">
