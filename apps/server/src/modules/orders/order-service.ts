@@ -418,8 +418,26 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
             const rawChildMods = cp.childInput.modifiers || [];
             const childMods = rawChildMods.map(normalizeModifier);
 
+            // Si el sabor tiene variante registrada, la línea hija usa el producto
+            // de esa variante para que el inventario baje del insumo correcto.
+            const normalizedFlavor = (cp.childInput.flavorChoice || '').trim().toLowerCase();
+            let lineProductId = childProd.id;
+            let lineProductName = childProd.name;
+            if (normalizedFlavor) {
+              const flavorVariant = rawDb.prepare(`
+                SELECT p.id, p.name
+                FROM product_flavor_variants pfv
+                JOIN products p ON p.id = pfv.variant_product_id
+                WHERE pfv.product_id = ? AND pfv.flavor_name = ?
+              `).get(childProd.id, normalizedFlavor) as any;
+              if (flavorVariant?.id) {
+                lineProductId = flavorVariant.id;
+                lineProductName = flavorVariant.name;
+              }
+            }
+
             const childSnapshot = JSON.stringify({
-              productName: childProd.name,
+              productName: lineProductName,
               comboParentName: prod.name,
               proratedPrice,
               modifiers: childMods
@@ -427,7 +445,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
 
             processedLines.push({
               id: childLineId,
-              productId: childProd.id,
+              productId: lineProductId,
               lineRole: 'COMBO_CHILD',
               parentLineId: lineId,
               quantity: childQty,
