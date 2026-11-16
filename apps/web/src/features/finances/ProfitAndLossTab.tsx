@@ -1,5 +1,6 @@
 import React from 'react';
-import { Card, Badge, Icon } from '../../ui/index.js';
+import { Card, Icon } from '../../ui/index.js';
+import { KasavanaMatrix } from './KasavanaMatrix.js';
 
 interface ProfitAndLossTabProps {
   pnlData: any;
@@ -310,48 +311,11 @@ export const ProfitAndLossTab: React.FC<ProfitAndLossTabProps> = ({ pnlData, isL
 
         {/* Matriz Kasavana & Smith (Ingeniería de Menú) */}
         {breakdown.kasavanaMatrix && (
-          <Card className="p-4 space-y-3 md:col-span-2 bg-surface">
-            <div className="flex items-center justify-between">
-              <div>
-                <h4 className="text-xs font-black text-ink uppercase tracking-wider">
-                  Matriz Kasavana & Smith (Popularidad vs. Margen)
-                </h4>
-                <p className="text-[11px] text-ink-muted">
-                  Clasificación de platos del menú para optimización de rentabilidad.
-                </p>
-              </div>
-              <Badge variant="neutral" className="text-[10px] font-black uppercase">
-                {breakdown.kasavanaMatrix.sampleStatus}
-              </Badge>
-            </div>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2">
-              <div className="p-3 bg-success/10 border border-success/30 rounded-xl">
-                <span className="text-[10px] font-black text-success uppercase block">
-                  Estrellas
-                </span>
-                <span className="text-[11px] text-ink-muted">Alta Popularidad + Alto Margen</span>
-              </div>
-              <div className="p-3 bg-primary/10 border border-primary/30 rounded-xl">
-                <span className="text-[10px] font-black text-primary uppercase block">
-                  Caballos de Batalla
-                </span>
-                <span className="text-[11px] text-ink-muted">Alta Popularidad + Bajo Margen</span>
-              </div>
-              <div className="p-3 bg-warning/10 border border-warning/30 rounded-xl">
-                <span className="text-[10px] font-black text-warning uppercase block">
-                  Puzzles (Rompecabezas)
-                </span>
-                <span className="text-[11px] text-ink-muted">Baja Popularidad + Alto Margen</span>
-              </div>
-              <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl">
-                <span className="text-[10px] font-black text-danger uppercase block">
-                  Perros
-                </span>
-                <span className="text-[11px] text-ink-muted">Baja Popularidad + Bajo Margen</span>
-              </div>
-            </div>
-          </Card>
+          <KasavanaMatrix
+            report={breakdown.kasavanaMatrix}
+            error={breakdown.kasavanaError}
+            className="md:col-span-2"
+          />
         )}
       </div>
     </div>

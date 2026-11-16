@@ -77,6 +77,7 @@ export interface ProfitAndLossStatement {
     byLocation: SalesByLocationItem[];
     topProducts: ProductRankingItem[];
     kasavanaMatrix: MenuEngineeringReport;
+    kasavanaError?: string;
   };
 }
 
@@ -273,12 +274,15 @@ export function calculateProfitAndLoss(
     .slice(0, 15);
 
   let kasavanaMatrix: MenuEngineeringReport;
+  let kasavanaError: string | undefined;
   try {
     kasavanaMatrix = generateMenuEngineeringReport(rawDb, {
       startDateMs,
       endDateMs
     });
-  } catch {
+  } catch (err) {
+    console.warn('[P&L] No se pudo generar la matriz Kasavana & Smith:', err);
+    kasavanaError = err instanceof Error ? err.message : String(err);
     kasavanaMatrix = {
       generatedAtMs: now,
       startDateMs,
@@ -313,6 +317,14 @@ export function calculateProfitAndLoss(
       averageTicketUsdCents,
       purchasesUsdCents
     },
-    breakdown: { byMethod, byCategory, byHour, byLocation, topProducts, kasavanaMatrix }
+    breakdown: {
+      byMethod,
+      byCategory,
+      byHour,
+      byLocation,
+      topProducts,
+      kasavanaMatrix,
+      ...(kasavanaError ? { kasavanaError } : {})
+    }
   };
 }
