@@ -19,6 +19,8 @@ import { Icon } from '../ui/Icon.js';
 import { Button } from '../ui/Button.js';
 import { LoadBoundary } from '../ui/LoadBoundary.js';
 import { useLoadState } from '../ui/useLoadState.js';
+import { Toast } from '../ui/index.js';
+import { compressImage, dataUrlByteSize } from '../lib/image-compress.js';
 import { apiFetch } from '../api/client.js';
 
 const normalizeSearch = (text: string) =>
@@ -37,7 +39,15 @@ export const MenuAdminView: React.FC = () => {
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
+  const [photoNotice, setPhotoNotice] = useState<string | null>(null);
   const [customMargins, setCustomMargins] = useState<Record<string, number>>({});
+
+  // El aviso de fotografía se cierra solo para no tapar el formulario del plato.
+  useEffect(() => {
+    if (!photoNotice) return;
+    const timer = setTimeout(() => setPhotoNotice(null), 8000);
+    return () => clearTimeout(timer);
+  }, [photoNotice]);
 
   // Query Insumos / Materia Prima para análisis de costos
   const { data: suppliesData } = useQuery<{ supplies: any[] }>({
@@ -428,6 +438,7 @@ export const MenuAdminView: React.FC = () => {
     setEditingProduct(null);
     setIsCreatingProduct(false);
     setPhotoBase64(null);
+    setPhotoNotice(null);
     setProductIngredients([]);
     setSelectedExistingIng('');
     setNewIngName('');
@@ -509,20 +520,30 @@ export const MenuAdminView: React.FC = () => {
     }
   };
 
-  const handlePhotoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+  const handlePhotoSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.currentTarget;
+    const file = input.files?.[0];
     if (!file) return;
 
-    if (file.size > 2 * 1024 * 1024) {
-      alert('La imagen no debe superar los 2 MB');
+    if (file.size > 12 * 1024 * 1024) {
+      setPhotoNotice('La imagen original no debe superar los 12 MB. Elige una foto más liviana.');
+      input.value = '';
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setPhotoBase64(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    try {
+      // Se comprime en el celular antes de enviarla: el servidor rechaza > 2 MB.
+      const compressed = await compressImage(file, { maxSide: 1280, quality: 0.82 });
+      if (dataUrlByteSize(compressed) > 2 * 1024 * 1024) {
+        setPhotoNotice('La foto sigue pesando más de 2 MB después de comprimirla. Usa una imagen más liviana.');
+        input.value = '';
+        return;
+      }
+      setPhotoBase64(compressed);
+    } catch {
+      setPhotoNotice('No se pudo procesar la imagen. Intenta con una foto JPG, PNG o WEBP.');
+      input.value = '';
+    }
   };
 
   const categoryMap = useMemo(() => {
@@ -1485,7 +1506,7 @@ export const MenuAdminView: React.FC = () => {
               {/* Subida Local de Fotografía */}
               <div>
                 <label className="text-xs text-ink-muted uppercase font-bold block mb-1">
-                  Fotografía del Plato (JPG, PNG, WEBP máx 2MB):
+                  Fotografía del Plato (JPG, PNG, WEBP hasta 12 MB; se comprime a máx 2 MB):
                 </label>
                 <input
                   type="file"
@@ -1493,6 +1514,14 @@ export const MenuAdminView: React.FC = () => {
                   onChange={handlePhotoSelect}
                   className="w-full text-xs text-ink-muted file:mr-3 file:py-1.5 file:px-3 file:rounded-xl file:border file:border-border file:bg-surface file:text-ink file:text-xs hover:file:border-tocineta-yellow cursor-pointer"
                 />
+                {photoNotice && (
+                  <Toast
+                    type="error"
+                    message={photoNotice}
+                    onClose={() => setPhotoNotice(null)}
+                    className="mt-2"
+                  />
+                )}
                 {photoBase64 && (
                   <div className="mt-2 text-[10px] text-success flex items-center gap-1 font-semibold">
                     <span>✓</span> Foto seleccionada y lista para cargar localmente

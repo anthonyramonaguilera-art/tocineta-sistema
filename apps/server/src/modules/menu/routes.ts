@@ -273,7 +273,10 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   // 8. Subida Local de Fotografía (POST /api/menu/products/:id/photo)
-  fastify.post('/api/menu/products/:id/photo', async (request, reply) => {
+  // bodyLimit explícito: el límite global (1 MiB) cortaba con 413 antes de validar.
+  // El tamaño y el tipo reales los valida saveProductPhoto (≤2 MB decodificados,
+  // PNG/JPEG/WEBP) y la ruta responde 400 con mensaje en español.
+  fastify.post('/api/menu/products/:id/photo', { bodyLimit: 5 * 1024 * 1024 }, async (request, reply) => {
     const dbCtx = getDatabaseContext();
     const user = requireRoles(request, reply, dbCtx.rawDb, ['admin', 'supervisor']);
     if (!user) return;
@@ -284,6 +287,15 @@ export const menuRoutes: FastifyPluginAsync = async (fastify) => {
 
     if (!base64Data) {
       return reply.status(400).send({ success: false, error: 'Debe enviar la imagen en formato base64' });
+    }
+
+    // Tipo declarado: saveProductPhoto trata cualquier payload sin data URL como
+    // JPEG, por eso los tipos que no son PNG/JPEG/WEBP se rechazan aquí (400).
+    if (/^data:/i.test(base64Data) && !/^data:image\/(?:png|jpe?g|webp);base64,/i.test(base64Data)) {
+      return reply.status(400).send({
+        success: false,
+        error: 'Formato de imagen no soportado. Debe ser JPG, PNG o WEBP.'
+      });
     }
 
     try {
