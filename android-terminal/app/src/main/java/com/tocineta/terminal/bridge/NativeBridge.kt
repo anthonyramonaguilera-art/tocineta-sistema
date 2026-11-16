@@ -46,6 +46,9 @@ class NativeBridge(
     private val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
     private val mainHandler = Handler(Looper.getMainLooper())
 
+    @Volatile
+    private var permissionPromptShown = false
+
     fun destroy() {
         try {
             scope.cancel()
@@ -186,7 +189,11 @@ class NativeBridge(
     private fun requestBluetoothPermissionIfNeeded() {
         val act = activity ?: (webView.context as? Activity) ?: return
         mainHandler.post {
-            PermissionHelper.requestBluetoothPermissionIfNeeded(act)
+            if (permissionPromptShown) return@post
+            if (!PermissionHelper.hasBluetoothPermission(act)) {
+                permissionPromptShown = true
+                PermissionHelper.requestBluetoothPermissionIfNeeded(act)
+            }
         }
     }
 

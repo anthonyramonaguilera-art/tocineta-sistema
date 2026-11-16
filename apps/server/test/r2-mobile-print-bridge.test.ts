@@ -162,7 +162,7 @@ describe('R2 — Mobile Print Bridge & Terminal Identity (@tocineta/web)', () =>
       expect(testRes.error).toBeDefined();
 
       const btStatus = await getBluetoothStatusOnDevice();
-      expect(btStatus).toEqual({ enabled: false, hasPermission: false, connected: false });
+      expect(btStatus).toEqual({ enabled: false, hasPermission: false, permission: false, connected: false });
 
       const heartbeatRes = await sendTerminalHeartbeatNow();
       expect(heartbeatRes.ok).toBe(false);
@@ -469,7 +469,7 @@ describe('R2 — Mobile Print Bridge & Terminal Identity (@tocineta/web)', () =>
       expect(testRes.error).toBe('Método no disponible en este dispositivo');
 
       const btStatus = await getBluetoothStatusOnDevice();
-      expect(btStatus).toEqual({ enabled: false, hasPermission: false, connected: false });
+      expect(btStatus).toEqual({ enabled: false, hasPermission: false, permission: false, connected: false });
     });
 
     it('3.12 disparo de sendTerminalHeartbeatNow al seleccionar impresora exitosamente', async () => {
@@ -520,7 +520,7 @@ describe('R2 — Mobile Print Bridge & Terminal Identity (@tocineta/web)', () =>
         expect(paired[0].name).toBe('POS-58-BT');
 
         const btStatus = await getBluetoothStatusOnDevice();
-        expect(btStatus).toEqual({ enabled: true, hasPermission: true, connected: true });
+        expect(btStatus).toEqual({ enabled: true, hasPermission: true, permission: true, connected: true });
 
         const testRes = await testPrintOnDevice();
         expect(testRes.ok).toBe(true);

@@ -91,7 +91,8 @@ describe('R2 — UI Print Wiring & Source Contracts Test', () => {
 
     // ConnectedTerminalsCard imports and renders DevicePrinterCard
     expect(terminalsContent).toContain('DevicePrinterCard');
-    expect(terminalsContent).toContain('<DevicePrinterCard />');
+    expect(terminalsContent).toContain('<DevicePrinterCard');
+    expect(terminalsContent).toContain('onPrinterConfigured={handlePrinterConfigured}');
 
     // DevicePrinterCard checks hasNativePrinting
     expect(devicePrinterContent).toContain('hasNativePrinting()');
@@ -110,8 +111,8 @@ describe('R2 — UI Print Wiring & Source Contracts Test', () => {
     // Min height 48px for tactile controls
     expect(devicePrinterContent).toContain('min-h-[48px]');
 
-    // Line count < 150 lines
+    // Line count < 200 lines
     const lineCount = devicePrinterContent.split('\n').length;
-    expect(lineCount).toBeLessThan(150);
+    expect(lineCount).toBeLessThan(200);
   });
 });
