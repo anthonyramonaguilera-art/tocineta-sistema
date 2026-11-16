@@ -167,7 +167,7 @@ export function getOwnerDashboardData(rawDb: Database.Database): OwnerDashboardD
   const transferRows = rawDb.prepare(`
     SELECT t.id, t.dispatch_note_code, t.from_location_id, lf.name as from_name,
            t.to_location_id, lt.name as to_name, t.status, t.mode, t.total_cost_usd_cents,
-           t.created_at_ms, t.items_json
+           t.created_at_ms, json_array_length(t.items_json) AS items_count
     FROM inter_location_transfers t
     LEFT JOIN locations lf ON t.from_location_id = lf.id
     LEFT JOIN locations lt ON t.to_location_id = lt.id
@@ -175,22 +175,16 @@ export function getOwnerDashboardData(rawDb: Database.Database): OwnerDashboardD
     LIMIT 6
   `).all() as any[];
 
-  const recentTransfers = transferRows.map(r => {
-    let itemsCount = 0;
-    try {
-      itemsCount = JSON.parse(r.items_json).length;
-    } catch {}
-    return {
-      id: r.id,
-      dispatchNoteCode: r.dispatch_note_code,
-      fromLocationName: r.from_name || r.from_location_id,
-      toLocationName: r.to_name || r.to_location_id,
-      status: r.status,
-      itemsCount,
-      totalCostUsdCents: r.total_cost_usd_cents,
-      createdAtMs: r.created_at_ms
-    };
-  });
+  const recentTransfers = transferRows.map(r => ({
+    id: r.id,
+    dispatchNoteCode: r.dispatch_note_code,
+    fromLocationName: r.from_name || r.from_location_id,
+    toLocationName: r.to_name || r.to_location_id,
+    status: r.status,
+    itemsCount: r.items_count,
+    totalCostUsdCents: r.total_cost_usd_cents,
+    createdAtMs: r.created_at_ms
+  }));
 
   // 5. Cuentas por Cobrar (Órdenes pendientes de pago)
   const pendingOrders = rawDb.prepare(`
