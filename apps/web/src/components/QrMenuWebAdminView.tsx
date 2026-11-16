@@ -21,14 +21,16 @@ export const QrMenuWebAdminView: React.FC = () => {
   const { data: qrMenuRes, isLoading } = useQuery({
     queryKey: ['publicQrMenu'],
     queryFn: async () => {
-      const res = await apiFetch('/api/qr-menu');
+      const res = await apiFetch('/api/qr-menu/data');
       if (!res.ok) throw new Error('Error al cargar menú digital');
       return res.json();
     },
     staleTime: 10000
   });
 
-  const menu = qrMenuRes?.menu;
+  // GET /api/qr-menu/data responde { success, ...payload, data: payload } (menuDataHandler);
+  // la respuesta no expone una clave "menu".
+  const menu = qrMenuRes?.data ?? qrMenuRes;
   const storeName = menu?.storeName || 'TOCINETA';
   const slogan = menu?.slogan || 'Cocinamos con amor y servimos como mereces';
   const whatsappNumber = menu?.whatsappNumber || '584249728209';
