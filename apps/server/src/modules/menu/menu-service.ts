@@ -1,7 +1,7 @@
 import type Database from 'better-sqlite3';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import { usdToBsCents, formatMicroBsToRate } from '@tocineta/shared';
+import { usdToBsCents, formatMicroBsToRate, generateUuidV7 } from '@tocineta/shared';
 import { publishDomainEvent, getLatestEventSeq } from '../events/event-bus.js';
 import { appendAuditEvent } from '../audit/audit-service.js';
 import { ensureBusinessSettingsDefensive } from '../../db/business-settings.js';
@@ -619,12 +619,31 @@ export function updateProduct(
   const isActive = data.isActive !== undefined ? (data.isActive ? 1 : 0) : current.is_active;
   const now = Date.now();
 
-  rawDb.prepare(`
-    UPDATE products
-    SET name = ?, description = ?, price_usd_cents = ?, estimated_cost_usd_cents = ?,
-        station = ?, is_active = ?, updated_at_ms = ?
-    WHERE id = ?
-  `).run(name, description, priceUsdCents, estimatedCostUsdCents, station, isActive, now, productId);
+  const applyProductUpdate = rawDb.transaction(() => {
+    rawDb.prepare(`
+      UPDATE products
+      SET name = ?, description = ?, price_usd_cents = ?, estimated_cost_usd_cents = ?,
+          station = ?, is_active = ?, updated_at_ms = ?
+      WHERE id = ?
+    `).run(name, description, priceUsdCents, estimatedCostUsdCents, station, isActive, now, productId);
+
+    // Historial de precios: toda edición manual desde Carta y Precios queda registrada
+    if (priceUsdCents !== current.price_usd_cents) {
+      rawDb.prepare(`
+        INSERT INTO price_history (id, product_id, old_price_usd_cents, new_price_usd_cents, reason, confirmed_by_user_id, created_at_ms)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+      `).run(
+        `ph_${generateUuidV7()}`,
+        productId,
+        current.price_usd_cents,
+        priceUsdCents,
+        'MANUAL_CARTA',
+        actorUserId,
+        now
+      );
+    }
+  });
+  applyProductUpdate();
 
   appendAuditEvent(rawDb, {
     actorUserId,
