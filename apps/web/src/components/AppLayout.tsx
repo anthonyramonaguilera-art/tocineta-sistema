@@ -169,7 +169,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
   const isAdmin = user?.role === 'admin' || user?.role === 'supervisor';
 
   return (
-    <div className="min-h-screen bg-surface-alt flex flex-col font-sans select-none transition-colors">
+    <div className="h-[100dvh] flex flex-col overflow-hidden bg-surface-alt font-sans select-none transition-colors">
       {/* Cabecera Oficial 56px (Estrictamente 4 elementos) */}
       <AppHeader
         title={VIEW_TITLES[currentTab] || 'Inicio'}
@@ -208,7 +208,7 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
 
       {/* Contenido Principal: Bloqueado completamente si mustChangePin es true */}
       <main
-        className={`flex-1 w-full max-w-7xl mx-auto p-2 sm:p-4 pb-20 sm:pb-6 transition-opacity ${
+        className={`flex-1 min-h-0 w-full max-w-7xl mx-auto p-2 sm:p-4 pb-20 sm:pb-6 overflow-y-auto overscroll-contain transition-opacity [&>*:has(>[data-wizard])]:h-full [&:has([data-wizard])]:pb-0 ${
           mustChangePin ? 'pointer-events-none select-none opacity-30 filter blur-[1px]' : ''
         }`}
         aria-hidden={mustChangePin}

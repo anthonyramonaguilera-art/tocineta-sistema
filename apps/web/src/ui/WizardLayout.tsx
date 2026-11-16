@@ -48,8 +48,15 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
   const loadingNext = isNextLoading || nextLoading;
   const progressPercent = Math.min(100, Math.round((currentStep / totalSteps) * 100));
 
+  // Contrato de altura: la raíz ocupa el alto disponible de su anfitrión (h-full).
+  // Cuando el anfitrión define altura (cuerpo del AppLayout) el wizard es el área
+  // desplazable; cuando no la define (Modal y contenedores intermedios) el wizard
+  // fluye y el scroll lo asume el contenedor que sí tiene altura, por eso el pie
+  // conserva sticky: queda visible sin depender de la altura de los ancestros.
+  // La marca data-wizard permite al AppLayout dar altura al wrapper del wizard
+  // (los wrappers viven en archivos fuera del alcance de esta tarea).
   return (
-    <div className={`flex flex-col h-[100dvh] overflow-hidden bg-surface text-ink ${className}`.trim()}>
+    <div data-wizard className={`flex flex-col h-full min-h-0 bg-surface text-ink ${className}`.trim()}>
       {/* Wizard Header */}
       <header className="sticky top-0 z-20 shrink-0 bg-surface border-b border-border px-4 py-3">
         <div className="max-w-2xl mx-auto flex flex-col gap-2">
@@ -79,13 +86,17 @@ export const WizardLayout: React.FC<WizardLayoutProps> = ({
         </div>
       </header>
 
-      {/* Main Content Area con scroll interno independiente */}
-      <main className="flex-1 overflow-y-auto overscroll-contain min-h-0 max-w-2xl w-full mx-auto p-4 pb-6">
+      {/* Área de contenido: scrollea aquí cuando la raíz tiene altura definida.
+          Sin overscroll-contain: si esta caja no desborda (anfitrión sin altura),
+          el gesto táctil o de rueda debe encadenar al contenedor con altura en
+          lugar de quedar atrapado sin mover nada. */}
+      <main className="flex-1 overflow-y-auto min-h-0 max-w-2xl w-full mx-auto p-4 pb-6">
         {children}
       </main>
 
-      {/* Footer Fijo en base flex (sin superposición ni blur costoso) */}
-      <footer className="shrink-0 bg-surface border-t border-border p-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] shadow-lg">
+      {/* Pie del wizard: sticky bottom-0 mantiene Siguiente/Continuar/Cobrar visible
+          cuando el scroll lo asume el anfitrión (Modal o wrappers sin altura). */}
+      <footer className="shrink-0 sticky bottom-0 z-20 bg-surface border-t border-border p-3.5 pb-[calc(0.875rem+env(safe-area-inset-bottom,0px))] shadow-lg">
         <div className="max-w-2xl mx-auto flex items-center justify-between gap-3">
           {footerExtra && (
             <div className="flex-1 min-w-0">
