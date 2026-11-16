@@ -36,13 +36,23 @@ export const OwnerDashboardView: React.FC = () => {
   useEffect(() => {
     let ws: WebSocket | null = null;
     let reconnectTimeout: any = null;
+    let cancelled = false;
 
     const connectWs = () => {
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
       const wsUrl = `${protocol}//${window.location.host}/ws`;
-      ws = new WebSocket(wsUrl);
+      const socket = new WebSocket(wsUrl);
+      ws = socket;
 
-      ws.onmessage = (event) => {
+      socket.onopen = () => {
+        if (cancelled) {
+          // El efecto se limpió mientras el socket aún conectaba: cerrar aquí
+          // evita el aviso del navegador por close() en estado CONNECTING.
+          socket.close();
+        }
+      };
+
+      socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
           // Si es un evento de negocio, refrescar métricas
@@ -52,7 +62,9 @@ export const OwnerDashboardView: React.FC = () => {
         } catch {}
       };
 
-      ws.onclose = () => {
+      socket.onclose = () => {
+        // Tras el desmontaje no se reconecta: el timeout quedaría huérfano.
+        if (cancelled) return;
         reconnectTimeout = setTimeout(connectWs, 3000);
       };
     };
@@ -60,8 +72,12 @@ export const OwnerDashboardView: React.FC = () => {
     connectWs();
 
     return () => {
-      if (ws) ws.close();
+      cancelled = true;
       if (reconnectTimeout) clearTimeout(reconnectTimeout);
+      if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.close();
+      }
+      // Si sigue CONNECTING, no se cierra aquí: su onopen lo cierra al abrir.
     };
   }, [queryClient]);
 

@@ -10,10 +10,10 @@ export function useEventStream() {
   const reconnectTimeoutRef = useRef<any>(null);
 
   useEffect(() => {
-    let unmounted = false;
+    let cancelled = false;
 
     const connect = () => {
-      if (unmounted) return;
+      if (cancelled) return;
 
       const token = getAuthToken();
       if (!token) {
@@ -30,7 +30,12 @@ export function useEventStream() {
         socketRef.current = socket;
 
         socket.onopen = () => {
-          if (unmounted) return;
+          if (cancelled) {
+            // El efecto se limpió mientras el socket aún conectaba: cerrar aquí
+            // evita el aviso del navegador por close() en estado CONNECTING.
+            socket.close();
+            return;
+          }
           setIsConnected(true);
         };
 
@@ -53,7 +58,7 @@ export function useEventStream() {
         };
 
         socket.onclose = () => {
-          if (unmounted) return;
+          if (cancelled) return;
           setIsConnected(false);
           // Reconectar en 2.5 segundos
           reconnectTimeoutRef.current = setTimeout(connect, 2500);
@@ -79,10 +84,15 @@ export function useEventStream() {
     connect();
 
     return () => {
-      unmounted = true;
+      cancelled = true;
       window.removeEventListener('tocineta:authenticated', handleAuthenticated);
       if (reconnectTimeoutRef.current) clearTimeout(reconnectTimeoutRef.current);
-      if (socketRef.current) socketRef.current.close();
+
+      const socket = socketRef.current;
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.close();
+      }
+      // Si sigue CONNECTING, no se cierra aquí: su onopen lo cierra al abrir.
     };
   }, [queryClient]);
 
