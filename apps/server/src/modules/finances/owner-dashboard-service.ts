@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3';
 import { getFinancialTruth } from './financial-truth-service.js';
+import { normalizeLocationFilter } from './financial-truth-helpers.js';
 
 export interface MetricDefinition {
   key: string;
@@ -66,10 +67,11 @@ export function getOwnerDashboardNumbers(
   }
 
   // 2. Delegar a la Verdad Financiera única
+  const loc = normalizeLocationFilter(locationId);
   const ft = getFinancialTruth(rawDb, {
     from: startOfDay,
     to: endOfDay,
-    locationId: locationId || 'ALL'
+    locationId: loc ?? 'ALL'
   });
 
   const avgTicket = ft.orders.totalCount > 0 ? Math.round(ft.orders.netSalesUsdCents / ft.orders.totalCount) : 0;

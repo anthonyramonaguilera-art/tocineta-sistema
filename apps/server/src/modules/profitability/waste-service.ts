@@ -1,6 +1,7 @@
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
 import { appendAuditEvent } from '../audit/audit-service.js';
+import { normalizeLocationFilter } from '../finances/financial-truth-helpers.js';
 
 export interface RegisterWasteInput {
   locationId: string;
@@ -362,7 +363,8 @@ export function registerWasteLog(rawDb: Database.Database, input: RegisterWasteI
 }
 
 export function getWasteLogs(rawDb: Database.Database, locationId?: string): WasteRecord[] {
-  const sql = locationId && locationId !== 'ALL'
+  const normalizedLocationId = normalizeLocationFilter(locationId);
+  const sql = normalizedLocationId
     ? `
       SELECT w.*, l.name as location_name, u.name as user_name,
              s.name as supply_name, p.name as product_name
@@ -387,8 +389,8 @@ export function getWasteLogs(rawDb: Database.Database, locationId?: string): Was
       LIMIT 100
     `;
 
-  const rows = (locationId && locationId !== 'ALL'
-    ? rawDb.prepare(sql).all(locationId)
+  const rows = (normalizedLocationId
+    ? rawDb.prepare(sql).all(normalizedLocationId)
     : rawDb.prepare(sql).all()) as any[];
 
   return rows.map(r => ({

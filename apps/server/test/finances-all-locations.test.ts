@@ -13,6 +13,10 @@ import { calculateCashFlow } from '../src/modules/finances/cashflow-service.js';
 import { listExpenses, createExpense } from '../src/modules/finances/expenses-service.js';
 import { createMonthlyClosure } from '../src/modules/finances/export-service.js';
 import { normalizeLocationFilter } from '../src/modules/finances/financial-truth-helpers.js';
+import { listPayables } from '../src/modules/finances/payables-service.js';
+import { listReceivables } from '../src/modules/finances/receivables-service.js';
+import { getOwnerDashboardNumbers } from '../src/modules/finances/owner-dashboard-service.js';
+import { getWasteLogs } from '../src/modules/profitability/waste-service.js';
 
 describe('Finanzas — Manejo de "Todas las sedes" (locationId=ALL) y deduplicación de combos', () => {
   const tempDir = path.join(os.tmpdir(), `tocineta_finances_all_${Date.now()}`);
@@ -192,6 +196,56 @@ describe('Finanzas — Manejo de "Todas las sedes" (locationId=ALL) y deduplicac
     // Asegurar que los gastos tengan timestamps deterministas dentro del período
     rawDb.prepare(`UPDATE operating_expenses SET created_at_ms = ? WHERE location_id = 'loc_alta_vista'`).run(baseTime + 250_000);
     rawDb.prepare(`UPDATE operating_expenses SET created_at_ms = ? WHERE location_id = 'loc_los_olivos'`).run(baseTime + 450_000);
+
+    // ==========================================
+    // Cuentas por pagar, por cobrar y mermas en ambas sedes
+    // ==========================================
+    rawDb.prepare(`
+      INSERT INTO customers (id, name, phone, identification, address, is_partner, balance_receivable_usd_cents, total_orders, created_at_ms)
+      VALUES ('cust_all_test', 'Cliente Todas las Sedes', NULL, NULL, NULL, 0, 1000, 0, ?)
+    `).run(baseTime);
+
+    rawDb.prepare(`
+      INSERT INTO purchases (
+        id, location_id, supplier_id, invoice_number, payment_condition, status,
+        total_usd_cents, total_bs_cents, balance_owed_usd_cents, due_date_ms, notes, created_by, created_at_ms
+      ) VALUES ('pur_all_av', 'loc_alta_vista', NULL, 'F-ALL-AV', 'CREDITO', 'PENDIENTE', 1200, 0, 1200, ?, NULL, 'usr_admin', ?)
+    `).run(baseTime + 86400_000, baseTime + 600_000);
+
+    rawDb.prepare(`
+      INSERT INTO purchases (
+        id, location_id, supplier_id, invoice_number, payment_condition, status,
+        total_usd_cents, total_bs_cents, balance_owed_usd_cents, due_date_ms, notes, created_by, created_at_ms
+      ) VALUES ('pur_all_lo', 'loc_los_olivos', NULL, 'F-ALL-LO', 'CREDITO', 'PENDIENTE', 800, 0, 800, ?, NULL, 'usr_admin', ?)
+    `).run(baseTime + 86400_000, baseTime + 700_000);
+
+    rawDb.prepare(`
+      INSERT INTO receivable_accounts (
+        id, customer_id, location_id, order_id, concept, total_usd_cents, balance_usd_cents,
+        due_date_ms, status, notes, created_by, created_at_ms, updated_at_ms
+      ) VALUES ('rec_all_av', 'cust_all_test', 'loc_alta_vista', NULL, 'Fiado AV', 700, 700, ?, 'PENDIENTE', NULL, 'usr_admin', ?, ?)
+    `).run(baseTime + 86400_000, baseTime + 10_000, baseTime + 10_000);
+
+    rawDb.prepare(`
+      INSERT INTO receivable_accounts (
+        id, customer_id, location_id, order_id, concept, total_usd_cents, balance_usd_cents,
+        due_date_ms, status, notes, created_by, created_at_ms, updated_at_ms
+      ) VALUES ('rec_all_lo', 'cust_all_test', 'loc_los_olivos', NULL, 'Fiado LO', 300, 300, ?, 'PENDIENTE', NULL, 'usr_admin', ?, ?)
+    `).run(baseTime + 86400_000, baseTime + 20_000, baseTime + 20_000);
+
+    rawDb.prepare(`
+      INSERT INTO waste_logs (
+        id, location_id, item_type, supply_id, product_id, quantity, unit,
+        cost_usd_cents, reason, reported_by_user_id, created_at_ms
+      ) VALUES ('wst_all_av', 'loc_alta_vista', 'product', NULL, 'prod_street_dog', 1, 'porcion', 100, 'Merma AV', 'usr_admin', ?)
+    `).run(baseTime + 300_000);
+
+    rawDb.prepare(`
+      INSERT INTO waste_logs (
+        id, location_id, item_type, supply_id, product_id, quantity, unit,
+        cost_usd_cents, reason, reported_by_user_id, created_at_ms
+      ) VALUES ('wst_all_lo', 'loc_los_olivos', 'product', NULL, 'prod_street_dog', 1, 'porcion', 200, 'Merma LO', 'usr_admin', ?)
+    `).run(baseTime + 350_000);
   });
 
   afterAll(() => {
@@ -319,5 +373,33 @@ describe('Finanzas — Manejo de "Todas las sedes" (locationId=ALL) y deduplicac
     expect(parsedMetrics.summary.netFoodSalesUsdCents).toBe(5300);
     expect(parsedMetrics.breakdown.byMethod.length).toBeGreaterThan(0);
     expect(parsedMetrics.breakdown.byCategory.length).toBeGreaterThan(0);
+  });
+
+  it('cuentas por pagar, por cobrar, mermas y panel dueña tratan "all", " ALL " y vacío como todas las sedes', () => {
+    const payablesAll = listPayables(rawDb, { locationId: 'ALL' });
+    expect(payablesAll.length).toBe(2);
+    expect(payablesAll.reduce((acc, p) => acc + p.balanceOwedUsdCents, 0)).toBe(2000);
+
+    const receivablesAll = listReceivables(rawDb, { locationId: 'ALL' });
+    expect(receivablesAll.length).toBe(2);
+    expect(receivablesAll.reduce((acc, r) => acc + r.balanceUsdCents, 0)).toBe(1000);
+
+    const wasteAll = getWasteLogs(rawDb, 'ALL');
+    expect(wasteAll.length).toBe(2);
+    expect(wasteAll.reduce((acc, w) => acc + w.costUsdCents, 0)).toBe(300);
+
+    const dashboardAll = getOwnerDashboardNumbers(rawDb, 'ALL');
+    const salesToday = dashboardAll.metrics.find(m => m.key === 'sales_today');
+    expect(salesToday?.value).toBe(5300);
+
+    for (const variant of ['all', ' ALL ', '']) {
+      expect(listPayables(rawDb, { locationId: variant }).map(p => p.id).sort())
+        .toEqual(payablesAll.map(p => p.id).sort());
+      expect(listReceivables(rawDb, { locationId: variant }).map(r => r.id).sort())
+        .toEqual(receivablesAll.map(r => r.id).sort());
+      expect(getWasteLogs(rawDb, variant).map(w => w.id).sort())
+        .toEqual(wasteAll.map(w => w.id).sort());
+      expect(getOwnerDashboardNumbers(rawDb, variant).metrics).toEqual(dashboardAll.metrics);
+    }
   });
 });

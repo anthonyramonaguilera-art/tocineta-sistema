@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
+import { normalizeLocationFilter } from './financial-truth-helpers.js';
 
 export interface PayableRecord {
   id: string;
@@ -76,9 +77,10 @@ export function listPayables(
   const now = Date.now();
   const twoDaysMs = 2 * 24 * 60 * 60 * 1000;
 
-  if (filters.locationId) {
+  const normalizedLocationId = normalizeLocationFilter(filters.locationId);
+  if (normalizedLocationId) {
     conditions.push('p.location_id = ?');
-    params.push(filters.locationId);
+    params.push(normalizedLocationId);
   }
   if (filters.supplierId) {
     conditions.push('p.supplier_id = ?');

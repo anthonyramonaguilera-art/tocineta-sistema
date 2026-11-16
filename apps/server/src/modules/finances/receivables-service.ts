@@ -1,5 +1,6 @@
 import type Database from 'better-sqlite3';
 import { generateUuidV7 } from '@tocineta/shared';
+import { normalizeLocationFilter } from './financial-truth-helpers.js';
 
 export interface CreateReceivableInput {
   customerId: string;
@@ -119,9 +120,10 @@ export function listReceivables(
   const params: any[] = [];
   const now = Date.now();
 
-  if (filters.locationId) {
+  const normalizedLocationId = normalizeLocationFilter(filters.locationId);
+  if (normalizedLocationId) {
     conditions.push('ra.location_id = ?');
-    params.push(filters.locationId);
+    params.push(normalizedLocationId);
   }
   if (filters.customerId) {
     conditions.push('ra.customer_id = ?');
