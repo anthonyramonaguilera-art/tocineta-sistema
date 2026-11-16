@@ -521,6 +521,11 @@ export function deductInventoryForOrder(
       };
 
       for (const line of lines) {
+        // Ítem libre de mostrador: no tiene receta ni insumos que descontar; no ensucia la auditoría.
+        if (line.product_id === 'prod_libre') {
+          continue;
+        }
+
         const qty = line.quantity || 1;
         const mode = line.recipe_mode || 'UNITS';
 

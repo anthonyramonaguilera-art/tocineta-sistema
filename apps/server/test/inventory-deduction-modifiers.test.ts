@@ -501,4 +501,45 @@ describe('E1 — Descuento de inventario por modificadores y recetas', () => {
     const panLoc = rawDb.prepare('SELECT current_stock_qty FROM location_inventory WHERE id = ?').get(`${locId}_sup_pan_perro`) as any;
     expect(panLoc.current_stock_qty).toBe(48);
   });
+
+  it('l) prod_libre no genera INVENTORY_DEDUCTION_GAP y otro producto sin receta sí lo sigue generando', () => {
+    const locId = 'loc_alta_vista';
+    const now = Date.now();
+
+    // 1. Orden con el ítem libre de mostrador: no debe auditar ningún GAP.
+    const freeOrderId = `ord_test_libre_${generateUuidV7().slice(0, 8)}`;
+    createOrderWithLines(freeOrderId, 111, locId, [
+      { lineId: `line_${freeOrderId}`, productId: 'prod_libre', quantity: 1 }
+    ]);
+
+    deductInventoryForOrder(rawDb, freeOrderId, locId, Date.now(), 'usr_cajera');
+
+    const freeGaps = rawDb.prepare(`
+      SELECT COUNT(*) as c FROM audit_events
+      WHERE action = 'INVENTORY_DEDUCTION_GAP' AND entity_id = ?
+    `).get(freeOrderId) as any;
+    expect(freeGaps.c).toBe(0);
+
+    // 2. Producto normal sin receta: el GAP de auditoría debe seguir registrándose.
+    const prodId = `prod_sin_receta_${generateUuidV7().slice(0, 8)}`;
+    rawDb.prepare(`
+      INSERT OR REPLACE INTO products (id, category_id, name, recipe_mode, price_usd_cents, station, is_active, created_at_ms, updated_at_ms)
+      VALUES (?, 'cat_hamburguesas', 'Producto Sin Receta', 'UNITS', 200, 'hamburguesas', 1, ?, ?)
+    `).run(prodId, now, now);
+
+    const orphanOrderId = `ord_test_sin_receta_${generateUuidV7().slice(0, 8)}`;
+    createOrderWithLines(orphanOrderId, 112, locId, [
+      { lineId: `line_${orphanOrderId}`, productId: prodId, quantity: 1 }
+    ]);
+
+    deductInventoryForOrder(rawDb, orphanOrderId, locId, Date.now(), 'usr_cajera');
+
+    const gapEvent = rawDb.prepare(`
+      SELECT * FROM audit_events
+      WHERE action = 'INVENTORY_DEDUCTION_GAP' AND entity_id = ?
+    `).get(orphanOrderId) as any;
+    expect(gapEvent).toBeDefined();
+    const payload = JSON.parse(gapEvent.payload_json);
+    expect(payload.productId).toBe(prodId);
+  });
 });
