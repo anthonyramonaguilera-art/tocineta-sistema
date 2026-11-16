@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import type { CashierOrder, CashierTender } from './types.js';
 import type { CashierPaymentMethod } from './payment-labels.js';
 import { usdToBsCents, generateUuidV7, getMethodCurrency } from '@tocineta/shared';
-import { Card, Badge, WizardLayout, Icon } from '../../ui/index.js';
+import { Card, Badge, WizardLayout, Icon, Button } from '../../ui/index.js';
 import { PaymentWizardStep2 } from './PaymentWizardStep2.js';
 import { PaymentWizardStep3 } from './PaymentWizardStep3.js';
 import { formatTableLabel } from '../../lib/format.js';
@@ -44,6 +44,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
   // Estados de validación y backend
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [blockingError, setBlockingError] = useState<string | null>(null);
   const [supervisorPinRequired, setSupervisorPinRequired] = useState<boolean>(false);
   const [supervisorPin, setSupervisorPin] = useState<string>('');
   const [warningConfirmationRequired, setWarningConfirmationRequired] = useState<boolean>(false);
@@ -121,6 +122,7 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
   const executePayment = async (overrideSupervisorPin?: string, overrideConfirmWarning?: boolean) => {
     setIsSubmitting(true);
     setErrorMessage(null);
+    setBlockingError(null);
 
     const tendersPayload = tenders.map(t => ({
       method: t.method,
@@ -155,34 +157,45 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
       const data = await res.json();
 
       if (!res.ok || !data.success) {
-        if (data.code === 'FRAUD_BLOCK_DUPLICATE_PAYMENT') {
-          setSupervisorPinRequired(true);
-          setErrorMessage(data.error);
-          return;
+        // El servidor manda el mensaje humano y los flags del siguiente paso.
+        const serverMessage: string = data.message || data.error || 'Error al procesar cobro';
+
+        if (data.requiresSupervisorPin) setSupervisorPinRequired(true);
+        if (data.requiresConfirmation) setWarningConfirmationRequired(true);
+
+        const alreadyPaid =
+          data.code === 'ORDER_ALREADY_PAID' || /ya fue cobrada previamente/i.test(serverMessage);
+        if (alreadyPaid) {
+          setBlockingError(
+            'Esta orden ya está registrada como pagada: cierra esta ventana y actualiza la lista. No reintentes el cobro.'
+          );
         }
-        if (data.code === 'FRAUD_WARN_DUPLICATE_REFERENCE') {
-          setWarningConfirmationRequired(true);
-          setErrorMessage(data.error);
-          return;
-        }
-        throw new Error(data.error || 'Error al procesar cobro');
+
+        setErrorMessage(serverMessage);
+        return;
       }
 
       await invalidateMoney(queryClient);
       onPaymentSuccess();
     } catch (err: any) {
-      setErrorMessage(err?.message || 'Error de comunicación con el servidor');
+      const isTransportError = err instanceof TypeError || err instanceof SyntaxError;
+      setErrorMessage(
+        isTransportError
+          ? 'Error de comunicación con el servidor'
+          : err?.message || 'Error de comunicación con el servidor'
+      );
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const finalizeDisabledReason = useMemo(() => {
+    if (blockingError) return blockingError;
     if (tenders.length === 0) return 'No se ha ingresado ningún método de pago';
     if (remainingUsdCents > 0) return `Falta cubrir ${(remainingUsdCents / 100).toFixed(2)} USD para completar el total`;
     if (supervisorPinRequired && !supervisorPin.trim()) return 'Se requiere PIN de supervisor por alerta antifraude';
     return null;
-  }, [tenders, remainingUsdCents, supervisorPinRequired, supervisorPin]);
+  }, [blockingError, tenders, remainingUsdCents, supervisorPinRequired, supervisorPin]);
 
   return (
     <div className="w-full">
@@ -201,15 +214,53 @@ export const PaymentWizard: React.FC<PaymentWizardProps> = ({
             ? () => setStep(3)
             : () => executePayment()
         }
-        nextLabel={step === 3 ? 'Finalizar e imprimir' : 'Siguiente'}
+        nextLabel={
+          step === 3
+            ? warningConfirmationRequired
+              ? 'Confirmar y cobrar'
+              : 'Finalizar e imprimir'
+            : 'Siguiente'
+        }
         isNextDisabled={step === 2 ? remainingUsdCents > 0 : step === 3 ? Boolean(finalizeDisabledReason) : false}
+        nextDisabledReason={step === 3 ? finalizeDisabledReason ?? undefined : undefined}
         isNextLoading={isSubmitting}
       >
         <div className="space-y-4 max-w-xl mx-auto">
           {errorMessage && (
-            <div className="p-3 bg-danger/10 border border-danger/30 rounded-xl text-xs font-bold text-danger flex items-center gap-2">
-              <Icon name="AlertTriangle" className="w-4 h-4 shrink-0 text-danger" />
-              <span>{errorMessage}</span>
+            <div
+              role="alert"
+              aria-live="assertive"
+              className="p-3 bg-danger/10 border border-danger/30 rounded-xl text-xs font-bold text-danger flex items-start gap-2"
+            >
+              <Icon name="AlertTriangle" className="w-4 h-4 shrink-0 text-danger mt-0.5" />
+              <div className="space-y-1 min-w-0">
+                <span className="block break-words">{errorMessage}</span>
+                {supervisorPinRequired && (
+                  <span className="block text-[11px] font-bold">
+                    Siguiente paso: ingresa el PIN de supervisor en el Paso 3 y vuelve a finalizar.
+                  </span>
+                )}
+                {warningConfirmationRequired && (
+                  <span className="block text-[11px] font-bold">
+                    Siguiente paso: revisa la advertencia y pulsa «Confirmar y cobrar».
+                  </span>
+                )}
+                {blockingError && onCancel && (
+                  <>
+                    <span className="block text-[11px] font-bold">
+                      Siguiente paso: cierra esta ventana y actualiza la lista de órdenes.
+                    </span>
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => onCancel()}
+                      className="mt-1 min-h-[48px]"
+                    >
+                      Cerrar ventana
+                    </Button>
+                  </>
+                )}
+              </div>
             </div>
           )}
 
