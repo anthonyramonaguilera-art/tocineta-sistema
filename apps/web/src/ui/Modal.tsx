@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import { X } from 'lucide-react';
+import { useBodyScrollLock } from '../lib/useBodyScrollLock.js';
 
 export interface ModalProps {
   isOpen: boolean;
@@ -26,12 +27,11 @@ export const Modal: React.FC<ModalProps> = ({
   closeOnEscape = true,
   closeOnBackdropClick = true
 }) => {
+  // Bloqueo de scroll del fondo compartido (varios modales abiertos a la vez).
+  useBodyScrollLock(isOpen);
+
   useEffect(() => {
     if (!isOpen) return;
-
-    // Bloqueo de scroll del fondo (evita que el fondo se mueva al hacer scroll en móvil)
-    const originalOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && closeOnEscape) onClose();
@@ -39,7 +39,6 @@ export const Modal: React.FC<ModalProps> = ({
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      document.body.style.overflow = originalOverflow;
       window.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, onClose, closeOnEscape]);

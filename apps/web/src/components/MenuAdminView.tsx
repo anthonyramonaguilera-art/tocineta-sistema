@@ -22,6 +22,7 @@ import { useLoadState } from '../ui/useLoadState.js';
 import { Toast } from '../ui/index.js';
 import { compressImage, dataUrlByteSize } from '../lib/image-compress.js';
 import { apiFetch } from '../api/client.js';
+import { useBodyScrollLock } from '../lib/useBodyScrollLock.js';
 
 const normalizeSearch = (text: string) =>
   text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
@@ -109,19 +110,8 @@ export const MenuAdminView: React.FC = () => {
   const [showAllCoupons, setShowAllCoupons] = useState<boolean>(false);
   const [isSyncingBcv, setIsSyncingBcv] = useState<boolean>(false);
 
-  useEffect(() => {
-    if (!isCreatingProduct) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, [isCreatingProduct]);
-
-  useEffect(() => {
-    if (!isCategoryModalOpen) return;
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, [isCategoryModalOpen]);
+  useBodyScrollLock(isCreatingProduct);
+  useBodyScrollLock(isCategoryModalOpen);
 
   const { data: adminMenu, isLoading, isError, error, refetch } = useQuery<AdminMenuResponse>({
     queryKey: ['adminMenu', token],
