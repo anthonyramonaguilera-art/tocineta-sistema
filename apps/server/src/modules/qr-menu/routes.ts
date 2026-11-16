@@ -1,4 +1,5 @@
 import type { FastifyPluginAsync } from 'fastify';
+import type Database from 'better-sqlite3';
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { getDatabaseContext } from '../../db/connection.js';
@@ -8,6 +9,43 @@ import {
   getCloudSummaryMetrics,
   generateSelfContainedHtml
 } from './qr-menu-service.js';
+
+export interface StaticQrPackageStatus {
+  hasPackage: boolean;
+  generatedAtMs: number | null;
+  lastMenuChangeAtMs: number | null;
+  staticStale: boolean;
+}
+
+/**
+ * Estado del paquete estático del Menú QR.
+ * La fecha de generación se toma de la mtime de index.html (el archivo que sirve GET /qr),
+ * porque generateStaticQrSite no persiste una marca de tiempo aparte.
+ * La fecha de la carta es MAX(updated_at_ms) de products (precios, nombres y disponibilidad).
+ */
+export function getStaticQrPackageStatus(
+  rawDb: Database.Database,
+  distDir: string = path.resolve(process.cwd(), './data/qr-static-dist')
+): StaticQrPackageStatus {
+  const lastChangeRow = rawDb
+    .prepare('SELECT MAX(updated_at_ms) AS last_ms FROM products')
+    .get() as { last_ms: number | null } | undefined;
+  const lastMenuChangeAtMs = lastChangeRow?.last_ms ?? null;
+
+  let generatedAtMs: number | null = null;
+  try {
+    generatedAtMs = fs.statSync(path.join(distDir, 'index.html')).mtimeMs;
+  } catch {
+    return { hasPackage: false, generatedAtMs: null, lastMenuChangeAtMs, staticStale: false };
+  }
+
+  return {
+    hasPackage: true,
+    generatedAtMs,
+    lastMenuChangeAtMs,
+    staticStale: lastMenuChangeAtMs !== null && generatedAtMs < lastMenuChangeAtMs
+  };
+}
 
 export const qrMenuRoutes: FastifyPluginAsync = async (fastify) => {
   // 1. Payload público sanitizado del Menú Activo
@@ -53,10 +91,12 @@ export const qrMenuRoutes: FastifyPluginAsync = async (fastify) => {
 
     try {
       const summary = getCloudSummaryMetrics(dbCtx.rawDb, query?.jornadaId);
+      const { staticStale } = getStaticQrPackageStatus(dbCtx.rawDb);
       return reply.status(200).send({
         success: true,
         ...summary,
-        summary
+        staticStale,
+        summary: { ...summary, staticStale }
       });
     } catch (err: any) {
       if (err.message && err.message.startsWith('DATA_PRIVACY_VIOLATION')) {

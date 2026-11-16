@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { Card, Button, Badge, Icon } from '../ui/index.js';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Card, Button, Badge, Icon, InfoCallout } from '../ui/index.js';
 import { PedagogicalGuideBanner } from './PedagogicalGuideBanner.js';
 import { apiFetch } from '../api/client.js';
 
@@ -26,6 +26,34 @@ export const QrMenuWebAdminView: React.FC = () => {
       return res.json();
     },
     staleTime: 10000
+  });
+
+  // Estado del paquete estático: si la carta cambió después de la última exportación.
+  const queryClient = useQueryClient();
+  const { data: cloudSummaryRes } = useQuery({
+    queryKey: ['qrMenuCloudSummary'],
+    queryFn: async () => {
+      const res = await apiFetch('/api/qr-menu/cloud-summary');
+      if (!res.ok) throw new Error('Error al consultar el estado del QR estático');
+      return res.json();
+    },
+    staleTime: 10000
+  });
+
+  const staticStale = Boolean(cloudSummaryRes?.staticStale ?? cloudSummaryRes?.summary?.staticStale);
+
+  const reExportMutation = useMutation({
+    mutationFn: async () => {
+      const res = await apiFetch('/api/qr-menu/export-static', {
+        method: 'POST',
+        body: JSON.stringify({})
+      });
+      if (!res.ok) throw new Error('No se pudo re-exportar el paquete estático');
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['qrMenuCloudSummary'] });
+    }
   });
 
   // GET /api/qr-menu/data responde { success, ...payload, data: payload } (menuDataHandler);
@@ -59,6 +87,39 @@ export const QrMenuWebAdminView: React.FC = () => {
         description="Generación de carteles de mesa (A5/A6) para comensales, sincronización automática con la carta real y ocultamiento instantáneo de platos agotados."
         storageKey="banner_qr_menu_f7"
       />
+
+      {staticStale && (
+        <InfoCallout
+          variant="warning"
+          title="La carta pública está desactualizada"
+          description="Los precios o productos cambiaron después de la última exportación del QR estático. Los clientes seguirán viendo la versión anterior hasta que re-exportes el paquete."
+          dismissible={false}
+        >
+          <div className="mt-3 flex flex-col sm:flex-row sm:items-center gap-2">
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              onClick={() => reExportMutation.mutate()}
+              disabled={reExportMutation.isPending}
+              className="min-h-[48px] text-xs font-black"
+              leftIcon={<Icon name="RefreshCw" size={16} />}
+            >
+              {reExportMutation.isPending ? 'Re-exportando...' : 'Re-exportar ahora'}
+            </Button>
+            {reExportMutation.isError && (
+              <span className="text-xs font-bold text-danger">
+                No se pudo re-exportar. Intenta de nuevo.
+              </span>
+            )}
+            {reExportMutation.isSuccess && (
+              <span className="text-xs font-bold text-success">
+                Paquete actualizado correctamente.
+              </span>
+            )}
+          </div>
+        </InfoCallout>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         {/* COLUMNA IZQUIERDA: CARTEL IMPRIMIBLE A5 / QR DE MESA (7 COLS) */}
