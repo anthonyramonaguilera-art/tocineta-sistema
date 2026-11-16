@@ -110,6 +110,65 @@ for (const relPath of PHASE1_AND_2_SCREENS) {
   }
 }
 
+// 1b. Límite duro de 400 líneas para todo .tsx, no solo para PHASE1_AND_2_SCREENS.
+// Los archivos que ya superaban el límite quedan congelados en scripts/ui-guard-baseline.json:
+// no pueden crecer; si se reducen, el guard sugiere actualizar su techo (sin fallar).
+const BASELINE_PATH = path.join(ROOT_DIR, 'scripts', 'ui-guard-baseline.json');
+
+function toRepoRelPath(file) {
+  return path.relative(ROOT_DIR, file).split(path.sep).join('/');
+}
+
+function loadSizeBaseline() {
+  if (!fs.existsSync(BASELINE_PATH)) {
+    report(BASELINE_PATH, 1, 'No existe scripts/ui-guard-baseline.json (baseline de archivos largos).');
+    return null;
+  }
+  try {
+    const parsed = JSON.parse(fs.readFileSync(BASELINE_PATH, 'utf8'));
+    const files = parsed && typeof parsed === 'object' ? parsed.files : null;
+    if (!files || typeof files !== 'object' || Array.isArray(files)) {
+      report(BASELINE_PATH, 1, 'El baseline de archivos largos no tiene un objeto "files" válido.');
+      return null;
+    }
+    return files;
+  } catch {
+    report(BASELINE_PATH, 1, 'No se pudo leer scripts/ui-guard-baseline.json como JSON válido.');
+    return null;
+  }
+}
+
+const SIZE_BASELINE = loadSizeBaseline();
+
+if (SIZE_BASELINE) {
+  scanDir(WEB_SRC, file => {
+    if (!file.endsWith('.tsx')) return;
+    const rel = toRepoRelPath(file);
+    if (PHASE1_AND_2_SCREENS.includes(rel)) return;
+
+    const content = fs.readFileSync(file, 'utf8');
+    const lineCount = content.split('\n').length;
+    if (!Object.prototype.hasOwnProperty.call(SIZE_BASELINE, rel)) {
+      if (lineCount > 400) {
+        report(file, lineCount, `Archivo .tsx fuera de PHASE1_AND_2_SCREENS con ${lineCount} líneas (máximo 400). Extrae subcomponentes o regístralo en el baseline.`);
+      }
+      return;
+    }
+
+    const ceiling = SIZE_BASELINE[rel];
+    if (!Number.isInteger(ceiling) || ceiling < 1) {
+      report(BASELINE_PATH, 1, `Techo inválido para "${rel}" en scripts/ui-guard-baseline.json.`);
+      return;
+    }
+    if (lineCount > ceiling) {
+      report(file, lineCount, `El archivo congelado en el baseline creció de ${ceiling} a ${lineCount} líneas y no puede superar su techo.`);
+    } else if (lineCount < ceiling) {
+      const extra = lineCount <= 400 ? ' (o elimínalo del baseline: ya está bajo el límite)' : '';
+      console.log(`[UI-GUARD] ${rel}: bajó de ${ceiling} a ${lineCount} líneas. Actualiza su techo en scripts/ui-guard-baseline.json${extra}.`);
+    }
+  });
+}
+
 // 2. Check TSX files for Hex Colors, text-white/bg-black outside ui/, and Emojis
 scanDir(WEB_SRC, file => {
   if (!file.endsWith('.tsx')) return;

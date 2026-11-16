@@ -1,0 +1,9 @@
+{
+  "files": {
+    "apps/web/src/components/MenuAdminView.tsx": 1698,
+    "apps/web/src/components/SystemHealthDashboard.tsx": 475,
+    "apps/web/src/features/emergency/DeferredPaperView.tsx": 558,
+    "apps/web/src/features/pos/ComboWizardModal.tsx": 496,
+    "apps/web/src/features/pos/CustomizationModal.tsx": 561
+  }
+}
