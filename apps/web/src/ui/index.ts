@@ -4,6 +4,7 @@ export * from './Field.js';
 export * from './Input.js';
 export * from './Select.js';
 export * from './Modal.js';
+export * from './ConfirmDialog.js';
 export * from './WizardLayout.js';
 export * from './Tabs.js';
 export * from './Chips.js';

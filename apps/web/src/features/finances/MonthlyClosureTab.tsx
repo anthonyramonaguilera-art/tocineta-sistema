@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button, Select, Badge, Icon, EmptyState } from '../../ui/index.js';
+import { Card, Button, Select, Badge, Icon, EmptyState, ConfirmDialog } from '../../ui/index.js';
 
 interface MonthlyClosureItem {
   id: string;
@@ -45,21 +45,25 @@ export const MonthlyClosureTab: React.FC<MonthlyClosureTabProps> = ({
   const [closureNotes, setClosureNotes] = useState('');
   const [isCreating, setIsCreating] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
-  const handleCreate = async () => {
+  const handleCreate = () => {
+    setIsConfirmOpen(true);
+  };
+
+  const confirmCreate = async () => {
     const yr = parseInt(selectedYear, 10);
     const mo = parseInt(selectedMonth, 10);
-    if (confirm(`¿Generar cierre mensual oficial para ${MONTH_NAMES[mo - 1]} ${yr}? Esta acción registrará una instantánea contable inmutable.`)) {
-      setIsCreating(true);
-      setErrorMsg(null);
-      try {
-        await onCreateClosure(yr, mo, closureNotes.trim() || undefined);
-        setClosureNotes('');
-      } catch (err: any) {
-        setErrorMsg(err?.message || 'Error al generar el cierre mensual');
-      } finally {
-        setIsCreating(false);
-      }
+    setIsConfirmOpen(false);
+    setIsCreating(true);
+    setErrorMsg(null);
+    try {
+      await onCreateClosure(yr, mo, closureNotes.trim() || undefined);
+      setClosureNotes('');
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Error al generar el cierre mensual');
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -207,6 +211,17 @@ export const MonthlyClosureTab: React.FC<MonthlyClosureTabProps> = ({
           </div>
         )}
       </div>
+
+      <ConfirmDialog
+        isOpen={isConfirmOpen}
+        title="Generar cierre mensual"
+        message={`¿Generar cierre mensual oficial para ${MONTH_NAMES[parseInt(selectedMonth, 10) - 1]} ${selectedYear}? Esta acción registrará una instantánea contable inmutable.`}
+        confirmLabel="Generar cierre"
+        variant="primary"
+        isLoading={isCreating}
+        onConfirm={confirmCreate}
+        onCancel={() => setIsConfirmOpen(false)}
+      />
     </div>
   );
 };

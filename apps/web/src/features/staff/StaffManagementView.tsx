@@ -7,6 +7,7 @@ import { Badge } from '../../ui/Badge.js';
 import { Icon } from '../../ui/Icon.js';
 import { LoadBoundary } from '../../ui/LoadBoundary.js';
 import { useLoadState } from '../../ui/useLoadState.js';
+import { ConfirmDialog, Toast } from '../../ui/index.js';
 import { useStaffData } from './useStaffData.js';
 import { EmployeeModal } from './EmployeeModal.js';
 import { PermissionsModal } from './PermissionsModal.js';
@@ -45,26 +46,32 @@ export const StaffManagementView: React.FC = () => {
 
   const [isEmployeeModalOpen, setIsEmployeeModalOpen] = useState(false);
   const [editingPermissionsUser, setEditingPermissionsUser] = useState<StaffUser | null>(null);
-  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [notification, setNotification] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [staffToDelete, setStaffToDelete] = useState<StaffUser | null>(null);
 
-  const showNotification = (msg: string) => {
-    setSuccessMessage(msg);
-    setTimeout(() => setSuccessMessage(null), 4000);
+  const showNotification = (msg: string, type: 'success' | 'error' = 'success') => {
+    setNotification({ type, text: msg });
+    setTimeout(() => setNotification(null), 4000);
   };
 
-  const handleDeleteStaff = async (user: StaffUser) => {
+  const handleDeleteStaff = (user: StaffUser) => {
     if (user.role === 'admin') {
-      alert('No se puede eliminar la cuenta del Administrador principal');
+      showNotification('No se puede eliminar la cuenta del Administrador principal', 'error');
       return;
     }
-    const confirmed = window.confirm(`¿Confirmas dar de baja a ${user.name}? Se revocarán sus sesiones activas.`);
-    if (!confirmed) return;
+    setStaffToDelete(user);
+  };
+
+  const handleConfirmDeleteStaff = async () => {
+    if (!staffToDelete) return;
+    const target = staffToDelete;
+    setStaffToDelete(null);
 
     try {
-      await deleteEmployeeMutation.mutateAsync(user.id);
-      showNotification(`Usuario ${user.name} dado de baja exitosamente.`);
+      await deleteEmployeeMutation.mutateAsync(target.id);
+      showNotification(`Usuario ${target.name} dado de baja exitosamente.`);
     } catch (err: any) {
-      alert(err.message || 'Error al dar de baja');
+      showNotification(err.message || 'Error al dar de baja', 'error');
     }
   };
 
@@ -77,11 +84,12 @@ export const StaffManagementView: React.FC = () => {
         description="Administra los perfiles de tu equipo con nombres reales, permisos granulares por rol y persona, nómina configurable y el pool de propinas del turno."
       />
 
-      {successMessage && (
-        <div className="p-3 bg-success/10 border border-success/30 rounded-xl text-xs font-bold text-success flex items-center gap-2">
-          <Icon name="CheckCircle2" size={16} />
-          <span>{successMessage}</span>
-        </div>
+      {notification && (
+        <Toast
+          type={notification.type}
+          message={notification.text}
+          onClose={() => setNotification(null)}
+        />
       )}
 
       {/* Navegación por Pestañas */}
@@ -311,6 +319,21 @@ export const StaffManagementView: React.FC = () => {
           await updatePermissionsMutation.mutateAsync({ userId, permissions: perms });
           showNotification('Permisos actualizados correctamente');
         }}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(staffToDelete)}
+        title="Dar de baja empleado"
+        message={
+          staffToDelete
+            ? `¿Confirmas dar de baja a ${staffToDelete.name}? Se revocarán sus sesiones activas.`
+            : ''
+        }
+        confirmLabel="Dar de baja"
+        variant="danger"
+        isLoading={deleteEmployeeMutation.isPending}
+        onConfirm={handleConfirmDeleteStaff}
+        onCancel={() => setStaffToDelete(null)}
       />
     </div>
   );

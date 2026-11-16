@@ -19,7 +19,7 @@ import { Icon } from '../ui/Icon.js';
 import { Button } from '../ui/Button.js';
 import { LoadBoundary } from '../ui/LoadBoundary.js';
 import { useLoadState } from '../ui/useLoadState.js';
-import { Toast } from '../ui/index.js';
+import { ConfirmDialog, Toast } from '../ui/index.js';
 import { compressImage, dataUrlByteSize } from '../lib/image-compress.js';
 import { apiFetch } from '../api/client.js';
 import { useBodyScrollLock } from '../lib/useBodyScrollLock.js';
@@ -38,6 +38,7 @@ export const MenuAdminView: React.FC = () => {
   const [productToDelete, setProductToDelete] = useState<AdminProduct | null>(null);
   const [showHiddenProducts, setShowHiddenProducts] = useState(false);
   const [feedbackMessage, setFeedbackMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [couponToDelete, setCouponToDelete] = useState<{ id: string; code: string } | null>(null);
   const [isCreatingProduct, setIsCreatingProduct] = useState(false);
   const [photoBase64, setPhotoBase64] = useState<string | null>(null);
   const [photoNotice, setPhotoNotice] = useState<string | null>(null);
@@ -372,7 +373,7 @@ export const MenuAdminView: React.FC = () => {
         queryClient.invalidateQueries({ queryKey: ['adminMenu'] });
         queryClient.invalidateQueries({ queryKey: ['posMenu'] });
       } else {
-        alert(data.error || 'Error al crear categoría');
+        setFeedbackMessage({ type: 'error', text: data.error || 'Error al crear categoría' });
       }
     }
   });
@@ -463,7 +464,7 @@ export const MenuAdminView: React.FC = () => {
             }];
           });
         } else {
-          alert(data.error || 'Error al asociar ingrediente');
+          setFeedbackMessage({ type: 'error', text: data.error || 'Error al asociar ingrediente' });
         }
       } else {
         const name = newIngName.trim() || availableIngredients.find(i => i.id === selectedExistingIng)?.name || '';
@@ -480,7 +481,7 @@ export const MenuAdminView: React.FC = () => {
       setSelectedExistingIng('');
       setNewIngName('');
     } catch {
-      alert('Error de conexión al guardar ingrediente');
+      setFeedbackMessage({ type: 'error', text: 'Error de conexión al guardar ingrediente' });
     } finally {
       setIsAddingIngredient(false);
     }
@@ -599,29 +600,14 @@ export const MenuAdminView: React.FC = () => {
       />
 
       {feedbackMessage && (
-        <div
-          role="alert"
-          className={`p-3.5 rounded-2xl border flex items-center justify-between gap-3 text-xs font-bold ${
-            feedbackMessage.type === 'success'
-              ? 'bg-success-subtle border-success/40 text-success'
-              : 'bg-danger-subtle border-danger/40 text-danger'
-          }`}
-        >
-          <div className="flex items-center gap-2">
-            <Icon
-              name={feedbackMessage.type === 'success' ? 'CheckCircle2' : 'AlertCircle'}
-              size={18}
+        <div className="fixed top-[calc(56px+env(safe-area-inset-top,0px)+8px)] right-3 left-3 sm:left-auto sm:right-4 z-[60] max-w-sm pointer-events-none">
+          <div className="pointer-events-auto">
+            <Toast
+              type={feedbackMessage.type}
+              message={feedbackMessage.text}
+              onClose={() => setFeedbackMessage(null)}
             />
-            <span>{feedbackMessage.text}</span>
           </div>
-          <button
-            type="button"
-            onClick={() => setFeedbackMessage(null)}
-            className="p-1 text-ink-muted hover:text-ink cursor-pointer"
-            aria-label="Cerrar notificación"
-          >
-            ×
-          </button>
         </div>
       )}
 
@@ -1293,11 +1279,7 @@ export const MenuAdminView: React.FC = () => {
                         )}
                         <button
                           type="button"
-                          onClick={() => {
-                            if (window.confirm(`¿Deseas eliminar el cupón "${c.code}" permanentemente?`)) {
-                              deleteCouponMutation.mutate(c.id);
-                            }
-                          }}
+                          onClick={() => setCouponToDelete({ id: c.id, code: c.code })}
                           className="p-1.5 rounded-lg text-xs font-bold text-ink-muted hover:text-danger hover:bg-danger-subtle transition-all flex items-center gap-1"
                           title="Eliminar cupón"
                         >
@@ -1691,6 +1673,21 @@ export const MenuAdminView: React.FC = () => {
         onClose={() => setProductToDelete(null)}
         onSuccessMessage={(msg) => setFeedbackMessage({ type: 'success', text: msg })}
         onError={(err) => setFeedbackMessage({ type: 'error', text: err })}
+      />
+
+      <ConfirmDialog
+        isOpen={Boolean(couponToDelete)}
+        title="Eliminar cupón"
+        message={couponToDelete ? `¿Deseas eliminar el cupón "${couponToDelete.code}" permanentemente?` : ''}
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={() => {
+          if (!couponToDelete) return;
+          const target = couponToDelete;
+          setCouponToDelete(null);
+          deleteCouponMutation.mutate(target.id);
+        }}
+        onCancel={() => setCouponToDelete(null)}
       />
     </div>
   );

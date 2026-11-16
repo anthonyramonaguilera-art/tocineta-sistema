@@ -4,6 +4,7 @@ import { Button } from '../../ui/Button.js';
 import { Select } from '../../ui/Select.js';
 import { Field } from '../../ui/Field.js';
 import { Icon } from '../../ui/Icon.js';
+import { Toast } from '../../ui/index.js';
 import type { StaffUser, PayrollAdjustment, StaffConsumption } from './types.js';
 import { apiFetch } from '../../api/client';
 import { downloadWithAuth } from '../../lib/download-file.js';
@@ -32,6 +33,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
   const [notes, setNotes] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
   const [settledResult, setSettledResult] = useState<{ id: string; netUsdCents: number } | null>(null);
 
   const selectedEmployee = activeEmployees.find((e) => e.id === selectedUserId) || activeEmployees[0];
@@ -156,7 +158,7 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
     try {
       await downloadWithAuth(`/api/staff/settlements/${settledResult.id}/pdf`, `liquidacion-${settledResult.id}.pdf`);
     } catch (err: any) {
-      alert(err.message || 'Error al descargar liquidación en PDF');
+      setToast({ type: 'error', message: err.message || 'Error al descargar liquidación en PDF' });
     }
   };
 
@@ -168,6 +170,15 @@ export const SettlementModal: React.FC<SettlementModalProps> = ({
       description="Revisa haberes, deducciones y elige qué consumos cobrar o perdonar"
       maxWidth="lg"
     >
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+          className="mb-3"
+        />
+      )}
+
       {settledResult ? (
         <div className="text-center py-6 space-y-4">
           <div className="w-16 h-16 bg-success/10 rounded-full flex items-center justify-center mx-auto text-success">

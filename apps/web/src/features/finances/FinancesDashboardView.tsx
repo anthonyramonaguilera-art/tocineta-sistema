@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../../context/AuthContext.js';
-import { Button, Icon, Select } from '../../ui/index.js';
+import { Button, Icon, Select, Toast } from '../../ui/index.js';
 import { apiFetch } from '../../api/client.js';
 import { downloadWithAuth } from '../../lib/download-file.js';
 import { useFinancesQueries } from './useFinancesQueries.js';
@@ -44,6 +44,7 @@ export const FinancesDashboardView: React.FC = () => {
   const [selectedReceivableForPayment, setSelectedReceivableForPayment] = useState<ReceivableItem | null>(null);
   const [selectedCustomerForStatement, setSelectedCustomerForStatement] = useState<string | null>(null);
   const [selectedPayableForPayment, setSelectedPayableForPayment] = useState<PayableItem | null>(null);
+  const [toast, setToast] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
 
   // Calcular rango de fechas normalizado a inicio del día (evita re-render y query-loops)
   const startDateMs = React.useMemo(() => {
@@ -82,12 +83,20 @@ export const FinancesDashboardView: React.FC = () => {
         `finanzas-${type}.${ext}`
       );
     } catch (err: any) {
-      alert(err.message || 'Error al exportar finanzas');
+      setToast({ type: 'error', message: err.message || 'Error al exportar finanzas' });
     }
   };
 
   return (
     <div className="max-w-7xl mx-auto p-4 sm:p-6 space-y-6">
+      {toast && (
+        <Toast
+          type={toast.type}
+          message={toast.message}
+          onClose={() => setToast(null)}
+        />
+      )}
+
       {/* 1. Encabezado de Finanzas & Controles */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-4 border-b border-border">
         <div>

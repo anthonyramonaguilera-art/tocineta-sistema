@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Card, Button, Icon, Badge } from '../../ui/index.js';
+import { Card, Button, Icon, Badge, Toast } from '../../ui/index.js';
 import { CostVariationModal, type RecipeImpact } from './components/CostVariationModal.js';
 import { NewPurchaseModal } from './components/NewPurchaseModal.js';
 import { PriceHistoryModal } from './components/PriceHistoryModal.js';
@@ -31,6 +31,7 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({ activeLocationId }
   // Alerta de Variación de Costo
   const [affectedRecipes, setAffectedRecipes] = useState<RecipeImpact[]>([]);
   const [priceAdjustments, setPriceAdjustments] = useState<Record<string, number>>({});
+  const [toast, setToast] = useState<{ type: 'error' | 'success'; message: string } | null>(null);
 
   const { data: purchasesData, isLoading } = useQuery<{ success: boolean; purchases: PurchaseRecord[] }>({
     queryKey: ['fase3Purchases', activeLocationId],
@@ -79,7 +80,7 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({ activeLocationId }
         setAffectedRecipes([]);
         setPriceAdjustments({});
       } else {
-        alert(data.error || 'Error al ajustar precios');
+        setToast({ type: 'error', message: data.error || 'Error al ajustar precios' });
       }
     }
   });
@@ -98,6 +99,18 @@ export const PurchasesView: React.FC<PurchasesViewProps> = ({ activeLocationId }
 
   return (
     <div className="space-y-4">
+      {toast && (
+        <div className="fixed top-[calc(56px+env(safe-area-inset-top,0px)+8px)] right-3 left-3 sm:left-auto sm:right-4 z-[60] max-w-sm pointer-events-none">
+          <div className="pointer-events-auto">
+            <Toast
+              type={toast.type}
+              message={toast.message}
+              onClose={() => setToast(null)}
+            />
+          </div>
+        </div>
+      )}
+
       {/* Barra de Acciones de Compras */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface p-3.5 rounded-2xl border border-border">
         <div className="flex items-center gap-2">

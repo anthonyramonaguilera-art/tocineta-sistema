@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Card, Button, Input, Select, Badge, Icon, EmptyState } from '../../ui/index.js';
+import { Card, Button, Input, Select, Badge, Icon, EmptyState, ConfirmDialog } from '../../ui/index.js';
 
 export interface ExpenseItem {
   id: string;
@@ -33,6 +33,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedMethod, setSelectedMethod] = useState('ALL');
+  const [expenseToDelete, setExpenseToDelete] = useState<ExpenseItem | null>(null);
 
   const filteredExpenses = expenses.filter((e) => {
     const matchesSearch =
@@ -158,11 +159,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
                   {onDeleteExpense && (
                     <button
                       type="button"
-                      onClick={() => {
-                        if (confirm('¿Eliminar este gasto operativo?')) {
-                          onDeleteExpense(exp.id);
-                        }
-                      }}
+                      onClick={() => setExpenseToDelete(exp)}
                       className="text-ink-muted hover:text-danger p-1 rounded-md"
                       title="Eliminar gasto"
                     >
@@ -175,6 +172,19 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({
           ))}
         </div>
       )}
+
+      <ConfirmDialog
+        isOpen={Boolean(expenseToDelete)}
+        title="Eliminar gasto"
+        message="¿Eliminar este gasto operativo?"
+        confirmLabel="Eliminar"
+        variant="danger"
+        onConfirm={() => {
+          if (expenseToDelete && onDeleteExpense) onDeleteExpense(expenseToDelete.id);
+          setExpenseToDelete(null);
+        }}
+        onCancel={() => setExpenseToDelete(null)}
+      />
     </div>
   );
 };
