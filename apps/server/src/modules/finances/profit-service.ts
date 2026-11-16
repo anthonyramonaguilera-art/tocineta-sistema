@@ -165,7 +165,10 @@ export function calculateProfitAndLoss(
       const placeholders = chunk.map(() => '?').join(',');
 
       const lines = rawDb.prepare(`
-        SELECT ol.id, ol.product_id, COALESCE(p.name, 'PRODUCTO') as product_name, ol.line_role, ol.quantity, ol.subtotal_usd_cents
+        SELECT ol.id, ol.product_id,
+          CASE WHEN ol.product_id = 'prod_libre' THEN 'prod_libre:' || COALESCE(ol.custom_name, 'Item libre') ELSE ol.product_id END as product_key,
+          COALESCE(ol.custom_name, p.name) as product_name,
+          ol.line_role, ol.quantity, ol.subtotal_usd_cents
         FROM order_lines ol
         LEFT JOIN products p ON ol.product_id = p.id
         WHERE ol.order_id IN (${placeholders})
@@ -194,12 +197,12 @@ export function calculateProfitAndLoss(
 
         const lineCost = costRes.baseRecipeCostUsdCents + costRes.extraIngredientsCostUsdCents + costRes.barraLibreCostUsdCents;
 
-        if (!productStats[line.product_id]) {
-          productStats[line.product_id] = { name: line.product_name, units: 0, sales: 0, cost: 0 };
+        if (!productStats[line.product_key]) {
+          productStats[line.product_key] = { name: line.product_name, units: 0, sales: 0, cost: 0 };
         }
-        productStats[line.product_id].units += line.quantity;
-        productStats[line.product_id].sales += line.subtotal_usd_cents;
-        productStats[line.product_id].cost += lineCost;
+        productStats[line.product_key].units += line.quantity;
+        productStats[line.product_key].sales += line.subtotal_usd_cents;
+        productStats[line.product_key].cost += lineCost;
       }
     }
   }
