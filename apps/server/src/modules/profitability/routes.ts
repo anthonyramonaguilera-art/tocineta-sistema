@@ -797,5 +797,100 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
       });
     }
   });
+
+  // 18. Salud de recetas: productos activos con configuración incompleta (E6)
+  fastify.get('/api/profitability/recipes/health', async (request, reply) => {
+    const dbCtx = getDatabaseContext();
+    const user = (request as any).user || getSessionUser(dbCtx.rawDb, request.headers.authorization);
+    const role = user?.role;
+
+    if (role !== 'admin' && role !== 'supervisor') {
+      return reply.status(403).send({
+        success: false,
+        error: 'Solo administradores o supervisores pueden consultar la salud de recetas'
+      });
+    }
+
+    const products = dbCtx.rawDb.prepare(`
+      SELECT p.id, p.name, p.price_usd_cents, COALESCE(p.recipe_mode, 'UNITS') as recipe_mode,
+             r.id as recipe_id
+      FROM products p
+      LEFT JOIN recipes r ON r.product_id = p.id
+      WHERE p.is_active = 1
+      ORDER BY p.name ASC
+    `).all() as any[];
+
+    const getSupplyUnitCost = dbCtx.rawDb.prepare(`
+      SELECT weighted_avg_cost_usd_cents, cost_per_unit_usd_cents
+      FROM supply_items WHERE id = ?
+    `);
+
+    const incomplete: any[] = [];
+
+    for (const p of products) {
+      const issues = new Set<string>();
+      let calculatedCostUsdCents = 0;
+
+      const recipeItems = p.recipe_id
+        ? (dbCtx.rawDb.prepare('SELECT supply_item_id, sub_recipe_id, quantity_required FROM recipe_items WHERE recipe_id = ?').all(p.recipe_id) as any[])
+        : [];
+
+      if (!p.recipe_id) issues.add('sin_receta');
+      if (p.recipe_id && recipeItems.length === 0) issues.add('receta_sin_insumos');
+
+      for (const ri of recipeItems) {
+        if (ri.sub_recipe_id) {
+          const subItems = dbCtx.rawDb.prepare('SELECT supply_id, quantity_required FROM sub_recipe_items WHERE sub_recipe_id = ?').all(ri.sub_recipe_id) as any[];
+          const subRecipe = dbCtx.rawDb.prepare('SELECT yield_quantity FROM sub_recipes WHERE id = ?').get(ri.sub_recipe_id) as any;
+          const yieldQty = subRecipe?.yield_quantity > 0 ? subRecipe.yield_quantity : 1;
+          let subRecipeCostCents = 0;
+          for (const si of subItems) {
+            const sup = getSupplyUnitCost.get(si.supply_id) as any;
+            const unitCost = sup ? (sup.weighted_avg_cost_usd_cents || sup.cost_per_unit_usd_cents || 0) : 0;
+            if (unitCost === 0) issues.add('insumo_costo_cero');
+            subRecipeCostCents += Math.round((si.quantity_required / yieldQty) * unitCost);
+          }
+          calculatedCostUsdCents += Math.round(ri.quantity_required * subRecipeCostCents);
+        } else if (ri.supply_item_id) {
+          const sup = getSupplyUnitCost.get(ri.supply_item_id) as any;
+          const unitCost = sup ? (sup.weighted_avg_cost_usd_cents || sup.cost_per_unit_usd_cents || 0) : 0;
+          if (unitCost === 0) issues.add('insumo_costo_cero');
+          calculatedCostUsdCents += Math.round(ri.quantity_required * unitCost);
+        }
+      }
+
+      if (p.recipe_mode === 'FINISHED_PRODUCT' && recipeItems.length === 0) {
+        const mirror = dbCtx.rawDb.prepare('SELECT id FROM supply_items WHERE id = ? OR id = ?').get(`sup_${p.id.replace('prod_', '')}`, p.id) as any;
+        if (mirror) {
+          const sup = getSupplyUnitCost.get(mirror.id) as any;
+          calculatedCostUsdCents = sup ? (sup.weighted_avg_cost_usd_cents || sup.cost_per_unit_usd_cents || 0) : 0;
+        } else {
+          issues.add('producto_terminado_sin_espejo_ni_receta');
+        }
+      }
+
+      if (calculatedCostUsdCents > 0 && p.price_usd_cents < calculatedCostUsdCents) {
+        issues.add('precio_menor_costo');
+      }
+
+      if (issues.size > 0) {
+        incomplete.push({
+          productId: p.id,
+          productName: p.name,
+          recipeMode: p.recipe_mode,
+          priceUsdCents: p.price_usd_cents,
+          calculatedCostUsdCents,
+          issues: Array.from(issues)
+        });
+      }
+    }
+
+    return reply.send({
+      success: true,
+      total: products.length,
+      incompleteCount: incomplete.length,
+      incomplete
+    });
+  });
 };
 

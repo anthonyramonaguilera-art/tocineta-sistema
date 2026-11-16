@@ -32,6 +32,7 @@ export const RecipesView: React.FC = () => {
   const [isSubRecipeModalOpen, setIsSubRecipeModalOpen] = useState(false);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isQuickProductModalOpen, setIsQuickProductModalOpen] = useState(false);
+  const [showIncompleteOnly, setShowIncompleteOnly] = useState(false);
 
   const { data: recipesData, isLoading } = useQuery<{ success: boolean; recipes: RecipeSummary[] }>({
     queryKey: ['fase3Recipes'],
@@ -57,14 +58,28 @@ export const RecipesView: React.FC = () => {
     }
   });
 
+  const { data: healthData } = useQuery<{ success: boolean; total: number; incompleteCount: number; incomplete: Array<{ productId: string; issues: string[] }> }>({
+    queryKey: ['recipesHealth'],
+    queryFn: async () => {
+      const res = await apiFetch('/api/profitability/recipes/health');
+      return res.json();
+    }
+  });
+
   const recipes = recipesData?.recipes || [];
   const supplies = suppliesData?.supplies || [];
   const subRecipes = subRecipesData?.subRecipes || [];
 
+  const incompleteById = new Map<string, string[]>(
+    (healthData?.incomplete || []).map((item) => [item.productId, item.issues || []])
+  );
+
   const filtered = recipes.filter((r) => {
     const matchesSearch = r.productName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStation = selectedStation === 'all' || r.station === selectedStation;
-    return matchesSearch && matchesStation;
+    const isIncomplete = incompleteById.has(r.productId);
+    const matchesIncompleteOnly = !showIncompleteOnly || isIncomplete;
+    return matchesSearch && matchesStation && matchesIncompleteOnly;
   });
 
   const stations = Array.from(new Set(recipes.map((r) => r.station).filter(Boolean)));
@@ -126,6 +141,17 @@ export const RecipesView: React.FC = () => {
         <div className="flex gap-1.5 overflow-x-auto pb-1 sm:pb-0">
           <button
             type="button"
+            onClick={() => setShowIncompleteOnly((value) => !value)}
+            className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all min-h-[48px] ${
+              showIncompleteOnly
+                ? 'bg-primary text-primary-ink'
+                : 'bg-surface border border-border text-ink hover:bg-surface-alt'
+            }`}
+          >
+            Solo incompletas ({incompleteById.size})
+          </button>
+          <button
+            type="button"
             onClick={() => setSelectedStation('all')}
             className={`px-3 py-2 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
               selectedStation === 'all'
@@ -177,6 +203,7 @@ export const RecipesView: React.FC = () => {
             const margin = (currentMargin / 100).toFixed(1);
             const targetMargin = (r.targetMarginBps / 100).toFixed(0);
             const isHealthyMargin = currentMargin >= r.targetMarginBps;
+            const isIncomplete = incompleteById.has(r.productId);
 
             return (
               <Card
@@ -191,9 +218,14 @@ export const RecipesView: React.FC = () => {
                       {r.station} {r.category ? `· ${r.category}` : ''}
                     </span>
                   </div>
-                  <Badge variant={isHealthyMargin ? 'neutral' : 'warning'}>
-                    {r.recipeMode}
-                  </Badge>
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {isIncomplete && (
+                      <Badge variant="danger">Receta incompleta</Badge>
+                    )}
+                    <Badge variant={isHealthyMargin ? 'neutral' : 'warning'}>
+                      {r.recipeMode}
+                    </Badge>
+                  </div>
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 p-2 rounded-xl bg-surface-alt text-xs font-mono">
