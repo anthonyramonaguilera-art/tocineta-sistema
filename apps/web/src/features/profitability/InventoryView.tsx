@@ -5,6 +5,7 @@ import { TransferModal } from './components/TransferModal.js';
 import { NewSupplyModal } from './components/NewSupplyModal.js';
 import { QuickProductModal } from './components/QuickProductModal.js';
 import { ProductionModal } from './components/ProductionModal.js';
+import { InventoryModeBanner } from './components/InventoryModeBanner.js';
 import { apiFetch } from '../../api/client.js';
 
 interface SupplyItemData {
@@ -62,6 +63,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
 
   return (
     <div className="space-y-4">
+      <InventoryModeBanner />
+
       {/* Barra Superior con Selector de Sede y Acciones */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface p-3.5 rounded-2xl border border-border">
         <div className="flex items-center gap-2">

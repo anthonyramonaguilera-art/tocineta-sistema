@@ -4,6 +4,7 @@ import { Card, Button, Input, Icon, Badge } from '../../ui/index.js';
 import { RecipeEditorModal } from './components/RecipeEditorModal.js';
 import { SubRecipeEditorModal } from './components/SubRecipeEditorModal.js';
 import { QuickProductModal } from './components/QuickProductModal.js';
+import { InventoryModeBanner } from './components/InventoryModeBanner.js';
 import { apiFetch } from '../../api/client';
 
 interface RecipeSummary {
@@ -86,6 +87,8 @@ export const RecipesView: React.FC = () => {
 
   return (
     <div className="space-y-4">
+      <InventoryModeBanner />
+
       {/* Barra de Herramientas */}
       <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-surface p-3.5 rounded-2xl border border-border">
         <div className="flex items-center gap-2">
