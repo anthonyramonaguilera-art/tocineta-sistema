@@ -52,7 +52,8 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
       });
     }
 
-    return list;
+    // Defensa ante datos viejos: un mismo id no puede repetirse (llaves de React).
+    return Array.from(new Map(list.map(i => [i.id, i])).values());
   }, [product]);
 
   // Estado local para ingredientes base: map de id -> 'normal' | 'poco' | 'sin'
@@ -354,7 +355,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                 const state = baseStates[ing.id] || 'normal';
                 return (
                   <div
-                    key={ing.id}
+                    key={`${ing.id}`}
                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-tocineta-bg border border-tocineta-border rounded-2xl"
                   >
                     <span className="text-sm font-bold text-ink px-2">

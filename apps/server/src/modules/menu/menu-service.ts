@@ -109,6 +109,8 @@ export function getPosMenu(rawDb: Database.Database) {
   const baseIngredientsByProduct = new Map<string, Array<{ id: string; name: string; isRemovable: boolean; defaultState: 'normal' }>>();
   for (const pi of prodIngRows) {
     const list = baseIngredientsByProduct.get(pi.product_id) || [];
+    // Defensa ante datos viejos: un producto nunca repite el mismo ingrediente.
+    if (list.some(i => i.id === pi.ingredient_id)) continue;
     list.push({
       id: pi.ingredient_id,
       name: pi.ingredient_name,
@@ -338,6 +340,8 @@ export function getAdminMenu(rawDb: Database.Database) {
   const prodIngMap = new Map<string, Array<{ id: string; ingredientId: string; name: string; isRemovable: boolean; displayOrder: number }>>();
   for (const row of prodIngRows) {
     const list = prodIngMap.get(row.product_id) || [];
+    // Defensa ante datos viejos: un producto nunca repite el mismo ingrediente.
+    if (list.some(i => i.ingredientId === row.ingredient_id)) continue;
     list.push({
       id: row.id,
       ingredientId: row.ingredient_id,
