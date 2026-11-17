@@ -26,6 +26,16 @@ interface RecipeSummary {
   suggestedPriceUsdCents: number;
 }
 
+interface RecipeCoverage {
+  productId: string;
+  ingredientsTotal: number;
+  ingredientsWithSupply: number;
+  coveredIngredients: number;
+  uncoveredCount: number;
+  missingSupplyCount: number;
+  coveragePct: number;
+}
+
 export const RecipesView: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedStation, setSelectedStation] = useState<string>('all');
@@ -59,7 +69,7 @@ export const RecipesView: React.FC = () => {
     }
   });
 
-  const { data: healthData } = useQuery<{ success: boolean; total: number; incompleteCount: number; incomplete: Array<{ productId: string; issues: string[] }> }>({
+  const { data: healthData } = useQuery<{ success: boolean; total: number; incompleteCount: number; incomplete: Array<{ productId: string; issues: string[] }>; coverage?: RecipeCoverage[] }>({
     queryKey: ['recipesHealth'],
     queryFn: async () => {
       const res = await apiFetch('/api/profitability/recipes/health');
@@ -75,10 +85,23 @@ export const RecipesView: React.FC = () => {
     (healthData?.incomplete || []).map((item) => [item.productId, item.issues || []])
   );
 
+  const coverageById = new Map<string, RecipeCoverage>(
+    (healthData?.coverage || []).map((item) => [item.productId, item])
+  );
+
+  // Un plato está incompleto si la salud reporta una incidencia o si sus
+  // ingredientes declarados no quedan cubiertos por la receta.
+  const incompleteProductIds = new Set<string>(incompleteById.keys());
+  for (const [productId, item] of coverageById) {
+    if (item.ingredientsTotal - item.coveredIngredients > 0) {
+      incompleteProductIds.add(productId);
+    }
+  }
+
   const filtered = recipes.filter((r) => {
     const matchesSearch = r.productName.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStation = selectedStation === 'all' || r.station === selectedStation;
-    const isIncomplete = incompleteById.has(r.productId);
+    const isIncomplete = incompleteProductIds.has(r.productId);
     const matchesIncompleteOnly = !showIncompleteOnly || isIncomplete;
     return matchesSearch && matchesStation && matchesIncompleteOnly;
   });
@@ -151,7 +174,7 @@ export const RecipesView: React.FC = () => {
                 : 'bg-surface border border-border text-ink hover:bg-surface-alt'
             }`}
           >
-            Solo incompletas ({incompleteById.size})
+            Solo incompletas ({incompleteProductIds.size})
           </button>
           <button
             type="button"
@@ -206,7 +229,11 @@ export const RecipesView: React.FC = () => {
             const margin = (currentMargin / 100).toFixed(1);
             const targetMargin = (r.targetMarginBps / 100).toFixed(0);
             const isHealthyMargin = currentMargin >= r.targetMarginBps;
-            const isIncomplete = incompleteById.has(r.productId);
+            const isIncomplete = incompleteProductIds.has(r.productId);
+            const coverage = coverageById.get(r.productId);
+            const uncoveredIngredients = coverage
+              ? Math.max(0, coverage.ingredientsTotal - coverage.coveredIngredients)
+              : 0;
 
             return (
               <Card
@@ -221,9 +248,13 @@ export const RecipesView: React.FC = () => {
                       {r.station} {r.category ? `· ${r.category}` : ''}
                     </span>
                   </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
+                  <div className="flex flex-col items-end gap-1 shrink-0 max-w-[60%]">
                     {isIncomplete && (
-                      <Badge variant="danger">Receta incompleta</Badge>
+                      <Badge variant="danger" className="whitespace-normal text-right">
+                        {coverage && uncoveredIngredients > 0
+                          ? `Receta incompleta (${uncoveredIngredients} de ${coverage.ingredientsTotal} ingredientes)`
+                          : 'Receta incompleta'}
+                      </Badge>
                     )}
                     <Badge variant={isHealthyMargin ? 'neutral' : 'warning'}>
                       {r.recipeMode}

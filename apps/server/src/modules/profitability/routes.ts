@@ -816,16 +816,43 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
       ORDER BY p.name ASC
     `).all() as any[];
 
+    // Cobertura receta vs ingredientes del producto (P1): cada ingrediente de carta
+    // se cruza con ingredient_supply_map (¿tiene insumo?) y con los recipe_items de
+    // su receta (¿está cubierto?). La tabla del mapa puede no existir en bases antiguas.
+    const hasIngredientSupplyMap = !!dbCtx.rawDb.prepare(
+      "SELECT 1 AS ok FROM sqlite_master WHERE type = 'table' AND name = 'ingredient_supply_map'"
+    ).get();
+
+    const getProductIngredients = hasIngredientSupplyMap
+      ? dbCtx.rawDb.prepare(`
+          SELECT pi.ingredient_id, m.supply_id
+          FROM product_ingredients pi
+          LEFT JOIN ingredient_supply_map m ON m.ingredient_id = pi.ingredient_id
+          WHERE pi.product_id = ?
+          ORDER BY pi.display_order ASC
+        `)
+      : dbCtx.rawDb.prepare(`
+          SELECT pi.ingredient_id, NULL AS supply_id
+          FROM product_ingredients pi
+          WHERE pi.product_id = ?
+          ORDER BY pi.display_order ASC
+        `);
+
     const getSupplyUnitCost = dbCtx.rawDb.prepare(`
       SELECT weighted_avg_cost_usd_cents, cost_per_unit_usd_cents
       FROM supply_items WHERE id = ?
     `);
 
     const incomplete: any[] = [];
+    // Cobertura por producto: permite pintar el badge y el filtro aun cuando el
+    // producto solo tenga ingredientes sin insumo mapeado.
+    const coverage: any[] = [];
 
     for (const p of products) {
       const issues = new Set<string>();
       let calculatedCostUsdCents = 0;
+      // Insumos que la receta descuenta de verdad (directos y desglosados de sub-recetas).
+      const coveredSupplyIds = new Set<string>();
 
       const recipeItems = p.recipe_id
         ? (dbCtx.rawDb.prepare('SELECT supply_item_id, sub_recipe_id, quantity_required FROM recipe_items WHERE recipe_id = ?').all(p.recipe_id) as any[])
@@ -841,6 +868,7 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
           const yieldQty = subRecipe?.yield_quantity > 0 ? subRecipe.yield_quantity : 1;
           let subRecipeCostCents = 0;
           for (const si of subItems) {
+            coveredSupplyIds.add(si.supply_id);
             const sup = getSupplyUnitCost.get(si.supply_id) as any;
             const unitCost = sup ? (sup.weighted_avg_cost_usd_cents || sup.cost_per_unit_usd_cents || 0) : 0;
             if (unitCost === 0) issues.add('insumo_costo_cero');
@@ -848,6 +876,7 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
           }
           calculatedCostUsdCents += Math.round(ri.quantity_required * subRecipeCostCents);
         } else if (ri.supply_item_id) {
+          coveredSupplyIds.add(ri.supply_item_id);
           const sup = getSupplyUnitCost.get(ri.supply_item_id) as any;
           const unitCost = sup ? (sup.weighted_avg_cost_usd_cents || sup.cost_per_unit_usd_cents || 0) : 0;
           if (unitCost === 0) issues.add('insumo_costo_cero');
@@ -864,6 +893,36 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
           issues.add('producto_terminado_sin_espejo_ni_receta');
         }
       }
+
+      // Cobertura receta vs ingredientes: con_insumo (mapeado), cubiertos (recipe_item),
+      // sin_insumo (sin mapa) y cobertura_pct (cubiertos / con_insumo).
+      const productIngredients = getProductIngredients.all(p.id) as any[];
+      let ingredientsWithSupply = 0;
+      let coveredIngredients = 0;
+      for (const ing of productIngredients) {
+        if (!ing.supply_id) continue;
+        ingredientsWithSupply += 1;
+        if (coveredSupplyIds.has(ing.supply_id)) coveredIngredients += 1;
+      }
+      const ingredientsTotal = productIngredients.length;
+      const missingSupplyCount = ingredientsTotal - ingredientsWithSupply;
+      const uncoveredCount = ingredientsWithSupply - coveredIngredients;
+      const coveragePct = ingredientsWithSupply > 0
+        ? Math.round((coveredIngredients / ingredientsWithSupply) * 100)
+        : 0;
+
+      if (uncoveredCount > 0) issues.add('ingredientes_sin_cobertura');
+
+      coverage.push({
+        productId: p.id,
+        productName: p.name,
+        ingredientsTotal,
+        ingredientsWithSupply,
+        coveredIngredients,
+        uncoveredCount,
+        missingSupplyCount,
+        coveragePct
+      });
 
       if (calculatedCostUsdCents > 0 && p.price_usd_cents < calculatedCostUsdCents) {
         issues.add('precio_menor_costo');
@@ -885,7 +944,8 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
       success: true,
       total: products.length,
       incompleteCount: incomplete.length,
-      incomplete
+      incomplete,
+      coverage
     });
   });
 };
