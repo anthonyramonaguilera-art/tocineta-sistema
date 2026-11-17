@@ -3,6 +3,7 @@ import { generateUuidV7 } from '@tocineta/shared';
 import { seedCatalog } from '../../db/seed-catalog.js';
 import { seedInitialUsers } from '../auth/seed-users.js';
 import { ensureOfficialLocations } from './locations-service.js';
+import { ensureCriticalInventoryBootstrap } from './inventory.js';
 
 export interface SetupWizardPayload {
   supplies: Array<{
@@ -173,6 +174,7 @@ export function importSetupCsv(
   });
 
   tx();
+  ensureCriticalInventoryBootstrap(rawDb);
   return { importedCount, errors };
 }
 

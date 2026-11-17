@@ -7,6 +7,7 @@ import { runMigrations } from './migrate.js';
 import { ensureOfficialLocations } from '../modules/profitability/locations-service.js';
 import { seedInitialUsersDetailed } from '../modules/auth/seed-users.js';
 import { seedCatalog } from './seed-catalog.js';
+import { ensureCriticalInventoryBootstrap } from '../modules/profitability/inventory.js';
 import { seedProductPhotos } from '../modules/menu/photo-seed.js';
 import { ensureBusinessSettingsDefensive } from './business-settings.js';
 
@@ -80,6 +81,7 @@ export async function createFreshProductionDatabase(customDbPath?: string): Prom
 
     console.log(`🍔 Sembrando catálogo oficial...`);
     seedCatalog(rawDb);
+    ensureCriticalInventoryBootstrap(rawDb);
     seedProductPhotos(rawDb);
 
     console.log(`⚙️ Asegurando ajustes del negocio (inventory_operation_mode='free', print_mode='one')...`);

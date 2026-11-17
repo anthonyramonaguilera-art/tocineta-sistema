@@ -10,6 +10,7 @@ import { seedInitialUsers, ensureCorporateUsersNonDestructive } from './modules/
 import { seedCatalog } from './db/seed-catalog.js';
 import { seedProductPhotos } from './modules/menu/photo-seed.js';
 import { ensureOfficialLocations } from './modules/profitability/locations-service.js';
+import { ensureCriticalInventoryBootstrap } from './modules/profitability/inventory.js';
 import { countDuplicateOpenSessions } from './modules/cashier/cashier-service.js';
 
 export function describeAuthMode(env: { ENFORCE_AUTH?: string } = process.env): string {
@@ -144,6 +145,7 @@ async function bootstrap() {
   // 4. Semilla de catálogo oficial (27 productos, combos, barra libre, sabores Pepsi, cupones)
   if (process.env.SKIP_SEED_CATALOG !== 'true') {
     seedCatalog(dbContext.rawDb);
+    ensureCriticalInventoryBootstrap(dbContext.rawDb);
     seedProductPhotos(dbContext.rawDb);
     console.log(`🍔 Catálogo oficial y fotografías sembrados con éxito.`);
   } else {

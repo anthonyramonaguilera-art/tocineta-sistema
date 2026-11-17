@@ -136,7 +136,6 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
   // 3. Nivel 1: Insumos, Alerta >30 días y Asistente de Actualización Masiva
   fastify.get('/api/profitability/supplies', async (_request, reply) => {
     const dbCtx = getDatabaseContext();
-    seedCriticalSuppliesAndRecipes(dbCtx.rawDb);
     const supplies = getSupplyItems(dbCtx.rawDb);
 
     return reply.status(200).send({
@@ -168,7 +167,6 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
   // 4. Nivel 2: Control de Inventario Crítico y Varianza
   fastify.get('/api/profitability/inventory/critical', async (request, reply) => {
     const dbCtx = getDatabaseContext();
-    seedCriticalSuppliesAndRecipes(dbCtx.rawDb);
     const query = request.query as { jornadaId?: string } | undefined;
 
     let targetJornadaId = query?.jornadaId;
@@ -324,8 +322,6 @@ export const profitabilityRoutes: FastifyPluginAsync = async (fastify) => {
       endDateMs?: string;
       jornadaId?: string;
     };
-
-    seedCriticalSuppliesAndRecipes(dbCtx.rawDb);
 
     const report = generateMenuEngineeringReport(dbCtx.rawDb, {
       startDateMs: query.startDateMs ? Number(query.startDateMs) : undefined,

@@ -24,7 +24,74 @@ export const CRITICAL_SUPPLIES: CriticalSupplySeed[] = [
   { id: 'sup_papas_francesa', name: 'Papas Francesas Congeladas', unit: 'kg', unitMeasure: 'kg', costPerUnitUsdCents: 280, previousCostUsdCents: 250, initialStock: 40, minimumStock: 10 },
   { id: 'sup_gas_operativo', name: 'Gas Operativo Bombona 43kg', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 2500, previousCostUsdCents: 2500, initialStock: 3, minimumStock: 1 },
   { id: 'sup_malta_lata', name: 'Malta Polar Lata 250 ml', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 65, previousCostUsdCents: 60, initialStock: 48, minimumStock: 12 },
-  { id: 'sup_refresco_1lt', name: 'Refresco Pepsi 1 Litro', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 90, previousCostUsdCents: 85, initialStock: 36, minimumStock: 10 }
+  { id: 'sup_refresco_1lt', name: 'Refresco Pepsi 1 Litro', unit: 'unid', unitMeasure: 'und', costPerUnitUsdCents: 90, previousCostUsdCents: 85, initialStock: 36, minimumStock: 10 },
+  // Insumos reales que ya existen en la operación (costos tomados de la base real).
+  // Su stock inicial es 0: el stock real es dato operativo, no semilla.
+  { id: 'sup_carne_molida_cruda', name: 'Carne Molida Especial (Cruda)', unit: 'kg', unitMeasure: 'g', costPerUnitUsdCents: 100, previousCostUsdCents: 100, initialStock: 0, minimumStock: 0 },
+  { id: 'sup_carne_smash_150g', name: 'Carne Prime Smash (150g)', unit: 'kg', unitMeasure: 'und', costPerUnitUsdCents: 180, previousCostUsdCents: 180, initialStock: 0, minimumStock: 0 },
+  { id: 'sup_cebolla_morada', name: 'Cebolla Morada Fresca', unit: 'kg', unitMeasure: 'porcion', costPerUnitUsdCents: 15, previousCostUsdCents: 15, initialStock: 0, minimumStock: 0 },
+  { id: 'sup_lata_refresco', name: 'Refresco Lata 355ml', unit: 'caja', unitMeasure: 'lata', costPerUnitUsdCents: 65, previousCostUsdCents: 65, initialStock: 0, minimumStock: 0 },
+  { id: 'sup_malta_lata_250', name: 'Malta Lata 250 ml', unit: 'caja', unitMeasure: 'lata', costPerUnitUsdCents: 65, previousCostUsdCents: 65, initialStock: 0, minimumStock: 0 },
+  { id: 'sup_pan_clasico', name: 'Pan Clásico Tocineta', unit: 'paquete', unitMeasure: 'und', costPerUnitUsdCents: 45, previousCostUsdCents: 45, initialStock: 0, minimumStock: 0 },
+  { id: 'sup_tocineta_ahumada', name: 'Tocineta Ahumada Crujiente', unit: 'paquete', unitMeasure: 'tira', costPerUnitUsdCents: 35, previousCostUsdCents: 35, initialStock: 0, minimumStock: 0 }
+];
+
+export interface CriticalRecipeSeed {
+  productId: string;
+  productName: string;
+  items: Array<{ supplyId: string; qty: number }>;
+}
+
+/**
+ * Recetas técnicas semilla. Son la única definición: las usa tanto el sembrado
+ * destructivo del POST /seed-critical como el bootstrap no destructivo del arranque.
+ */
+export const CRITICAL_RECIPES: CriticalRecipeSeed[] = [
+  // HAMBURGUESAS (Medallones según especificación exacta de TOCINETA)
+  // Americana Deluxe: 4 medallones
+  { productId: 'prod_americana_deluxe', productName: 'Americana Deluxe', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 4 }] },
+  // Miami: 3 medallones
+  { productId: 'prod_miami', productName: 'Miami', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 3 }] },
+  // Texas Mex, New York, Mozarrella, Doble Smash: 2 medallones
+  { productId: 'prod_texas_mex', productName: 'Texas Mex', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 2 }] },
+  { productId: 'prod_new_york', productName: 'New York', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 2 }] },
+  { productId: 'prod_mozarrella', productName: 'Mozarrella', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 2 }] },
+  { productId: 'prod_doble_smash', productName: 'Doble Smash', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 2 }] },
+  // Grill, Nuggets Meat, Smash Clásica, Kids Burger: 1 medallón
+  { productId: 'prod_grill', productName: 'Grill', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 1 }] },
+  { productId: 'prod_nuggets_meat', productName: 'Nuggets Meat', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 1 }] },
+  { productId: 'prod_smash_clasica', productName: 'Smash Clásica', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 1 }] },
+  { productId: 'prod_kids_burger', productName: 'Kids Burger', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 1 }] },
+  // Pechuga César: 1 pechuga de pollo crispy/grill
+  { productId: 'prod_pechuga_cesar', productName: 'Pechuga César', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_pechuga_pollo', qty: 1 }] },
+
+  // HOT DOGS
+  // Street Dog y perros estándar: 1 pan de perro + 1 salchicha pollo
+  { productId: 'prod_street_dog', productName: 'Street Dog', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
+  { productId: 'prod_classic_dog', productName: 'Classic Dog', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
+  { productId: 'prod_brazil_dog', productName: 'Brazil Dog', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
+  { productId: 'prod_doritos_dog_snacks', productName: 'Doritos Dog Snacks', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
+  { productId: 'prod_jalapenos_dog', productName: 'Jalapeños Dog', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
+  { productId: 'prod_tocineta_dog_parmesano', productName: 'Tocineta Dog Parmesano', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
+  // Doble Salchicha Dog: 1 pan de perro + 2 salchichas pollo
+  { productId: 'prod_doble_salchicha_dog', productName: 'Doble Salchicha Dog', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 2 }] },
+
+  // BEBIDAS
+  { productId: 'prod_malta_lata_250', productName: 'Malta Lata 250 ml', items: [{ supplyId: 'sup_malta_lata', qty: 1 }] },
+  { productId: 'prod_refresco_1lt', productName: 'Refresco 1 Litro', items: [{ supplyId: 'sup_refresco_1lt', qty: 1 }] }
+];
+
+/**
+ * Pares ingrediente de carta → insumo de inventario (los 7 de la migración 0045).
+ */
+export const INGREDIENT_SUPPLY_PAIRS: Array<{ ingredientId: string; supplyId: string }> = [
+  { ingredientId: 'ing_base_pan_perro', supplyId: 'sup_pan_perro' },
+  { ingredientId: 'ing_base_pan_brioche', supplyId: 'sup_pan_brioche' },
+  { ingredientId: 'ing_base_carne_smash', supplyId: 'sup_carne_smash' },
+  { ingredientId: 'ing_base_tocineta', supplyId: 'sup_tocineta_crispy' },
+  { ingredientId: 'ing_base_salchicha_pollo', supplyId: 'sup_salchicha_pollo' },
+  { ingredientId: 'ing_base_salchicha_polaca', supplyId: 'sup_salchicha_polaca' },
+  { ingredientId: 'ing_base_pechuga_crispy', supplyId: 'sup_pechuga_pollo' }
 ];
 
 export interface InventoryItemReconciliation {
@@ -105,47 +172,8 @@ export function seedCriticalSuppliesAndRecipes(rawDb: Database.Database): void {
       VALUES (?, ?, ?, ?)
     `);
 
-    // Definición de las reglas exactas de recetas de TOCINETA
-    interface RecipeDef {
-      productId: string;
-      productName: string;
-      items: Array<{ supplyId: string; qty: number }>;
-    }
-
-    const recipesData: RecipeDef[] = [
-      // HAMBURGUESAS (Medallones según especificación exacta de TOCINETA)
-      // Americana Deluxe: 4 medallones
-      { productId: 'prod_americana_deluxe', productName: 'Americana Deluxe', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 4 }] },
-      // Miami: 3 medallones
-      { productId: 'prod_miami', productName: 'Miami', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 3 }] },
-      // Texas Mex, New York, Mozarrella, Doble Smash: 2 medallones
-      { productId: 'prod_texas_mex', productName: 'Texas Mex', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 2 }] },
-      { productId: 'prod_new_york', productName: 'New York', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 2 }] },
-      { productId: 'prod_mozarrella', productName: 'Mozarrella', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 2 }] },
-      { productId: 'prod_doble_smash', productName: 'Doble Smash', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 2 }] },
-      // Grill, Nuggets Meat, Smash Clásica, Kids Burger: 1 medallón
-      { productId: 'prod_grill', productName: 'Grill', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 1 }] },
-      { productId: 'prod_nuggets_meat', productName: 'Nuggets Meat', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 1 }] },
-      { productId: 'prod_smash_clasica', productName: 'Smash Clásica', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 1 }] },
-      { productId: 'prod_kids_burger', productName: 'Kids Burger', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_carne_smash', qty: 1 }] },
-      // Pechuga César: 1 pechuga de pollo crispy/grill
-      { productId: 'prod_pechuga_cesar', productName: 'Pechuga César', items: [{ supplyId: 'sup_pan_brioche', qty: 1 }, { supplyId: 'sup_pechuga_pollo', qty: 1 }] },
-
-      // HOT DOGS
-      // Street Dog y perros estándar: 1 pan de perro + 1 salchicha pollo
-      { productId: 'prod_street_dog', productName: 'Street Dog', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
-      { productId: 'prod_classic_dog', productName: 'Classic Dog', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
-      { productId: 'prod_brazil_dog', productName: 'Brazil Dog', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
-      { productId: 'prod_doritos_dog_snacks', productName: 'Doritos Dog Snacks', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
-      { productId: 'prod_jalapenos_dog', productName: 'Jalapeños Dog', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
-      { productId: 'prod_tocineta_dog_parmesano', productName: 'Tocineta Dog Parmesano', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 1 }] },
-      // Doble Salchicha Dog: 1 pan de perro + 2 salchichas pollo
-      { productId: 'prod_doble_salchicha_dog', productName: 'Doble Salchicha Dog', items: [{ supplyId: 'sup_pan_perro', qty: 1 }, { supplyId: 'sup_salchicha_pollo', qty: 2 }] },
-
-      // BEBIDAS
-      { productId: 'prod_malta_lata_250', productName: 'Malta Lata 250 ml', items: [{ supplyId: 'sup_malta_lata', qty: 1 }] },
-      { productId: 'prod_refresco_1lt', productName: 'Refresco 1 Litro', items: [{ supplyId: 'sup_refresco_1lt', qty: 1 }] }
-    ];
+    // Definición única de recetas semilla (ver CRITICAL_RECIPES)
+    const recipesData = CRITICAL_RECIPES;
 
     for (const rDef of recipesData) {
       const recId = `rec_${rDef.productId}`;
@@ -159,6 +187,95 @@ export function seedCriticalSuppliesAndRecipes(rawDb: Database.Database): void {
         insertRecipeItem.run(`ri_${recId}_${itm.supplyId}`, recId, itm.supplyId, itm.qty);
       }
     }
+  });
+
+  tx();
+}
+
+/**
+ * 1.b Siembra NO destructiva del mapa ingrediente de carta → insumo de inventario.
+ * Inserta solo los pares que faltan y solo cuando existen el ingrediente y el insumo.
+ */
+export function ensureIngredientSupplyMap(rawDb: Database.Database): void {
+  const hasMapTable = rawDb.prepare(
+    "SELECT 1 AS ok FROM sqlite_master WHERE type = 'table' AND name = 'ingredient_supply_map'"
+  ).get();
+  if (!hasMapTable) return;
+
+  const insertPair = rawDb.prepare(
+    'INSERT OR IGNORE INTO ingredient_supply_map (ingredient_id, supply_id) VALUES (?, ?)'
+  );
+  const ingredientExists = rawDb.prepare('SELECT 1 AS ok FROM ingredients WHERE id = ?');
+  const supplyExists = rawDb.prepare('SELECT 1 AS ok FROM supply_items WHERE id = ?');
+
+  for (const pair of INGREDIENT_SUPPLY_PAIRS) {
+    if (!ingredientExists.get(pair.ingredientId)) continue;
+    if (!supplyExists.get(pair.supplyId)) continue;
+    insertPair.run(pair.ingredientId, pair.supplyId);
+  }
+}
+
+/**
+ * 1. Bootstrap NO destructivo de inventario (arranque, consultas y asistente).
+ * - Insumos: INSERT OR IGNORE. Jamás actualiza costo, costo previo, stock ni mínimo.
+ * - Recetas: crea receta e ítems solo si el producto existe y aún no tiene receta.
+ * - Mapa ingrediente→insumo: los 7 pares de la migración 0045.
+ * Sin DELETE y todo dentro de una transacción. Idempotente.
+ */
+export function ensureCriticalInventoryBootstrap(rawDb: Database.Database): void {
+  const now = Date.now();
+
+  const tx = rawDb.transaction(() => {
+    const insertSupply = rawDb.prepare(`
+      INSERT OR IGNORE INTO supply_items (
+        id, name, unit, unit_measure, current_stock_qty, minimum_stock_qty,
+        cost_per_unit_usd_cents, previous_cost_usd_cents, created_at_ms, updated_at_ms
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+
+    for (const sup of CRITICAL_SUPPLIES) {
+      insertSupply.run(
+        sup.id,
+        sup.name,
+        sup.unit,
+        sup.unitMeasure || 'und',
+        sup.initialStock,
+        sup.minimumStock,
+        sup.costPerUnitUsdCents,
+        sup.previousCostUsdCents || sup.costPerUnitUsdCents,
+        now,
+        now
+      );
+    }
+
+    const productExists = rawDb.prepare('SELECT 1 AS ok FROM products WHERE id = ?');
+    const recipeForProduct = rawDb.prepare('SELECT id FROM recipes WHERE product_id = ? LIMIT 1');
+    const recipeById = rawDb.prepare('SELECT product_id FROM recipes WHERE id = ?');
+    const insertRecipe = rawDb.prepare(
+      'INSERT OR IGNORE INTO recipes (id, product_id, name, notes) VALUES (?, ?, ?, ?)'
+    );
+    const insertRecipeItem = rawDb.prepare(
+      'INSERT INTO recipe_items (id, recipe_id, supply_item_id, quantity_required) VALUES (?, ?, ?, ?)'
+    );
+
+    for (const rDef of CRITICAL_RECIPES) {
+      if (!productExists.get(rDef.productId)) continue;
+      if (recipeForProduct.get(rDef.productId)) continue;
+
+      const recId = `rec_${rDef.productId}`;
+      insertRecipe.run(recId, rDef.productId, rDef.productName, null);
+
+      // Si el id ya pertenece a otra receta, no se toca ni se le agregan ítems.
+      const owner = recipeById.get(recId) as { product_id: string } | undefined;
+      if (!owner || owner.product_id !== rDef.productId) continue;
+
+      for (let i = 0; i < rDef.items.length; i++) {
+        const itm = rDef.items[i];
+        insertRecipeItem.run(`ri_${recId}_${itm.supplyId}`, recId, itm.supplyId, itm.qty);
+      }
+    }
+
+    ensureIngredientSupplyMap(rawDb);
   });
 
   tx();
@@ -263,7 +380,8 @@ export function reconcileCriticalInventory(
   totalVarianceUsdCents: number;
 } {
   const now = Date.now();
-  seedCriticalSuppliesAndRecipes(rawDb);
+  // No destructivo: la conciliación no debe reescribir costos ni recetas reales.
+  ensureCriticalInventoryBootstrap(rawDb);
 
   const theoreticalConsumption = calculateTheoreticalConsumption(rawDb, jornadaId);
 
