@@ -19,7 +19,9 @@ const AMERICANA_COST_RESTORED = 560;
 
 describe('Cantidad por ingrediente de producto restaurada por 0049 (@tocineta/server)', () => {
   let db: Database.Database;
+  let tempDir: string;
   let legacyMigrationsDir: string;
+  let legacySeedBuffer: Buffer;
 
   const countLinks = (productId: string, ingredientId: string): number =>
     (
@@ -36,6 +38,11 @@ describe('Cantidad por ingrediente de producto restaurada por 0049 (@tocineta/se
     return product!.baseIngredients.find(i => i.id === ingredientId);
   };
 
+  const quantityOf = (targetDb: Database.Database, productId: string, ingredientId: string): number =>
+    (targetDb
+      .prepare('SELECT quantity FROM product_ingredients WHERE product_id = ? AND ingredient_id = ?')
+      .get(productId, ingredientId) as { quantity: number }).quantity;
+
   // Aplica la 0049 como en producción: primero la base sembrada (0000..0048) y
   // luego el runner real, de modo que la migración opere sobre filas existentes.
   const upgradeToQuantityMigration = async (): Promise<void> => {
@@ -43,23 +50,31 @@ describe('Cantidad por ingrediente de producto restaurada por 0049 (@tocineta/se
     expect(result.appliedMigrations).toContain(NEW_MIGRATION);
   };
 
-  beforeAll(() => {
-    legacyMigrationsDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tocineta_pi_qty_legacy_'));
+  beforeAll(async () => {
+    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'tocineta_pi_qty_'));
+    legacyMigrationsDir = path.join(tempDir, 'legacy-migrations');
+    fs.mkdirSync(legacyMigrationsDir, { recursive: true });
     for (const file of fs.readdirSync(migrationsDir)) {
       if (file.endsWith('.sql') && file < NEW_MIGRATION) {
         fs.copyFileSync(path.join(migrationsDir, file), path.join(legacyMigrationsDir, file));
       }
     }
+
+    // Base sembrada una sola vez con el esquema previo a la 0049; cada prueba
+    // arranca de su copia en memoria para aislarse sin repetir migraciones ni siembra.
+    const seedDb = new Database(':memory:');
+    await runMigrations(seedDb, { dbPath: ':memory:', migrationsDir: legacyMigrationsDir });
+    seedCatalog(seedDb);
+    legacySeedBuffer = seedDb.serialize();
+    seedDb.close();
   });
 
   afterAll(() => {
-    fs.rmSync(legacyMigrationsDir, { recursive: true, force: true });
+    fs.rmSync(tempDir, { recursive: true, force: true });
   });
 
-  beforeEach(async () => {
-    db = new Database(':memory:');
-    await runMigrations(db, { dbPath: ':memory:', migrationsDir: legacyMigrationsDir });
-    seedCatalog(db);
+  beforeEach(() => {
+    db = new Database(legacySeedBuffer);
   });
 
   afterEach(() => {
@@ -165,5 +180,21 @@ describe('Cantidad por ingrediente de producto restaurada por 0049 (@tocineta/se
       WHERE product_id = 'prod_street_dog' AND ingredient_id = 'ing_base_carne_smash'
     `).get() as { quantity: number };
     expect(row.quantity).toBe(2);
+  });
+
+  it('Una base nueva sembrada después de todas las migraciones nace con las cantidades', async () => {
+    const freshDb = new Database(':memory:');
+    try {
+      await runMigrations(freshDb, { dbPath: ':memory:', migrationsDir });
+      seedCatalog(freshDb);
+
+      expect(quantityOf(freshDb, 'prod_americana_deluxe', 'ing_base_carne_smash')).toBe(4);
+      expect(quantityOf(freshDb, 'prod_americana_deluxe', 'ing_base_queso_americano')).toBe(2);
+      expect(quantityOf(freshDb, 'prod_miami', 'ing_base_queso_americano')).toBe(3);
+      expect(quantityOf(freshDb, 'prod_street_dog', 'ing_base_pan_perro')).toBe(1);
+      expect(calculateDishUnitCost(freshDb, 'prod_americana_deluxe')).toBe(AMERICANA_COST_RESTORED);
+    } finally {
+      freshDb.close();
+    }
   });
 });

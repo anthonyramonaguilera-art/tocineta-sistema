@@ -183,14 +183,42 @@ export function seedCatalog(rawDb: Database.Database, opts?: { force?: boolean }
       rawDb.prepare('DELETE FROM product_ingredients').run();
     }
 
+    // La 0049 agregó quantity; en bases anteriores a esa migración la columna
+    // todavía no existe y la siembra debe seguir funcionando sin ella.
+    const piHasQuantity = (rawDb.prepare('PRAGMA table_info(product_ingredients)').all() as Array<{ name: string }>)
+      .some(c => c.name === 'quantity');
+    const piQuantityColumn = piHasQuantity ? ', quantity' : '';
+    const piQuantityValue = piHasQuantity ? ', ?' : '';
+
     const piSql = shouldReset
-      ? `INSERT OR REPLACE INTO product_ingredients (id, product_id, ingredient_id, is_removable, display_order) VALUES (?, ?, ?, 1, ?)`
-      : `INSERT OR IGNORE INTO product_ingredients (id, product_id, ingredient_id, is_removable, display_order) VALUES (?, ?, ?, 1, ?)`;
+      ? `INSERT OR REPLACE INTO product_ingredients (id, product_id, ingredient_id, is_removable, display_order${piQuantityColumn}) VALUES (?, ?, ?, 1, ?${piQuantityValue})`
+      : `INSERT OR IGNORE INTO product_ingredients (id, product_id, ingredient_id, is_removable, display_order${piQuantityColumn}) VALUES (?, ?, ?, 1, ?${piQuantityValue})`;
 
     const insertProdIng = rawDb.prepare(piSql);
 
+    // Cantidades de las filas que el catálogo histórico repetía por ingrediente
+    // y que la 0047 colapsó. La 0049 las restaura en bases ya sembradas; aquí se
+    // siembran desde el inicio para que una base nueva nazca con los mismos valores.
+    const piQuantityByPair: Record<string, number> = {
+      'prod_americana_deluxe|ing_base_carne_smash': 4,
+      'prod_americana_deluxe|ing_base_queso_americano': 2,
+      'prod_miami|ing_base_carne_smash': 3,
+      'prod_miami|ing_base_queso_americano': 3,
+      'prod_texas_mex|ing_base_carne_smash': 2,
+      'prod_texas_mex|ing_base_queso_americano': 2,
+      'prod_texas_mex|ing_base_tocineta': 2,
+      'prod_pechuga_cesar|ing_base_pechuga_crispy': 2,
+      'prod_new_york|ing_base_carne_smash': 2,
+      'prod_new_york|ing_base_queso_americano': 2,
+      'prod_mozarrella|ing_base_carne_smash': 2
+    };
+
     const helperAddIng = (piId: string, pId: string, ingId: string, order: number) => {
-      insertProdIng.run(piId, pId, ingId, order);
+      if (piHasQuantity) {
+        insertProdIng.run(piId, pId, ingId, order, piQuantityByPair[`${pId}|${ingId}`] ?? 1);
+      } else {
+        insertProdIng.run(piId, pId, ingId, order);
+      }
     };
 
     // A. 7 Hot Dogs (Fieles al afiche oficial)
