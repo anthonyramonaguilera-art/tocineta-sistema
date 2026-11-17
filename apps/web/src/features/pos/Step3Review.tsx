@@ -2,6 +2,7 @@ import React from 'react';
 import type { CartItem } from './types.js';
 import { Card, Button, Input, Money, Icon, Badge } from '../../ui/index.js';
 import { formatTableLabel } from '../../lib/format.js';
+import { SEDE_LABELS, resolveSedeKey } from './sede.js';
 
 interface Step3ReviewProps {
   cart: CartItem[];
@@ -111,8 +112,11 @@ export const Step3Review: React.FC<Step3ReviewProps> = ({
                 ? 'Para Llevar'
                 : 'Delivery'}
             </Badge>
-            {fulfillmentType === 'delivery' && deliverySede && (
-              <span className="text-[10px] text-ink-muted font-bold">({deliverySede})</span>
+            {deliverySede && (
+              <span className="text-[10px] text-ink-muted font-bold flex items-center gap-1">
+                <Icon name="MapPin" size={11} />
+                {SEDE_LABELS[resolveSedeKey(deliverySede)]}
+              </span>
             )}
           </div>
           {fulfillmentType === 'delivery' && deliveryAddress && (

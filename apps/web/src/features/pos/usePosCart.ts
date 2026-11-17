@@ -3,6 +3,7 @@ import type { CartItem, CustomizationModifier } from './types.js';
 import type { PosProduct } from '../../types/menu.js';
 import { generateUuidV7, createIdempotencyKey, usdToBsCents, parseRateToMicroBs } from '@tocineta/shared';
 import { saveOrderToOutbox, subscribeToOutboxCount, flushOutbox, isNetworkFailure } from './outbox.js';
+import { SEDE_LABELS, SEDE_LOCATION_IDS, useActiveSede } from './sede.js';
 
 export interface UsePosCartProps {
   token: string | null;
@@ -18,7 +19,7 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
   const [customerNameError, setCustomerNameError] = useState<string | null>(null);
   const [fulfillmentType, setFulfillmentType] = useState<'salon' | 'para_llevar' | 'delivery'>('salon');
   const [tableNumber, setTableNumber] = useState<string>('Mesa 1');
-  const [deliverySede, setDeliverySede] = useState<string>(() => localStorage.getItem('tocineta_active_sede') || 'Sede B: Alta Vista');
+  const [deliverySede, setDeliverySede] = useActiveSede();
   const [customerPhone, setCustomerPhone] = useState<string>('');
   const [deliveryAddress, setDeliveryAddress] = useState<string>('');
   const [deliveryReference, setDeliveryReference] = useState<string>('');
@@ -209,9 +210,9 @@ export function usePosCart({ token, formattedRate = '40,00', onOrderSuccess }: U
 
     const orderPayload = {
       tableNumber: fulfillmentType === 'salon' ? tableNumber : fulfillmentType === 'para_llevar' ? 'Para Llevar' : 'Delivery',
-      fulfillmentType,
+      fulfillmentType, locationId: SEDE_LOCATION_IDS[deliverySede],
       notes: fulfillmentType === 'delivery'
-        ? (notes.trim() ? `[${deliverySede}] ${notes.trim()}` : `[${deliverySede}]`)
+        ? (notes.trim() ? `[${SEDE_LABELS[deliverySede]}] ${notes.trim()}` : `[${SEDE_LABELS[deliverySede]}]`)
         : (notes.trim() || undefined),
       deliveryFeeUsdCents: fulfillmentType === 'delivery' ? deliveryTierCents : 0,
       customerName: customerName.trim(),

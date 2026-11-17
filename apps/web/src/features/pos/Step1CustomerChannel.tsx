@@ -295,8 +295,8 @@ export const Step1CustomerChannel: React.FC<Step1CustomerChannelProps> = ({
                 onChange={(e) => setDeliverySede(e.target.value)}
                 className="w-full min-h-[48px] px-3 rounded-xl bg-surface border border-border text-xs font-bold text-ink outline-none"
               >
-                <option value="Sede B: Alta Vista">Sede B: Alta Vista (Principal)</option>
-                <option value="Sede A: Los Olivos">Sede A: Los Olivos</option>
+                <option value="sede_b">Sede B: Alta Vista (Principal)</option>
+                <option value="sede_a">Sede A: Los Olivos</option>
               </select>
             </Field>
           </div>

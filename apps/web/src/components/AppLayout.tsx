@@ -129,6 +129,11 @@ export const AppLayout: React.FC<AppLayoutProps> = ({
     });
   };
 
+  // Notifica al POS la sede activa (el evento storage no se propaga dentro de la misma pestaña).
+  useEffect(() => {
+    window.dispatchEvent(new CustomEvent('tocineta:sede-changed', { detail: { sede: activeSede } }));
+  }, [activeSede]);
+
   // 3. Limpieza de conmutador obsoleto "Modo Básico" / "Modo Pro"
   useEffect(() => {
     try {
