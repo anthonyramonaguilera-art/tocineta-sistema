@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Icon } from '../../ui/Icon.js';
-import type { PosProduct } from '../../types/menu.js';
+import type { PosBaseIngredient, PosProduct } from '../../types/menu.js';
 import type { CustomizationModifier } from './types.js';
 
 interface CustomizationModalProps {
@@ -28,7 +28,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
 
   // Determinar ingredientes base del producto (asegurar pan y salsas si aplican)
   const baseIngredients = useMemo(() => {
-    const list = [...(product.baseIngredients || [])];
+    const list: Array<PosBaseIngredient & { quantity?: number }> = [...(product.baseIngredients || [])];
     const isBurger = product.station === 'hamburguesas';
     const isDog = product.station === 'hot_dogs';
 
@@ -359,7 +359,7 @@ export const CustomizationModal: React.FC<CustomizationModalProps> = ({
                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2.5 bg-tocineta-bg border border-tocineta-border rounded-2xl"
                   >
                     <span className="text-sm font-bold text-ink px-2">
-                      {ing.name}
+                      {ing.name}{(ing.quantity ?? 1) > 1 && <span className="ml-1.5 font-mono text-xs text-tocineta-muted">x{ing.quantity}</span>}
                     </span>
                     <div className="grid grid-cols-3 gap-1 shrink-0">
                       <button

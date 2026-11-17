@@ -44,7 +44,7 @@ export interface ShoppingListItem {
  */
 export function calculateDishUnitCost(rawDb: Database.Database, productId: string): number {
   const row = rawDb.prepare(`
-    SELECT COALESCE(SUM(i.internal_cost_usd_cents), 0) as total_cost
+    SELECT COALESCE(SUM(i.internal_cost_usd_cents * COALESCE(pi.quantity, 1)), 0) as total_cost
     FROM product_ingredients pi
     JOIN ingredients i ON pi.ingredient_id = i.id
     WHERE pi.product_id = ?
@@ -66,24 +66,25 @@ export function calculateShoppingList(
     if (item.quantity <= 0) continue;
 
     const ingRows = rawDb.prepare(`
-      SELECT i.id, i.name, i.internal_cost_usd_cents
+      SELECT i.id, i.name, i.internal_cost_usd_cents, COALESCE(pi.quantity, 1) as quantity
       FROM product_ingredients pi
       JOIN ingredients i ON pi.ingredient_id = i.id
       WHERE pi.product_id = ?
-    `).all(item.productId) as Array<{ id: string; name: string; internal_cost_usd_cents: number }>;
+    `).all(item.productId) as Array<{ id: string; name: string; internal_cost_usd_cents: number; quantity: number }>;
 
     for (const ing of ingRows) {
+      const units = item.quantity * (ing.quantity > 0 ? ing.quantity : 1);
       const existing = ingredientsMap.get(ing.id);
       if (existing) {
-        existing.requiredCount += item.quantity;
+        existing.requiredCount += units;
         existing.totalCostUsdCents = existing.requiredCount * existing.unitCostUsdCents;
       } else {
         ingredientsMap.set(ing.id, {
           ingredientId: ing.id,
           ingredientName: ing.name,
-          requiredCount: item.quantity,
+          requiredCount: units,
           unitCostUsdCents: ing.internal_cost_usd_cents,
-          totalCostUsdCents: item.quantity * ing.internal_cost_usd_cents
+          totalCostUsdCents: units * ing.internal_cost_usd_cents
         });
       }
     }

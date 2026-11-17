@@ -94,7 +94,7 @@ export function getPosMenu(rawDb: Database.Database) {
 
   // 4. Ingredientes base de productos (removibles: "Sin Salsa de Ajo", "Sin Pan", etc.)
   const prodIngRows = rawDb.prepare(`
-    SELECT pi.product_id, i.id as ingredient_id, i.name as ingredient_name, pi.is_removable
+    SELECT pi.product_id, i.id as ingredient_id, i.name as ingredient_name, pi.is_removable, pi.quantity
     FROM product_ingredients pi
     JOIN ingredients i ON pi.ingredient_id = i.id
     WHERE i.is_active = 1
@@ -104,9 +104,10 @@ export function getPosMenu(rawDb: Database.Database) {
     ingredient_id: string;
     ingredient_name: string;
     is_removable: number;
+    quantity: number;
   }>;
 
-  const baseIngredientsByProduct = new Map<string, Array<{ id: string; name: string; isRemovable: boolean; defaultState: 'normal' }>>();
+  const baseIngredientsByProduct = new Map<string, Array<{ id: string; name: string; isRemovable: boolean; defaultState: 'normal'; quantity: number }>>();
   for (const pi of prodIngRows) {
     const list = baseIngredientsByProduct.get(pi.product_id) || [];
     // Defensa ante datos viejos: un producto nunca repite el mismo ingrediente.
@@ -115,7 +116,8 @@ export function getPosMenu(rawDb: Database.Database) {
       id: pi.ingredient_id,
       name: pi.ingredient_name,
       isRemovable: Boolean(pi.is_removable),
-      defaultState: 'normal'
+      defaultState: 'normal',
+      quantity: pi.quantity ?? 1
     });
     baseIngredientsByProduct.set(pi.product_id, list);
   }
@@ -331,13 +333,13 @@ export function getAdminMenu(rawDb: Database.Database) {
   `).all() as any[];
 
   const prodIngRows = rawDb.prepare(`
-    SELECT pi.id, pi.product_id, pi.ingredient_id, i.name as ingredient_name, pi.is_removable, pi.display_order
+    SELECT pi.id, pi.product_id, pi.ingredient_id, i.name as ingredient_name, pi.is_removable, pi.display_order, pi.quantity
     FROM product_ingredients pi
     JOIN ingredients i ON pi.ingredient_id = i.id
     ORDER BY pi.display_order ASC
   `).all() as any[];
 
-  const prodIngMap = new Map<string, Array<{ id: string; ingredientId: string; name: string; isRemovable: boolean; displayOrder: number }>>();
+  const prodIngMap = new Map<string, Array<{ id: string; ingredientId: string; name: string; isRemovable: boolean; displayOrder: number; quantity: number }>>();
   for (const row of prodIngRows) {
     const list = prodIngMap.get(row.product_id) || [];
     // Defensa ante datos viejos: un producto nunca repite el mismo ingrediente.
@@ -347,7 +349,8 @@ export function getAdminMenu(rawDb: Database.Database) {
       ingredientId: row.ingredient_id,
       name: row.ingredient_name,
       isRemovable: Boolean(row.is_removable),
-      displayOrder: row.display_order
+      displayOrder: row.display_order,
+      quantity: row.quantity ?? 1
     });
     prodIngMap.set(row.product_id, list);
   }
