@@ -31,6 +31,7 @@ export const orderRoutes: FastifyPluginAsync = async (fastify) => {
     try {
       const order = createOrder(dbCtx.rawDb, {
         ...body,
+        locationId: body.locationId,
         createdByUserId
       });
 

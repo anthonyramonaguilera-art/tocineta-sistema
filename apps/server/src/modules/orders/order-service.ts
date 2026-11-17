@@ -6,6 +6,8 @@ import { appendAuditEvent } from '../audit/audit-service.js';
 import { verifyPin } from '../auth/pin.js';
 import { checkUserLockout, recordFailedAttempt, resetLockout } from '../auth/lockout.js';
 import { mapUserRow } from '../../db/schema.js';
+import { resolveLocationId } from '../profitability/locations-service.js';
+import { getStationCashSession } from '../cashier/cashier-service.js';
 
 export type ModifierRawInput = string | {
   ingredientId?: string | null;
@@ -98,6 +100,7 @@ export interface CreateOrderInput {
   orderId?: string;
   idempotencyKey?: string;
   createdByUserId: string;
+  locationId?: string;
   fulfillmentType?: 'salon' | 'para_llevar' | 'delivery';
   tableNumber?: string | null;
   customerName?: string | null;
@@ -148,6 +151,31 @@ export function getNextOrderNumber(rawDb: Database.Database, jornadaId: string):
   `).get(jornadaId) as { max_num: number | null } | undefined;
 
   return (row?.max_num ?? 0) + 1;
+}
+
+/**
+ * Resuelve la sede de venta del pedido (J2):
+ * 1. `locationId` enviado en el body, validado contra `locations` (400 si no existe o está inactiva).
+ * 2. Sesión de caja abierta del usuario que registra el pedido.
+ * 3. Sede por defecto del usuario (`users.default_location_id`), si está activa.
+ * 4. Último recurso: 'loc_alta_vista'.
+ */
+function resolveOrderLocationId(rawDb: Database.Database, input: CreateOrderInput): string {
+  const candidate = input.locationId;
+  if (typeof candidate === 'string' && candidate.trim() !== '') {
+    return resolveLocationId(rawDb, candidate);
+  }
+
+  const session = getStationCashSession(rawDb, input.createdByUserId);
+  if (session?.location_id) {
+    return session.location_id;
+  }
+
+  try {
+    return resolveLocationId(rawDb, null, input.createdByUserId);
+  } catch {
+    return 'loc_alta_vista';
+  }
 }
 
 export function assertProductsSellable(rawDb: Database.Database, productIds: string[]): void {
@@ -205,6 +233,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
   const orderId = input.orderId || `ord_${generateUuidV7()}`;
   const now = Date.now();
   const rateMicroBs = getCurrentExchangeRate(rawDb);
+  const locationId = resolveOrderLocationId(rawDb, input);
   const jornadaId = getOrCreateOpenJornada(rawDb, input.createdByUserId);
   const orderNumber = getNextOrderNumber(rawDb, jornadaId);
 
@@ -557,7 +586,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
     // 3. Insertar orden en tabla orders
     rawDb.prepare(`
       INSERT INTO orders (
-        id, order_number, jornada_id, created_by_user_id, fulfillment_type,
+        id, order_number, location_id, jornada_id, created_by_user_id, fulfillment_type,
         table_number, customer_name, customer_phone, delivery_address, delivery_reference,
         delivery_fee_usd_cents, motorizado_id,
         gross_food_subtotal_usd_cents, discount_usd_cents, coupon_id, net_food_sales_usd_cents,
@@ -565,7 +594,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
         station_status_hot_dogs, station_status_hamburguesas,
         notes, version, table_service_mode, created_at_ms, updated_at_ms
       ) VALUES (
-        ?, ?, ?, ?, ?,
+        ?, ?, ?, ?, ?, ?,
         ?, ?, ?, ?, ?,
         ?, ?,
         ?, ?, ?, ?,
@@ -576,6 +605,7 @@ export function createOrder(rawDb: Database.Database, input: CreateOrderInput) {
     `).run(
       orderId,
       orderNumber,
+      locationId,
       jornadaId,
       input.createdByUserId,
       input.fulfillmentType || 'salon',
